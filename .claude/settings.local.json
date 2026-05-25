@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(D:\\\\MyApps\\\\ABM\\\\.venv\\\\Scripts\\\\python.exe -m pip install --upgrade pip setuptools wheel 2>&1)",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}

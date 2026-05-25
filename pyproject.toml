@@ -1,0 +1,29 @@
+[project]
+name = "abm"
+version = "0.1.0"
+description = "Agent-based modeling framework for political polarization dynamics"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "plotly>=5.20",
+    "solara>=1.30",
+    "anywidget>=0.9",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+]
+
+[project.optional-dependencies]
+mesa = ["mesa>=3.0"]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["abm*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
