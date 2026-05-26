@@ -21,6 +21,7 @@ import numpy as np
 from ..core.agent import Agent
 from ..core.engine import Engine
 from ..core.environment import Environment
+from ..core.network import Network
 from ..core.outlets import US_MEDIA_OUTLETS_2024, diet_for_party
 from ..core.rules import RulePipeline
 from ..core.space import ContinuousSpace2D
@@ -99,6 +100,9 @@ def build(
         attrs={
             "parties": party_centers,
             "outlets": outlets_by_id,                     # rules need lookup
+            # ADR-001: complete graph reproduces the pre-ADR population-wide
+            # behaviour exactly for influence-rule purposes.
+            "network": Network.complete(range(n_agents)),
             "viz": {
                 "title": TITLE,
                 "group_names": PARTY_NAMES,

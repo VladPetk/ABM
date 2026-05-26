@@ -20,7 +20,24 @@ import numpy as np
 
 
 def affective_polarization(agents) -> float:
-    """Mean out-party warmth across all (agent, other-party) pairs."""
+    """Mean out-party warmth across all (agent, other-party) pairs.
+
+    Returns a number in [-1, 1]. **More negative = more affectively
+    polarized** (out-party animus is higher). Following Phase 5's
+    corrected ``AffectiveUpdate`` dynamics, this number is *negative-
+    going* through S2 and S3 — the operational mirror of Iyengar et al.
+    2019's "out-party thermometer" trajectory.
+
+    **S4 nuance: the metric can read *less* negative at S4 than at
+    S2/S3.** Cause: S4's tie-rewiring isolates some agents from any
+    out-party network neighbour. ``AffectiveUpdate`` is network-mediated
+    — it only fires when an agent encounters an out-party neighbour —
+    so isolated agents' warmth freezes at whatever it last reached, or
+    stays at the t=0 seed value of 0.0 if they never met the other side.
+    Averaged across the population, those near-zero entries dilute the
+    mean. Read as "S4 sorts so hard that some agents stop forming
+    out-party animus altogether" — not "S4 cools the warmth back up."
+    """
     vals: list[float] = []
     for a in agents:
         affect = a.state.attrs.get("affect")

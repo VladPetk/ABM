@@ -18,6 +18,7 @@ import numpy as np
 
 from ..core.agent import Agent
 from ..core.environment import Environment
+from ..core.network import neighbor_agents
 from ..core.space import ContinuousSpace2D
 from ..core.state import StateDelta
 
@@ -36,13 +37,15 @@ class ArgumentExchange:
     ) -> StateDelta:
         if self.step == 0:
             return StateDelta()
-        neighbors = space.neighbors_within(
-            agent.state.ideology, self.homophily_radius, exclude_id=agent.id
-        )
+        # The network already encodes homophily — neighbours are
+        # `neighbor_agents(...)`; `homophily_radius` is vestigial post-ADR-001.
+        neighbors = neighbor_agents(agent, space, env)
         if not neighbors:
             return StateDelta()
         neighbor = neighbors[int(rng.integers(len(neighbors)))]
         axis = int(rng.integers(2))
         delta = np.zeros(2)
         delta[axis] = self.step * float(neighbor.state.ideology[axis])
-        return StateDelta(d_ideology=delta)
+        # F1: Friedkin-Johnsen scaling — stubborn agents move less.
+        s = float(agent.state.attrs.get("stubbornness", 0.0))
+        return StateDelta(d_ideology=(1.0 - s) * delta)

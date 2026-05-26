@@ -1,17 +1,28 @@
 """
-Bounded-confidence attraction (Hegselmann-Krause), exposure-aware.
+Bounded-confidence attraction, network-mediated (ADR-001).
 
-Agents only listen to neighbors within ideological distance epsilon.
-Within that confidence ball, they shift a fraction ``strength`` of the
-way toward the **exposure-weighted mean** of those neighbours: tie
-neighbours pull at full weight, non-tie neighbours pull at the residual
-``cross_tie_weight``. Classic mechanism for echo-chamber formation;
-``cross_tie_weight`` is the Phase 3 "soft gate" that lets the social
-tie network filter who you actually hear.
+The candidate set for each agent is its **social-network neighbours**, not
+a spatial radius query. Among the network neighbours, the agent shifts a
+fraction ``strength`` of the way toward the mean of those within ideological
+distance ``epsilon`` (the canonical hard-cutoff filter).
 
-S0-S3 keep ``cross_tie_weight = 1.0``, which takes a fast path that is
-**bit-identical** to today's plain-mean rule (guarded by
-``test_cross_tie_weight_1_is_inert``).
+On a **complete graph** every agent is everyone else's neighbour, so the
+hard-cutoff filter then picks the same set as classic Hegselmann-Krause:
+the network generalises HK, it does not replace it (ADR-001 §7).
+
+Phase 4 adds two attrs:
+
+- ``temperature`` — the F2 graded confidence filter. Defaults to ``0.0``,
+  the canonical hard-cutoff behaviour, so every existing scenario
+  (``compass_basic``, ``actb``, etc.) and the canonical HK replication
+  tests are unchanged. The pillar opts in to ``temperature = 0.05`` via
+  ``build_engine`` and every intervention bundle. With ``temperature > 0``
+  the candidate set is *every* network neighbour, weighted by the
+  logistic ``w(d) = 1 / (1 + exp((d - epsilon) / temperature))``.
+- Friedkin-Johnsen ``stubbornness`` scaling (F1) is applied uniformly at
+  the apply site: the rule's intended ``d_ideology`` is multiplied by
+  ``(1 - stubbornness)``. Agents without a stubbornness attr (every
+  non-pillar scenario) see ``s = 0`` and the scaling is a no-op.
 """
 from __future__ import annotations
 
@@ -19,6 +30,7 @@ import numpy as np
 
 from ..core.agent import Agent
 from ..core.environment import Environment
+from ..core.network import neighbor_agents
 from ..core.space import ContinuousSpace2D
 from ..core.state import StateDelta
 
@@ -28,13 +40,16 @@ class BoundedConfidenceInfluence:
         self,
         epsilon: float = 0.3,
         strength: float = 0.1,
-        cross_tie_weight: float = 1.0,
+        temperature: float = 0.0,
+        affect_weight: float = 0.0,
     ):
         self.epsilon = epsilon
         self.strength = strength
-        # 1.0 = exposure is uniform (the Phase 1/2 behaviour).
-        # 0.0 = only tie neighbours are heard. S4 sits well below 1.
-        self.cross_tie_weight = cross_tie_weight
+        self.temperature = temperature
+        # Phase 5 (A4): per-neighbour affect modulator. Default 0.0
+        # preserves canonical / non-pillar behaviour exactly. The pillar
+        # opts in via bundles (BC_AFFECT_WEIGHT in calm_to_camps.py).
+        self.affect_weight = affect_weight
 
     def apply(
         self,
@@ -43,26 +58,73 @@ class BoundedConfidenceInfluence:
         env: Environment,
         rng: np.random.Generator,
     ) -> StateDelta:
-        neighbors = space.neighbors_within(
-            agent.state.ideology, self.epsilon, exclude_id=agent.id
-        )
-        if not neighbors:
+        if self.strength == 0.0:
             return StateDelta()
-
-        network = env.attrs.get("network")
-        if network is None or self.cross_tie_weight == 1.0:
-            # FAST PATH — must stay bit-identical to the pre-Phase-3 rule.
-            target = np.mean([n.state.ideology for n in neighbors], axis=0)
-        else:
-            ties = network.get(agent.id, ())
-            weights = np.array(
-                [1.0 if n.id in ties else self.cross_tie_weight for n in neighbors],
-                dtype=float,
-            )
-            if weights.sum() == 0.0:
-                # Gated agent with no in-range tie neighbours: silent this tick.
+        neighbours = neighbor_agents(agent, space, env)
+        if not neighbours:
+            return StateDelta()
+        my_ide = agent.state.ideology
+        if self.temperature <= 0.0:
+            # Canonical hard-cutoff Hegselmann-Krause. Default; HK
+            # replication path. The affect modulator is a feature of
+            # the graded filter only — surface the misconfiguration
+            # rather than silently ignoring it.
+            if self.affect_weight > 0.0:
+                raise ValueError(
+                    "BoundedConfidenceInfluence: affect_weight > 0 requires "
+                    "temperature > 0 (affect feedback applies on the graded "
+                    "filter, not the hard-cutoff branch). Set temperature "
+                    "before enabling affect_weight."
+                )
+            within = [
+                n.state.ideology
+                for n in neighbours
+                if np.linalg.norm(my_ide - n.state.ideology) <= self.epsilon
+            ]
+            if not within:
                 return StateDelta()
-            target = np.average(
-                [n.state.ideology for n in neighbors], axis=0, weights=weights
-            )
-        return StateDelta(d_ideology=self.strength * (target - agent.state.ideology))
+            target = np.mean(within, axis=0)
+        else:
+            # Graded logistic filter — pillar opt-in (Phase 4 F2).
+            positions = np.array([n.state.ideology for n in neighbours])
+            ds = np.linalg.norm(positions - my_ide, axis=1)
+            # Clip the exponent to keep np.exp safe under extreme params
+            # (e.g. tiny temperature). Logistic saturates well before 50;
+            # this is a numerical-safety guard, not a behavioural change.
+            arg = np.clip((ds - self.epsilon) / self.temperature, -50.0, 50.0)
+            ws = 1.0 / (1.0 + np.exp(arg))
+            # Phase 5 (A4): affect modulator. For each out-party
+            # neighbour, multiply the logistic weight by
+            # (1 + affect_weight * warmth_toward_their_party), clipped
+            # to [0.1, 2.0]. Same-party neighbours: multiplier 1.0.
+            # affect_weight = 0.0 → ms is all 1.0 → no behavioural change
+            # (the multiplication is a pure scalar 1.0, leaving ws
+            # bit-identical to the Phase 4 path).
+            if self.affect_weight > 0.0:
+                own_affect = agent.state.attrs.get("affect") or {}
+                own_party = agent.state.attrs.get("party")
+                ms = np.empty(len(neighbours))
+                for k, n in enumerate(neighbours):
+                    other = n.state.attrs.get("party")
+                    if other is None or other == own_party:
+                        ms[k] = 1.0
+                    else:
+                        # Underlying affect can drift past [-1, 1] —
+                        # AffectiveUpdate accumulates additively. Clip
+                        # the read here to keep the modulator's range
+                        # interpretable; the [0.1, 2.0] outer clip is a
+                        # numerical safety net, this is the model clip.
+                        warmth = float(np.clip(
+                            own_affect.get(other, 0.0), -1.0, 1.0
+                        ))
+                        m = 1.0 + self.affect_weight * warmth
+                        ms[k] = float(np.clip(m, 0.1, 2.0))
+                ws = ws * ms
+            wsum = float(ws.sum())
+            if wsum < 1e-9:
+                return StateDelta()
+            target = (ws[:, None] * positions).sum(axis=0) / wsum
+        d = self.strength * (target - my_ide)
+        # F1: Friedkin-Johnsen scaling — stubborn agents move less.
+        s = float(agent.state.attrs.get("stubbornness", 0.0))
+        return StateDelta(d_ideology=(1.0 - s) * d)

@@ -39,5 +39,8 @@ class PartyPull:
         if party is None or party not in parties:
             return StateDelta()
         target = parties[party]
-        s = float(agent.state.attrs.get("identity_strength", 0.5))
-        return StateDelta(d_ideology=self.strength * s * (target - agent.state.ideology))
+        ident = float(agent.state.attrs.get("identity_strength", 0.5))
+        d = self.strength * ident * (target - agent.state.ideology)
+        # F1: Friedkin-Johnsen scaling — stubborn agents move less.
+        stubbornness = float(agent.state.attrs.get("stubbornness", 0.0))
+        return StateDelta(d_ideology=(1.0 - stubbornness) * d)

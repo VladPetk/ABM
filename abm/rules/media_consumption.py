@@ -43,4 +43,7 @@ class MediaConsumption:
         if not diet or not outlets:
             return StateDelta()
         target = diet_target(diet, outlets)
-        return StateDelta(d_ideology=self.strength * (target - agent.state.ideology))
+        d = self.strength * (target - agent.state.ideology)
+        # F1: Friedkin-Johnsen scaling — stubborn agents move less.
+        s = float(agent.state.attrs.get("stubbornness", 0.0))
+        return StateDelta(d_ideology=(1.0 - s) * d)

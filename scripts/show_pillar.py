@@ -71,7 +71,8 @@ def _record(run: Run, engine, t: int) -> None:
     net = engine.env.attrs["network"]
     run.ticks.append(t)
     run.pos.append(pos.copy())
-    run.nets.append({k: set(v) for k, v in net.items()})
+    # Snapshot the adjacency so the animation freezes the graph at this tick.
+    run.nets.append({i: set(net.neighbors(i)) for i in net.node_ids})
     run.var.append(variance(pos))
     run.xcut.append(cross_cutting_tie_fraction(engine.agents, net))
     run.mod.append(party_modularity(engine.agents, net))

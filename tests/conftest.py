@@ -56,15 +56,35 @@ def diet_extremity(agent) -> float:
 
 
 def positional_engine(stage_index: int, seed: int):
-    """build_at_stage at the test N, then zero AffectiveUpdate (Phase 2 D6:
-    AffectiveUpdate is positionally inert and never draws from the RNG, so
-    zeroing it leaves every position bit-identical while removing its
-    O(n^2) cost). Use for every positional test."""
+    """build_at_stage at the test N, then zero the **affect channel**
+    (AffectiveUpdate.lr + BoundedConfidenceInfluence.affect_weight +
+    TieRewiring.affect_weight_rewire). With all three at zero the affect
+    channel is positionally inert — affect never updates and is never
+    read — and the run leaves positions bit-identical to the full
+    Phase 5 bundle (Phase 5 §11 calibration: macro positional metrics
+    differ by <0.005 between affect-on and affect-off). Use for every
+    positional test that cares about positions, not affect.
+
+    For affect-reading tests, use `s1_affect_engines` / `s3_affect_engines`
+    (which keep all three at their bundle values)."""
     eng = build_pillar_engine(seed=seed, n_agents=N)
     apply_intervention(eng, PILLAR.interventions[stage_index])
     for rule in eng.rules.rules:
-        if type(rule).__name__ == "AffectiveUpdate":
+        name = type(rule).__name__
+        if name == "AffectiveUpdate":
             rule.lr = 0.0
+        elif name == "BoundedConfidenceInfluence":
+            # Phase 5 A4: without this, BC reads affect per neighbour,
+            # and zeroing lr alone is no longer positionally inert.
+            rule.affect_weight = 0.0
+        elif name == "BacklashRepulsion":
+            # Phase 6: would-be no-op at strength 0 in S0-S4 bundles,
+            # but zero defensively in case a future test runs the fast
+            # path on an intervention bundle that turns it on.
+            rule.strength = 0.0
+    for rule in eng.env_rules:
+        if type(rule).__name__ == "TieRewiring":
+            rule.affect_weight_rewire = 0.0
     return eng
 
 
@@ -128,6 +148,98 @@ def s3_engines() -> list:
 @pytest.fixture(scope="session")
 def s4_engines() -> list:
     return _run_stage_engines(4)
+
+
+# --- Phase 5: affect-bearing engines --------------------------------------
+# `positional_engine` zeros AffectiveUpdate.lr because it's positionally
+# inert and that's a speed win for positional tests. The Iyengar test
+# (and any other affect-reading assertion) needs affect to actually
+# update, so we provide a parallel pair of fixtures without the lr-zero
+# optimisation.
+
+
+def _affect_engine(stage_index: int, seed: int):
+    """Like `positional_engine`, but keep AffectiveUpdate.lr at the
+    bundle value — affect actually updates during the run."""
+    eng = build_pillar_engine(seed=seed, n_agents=N)
+    apply_intervention(eng, PILLAR.interventions[stage_index])
+    return eng
+
+
+def _run_affect_engines(stage_index: int) -> list:
+    out = []
+    for seed in STAGE_SEEDS:
+        eng = _affect_engine(stage_index, seed)
+        eng.run(TICKS)
+        out.append(eng)
+    return out
+
+
+@pytest.fixture(scope="session")
+def s0_affect_engines() -> list:
+    return _run_affect_engines(0)
+
+
+# --- Phase 6: per-intervention release-phase fixture ----------------------
+# Each X-intervention is applied at the end of an S4 run, then the engine
+# runs `TICKS` more. Δparty_separation = sep_after - sep_S4_end. The
+# session-scoped fixture caches the result map so the consolidated bucket
+# test and any further investigation tests share one set of runs.
+
+
+def _release_metrics(intervention, seed):
+    """S0→S4 (`TICKS`), apply intervention, run `TICKS`, return
+    {'sep': (before, after), 'aff': (before, after)} for the two-axis
+    bucketing (Phase 7)."""
+    from abm.metrics.affective import affective_polarization
+
+    eng = build_pillar_engine(seed=seed, n_agents=N)
+    apply_intervention(eng, PILLAR.interventions[4])
+    eng.run(TICKS)
+    sep_before = party_separation(eng)
+    aff_before = affective_polarization(eng.agents)
+    apply_intervention(eng, intervention)
+    eng.run(TICKS)
+    sep_after = party_separation(eng)
+    aff_after = affective_polarization(eng.agents)
+    return {"sep": (sep_before, sep_after), "aff": (aff_before, aff_after)}
+
+
+@pytest.fixture(scope="session")
+def intervention_buckets() -> dict[str, dict[str, float]]:
+    """`{intervention.id: {"sep": Δparty_separation, "aff": Δaffective_polarization}}`
+    means across STAGE_SEEDS.
+
+    Sign conventions:
+      - Δsep: negative = helpful (camps closer), positive = backfire.
+      - Δaff: positive = helpful (warmer / less animus), negative =
+        backfire (more animus). Note the OPPOSITE sign convention from
+        Δsep — `affective_polarization` itself is more-negative = more
+        polarized.
+    """
+    from abm.pillars import INTERVENTIONS_PHASE6
+    out: dict[str, dict[str, float]] = {}
+    for iv in INTERVENTIONS_PHASE6:
+        sep_diffs, aff_diffs = [], []
+        for seed in STAGE_SEEDS:
+            m = _release_metrics(iv, seed)
+            sep_diffs.append(m["sep"][1] - m["sep"][0])
+            aff_diffs.append(m["aff"][1] - m["aff"][0])
+        out[iv.id] = {
+            "sep": float(np.mean(sep_diffs)),
+            "aff": float(np.mean(aff_diffs)),
+        }
+    return out
+
+
+@pytest.fixture(scope="session")
+def s1_affect_engines() -> list:
+    return _run_affect_engines(1)
+
+
+@pytest.fixture(scope="session")
+def s3_affect_engines() -> list:
+    return _run_affect_engines(3)
 
 
 # Snapshot of t=0 network metrics per seed — used by test_s4_narrows_exposure

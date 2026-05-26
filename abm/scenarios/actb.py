@@ -16,6 +16,7 @@ import numpy as np
 from ..core.agent import Agent
 from ..core.engine import Engine
 from ..core.environment import Environment
+from ..core.network import Network
 from ..core.rules import RulePipeline
 from ..core.space import ContinuousSpace2D
 from ..core.state import AgentState
@@ -72,6 +73,10 @@ def build(
         )
     env = Environment(
         attrs={
+            # ADR-001: complete-graph network reproduces the population-wide
+            # ACTB dynamic exactly (ArgumentExchange now reads neighbours
+            # from the network rather than a homophily radius).
+            "network": Network.complete(range(n_agents)),
             "viz": {
                 "title": TITLE,
                 "group_names": GROUP_NAMES,
