@@ -1,0 +1,394 @@
+{
+  "metadata": {
+    "n_agents": 250,
+    "independent_fraction": 0.12,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "years": [
+      1980,
+      1990,
+      2000,
+      2010,
+      2020,
+      2025
+    ]
+  },
+  "means": {
+    "1980": {
+      "variance": 0.38228156338300345,
+      "constraint": 0.35029687727221437,
+      "party_sep": 0.5947286331966641,
+      "affect": -0.2522297257153629,
+      "within_party_sd": 0.3382091550646638,
+      "xc_fraction": 0.5141487107867891,
+      "modularity": 0.0979236268009692
+    },
+    "1990": {
+      "variance": 0.17205284260249137,
+      "constraint": 0.4351863155807087,
+      "party_sep": 0.5056032015033609,
+      "affect": -0.416560689906688,
+      "within_party_sd": 0.2099903941327121,
+      "xc_fraction": 0.49791039775762336,
+      "modularity": 0.11366713713649779
+    },
+    "2000": {
+      "variance": 0.12517862625356954,
+      "constraint": 0.5611016008838264,
+      "party_sep": 0.5299136004205703,
+      "affect": -0.5556810328809461,
+      "within_party_sd": 0.17734833323330698,
+      "xc_fraction": 0.4776314823584281,
+      "modularity": 0.134645553003834
+    },
+    "2010": {
+      "variance": 0.1535378061492327,
+      "constraint": 0.6465686128247125,
+      "party_sep": 0.6442653012948713,
+      "affect": -0.618371792215114,
+      "within_party_sd": 0.18467013549295835,
+      "xc_fraction": 0.4587008864395363,
+      "modularity": 0.1565174926491522
+    },
+    "2020": {
+      "variance": 0.1878130933235277,
+      "constraint": 0.7231054066961365,
+      "party_sep": 0.7555253210888191,
+      "affect": -0.7034923302789647,
+      "within_party_sd": 0.1824966087443109,
+      "xc_fraction": 0.43481538247732016,
+      "modularity": 0.18207436310852126
+    },
+    "2025": {
+      "variance": 0.20450261901063538,
+      "constraint": 0.7541934675921624,
+      "party_sep": 0.8043916497347418,
+      "affect": -0.7377536393503012,
+      "within_party_sd": 0.18244610906807504,
+      "xc_fraction": 0.42136921246980197,
+      "modularity": 0.19635420319276958
+    }
+  },
+  "ses": {
+    "1980": {
+      "variance": 0.00425357379730685,
+      "constraint": 0.004383563210169321,
+      "party_sep": 0.00795993849092204,
+      "affect": 0.0014851692577517175,
+      "within_party_sd": 0.003085036271945548,
+      "xc_fraction": 0.0035330074122356006,
+      "modularity": 0.0029939195925917333
+    },
+    "1990": {
+      "variance": 0.002912407405284137,
+      "constraint": 0.007781563528858037,
+      "party_sep": 0.00829657373424918,
+      "affect": 0.0038600755805028733,
+      "within_party_sd": 0.0025161430365843915,
+      "xc_fraction": 0.004739431810620109,
+      "modularity": 0.004197553087098892
+    },
+    "2000": {
+      "variance": 0.0019518743690658102,
+      "constraint": 0.0067947376247276,
+      "party_sep": 0.007261406619715802,
+      "affect": 0.005723347838114568,
+      "within_party_sd": 0.0021231051499148016,
+      "xc_fraction": 0.0059504804140928114,
+      "modularity": 0.004808816519206161
+    },
+    "2010": {
+      "variance": 0.0020351960976009737,
+      "constraint": 0.005967042656006693,
+      "party_sep": 0.0072948595012596006,
+      "affect": 0.006854348708359459,
+      "within_party_sd": 0.0028158156174837388,
+      "xc_fraction": 0.005617331780613983,
+      "modularity": 0.004767149874664417
+    },
+    "2020": {
+      "variance": 0.0020161623091957516,
+      "constraint": 0.0050480779821211325,
+      "party_sep": 0.005771312934908352,
+      "affect": 0.007611331828888797,
+      "within_party_sd": 0.0030054324818072136,
+      "xc_fraction": 0.005880811096510708,
+      "modularity": 0.004566998337039257
+    },
+    "2025": {
+      "variance": 0.002320458102588515,
+      "constraint": 0.004783516790798589,
+      "party_sep": 0.006267451089069897,
+      "affect": 0.007567398393087497,
+      "within_party_sd": 0.0031039086161500796,
+      "xc_fraction": 0.004668822617379187,
+      "modularity": 0.0037107045984460167
+    }
+  },
+  "phase_8b_baseline": {
+    "1980": {
+      "variance": 0.42,
+      "constraint": 0.41,
+      "party_sep": 0.72,
+      "affect": -0.25,
+      "within_party_sd": 0.31,
+      "xc_fraction": 0.34,
+      "modularity": null
+    },
+    "1990": {
+      "variance": 0.17,
+      "constraint": 0.45,
+      "party_sep": 0.58,
+      "affect": -0.6,
+      "within_party_sd": 0.18,
+      "xc_fraction": 0.31,
+      "modularity": 0.18
+    },
+    "2000": {
+      "variance": 0.1,
+      "constraint": 0.49,
+      "party_sep": 0.5,
+      "affect": -0.76,
+      "within_party_sd": 0.12,
+      "xc_fraction": 0.29,
+      "modularity": 0.21
+    },
+    "2010": {
+      "variance": 0.09,
+      "constraint": 0.54,
+      "party_sep": 0.51,
+      "affect": -0.84,
+      "within_party_sd": 0.11,
+      "xc_fraction": 0.27,
+      "modularity": 0.23
+    },
+    "2020": {
+      "variance": 0.11,
+      "constraint": 0.58,
+      "party_sep": 0.58,
+      "affect": -0.89,
+      "within_party_sd": 0.1,
+      "xc_fraction": 0.25,
+      "modularity": 0.25
+    },
+    "2025": {
+      "variance": 0.12,
+      "constraint": 0.59,
+      "party_sep": 0.61,
+      "affect": -0.9,
+      "within_party_sd": 0.1,
+      "xc_fraction": 0.24,
+      "modularity": 0.25
+    }
+  },
+  "primary_targets": {
+    "1990": {
+      "constraint": [
+        0.35,
+        0.5
+      ],
+      "party_sep": [
+        0.5,
+        0.65
+      ],
+      "affect": [
+        -0.45,
+        -0.3
+      ],
+      "within_party_sd": [
+        0.18,
+        0.32
+      ]
+    },
+    "2000": {
+      "constraint": [
+        0.45,
+        0.6
+      ],
+      "party_sep": [
+        0.55,
+        0.7
+      ],
+      "affect": [
+        -0.55,
+        -0.4
+      ],
+      "within_party_sd": [
+        0.18,
+        0.3
+      ]
+    },
+    "2010": {
+      "constraint": [
+        0.55,
+        0.7
+      ],
+      "party_sep": [
+        0.6,
+        0.75
+      ],
+      "affect": [
+        -0.65,
+        -0.5
+      ],
+      "within_party_sd": [
+        0.17,
+        0.28
+      ]
+    },
+    "2020": {
+      "constraint": [
+        0.6,
+        0.75
+      ],
+      "party_sep": [
+        0.65,
+        0.8
+      ],
+      "affect": [
+        -0.78,
+        -0.6
+      ],
+      "within_party_sd": [
+        0.15,
+        0.25
+      ]
+    },
+    "2025": {
+      "constraint": [
+        0.62,
+        0.78
+      ],
+      "party_sep": [
+        0.68,
+        0.82
+      ],
+      "affect": [
+        -0.85,
+        -0.65
+      ],
+      "within_party_sd": [
+        0.15,
+        0.22
+      ]
+    }
+  },
+  "secondary_targets": {
+    "1990": {
+      "variance": [
+        0.4,
+        0.55
+      ],
+      "xc_fraction": [
+        0.25,
+        0.35
+      ],
+      "modularity": [
+        0.15,
+        0.25
+      ]
+    },
+    "2000": {
+      "variance": [
+        0.3,
+        0.45
+      ],
+      "xc_fraction": [
+        0.2,
+        0.3
+      ],
+      "modularity": [
+        0.2,
+        0.3
+      ]
+    },
+    "2010": {
+      "variance": [
+        0.2,
+        0.35
+      ],
+      "xc_fraction": [
+        0.18,
+        0.28
+      ],
+      "modularity": [
+        0.25,
+        0.38
+      ]
+    },
+    "2020": {
+      "variance": [
+        0.15,
+        0.25
+      ],
+      "xc_fraction": [
+        0.15,
+        0.25
+      ],
+      "modularity": [
+        0.3,
+        0.42
+      ]
+    },
+    "2025": {
+      "variance": [
+        0.13,
+        0.2
+      ],
+      "xc_fraction": [
+        0.15,
+        0.25
+      ],
+      "modularity": [
+        0.32,
+        0.45
+      ]
+    }
+  },
+  "initial_targets_1980": {
+    "variance": [
+      0.45,
+      0.6
+    ],
+    "constraint": [
+      0.25,
+      0.4
+    ],
+    "party_sep": [
+      0.45,
+      0.6
+    ],
+    "affect": [
+      -0.35,
+      -0.2
+    ],
+    "within_party_sd": [
+      0.2,
+      0.35
+    ],
+    "xc_fraction": [
+      0.3,
+      0.4
+    ]
+  }
+}

@@ -163,6 +163,23 @@ divide by `2.83` to map exactly to `[0, 1]`. The `radius = 1.5` choice
 preserves the existing `build_engine` constant and keeps the formula's
 shape close to today's; tuning is a Phase 7 item.
 
+**Phase 8c D3 clarification.** Spelled out for the reader: at the
+`[-1, 1]^2` compass, the maximum ideological distance is `2 * sqrt(2)
+≈ 2.83`; dividing by `radius = 1.5` makes `issue_term` live in
+roughly `[0, 1.89]`, not `[0, 1]`. The `disagreement` term
+`identity_weight * identity_term + (1 − identity_weight) * issue_term`
+therefore lives in roughly `[0, 1.45]` (because `identity_term` is
+genuinely in `[0, 1]`, weighted 0.5; `issue_term` is in `[0, 1.89]`,
+also weighted 0.5; the linear combination weighted by 0.5 each gives
+a max around `(1 + 1.89) / 2 ≈ 1.45`). The per-encounter valence
+`-(disagreement + baseline)` is in roughly `[-1.55, -0.10]` —
+clipped downstream by the `[-1, 1]` affect read in metrics. This is
+the honest description of the formula's range. Phase 8c §1-A Fork
+defaulted to doc-only; rescaling to a literal `[0, 1]` issue_term
+would shift the pillar's affect trajectory and force re-blessing of
+every threshold; rescaling is deferred to backlog unless Phase 8c §7
+re-measurement surfaces a problem traceable to the over-range.
+
 **Decision (judgment fork A1):** the valence formula
 `valence = -(0.5 * identity_distance + 0.5 * issue_distance + 0.10)`.
 This is the *new dynamic*. The judgment is whether the linear blend with

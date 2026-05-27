@@ -148,11 +148,12 @@ def test_pillar_baseline_carries_backlash_at_zero():
 # --- R3: intervention library structure ----------------------------------
 
 
-def test_intervention_library_has_six_well_formed_interventions():
+def test_intervention_library_has_seven_well_formed_interventions():
     """Every X has id, label, expected_naive_effect, predicted_effect,
     and either a non-empty param_bundle or a non-None setup. The
-    library has six entries after the X6 contact-hypothesis addition."""
-    assert len(INTERVENTIONS_PHASE6) == 6
+    library has seven entries after Phase 8c §4 added X7
+    (perception-gap correction)."""
+    assert len(INTERVENTIONS_PHASE6) == 7
     for iv in INTERVENTIONS_PHASE6:
         assert iv.id, f"intervention has no id: {iv}"
         assert iv.label, f"{iv.id} has no label"

@@ -41,6 +41,17 @@ There is work specifically on generating distance-and-homophily-dependent
 networks *for opinion-dynamics ABMs*, including reusable implementations
 (comses.net), and on baseline homophily in spatially-embedded networks for ABM.
 
+**Provenance note (Phase 8c D1):** Wong, Pattison & Robins (2006)
+supply the formal *mathematical* class of spatially-embedded random
+graphs. The specific tie-formation parameters polarlab uses
+(`generate_homophilous_network` in `abm/core/network.py`: edge
+probability `p_local * exp(-d / tau) + p_bridge`; `tau = 0.40`,
+`p_local = 0.35`, `p_bridge = 0.002`) are **E (extrapolation):**
+calibrated empirically against the pillar's mean-degree target
+(~6-10) rather than fit to Wong et al.'s reported parameter
+distributions. The form is literature-supported; the specific
+parameters are calibration-fit and so are flagged E.
+
 **C. The combination — opinion dynamics on a co-evolving, spatially/homophily-
 embedded network.** This is essentially the idea as described. Schweighofer-
 style and the 2024 *Chaos* model "Co-evolving networks for opinion and social

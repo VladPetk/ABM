@@ -27,7 +27,7 @@ interventions; (R3) an honesty schema on `Intervention`.
 | R2 | **Bundle `BacklashRepulsion` into the pillar superset.** It is added to `build_engine`'s rule list at `strength = 0.0` (an exact no-op). S0-S4 bundles carry `("BacklashRepulsion", "strength", 0.0)` and `("BacklashRepulsion", "affect_threshold", -0.3)`. The repulsion mechanism is **off in the pillar's baseline progression** — it is an *intervention* knob, not a baseline force. (R3 interventions can turn it on selectively.) |
 | R3 | **A library of named post-S4 interventions** lives in `abm/pillars/interventions_phase6.py`. Each is an `Intervention` (Phase 1 D5 machinery, unchanged). All operate as **release-phase bundles**: applied at the end of a full S0-S4 polarization run, then run for `TICKS` more. The library ships with **5 interventions**: cross-cutting exposure boost, algorithmic-feed reset, civility nudge, elite cooling, and anchor renewal. (Details in §6.) |
 | R4 | **Honesty schema extension on `Intervention`.** `Intervention.label_kind` gains three new permitted values — `"null"`, `"partial"`, `"real"` — alongside the existing `"control"`, `"replication"`, `"illustrative"`. A new optional field `expected_naive_effect` documents the intuitive claim ("would shrink the gap between camps"); the existing `predicted_effect` documents what the model actually produces. The web layer will later render the tag as colour-coded copy. |
-| R5 | **What "null / partial / real" mean operationally.** Define a single intervention-effect metric: **`Δparty_separation` after `TICKS` of release**, ensemble mean across `STAGE_SEEDS`. Buckets: |effect| < 0.05 → **null**; 0.05 ≤ |effect| < 0.15 → **partial**; effect ≥ 0.15 (in the helpful direction) → **real**; effect ≤ -0.05 (polarization rises) → **backfire**. Each intervention's measured bucket is set by the §11 calibration, not declared at design time. |
+| R5 | **What "null / partial / real" mean operationally.** Define a single intervention-effect metric: **`Δparty_separation` after `TICKS` of release**, ensemble mean across `STAGE_SEEDS`. The **helpful direction for `issue_sorting` is negative Δsep** (camps closer). Buckets (Phase 8c D2 sign-convention fix; matches `_classify_sep` in `tests/test_phase6.py`): `|Δsep| < 0.05` → **null**; `−0.15 < Δsep < −0.05` → **partial** (helpful, modest); `Δsep ≤ −0.15` → **real** (helpful, substantial); `Δsep > +0.05` → **backfire** (camps further apart). The `affect` axis adds a second classifier (Phase 7): helpful direction = positive Δaff (warmth recovers — note the sign flip from Δsep). Each intervention's measured bucket is set by the §11 calibration, not declared at design time. |
 | R6 | **No new rule classes.** R1 is a `BacklashRepulsion` edit. R3 interventions all express through existing rules. |
 
 **Out of scope.**
@@ -606,17 +606,22 @@ intervention at 12-seed ensemble, TICKS post-S4:
 4. **Δideological_constraint** (does sorting unwind?).
 5. **Δvariance** (does the population spread?).
 
-Then assign each intervention a `label_kind`:
-- |Δsep| < 0.05 → `"null"`.
-- 0.05 ≤ |Δsep| < 0.15 and Δsep < 0 (in the helpful direction, i.e.
-  separation falls) → `"partial"`.
-- Δsep ≥ -0.15 (sep falls by at least 0.15 — interventions help) →
-  `"real"`. *(Note: "helpful direction" = decrease in separation, so
-  Δsep is negative when helpful.)*
-- Δsep > +0.05 (separation rises) → `"backfire"`.
+Then assign each intervention a `label_kind`. **Sign convention
+(Phase 8c D2 fix):** report `Δsep` as `sep_after − sep_S4_end`. The
+helpful direction is **negative** Δsep (separation falls — camps
+closer). The buckets are:
 
-(Sign convention: report `Δsep` as `sep_after − sep_S4_end`. Negative =
-helpful.)
+- `|Δsep| < 0.05` → `"null"`.
+- `−0.15 < Δsep < −0.05` → `"partial"` (helpful, modest).
+- `Δsep ≤ −0.15` → `"real"` (helpful, substantial).
+- `Δsep > +0.05` → `"backfire"` (separation rises).
+
+(Earlier drafts of this section used the inequalities `effect ≥
+0.15` and `Δsep ≥ -0.15` for "real," which are the wrong direction
+for the helpful sign convention; the implementation in
+`tests/test_phase6.py::_classify_sep` always used `dsep <= -0.15`,
+which is correct. Phase 8c D2 brings the spec text in line with the
+implementation.)
 
 Then commit the labels into `interventions_phase6.py`'s
 `label_kind` fields and into the consolidated bucket test's expected

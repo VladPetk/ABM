@@ -23,12 +23,15 @@ from ..core.space import ContinuousSpace2D
 from ..core.state import AgentState
 from ..rules.affective_update import AffectiveUpdate
 from ..rules.elite_drift import EliteDrift
+from ..rules.identity_prime import IdentityPrimeExpiry
 from ..rules.identity_sorting import IdentitySorting
 from ..rules.influence import BoundedConfidenceInfluence
 from ..rules.media_consumption import MediaConsumption
 from ..rules.noise import GaussianNoise
 from ..rules.party_pull import PartyPull
+from ..rules.perception_update import PerceptionUpdate
 from ..rules.repulsion import BacklashRepulsion
+from ..rules.threat_dynamics import ThreatDecay
 from ..rules.tie_rewiring import TieRewiring
 from .intervention import Intervention
 from .pillar import Pillar
@@ -110,11 +113,51 @@ BACKLASH_AFFECT_THRESHOLD = -0.3
 # insufficient; only X6's added edges carry the cooperative tag.
 COOPERATIVE_MUTE = 0.5
 
+# Phase 8a — PartyPull F' (personal party_cue).
+# Each agent's `party_cue` is sampled at build time from
+# N(party_centroid, PARTY_CUE_SIGMA²) — representing the specific
+# elite / sub-group / leader they identify with (Levendusky 2009
+# "noisy cue-taking"; Mason 2018 sub-group identity; Bawn et al. 2012
+# coalitional parties). PartyPull pulls each agent toward its personal
+# cue, not the party-wide centroid.
+#
+# §11 measure-then-bless outcome: at σ=0.25 (Vlad's confirmed default;
+# 12 seeds, N=250, TICKS=200), within-party SD_x at S2-end lifts from
+# Phase 7's ~0.14 (just below the DW-NOMINATE legislator floor) to
+# ~0.155 — inside the legislator band (~0.15-0.20) but below the ANES
+# voter band (~0.33-0.47). The spec's analytic prediction of [0.20,
+# 0.35] underestimated `BoundedConfidenceInfluence`'s pull toward the
+# local mean, which partially cancels per-agent cue dispersion. Even
+# at the cushion ceiling σ=0.35 the SD only reaches ~0.17. The
+# remaining S3/S4 over-tightness is `MediaConsumption`-driven and out
+# of Phase 8a's P-Scope=PartyPull-only.
+#
+# Non-pillar scenarios (compass_basic, etc.) do not set `party_cue`
+# on their agents; `PartyPull.apply` falls back to the env-level
+# centroid in that case, preserving bit-identical behaviour.
+PARTY_CUE_SIGMA = 0.25
 
-def build_engine(seed: int = 0, n_agents: int = 400) -> Engine:
+
+def build_engine(
+    seed: int = 0,
+    n_agents: int = 400,
+    independent_fraction: float = 0.0,
+) -> Engine:
     """Construct the superset engine with every pillar mechanism present
     but every force off. Applying an Intervention's bundle turns on the
     stages that are in scope.
+
+    Phase 8d adds the `independent_fraction` kwarg. Default 0.0 →
+    bit-identical to Phase 8c §7 (no Independents seeded). Non-zero →
+    `int(independent_fraction * n_agents)` agents are assigned
+    `party = 2` (pure independents / unaffiliated, per Klar &
+    Krupnikov 2016 *Independent Politics*). Independents have no
+    `party_cue`, no `affect` dict, no `perceived_other_party` etc.,
+    so the partisan-aware rules (PartyPull, AffectiveUpdate,
+    BacklashRepulsion, PerceptionUpdate, IdentityPrimeExpiry,
+    ThreatDecay) no-op on them. They DO participate in
+    BoundedConfidenceInfluence, MediaConsumption, TieRewiring,
+    GaussianNoise, IdentitySorting.
     """
     rng = np.random.default_rng(seed)
 
@@ -128,8 +171,54 @@ def build_engine(seed: int = 0, n_agents: int = 400) -> Engine:
         1: +identity_bias * np.ones(n_identities),
     }
 
+    # Phase 8d: pre-sample which agent ids will be independents. The
+    # `n_indep == 0` early-return preserves bit-identity to Phase 8c
+    # §7 when the kwarg is at its default 0.0 (the permutation call
+    # would otherwise consume RNG draws and shift downstream values).
+    n_indep = int(independent_fraction * n_agents)
+    if n_indep > 0:
+        indep_ids = set(int(i) for i in rng.permutation(n_agents)[:n_indep])
+    else:
+        indep_ids = set()
+
     agents: list[Agent] = []
     for i in range(n_agents):
+        if i in indep_ids:
+            # Phase 8d Independent agent (party=2). Broad centered
+            # position (N(0, 0.4)) — not centrist by definition; some
+            # Independents are ideological extremists who don't fit
+            # either party. Zero-mean identities; partisan-agnostic
+            # media diet (outlet centroid). Same stubbornness +
+            # identity_strength distributions as partisans.
+            pos_x = float(np.clip(rng.normal(0, 0.4), -1.0, 1.0))
+            pos_y = float(np.clip(rng.normal(0, 0.4), -1.0, 1.0))
+            pos = np.array([pos_x, pos_y])
+            indep_identities = np.clip(
+                rng.normal(0, 0.3, size=n_identities), -1.0, 1.0,
+            )
+            indep_identity_strength = float(rng.beta(2, 2))
+            indep_stubbornness = float(
+                rng.beta(STUBBORNNESS_ALPHA, STUBBORNNESS_BETA)
+            )
+            # Centrist diet — diet_for_party at origin pulls toward
+            # outlet centroid, not toward a partisan camp.
+            indep_diet = diet_for_party(np.zeros(2), outlets, rng)
+            attrs = {
+                "group": 2,
+                "party": 2,
+                "identity_strength": indep_identity_strength,
+                "identities": indep_identities,
+                # No affect, no party_cue, no perceived_other_party,
+                # no cooperative_share — the partisan-aware rules
+                # short-circuit on missing attrs / party == 2.
+                "media_diet": indep_diet,
+                "cohort": "all",
+                "origin": pos.copy(),
+                "anchor": pos.copy(),
+                "stubbornness": indep_stubbornness,
+            }
+            agents.append(Agent(id=i, state=AgentState(ideology=pos, attrs=attrs)))
+            continue
         pos = rng.uniform(-1.0, 1.0, size=2)
         party = 0 if pos[0] < 0 else 1
         diet = diet_for_party(PARTY_CENTERS[party], outlets, rng)
@@ -137,6 +226,18 @@ def build_engine(seed: int = 0, n_agents: int = 400) -> Engine:
             party_identity_centers[party] + rng.normal(0, 0.3, size=n_identities),
             -1.0,
             1.0,
+        )
+        # Phase 8a F': personal party cue, fixed for life. Drawn from
+        # the main RNG stream. **Note**: this `rng.normal(...)` call
+        # consumes 2 draws per agent from the main stream, which shifts
+        # downstream draws (`identity_strength`, `stubbornness`, and
+        # subsequent agents' positions) relative to Phase 7. Pillar
+        # populations are therefore NOT bit-identical to Phase 7 even
+        # with the same seed. Non-pillar scenarios are unaffected —
+        # they don't call this builder. The network stream (`net_rng`)
+        # is independent and unaffected.
+        party_cue = PARTY_CENTERS[party] + rng.normal(
+            0.0, PARTY_CUE_SIGMA, size=2
         )
         attrs = {
             "group": party,
@@ -154,6 +255,9 @@ def build_engine(seed: int = 0, n_agents: int = 400) -> Engine:
             "stubbornness": float(
                 rng.beta(STUBBORNNESS_ALPHA, STUBBORNNESS_BETA)
             ),
+            # Phase 8a F': the specific elite/sub-group cue this agent
+            # identifies with (Levendusky 2009 plural cue-taking).
+            "party_cue": party_cue,
         }
         agents.append(Agent(id=i, state=AgentState(ideology=pos, attrs=attrs)))
 
@@ -162,7 +266,17 @@ def build_engine(seed: int = 0, n_agents: int = 400) -> Engine:
     # untouched and S0-S3 populations stay bit-identical to Phase 1/2.
     net_rng = np.random.default_rng(seed + 9973)
     for a in agents:
-        sign = -1.0 if a.state.attrs["party"] == 0 else 1.0
+        # Phase 8d: Independents get sign=0 (no party-based social-coord
+        # bias). Bit-identity at independent_fraction=0.0 preserved
+        # because no agent has party==2 then; party=0 stays at -1,
+        # party=1 stays at +1, RNG order unchanged.
+        party = a.state.attrs["party"]
+        if party == 0:
+            sign = -1.0
+        elif party == 1:
+            sign = 1.0
+        else:
+            sign = 0.0
         a.state.attrs["social_coord"] = float(
             np.clip(
                 sign * SOCIAL_BIAS + net_rng.normal(0.0, SOCIAL_NOISE),
@@ -246,10 +360,30 @@ def build_engine(seed: int = 0, n_agents: int = 400) -> Engine:
             epsilon=0.30, max_range=1.5, strength=0.0,
             affect_threshold=BACKLASH_AFFECT_THRESHOLD,
         ),
+        # Phase 8c §4 E4: PerceptionUpdate present in the superset
+        # pipeline but inert in pillar S0-S4 (correction_rate=0.0).
+        # Pillar agents don't seed `perceived_other_party`; the rule
+        # no-ops in that case regardless of rate. The historical-arc
+        # scenario activates it. Adding the rule here at strength 0
+        # preserves the pipeline-shape invariant tested in
+        # `tests/test_phase6.py::test_apply_intervention_preserves_pipeline_structure`.
+        PerceptionUpdate(correction_rate=0.0),
         GaussianNoise(sigma=0.01),
     ]
-    # TieRewiring lives at rewire_rate=0 — an exact no-op until S4 turns it on.
-    env_rules = [EliteDrift(rate=0.0), TieRewiring(rewire_rate=0.0)]
+    # TieRewiring at rewire_rate=0; Phase 8c §4 IdentityPrimeExpiry
+    # added to the env-rule pipeline so X4's prime overrides are
+    # cleared at their configured expiry tick. Inert until X4 fires
+    # (no agent has `identity_prime_expires_at`).
+    env_rules = [
+        EliteDrift(rate=0.0),
+        TieRewiring(rewire_rate=0.0),
+        IdentityPrimeExpiry(),
+        # Phase 8c §5 E5: ThreatDecay added at decay_rate=0 (inert).
+        # Pillar agents never carry `perceived_threat`; the rule
+        # no-ops in both senses (the early-return at decay_rate=0
+        # AND the per-agent skip when threat is absent/zero).
+        ThreatDecay(decay_rate=0.0),
+    ]
 
     # Enforce D6: at most one instance per class — applying a bundle by
     # class name is ambiguous otherwise.
@@ -293,6 +427,10 @@ S0_BASELINE = Intervention(
         ("TieRewiring", "affect_weight_rewire", 0.0),
         ("BacklashRepulsion", "strength", 0.0),
         ("BacklashRepulsion", "affect_threshold", BACKLASH_AFFECT_THRESHOLD),
+        # Phase 8c §6 E6.1: asymmetric = None preserves symmetric
+        # pillar behaviour (bit-identical to pre-§6). X1 overrides
+        # to {0: 0.7, 1: 1.3} per Bail 2018.
+        ("BacklashRepulsion", "asymmetric", None),
     ),
 )
 
@@ -320,6 +458,10 @@ S1_BOUNDED_CONFIDENCE = Intervention(
         ("TieRewiring", "affect_weight_rewire", 0.0),
         ("BacklashRepulsion", "strength", 0.0),
         ("BacklashRepulsion", "affect_threshold", BACKLASH_AFFECT_THRESHOLD),
+        # Phase 8c §6 E6.1: asymmetric = None preserves symmetric
+        # pillar behaviour (bit-identical to pre-§6). X1 overrides
+        # to {0: 0.7, 1: 1.3} per Bail 2018.
+        ("BacklashRepulsion", "asymmetric", None),
     ),
 )
 
@@ -348,6 +490,10 @@ S2_PARTY_IDENTITY = Intervention(
         ("TieRewiring", "affect_weight_rewire", TR_AFFECT_WEIGHT_REWIRE),
         ("BacklashRepulsion", "strength", 0.0),
         ("BacklashRepulsion", "affect_threshold", BACKLASH_AFFECT_THRESHOLD),
+        # Phase 8c §6 E6.1: asymmetric = None preserves symmetric
+        # pillar behaviour (bit-identical to pre-§6). X1 overrides
+        # to {0: 0.7, 1: 1.3} per Bail 2018.
+        ("BacklashRepulsion", "asymmetric", None),
     ),
 )
 
@@ -375,6 +521,10 @@ S3_PARTISAN_MEDIA = Intervention(
         ("TieRewiring", "affect_weight_rewire", TR_AFFECT_WEIGHT_REWIRE),
         ("BacklashRepulsion", "strength", 0.0),
         ("BacklashRepulsion", "affect_threshold", BACKLASH_AFFECT_THRESHOLD),
+        # Phase 8c §6 E6.1: asymmetric = None preserves symmetric
+        # pillar behaviour (bit-identical to pre-§6). X1 overrides
+        # to {0: 0.7, 1: 1.3} per Bail 2018.
+        ("BacklashRepulsion", "asymmetric", None),
     ),
 )
 
@@ -407,6 +557,10 @@ S4_HOMOPHILOUS_NETWORK = Intervention(
         ("TieRewiring", "affect_weight_rewire", TR_AFFECT_WEIGHT_REWIRE),
         ("BacklashRepulsion", "strength", 0.0),
         ("BacklashRepulsion", "affect_threshold", BACKLASH_AFFECT_THRESHOLD),
+        # Phase 8c §6 E6.1: asymmetric = None preserves symmetric
+        # pillar behaviour (bit-identical to pre-§6). X1 overrides
+        # to {0: 0.7, 1: 1.3} per Bail 2018.
+        ("BacklashRepulsion", "asymmetric", None),
     ),
     setup=None,
 )

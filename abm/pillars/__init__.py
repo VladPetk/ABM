@@ -14,6 +14,7 @@ from .interventions_phase6 import (
     X4_BIPARTISAN_DIALOGUE,
     X5_RANKED_CHOICE_VOTING,
     X6_SHARED_INSTITUTIONS,
+    X7_PERCEPTION_CORRECTION,
 )
 from .pillar import Pillar, build_at_stage
 
@@ -31,4 +32,5 @@ __all__ = [
     "X4_BIPARTISAN_DIALOGUE",
     "X5_RANKED_CHOICE_VOTING",
     "X6_SHARED_INSTITUTIONS",
+    "X7_PERCEPTION_CORRECTION",
 ]

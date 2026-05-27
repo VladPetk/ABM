@@ -36,7 +36,13 @@ class GaussianNoise:
     ) -> StateDelta:
         s = float(agent.state.attrs.get("stubbornness", 0.0))
         anchor = agent.state.attrs.get("anchor")
-        alpha = float(env.attrs.get("fj_alpha", 0.0))
+        # Phase 8b M1: per-agent fj_alpha heterogeneity (engaged
+        # partisans more anchored; Achen & Bartels 2016). Falls back
+        # to env-level fj_alpha if per-agent not set — bit-identical
+        # to Phase 8a for the pillar.
+        alpha = float(agent.state.attrs.get(
+            "fj_alpha", env.attrs.get("fj_alpha", 0.0)
+        ))
         fj_active = s > 0.0 and anchor is not None and alpha > 0.0
 
         if self.sigma <= 0:

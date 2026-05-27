@@ -64,6 +64,11 @@ class BoundedConfidenceInfluence:
         if not neighbours:
             return StateDelta()
         my_ide = agent.state.ideology
+        # Phase 8b M1: per-agent epsilon heterogeneity (engaged-partisan
+        # fat-tail; Taber & Lodge 2006). Falls back to the rule's
+        # `self.epsilon` for any scenario that doesn't seed per-agent
+        # epsilon — bit-identical to Phase 8a behaviour for the pillar.
+        epsilon = float(agent.state.attrs.get("epsilon", self.epsilon))
         if self.temperature <= 0.0:
             # Canonical hard-cutoff Hegselmann-Krause. Default; HK
             # replication path. The affect modulator is a feature of
@@ -79,7 +84,7 @@ class BoundedConfidenceInfluence:
             within = [
                 n.state.ideology
                 for n in neighbours
-                if np.linalg.norm(my_ide - n.state.ideology) <= self.epsilon
+                if np.linalg.norm(my_ide - n.state.ideology) <= epsilon
             ]
             if not within:
                 return StateDelta()
@@ -91,7 +96,7 @@ class BoundedConfidenceInfluence:
             # Clip the exponent to keep np.exp safe under extreme params
             # (e.g. tiny temperature). Logistic saturates well before 50;
             # this is a numerical-safety guard, not a behavioural change.
-            arg = np.clip((ds - self.epsilon) / self.temperature, -50.0, 50.0)
+            arg = np.clip((ds - epsilon) / self.temperature, -50.0, 50.0)
             ws = 1.0 / (1.0 + np.exp(arg))
             # Phase 5 (A4): affect modulator. For each out-party
             # neighbour, multiply the logistic weight by

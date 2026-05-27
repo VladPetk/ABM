@@ -52,13 +52,24 @@ def affective_polarization(agents) -> float:
 
 def sorting_index(agents) -> float:
     """Mean |Pearson r| between party id and each identity dimension.
-    Returns nan if agents lack identities."""
+    Returns nan if agents lack identities.
+
+    Phase 8d: Independents (party=2) are excluded — the metric
+    measures partisan-identity alignment, which is undefined for
+    agents with no partisan identity. Same filter as
+    `ideological_constraint`.
+    """
     parties = np.array([a.state.attrs.get("party", -1) for a in agents])
-    mask = parties >= 0
+    # Phase 8d: only include party in {0, 1} (exclude Independents
+    # and missing-party agents).
+    mask = (parties == 0) | (parties == 1)
     if mask.sum() < 2:
         return float("nan")
     ids_list = [a.state.attrs.get("identities") for a in agents]
-    have_ids = [i for i, x in enumerate(ids_list) if x is not None]
+    have_ids = [
+        i for i, x in enumerate(ids_list)
+        if x is not None and mask[i]
+    ]
     if len(have_ids) < 2:
         return float("nan")
     n_dims = len(ids_list[have_ids[0]])
@@ -78,10 +89,31 @@ def sorting_index(agents) -> float:
     return float(np.mean(corrs))
 
 
+def ideological_constraint_per_axis(agents) -> dict[str, float]:
+    """Phase 8f §3 (audit small-fix) — alias-friendly explicit
+    per-axis decomposition of `ideological_constraint`. Returns the
+    same dict (`{"x": ..., "y": ...}`) but makes the component
+    split explicit in the name. The Phase 8f investigation
+    identified that the average `(cx + cy) / 2` had a hidden
+    y-axis ceiling (the constraint plateau) — making per-axis
+    visible to callers is the metric-side hygiene fix.
+    """
+    return ideological_constraint(agents)
+
+
 def ideological_constraint(agents) -> dict[str, float]:
-    """|Pearson r| between party membership and each issue axis."""
+    """|Pearson r| between party membership and each issue axis.
+
+    Phase 8d: Independents (party=2) are excluded from the
+    correlation. The metric measures how well party (0 vs 1) predicts
+    issue position; Independents have no partisan identity, so
+    including them as a third category would distort the correlation
+    rather than enrich it.
+    """
     parties = np.array([a.state.attrs.get("party", -1) for a in agents])
-    mask = parties >= 0
+    # Phase 8d: only include party in {0, 1}. Independents (party=2)
+    # and missing-party agents excluded.
+    mask = (parties == 0) | (parties == 1)
     if mask.sum() < 2:
         return {"x": float("nan"), "y": float("nan")}
     positions = np.array([a.state.ideology for a in agents])[mask]

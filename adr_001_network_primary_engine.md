@@ -104,6 +104,17 @@ the better-established of the two main formal traditions in opinion dynamics.
   Johnsen 1990s) — influence flows over a social network of weighted ties.
   Friedkin-Johnsen adds a per-agent **"stubbornness"** term: each agent's
   opinion is a blend of its neighbours' opinions and its own innate position.
+- **Empirical political-network research** (Huckfeldt & Sprague 1995,
+  *Citizens, Politics, and Social Communication*; Mutz 2006, *Hearing the
+  Other Side*) — the *substantive* finding that political influence in
+  US democracies travels through social ties (discussion partners, kin,
+  workplace), not through abstract ideological proximity. DeGroot/FJ
+  supply the mathematical form; the political-network tradition supplies
+  the empirical case that the network IS where political influence
+  actually flows. **Provenance note (Phase 8c D1):** earlier drafts of
+  this ADR cited DeGroot/FJ alone, which gives the *form* but not the
+  empirical *substance*. Mutz and Huckfeldt-Sprague are the political-
+  science anchors and are now stated alongside.
 
 The current engine sits entirely in the first tradition. The re-foundation
 adopts a **synthesis** that is itself a well-studied class — bounded confidence

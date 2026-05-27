@@ -68,9 +68,19 @@ class IdentitySorting:
             other_ids = other.state.attrs.get("identities")
             if other_ids is None or len(other_ids) <= dim:
                 continue
-            if other.state.attrs.get("party") == party:
+            other_party = other.state.attrs.get("party")
+            if other_party == party:
                 in_vals.append(float(other_ids[dim]))
-            else:
+            elif (
+                # Phase 8d: only the other PARTISAN party counts as
+                # "out" for Mason's mega-identity mechanism. Independents
+                # (party=2) and party-less agents (party=None) are not
+                # the identity-differentiation target. At
+                # independent_fraction=0.0 no party=2 agents exist and
+                # this filter is a no-op (bit-identity preserved).
+                other_party is not None
+                and other_party != 2
+            ):
                 out_vals.append(float(other_ids[dim]))
         if not in_vals:
             return StateDelta()

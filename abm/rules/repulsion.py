@@ -44,6 +44,8 @@ class BacklashRepulsion:
         max_range: float = 1.5,
         strength: float = 0.05,
         affect_threshold: float = -0.3,
+        threat_amplification: float = 1.0,
+        asymmetric: dict[int, float] | None = None,
     ):
         self.epsilon = epsilon
         self.max_range = max_range
@@ -55,6 +57,24 @@ class BacklashRepulsion:
         # backlash — the pre-Phase-6 Macy-Flache form); -inf disables
         # backlash entirely.
         self.affect_threshold = affect_threshold
+        # Phase 8c §5 E5.3: identity-threat amplifier on push
+        # magnitude. When `perceived_threat ∈ [0, 1]` is non-zero,
+        # the push is multiplied by `1 + threat_amplification *
+        # perceived_threat`. Pillar agents don't carry the attr →
+        # `threat_factor = 1.0` → bit-identical to Phase 8c §4
+        # behaviour. Same default amplification (1.0) as
+        # `AffectiveUpdate`: doubles push at full threat.
+        self.threat_amplification = threat_amplification
+        # Phase 8c §6 E6.1: per-party asymmetric multiplier on push
+        # magnitude. When None (the pillar default), every agent gets
+        # multiplier 1.0 — bit-identical to §5 behaviour. When set
+        # (e.g. {0: 0.7, 1: 1.3} per Vlad's Fork 6-A confirm, a 1.86×
+        # ratio), each agent's push is multiplied by
+        # asymmetric.get(agent.party, 1.0). The historical-arc scenario
+        # opts in via `{0: 0.7, 1: 1.3}` (Bail 2018: Republican users
+        # more susceptible to cross-cutting backfire); X1 setup sets
+        # the same asymmetric dict on the rule when it fires.
+        self.asymmetric = asymmetric
 
     def apply(
         self,
@@ -64,6 +84,12 @@ class BacklashRepulsion:
         rng: np.random.Generator,
     ) -> StateDelta:
         if self.strength == 0:
+            return StateDelta()
+        # Phase 8d: Independents (party=2) have no in-party identity
+        # threat to defend → no backlash. Short-circuit before
+        # neighbour iteration.
+        own_party_early = agent.state.attrs.get("party")
+        if own_party_early is None or own_party_early == 2:
             return StateDelta()
         neighbours = neighbor_agents(agent, space, env)
         if not neighbours:
@@ -77,7 +103,10 @@ class BacklashRepulsion:
             other = n.state.attrs.get("party")
             # In-party neighbours and party-less agents never contribute
             # to backlash — Bail's mechanism is identity-threat driven.
-            if other is None or other == own_party:
+            # Phase 8d: also skip Independent (party=2) neighbours —
+            # they're not "out-party" and don't trigger identity-threat
+            # backlash for partisan agents.
+            if other is None or other == own_party or other == 2:
                 continue
             warmth = float(np.clip(own_affect.get(other, 0.0), -1.0, 1.0))
             if warmth >= self.affect_threshold:
@@ -99,7 +128,21 @@ class BacklashRepulsion:
 
         if count == 0:
             return StateDelta()
-        d = self.strength * push / count
+        # Phase 8c §5 E5.3: threat amplifies push magnitude. Pillar
+        # agents read `perceived_threat = 0.0` (no attr) → factor 1.0
+        # → bit-identical to §4 behaviour. Historical-arc agents with
+        # post-2016 threat amplify their backlash push.
+        threat = float(
+            np.clip(agent.state.attrs.get("perceived_threat", 0.0), 0.0, 1.0)
+        )
+        threat_factor = 1.0 + self.threat_amplification * threat
+        # Phase 8c §6 E6.1: per-party asymmetric multiplier. Pillar
+        # default (None) → factor 1.0 → bit-identical to §5.
+        if self.asymmetric is not None:
+            asym_factor = float(self.asymmetric.get(own_party, 1.0))
+        else:
+            asym_factor = 1.0
+        d = self.strength * threat_factor * asym_factor * push / count
         # F1: Friedkin-Johnsen scaling — stubborn agents move less.
         s = float(agent.state.attrs.get("stubbornness", 0.0))
         return StateDelta(d_ideology=(1.0 - s) * d)

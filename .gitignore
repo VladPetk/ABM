@@ -8,3 +8,27 @@ dist/
 .pytest_cache/
 .ipynb_checkpoints/
 .DS_Store
+
+# Logs
+*.log
+solara.log
+web.log
+
+# Pickle artifacts
+*.pkl
+
+# Phase 8f investigation — variant-sweep diagnostic dumps (70+ JSONs).
+# Keep the named result JSONs (phase8b_calibration_results.json,
+# phase8d_historical_results.json, phase8e_*.json) — those are
+# referenced from methods.md and the phase results docs.
+phase8f_diag_*.json
+
+# Phase 9 cluster-diversity investigation variant dumps + logs.
+phase9_div_*.json
+phase9_logs/
+
+# Editor / scratchpad detritus
+*.tmp
+*.bak
+*.bak.py
+*.py.tmp

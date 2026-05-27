@@ -22,6 +22,18 @@ def variance(positions: np.ndarray) -> float:
     return float(np.var(positions, axis=0).sum())
 
 
+def variance_per_axis(positions: np.ndarray) -> dict[str, float]:
+    """Phase 8f §3 (audit small-fix) — per-axis variance decomposition.
+    The aggregate `variance` is the sum; this returns x and y
+    components separately so callers can see which axis carries the
+    dispersion. Useful in three-party population audits where the
+    y-axis is the structural sort dimension."""
+    if len(positions) < 2:
+        return {"x": 0.0, "y": 0.0}
+    v = np.var(positions, axis=0)
+    return {"x": float(v[0]), "y": float(v[1])}
+
+
 def mean_pairwise_distance(positions: np.ndarray) -> float:
     if len(positions) < 2:
         return 0.0

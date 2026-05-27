@@ -9,12 +9,23 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from abm.calibration_parallel import run_seeds_parallel
 from abm.core.outlets import US_MEDIA_OUTLETS_2024, diet_target
 from abm.metrics.affective import ideological_constraint
 from abm.metrics.polarization import variance
 from abm.pillars import PILLAR, apply_intervention, build_at_stage
 from abm.pillars.calm_to_camps import build_engine as build_pillar_engine
 from abm.scenarios.compass_basic import build as build_compass
+
+from ._parallel_workers import (
+    affect_engine_worker,
+    hk_final_var_worker,
+    initial_network_metrics_worker,
+    pillar_stage_engine_worker,
+    pillar_stage_variance_worker,
+    release_metrics_with_independents_worker,
+    release_metrics_worker,
+)
 
 
 def party_separation(engine) -> float:
@@ -26,8 +37,11 @@ def party_separation(engine) -> float:
         np.linalg.norm(pos[parties == 0].mean(axis=0) - pos[parties == 1].mean(axis=0))
     )
 
-# Ensemble sizes (Phase 1 D4).
-STAGE_SEEDS = tuple(range(12))
+# Ensemble sizes (Phase 1 D4; Phase 8c §7 S1: pillar 12 → 20 seeds).
+# The bump from 12 to 20 reduces SE by ~22%; required for honest CI
+# reporting per the §7 stats pass. Compute multiplier ~1.7×; runtime
+# under the parallel-seed runner (Phase 8c §1.5) absorbs this fully.
+STAGE_SEEDS = tuple(range(20))
 HK_SEEDS = tuple(range(6))
 
 # N = 250 keeps the suite fast; thresholds were re-measured here.
@@ -91,6 +105,8 @@ def positional_engine(stage_index: int, seed: int):
 # --- pillar S0 / S1 ensembles (variance pairs) ----------------------------
 
 def _run_pillar_stage(stage_index: int, seed: int) -> tuple[float, float]:
+    """Serial fallback. Used only outside of the parallel ensembles
+    (e.g. ad-hoc test code that may call this directly)."""
     eng = positional_engine(stage_index, seed)
     v0 = variance(eng.positions())
     eng.run(TICKS)
@@ -99,11 +115,11 @@ def _run_pillar_stage(stage_index: int, seed: int) -> tuple[float, float]:
 
 
 def _stage_variance_ensemble(stage_index: int) -> tuple[list[float], list[float]]:
-    initials, finals = [], []
-    for seed in STAGE_SEEDS:
-        v0, v1 = _run_pillar_stage(stage_index, seed)
-        initials.append(v0)
-        finals.append(v1)
+    """Phase 8c §1.5: parallel-seed execution; bit-identical to serial."""
+    args = [(stage_index, seed) for seed in STAGE_SEEDS]
+    results = run_seeds_parallel(pillar_stage_variance_worker, args)
+    initials = [v0 for v0, _v1 in results]
+    finals = [v1 for _v0, v1 in results]
     return initials, finals
 
 
@@ -122,12 +138,9 @@ def s1_ensemble() -> tuple[list[float], list[float]]:
 # engines themselves (not just summaries) are cached.
 
 def _run_stage_engines(stage_index: int) -> list:
-    engines = []
-    for seed in STAGE_SEEDS:
-        eng = positional_engine(stage_index, seed)
-        eng.run(TICKS)
-        engines.append(eng)
-    return engines
+    """Phase 8c §1.5: parallel-seed execution; bit-identical to serial."""
+    args = [(stage_index, seed) for seed in STAGE_SEEDS]
+    return run_seeds_parallel(pillar_stage_engine_worker, args)
 
 
 @pytest.fixture(scope="session")
@@ -167,12 +180,9 @@ def _affect_engine(stage_index: int, seed: int):
 
 
 def _run_affect_engines(stage_index: int) -> list:
-    out = []
-    for seed in STAGE_SEEDS:
-        eng = _affect_engine(stage_index, seed)
-        eng.run(TICKS)
-        out.append(eng)
-    return out
+    """Phase 8c §1.5: parallel-seed execution; bit-identical to serial."""
+    args = [(stage_index, seed) for seed in STAGE_SEEDS]
+    return run_seeds_parallel(affect_engine_worker, args)
 
 
 @pytest.fixture(scope="session")
@@ -216,13 +226,48 @@ def intervention_buckets() -> dict[str, dict[str, float]]:
         backfire (more animus). Note the OPPOSITE sign convention from
         Δsep — `affective_polarization` itself is more-negative = more
         polarized.
+
+    Phase 8c §1.5: parallel-seed execution. All
+    `len(INTERVENTIONS_PHASE6) * len(STAGE_SEEDS)` runs go into a
+    single Pool batch — biggest single wall-clock win in the suite.
+    Bit-identical to serial.
     """
     from abm.pillars import INTERVENTIONS_PHASE6
+    args = [(iv.id, seed) for iv in INTERVENTIONS_PHASE6 for seed in STAGE_SEEDS]
+    flat = run_seeds_parallel(release_metrics_worker, args)
     out: dict[str, dict[str, float]] = {}
     for iv in INTERVENTIONS_PHASE6:
-        sep_diffs, aff_diffs = [], []
-        for seed in STAGE_SEEDS:
-            m = _release_metrics(iv, seed)
+        sep_diffs: list[float] = []
+        aff_diffs: list[float] = []
+        for (iv_id, _seed), m in zip(args, flat):
+            if iv_id != iv.id:
+                continue
+            sep_diffs.append(m["sep"][1] - m["sep"][0])
+            aff_diffs.append(m["aff"][1] - m["aff"][0])
+        out[iv.id] = {
+            "sep": float(np.mean(sep_diffs)),
+            "aff": float(np.mean(aff_diffs)),
+        }
+    return out
+
+
+@pytest.fixture(scope="session")
+def intervention_buckets_with_independents() -> dict[str, dict[str, float]]:
+    """Phase 8d §5: same as `intervention_buckets` but builds the
+    pillar at `independent_fraction = 0.12` (12% pure Independents).
+    Sensitivity reading — variant buckets are reported in methods.md
+    §4.5 alongside the canonical binary-party numbers.
+    """
+    from abm.pillars import INTERVENTIONS_PHASE6
+    args = [(iv.id, seed) for iv in INTERVENTIONS_PHASE6 for seed in STAGE_SEEDS]
+    flat = run_seeds_parallel(release_metrics_with_independents_worker, args)
+    out: dict[str, dict[str, float]] = {}
+    for iv in INTERVENTIONS_PHASE6:
+        sep_diffs: list[float] = []
+        aff_diffs: list[float] = []
+        for (iv_id, _seed), m in zip(args, flat):
+            if iv_id != iv.id:
+                continue
             sep_diffs.append(m["sep"][1] - m["sep"][0])
             aff_diffs.append(m["aff"][1] - m["aff"][0])
         out[iv.id] = {
@@ -246,21 +291,8 @@ def s3_affect_engines() -> list:
 # to compare against the post-run state without re-running the build.
 @pytest.fixture(scope="session")
 def initial_network_metrics() -> list[tuple[float, float]]:
-    from abm.metrics.network import (
-        cross_cutting_tie_fraction,
-        party_modularity,
-    )
-    out = []
-    for seed in STAGE_SEEDS:
-        eng = build_pillar_engine(seed=seed, n_agents=N)
-        net = eng.env.attrs["network"]
-        out.append(
-            (
-                cross_cutting_tie_fraction(eng.agents, net),
-                party_modularity(eng.agents, net),
-            )
-        )
-    return out
+    """Phase 8c §1.5: parallel-seed execution; bit-identical to serial."""
+    return run_seeds_parallel(initial_network_metrics_worker, STAGE_SEEDS)
 
 
 # --- canonical HK ensembles -----------------------------------------------
@@ -280,14 +312,23 @@ def _hk_final_var(epsilon: float, seed: int) -> float:
 
 @pytest.fixture(scope="session")
 def hk_loose_finals() -> list[float]:
-    return [_hk_final_var(2.0, seed) for seed in HK_SEEDS]
+    """Phase 8c §1.5: parallel-seed execution; bit-identical to serial."""
+    return run_seeds_parallel(
+        hk_final_var_worker, [(2.0, s) for s in HK_SEEDS],
+    )
 
 
 @pytest.fixture(scope="session")
 def hk_mid_finals() -> list[float]:
-    return [_hk_final_var(0.30, seed) for seed in HK_SEEDS]
+    """Phase 8c §1.5: parallel-seed execution; bit-identical to serial."""
+    return run_seeds_parallel(
+        hk_final_var_worker, [(0.30, s) for s in HK_SEEDS],
+    )
 
 
 @pytest.fixture(scope="session")
 def hk_tight_finals() -> list[float]:
-    return [_hk_final_var(0.15, seed) for seed in HK_SEEDS]
+    """Phase 8c §1.5: parallel-seed execution; bit-identical to serial."""
+    return run_seeds_parallel(
+        hk_final_var_worker, [(0.15, s) for s in HK_SEEDS],
+    )

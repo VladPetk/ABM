@@ -47,6 +47,13 @@ class EliteDrift:
             return
         positions = np.array(list(parties.values()), dtype=float)
         centroid = positions.mean(axis=0)
+        # Per-party deltas (used both for env centroids and per-agent
+        # party_cue propagation — Phase 8b architecture: under F',
+        # PartyPull reads agent.party_cue, so an EliteDrift that
+        # only moved env centroids would silently fail to propagate
+        # to mass behaviour. Pillar uses rate=0 so this branch is
+        # inert there).
+        per_party_step: dict = {}
         for pid in list(parties.keys()):
             direction = parties[pid] - centroid
             d = float(np.linalg.norm(direction))
@@ -58,7 +65,30 @@ class EliteDrift:
                     continue
             mult = self.asymmetric.get(pid, 1.0)
             step = self.rate * mult * direction / d
-            parties[pid] = np.clip(parties[pid] + step, -1.0, 1.0)
+            # Record the *applied* step (post-clip) so per-agent cue
+            # propagation tracks what actually happened to the env
+            # centroid. Without this, a saturated centroid would
+            # silently leave cues drifting past where the env says
+            # the party stands — a footgun under sustained drift.
+            old_val = parties[pid].copy()
+            parties[pid] = np.clip(old_val + step, -1.0, 1.0)
+            per_party_step[pid] = parties[pid] - old_val
+
+        # Phase 8b: propagate the per-party shift to agents' personal
+        # `party_cue` attrs (under F', cues are what PartyPull reads).
+        # Pillar invariant: rate=0 above short-circuits; for any
+        # scenario without per-agent party_cue (compass_basic, etc.),
+        # this loop is a no-op.
+        for a in agents:
+            cue = a.state.attrs.get("party_cue")
+            if cue is None:
+                continue
+            party = a.state.attrs.get("party")
+            if party not in per_party_step:
+                continue
+            a.state.attrs["party_cue"] = np.clip(
+                cue + per_party_step[party], -1.0, 1.0
+            )
 
         # Update viz hint so the dashboard rerenders party stars at new positions
         viz = env.attrs.setdefault("viz", {})

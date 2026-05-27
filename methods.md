@@ -56,26 +56,83 @@ The four empirical anchors recorded in `abm/calibration.py`'s
 is checked against; the "model_check" line records what the model
 actually produces.
 
+**Provenance tags (Phase 8c D1).** Anchors and mechanisms are tagged
+L / N / E throughout:
+
+- **L (literature-supported):** the model's parameter matches a
+  published empirical value (e.g. ANES thermometer fall → 200-tick
+  affect projection band; DW-NOMINATE divergence rate →
+  `EliteDrift.rate`).
+- **N (new):** mechanism or value introduced by polarlab without a
+  direct published anchor.
+- **E (extrapolation):** the literature constrains direction and
+  rough magnitude; polarlab maps it onto a specific per-tick / per-
+  encounter operator that is not literally specified in the source.
+  Examples: the cooperative-mute multiplier (§3.3) maps a cumulative
+  meta-analytic `r ≈ −0.21` onto a per-encounter scale; the graded
+  logistic filter (Phase 4 F2 at `temperature > 0`) departs from
+  canonical HK at the operational T.
+
+When this distinction matters for a section's calibration, the tag
+is stated inline.
+
+**Friedkin-Johnsen realization (Phase 8c D5 clarification).**
+polarlab implements the Friedkin-Johnsen anchoring via two separate
+mechanisms that, summed, approximate FJ:
+
+1. **Per-rule `(1 − stubbornness)` scaling.** Each ideology-moving
+   rule (`BoundedConfidenceInfluence`, `PartyPull`, `MediaConsumption`,
+   `BacklashRepulsion`) multiplies its intended `d_ideology` by
+   `(1 − stubbornness)` at the apply site. Stubborn agents (high s)
+   take less of every rule's pull.
+2. **`GaussianNoise` damping toward anchor.** `GaussianNoise` adds an
+   extra `FJ_ALPHA * stubbornness * (anchor − position)` pull per
+   tick — anchored agents are pulled back to their starting position
+   at rate `FJ_ALPHA * stubbornness = 0.05 * stubbornness`.
+
+This **sums multiple per-rule pulls before damping**, which is a
+slight departure from canonical Friedkin-Johnsen (where the anchor
+pull and the social pull are combined in a single update step). The
+departure is small at the pillar's stubbornness distribution
+(`Beta(2, 5)`, mean ≈ 0.29): the per-rule scaling is uniform across
+rules, so the net effect on each step is `(1 − s) * (sum of all
+rule pulls)` plus the anchor damping, which is algebraically the same
+as canonical FJ for a stationary set of pulls — but for a sequence
+of *different* rule pulls per tick, the polarlab realization
+multiplies each by `(1 − s)` and then adds the damping at the end of
+the step. The empirical difference is small at our stubbornness
+distribution; the difference is flagged for transparency. **Provenance
+tag for the FJ realization: L (form) + E (the multi-rule decomposition).**
+
 ### 3.1 ANES out-party thermometer (the tick-to-year scalar)
 
 - **Source:** Iyengar, Lelkes, Levendusky, Malhotra & Westwood 2019,
-  *Annual Review of Political Science* 22:129; Finkel et al. 2020,
-  *Science* 370:533.
+  *Annual Review of Political Science* 22:129 (review of the
+  1978-2020 ANES thermometer trend); Finkel et al. 2020, *Science*
+  370:533 (synthesis paper that re-summarises the same trend).
+  Iyengar et al. 2019 is the canonical empirical anchor; Finkel 2020
+  is a synthesis citation, not an independent measurement.
 - **Finding:** mean out-party feeling-thermometer scores fell from
   ~48° (1978) to ~20° (2020) — a 28-point drop over 42 years on the
   [0, 100] thermometer, or **−0.56 normalised** to the model's
   [−1, 1] affect axis.
-- **Model check:** the pillar's S0→S3 measured Δaffective_polarization
-  is ≈ −0.85 over 200 ticks. Under linear scaling, the equivalent
-  42-year (126-tick) projection is ~−0.535 — within ~5% of the ANES
-  anchor by that arithmetic. The test in
+- **Model check (what the Phase 7 test actually guards).** The
+  pillar's S0→S3 measured Δaffective_polarization is ≈ −0.85 over
+  200 ticks. The test in
   `tests/test_phase7.py::test_pillar_affect_trajectory_matches_anes_within_band`
-  asserts the *full-200-tick* trajectory (~67 years) sits within ±20%
-  of the ANES-projected value at that horizon (~−0.89); the measured
-  −0.85 is inside the band. The "5% match" is a projection, not a
-  measured 126-tick value (which is not run as a separate test — the
-  pillar's S2/S3 trajectory is non-linear, so the full-window
-  regression is the canonical check).
+  guards the **trajectory shape** at the *full-200-tick / ~67-year*
+  horizon: it asserts the mean S3 affect sits within ±20% of
+  `−0.56 * (200/126) ≈ −0.89` (the ANES anchor linearly projected
+  to the 200-tick window). It does **not** assert that the 126-tick
+  (42-year ANES window) measurement equals `−0.56`. The pillar's
+  S2/S3 trajectory is non-linear (S0/S1 carry `affect_lr = 0`; most
+  cooling happens in S2/S3), so the 126-tick value is not a simple
+  linear scaling of the 200-tick value. The "within ~5%"
+  arithmetic projection (`126/200 * −0.85 ≈ −0.535`) is a derived
+  projection from the *full-window measurement*, not a separate
+  measurement at 126 ticks. **Phase 8c D4 clarification:** the test
+  guards trajectory shape at one horizon, not anchor agreement
+  across all horizons.
 - **Pinning:** `TICKS_PER_YEAR = 3.0`. The pillar's full 200-tick
   trajectory corresponds to ~67 years of stylised history.
 
@@ -99,19 +156,37 @@ mute)
 - **Finding:** contact under Allport (1954) conditions — equal
   status, cooperative tasks, institutional support — roughly halves
   prejudice formation.
-- **Pinning:** `AffectiveUpdate.cooperative_mute = 0.5`. Out-party
-  encounters over edges tagged `cooperative=True` produce
-  half-strength negative valence. X6's setup adds cooperative
-  involuntary edges; the F3 baseline involuntary stratum (kin /
-  workplace) is **not** cooperative — the literature is explicit
-  that contact alone is insufficient.
-- **Modelling judgment flagged:** the current implementation is the
-  *edge-level* mute (only encounters across cooperative edges are
-  attenuated). Pettigrew 2009's "secondary transfer effect" suggests
-  a broader *agent-level* mute (contact reduces overall prejudice
-  formation across out-groups, not just the contact target). The
-  edge-level reading is more conservative and is what ships;
-  agent-level is flagged as a Phase 7 §5 sensitivity item.
+- **Pinning (Phase 8c §2 — replaces Phase 7 edge-level mute):**
+  `AffectiveUpdate.cooperative_mute = 0.5` is the *agent-level*
+  fully-cooperative mute multiplier. Each agent carries
+  `cooperative_share ∈ [0, 1]` (default 0.0); negative valence on
+  every out-party encounter is multiplied by
+  `1 − cooperative_share * (1 − cooperative_mute)`. A fully-
+  cooperative agent (`coop_share = 1.0`) gets exactly the
+  Pettigrew & Tropp halving; a non-cooperative agent
+  (`coop_share = 0.0`) gets no muting. X6's setup adds
+  `cooperative=True` involuntary edges AND bumps participating
+  agents' `cooperative_share`. Cooperative edges also trigger a
+  positive-going valence path when the agent's warmth is at or
+  above `coop_positive_threshold = -0.2` (Pettigrew 2009 secondary-
+  transfer). The F3 baseline involuntary stratum (kin / workplace)
+  is **not** cooperative and does **not** bump cooperative_share —
+  the literature is explicit that contact alone is insufficient.
+- **Provenance: E (extrapolation), not L (literature-supported).**
+  Pettigrew & Tropp's `r ≈ −0.21` is a **cumulative** meta-analytic
+  correlation between contact and prejudice — measured across whole
+  studies, not per encounter. The "halves valence" reading is an
+  *extrapolation* that maps the cumulative effect onto a per-
+  encounter multiplier. The literature constrains the direction and
+  rough magnitude; it does not literally specify a per-encounter
+  scale factor. Earlier drafts of this section labelled the mute
+  L (literature-supported); Phase 8c D1 reclassifies it E.
+- **Modelling judgment flagged (Phase 6/7 reading):** the
+  Phase 6/7 implementation was *edge-level* mute (only encounters
+  across cooperative edges attenuated). Pettigrew 2009's "secondary
+  transfer effect" suggests a broader *agent-level* mute. Phase 8c
+  §2 replaces the edge-level mute with an agent-level
+  implementation, more faithful to Pettigrew 2009.
 
 ### 3.4 Allcott / Meta-2020 algorithmic interventions (the null anchor
 for X2)
@@ -125,6 +200,47 @@ for X2)
   polarization at the population level.
 - **Model check:** X2 "Fix the algorithm" measured Δsep ≈ −0.02,
   Δaff ≈ −0.01 — null on both axes.
+
+### 3.5 Mutz 2018 status-threat (Phase 8c §5 — historical-arc only)
+
+- **Source:** Mutz 2018, *PNAS* 115:E4330 (status threat, not
+  economic anxiety, explains the 2016 vote).
+- **Finding:** white Republican voters reported elevated identity /
+  status threat in response to demographic and cultural-change cues
+  around the 2016 election, which amplified out-group hostility.
+- **Pinning (Phase 8c §5):** every agent carries
+  `perceived_threat ∈ [0, 1]` (default 0.0). The 2016 historical
+  event sets `perceived_threat = 0.5` for 60% of party=1
+  (Republican) agents. `AffectiveUpdate` multiplies the negative-
+  going valence by `(1 + threat_amplification * perceived_threat)`,
+  doubling cooling at full threat; positive (cooperative) valence
+  is **not** amplified (threat is identity-defensive, not socially
+  open). `BacklashRepulsion` push magnitude is amplified by the
+  same factor. `ThreatDecay` env-rule multiplies threat by
+  `(1 - 0.05)` each tick — half-life ≈ 14 ticks ≈ 4.7 years, so
+  the 2016 spike decays to ~half by 2020 and to noise by 2025.
+- **Provenance: split L / E (Phase 8e §5.2 disambiguation).**
+  - **L (literature-supported, *direction*)**: Mutz 2018
+    establishes the existence and direction of the white-Republican-
+    specific status-threat → amplified hostility effect, and the
+    ~60% population fraction.
+  - **E (extrapolation, *magnitude*)**: the `THREAT_2016_MAGNITUDE
+    = 0.5` per-agent amplitude and the `THREAT_DECAY_RATE = 0.05`
+    half-life are **post-hoc fits** to the 2016 ANES thermometer
+    spike's shape. They are NOT literature anchors; they were
+    chosen to roughly reproduce the empirical 2016 spike-and-decay
+    pattern in the historical arc. **The 2016 spike match is
+    therefore NOT independent evidence** of the model's accuracy
+    — it's a curve fit, not a forward prediction. Round-2 R2
+    correctly flagged this as a circularity concern; this
+    disambiguation answers it. A pre-2016 calibration anchor (e.g.
+    tuning to the 2008 ANES dip and treating 2016 as forward
+    prediction) is a Phase 8f candidate.
+- **Pillar invariant.** The pillar's S0-S4 baseline never sets
+  `perceived_threat`. Consumers read 0.0 → `threat_factor = 1.0` →
+  bit-identical to Phase 8c §4 in the pillar. The mechanism is
+  inert in the pillar; it fires only in the historical arc's
+  Schedule.
 
 ---
 
@@ -164,45 +280,174 @@ fixed by the spec and are not adjusted to fit a desired narrative.
 ### 4.3 The current library
 
 Each intervention's measured per-axis label, with the literature
-finding it grounds in. Values measured at N=250, 12 seeds, 200-tick
-release.
+finding it grounds in. Values measured at **N=250, 20 seeds**
+(Phase 8c §7 S1), 200-tick release. SE is `std / sqrt(n_seeds)`.
+Close-call interventions (within 1 SE of a bucket boundary) carry
+a 95% CI for transparency.
 
-| ID | Lay name | Δsep | issue_sorting | Δaff | affect | Anchor |
+| ID | Lay name | Δsep ± SE | issue_sorting | Δaff ± SE | affect | Anchor |
 |---|---|---|---|---|---|---|
-| X1 | Show people the other side | +0.50 | **backfire** | −0.01 | null | Bail et al. 2018 |
-| X2 | Fix the algorithm | −0.02 | **null** | −0.01 | null | Guess/Nyhan 2023 |
-| X3 | Quit cable news | +0.27 | **backfire** | −0.01 | null | Allcott 2020 |
-| X4 | Bipartisan dialogue programs | −0.02 | **null** | −0.00 | null | Levendusky 2021 |
-| X5 | Ranked-choice voting | −0.14 | **partial** | −0.01 | null | Hetherington 2001; Gidron et al. 2020 |
-| X6 | Shared neighborhoods and workplaces | −0.04 | **null** | −0.23 | **backfire** | Allport 1954; Pettigrew & Tropp 2006 |
+| X1 | Show people the other side (asymmetric) | +0.490 ± 0.006 | **backfire** | −0.014 ± 0.001 | null | Bail et al. 2018 [Phase 8c §6: asymmetric backfire — party=1 push ×1.3, party=0 push ×0.7 (1.86× ratio); macro bucket unchanged but per-party drift now asymmetric per Bail's R-user finding]. |
+| X2 | Fix the algorithm | −0.029 ± 0.002 | **null** | −0.012 ± 0.001 | null | Guess/Nyhan 2023 |
+| X3 | Quit cable news (cable-only) | −0.001 ± 0.002 | **null** | −0.013 ± 0.001 | null | Levendusky 2013; Allcott 2020; Martin & Yurukoglu 2017 [Phase 8c §3 re-bless: bucket flipped from backfire to null. Old X3 zeroed MediaConsumption.strength entirely (R1's "category error" — bundling centripetal broadcast with centrifugal cable). New X3 zeros only MSNBC + Fox News weights; result: cable's exit alone doesn't measurably move the macro picture.] |
+| X4 | Shared-identity priming program | −0.027 ± 0.002 | **null** | −0.012 ± 0.001 | null | Levendusky 2021 (*Our Common Bonds*); Transue 2007; Wright & Esses 2017 [Phase 8c §4 re-implementation: superordinate-identity prime at 20% of population for 30 ticks. Modest individual-level effects but population-level null, consistent with Levendusky's experimental reports.] |
+| X5 | Ranked-choice voting | −0.142 ± 0.002 [95% CI ≈ [−0.146, −0.138]] | **partial** † | −0.014 ± 0.001 | null | Hetherington 2001; Gidron et al. 2020 [† Phase 8c §7 cutoff sweep close call: lands at "partial" under default cutoff 0.15; lands at "real" under tighter cutoff 0.10. CI does not cross −0.15 boundary at 20 seeds.] |
+| X6 | Shared neighborhoods and workplaces | −0.048 ± 0.003 [95% CI ≈ [−0.053, −0.043]] | **null** † | +0.242 ± 0.005 | **real** | Allport 1954; Pettigrew & Tropp 2006; Pettigrew 2009 [Phase 8c §2 re-bless: bucket flipped from backfire to real under agent-level cooperative-share mute — see §5.3. † Phase 8c §7 cutoff sweep close call on issue_sorting: "null" under default; "partial" under tighter cutoff 0.03.] |
+| X7 | Correct the perception gap | −0.027 ± 0.002 | **null** | −0.012 ± 0.001 | null | Levendusky & Malhotra 2016; Ahler & Sood 2018; Druckman et al. 2022 [Phase 8c §4 new intervention. In the pillar release-phase, X7 is a no-op — pillar agents don't model perception (Path A bit-identity discipline). The meaningful X7 measurement is in the historical arc, where agents carry biased perceptions seeded at build.] |
+
+**Cutoff-sweep stability (Phase 8c §7 S2).** Of the 7 X-interventions,
+5 (X1, X2, X3, X4, X7) are bucket-stable across {0.03/0.10},
+{0.05/0.15} (default), and {0.08/0.20}. Two are close calls:
+
+- **X5 issue_sorting**: `partial` at default + loose; `real` at tight.
+  The Δsep = −0.142 sits ~0.008 from the default "real" boundary.
+- **X6 issue_sorting**: `null` at default + loose; `partial` at tight.
+  The Δsep = −0.048 sits ~0.002 from the default "null" boundary.
+
+Both close calls are documented honestly: X5's claim is "partial
+under the spec's default cutoffs; would be real if the field's
+effect-size convention adopted a tighter `real` threshold." X6's
+issue-sorting result is "null but borderline." Affect labels are
+robust across all configs for both interventions.
+
+The default 0.05/0.15 cutoffs are kept per §7 Fork 7-A's
+data-driven decision: 5/7 stable is robust enough to justify the
+current threshold scheme; the two close-call interventions get
+explicit CI reporting rather than a threshold re-bless.
+
+### 4.5 §11 sensitivity under 12% Independents (Phase 8d)
+
+The §4.3 table reports buckets at the canonical binary-party build
+(`independent_fraction = 0.0`). Phase 8d adds a sensitivity reading:
+the same §11 release-phase experiment with **12% pure independents
+(party=2) in the population** (Klar & Krupnikov 2016 *Independent
+Politics*; ANES 2020 pure-independents share ~11-12%). Independents
+don't fire `AffectiveUpdate`, `BacklashRepulsion`, `PartyPull`, or
+`PerceptionUpdate`; they participate fully in `BoundedConfidenceInfluence`,
+`MediaConsumption`, `TieRewiring`, `GaussianNoise`, `IdentitySorting`.
+Measured at N=250, 20 seeds, 200-tick release:
+
+| ID | Δsep (binary) | Δsep (12% indep) | Δaff (binary) | Δaff (12% indep) | Note |
+|---|---|---|---|---|---|
+| X1 | +0.490 ± 0.006 | **+0.253 ± 0.008** | −0.014 ± 0.001 | −0.016 ± 0.001 | **X1 macro backfire halves under 12% Independents.** The 12% who don't fire `BacklashRepulsion` drag the population-mean separation back. Bucket stays *backfire* (still > +0.05) but the magnitude is much closer to Bail 2018's empirical effect size. |
+| X2 | −0.029 ± 0.002 | −0.009 ± 0.002 | −0.012 ± 0.001 | −0.013 ± 0.001 | null/null both. |
+| X3 | −0.001 ± 0.002 | +0.020 ± 0.003 | −0.013 ± 0.001 | −0.015 ± 0.001 | null/null at default cutoffs; X3 dips into a small *backfire* on Δsep under tighter (0.03) cutoffs in the variant. The cable-zero removes the centripetal partisan-cable pull on partisans but Independents are unaffected (centrist diet); net effect slightly worse on partisan separation. |
+| X4 | −0.027 ± 0.002 | −0.009 ± 0.002 | −0.012 ± 0.001 | −0.013 ± 0.001 | null/null. X4 primes 20% of all agents; primed Independents are wasted primes (they have no identity_weight to override). |
+| X5 | −0.142 ± 0.002 | −0.129 ± 0.002 | −0.014 ± 0.001 | −0.015 ± 0.001 | partial/null both. Halving partisan centroids affects only partisans; Independents have no party_cue to halve. Slight magnitude drop (12% of agents don't move). |
+| X6 | −0.048 ± 0.003 | −0.034 ± 0.002 | +0.242 ± 0.005 | +0.225 ± 0.008 | null/**real** both. Affect warming is partisan-only (Independents have no out-party affect to mute); cooperative ties still form. |
+| X7 | −0.027 ± 0.002 | −0.009 ± 0.002 | −0.012 ± 0.001 | −0.013 ± 0.001 | null/null both. X7 still a no-op in pillar context (pillar agents don't seed perception). |
+
+**Story.** Under the 12% Independents variant, X1's macro backfire
+drops by ~50% (Bail 2018's R-leaning effect is concentrated in
+partisans; Independents have no out-party identity to defend, so 12%
+of the population is naturally insulated from cross-cutting backfire).
+This is the headline §8d finding: **including Independents in the
+population tempers the most prominent "backfire" intervention's macro
+effect — without changing its categorical direction.** Other
+interventions are largely unchanged on direction/bucket. X6's affect
+warming is partisan-only mechanism and stays "real."
+
+### 4.6 4-cell decomposition of the 2025 affect-in-band result (Phase 8e §4)
+
+Per round-2 R2: the Phase 8d "affect 2025 in band" finding is
+disambiguated via {Independents on/off} × {augmented engine / 8b
+baseline}. Each cell at 15 seeds × 135 ticks.
+
+| Cell | Engine | Independents | 2025 affect |
+|---|---|---|---|
+| A | 8b baseline | 0.0 | −0.8994 ± 0.0034 |
+| B | 8b baseline | 0.12 | −0.8202 ± 0.0066 |
+| C | augmented | 0.0 | −0.8780 ± 0.0065 |
+| D | augmented (full Phase 8e) | 0.12 | −0.7907 ± 0.0066 |
+
+**Decomposition.** The total improvement (D − A) = +0.109 splits:
+- **Compositional shift (B − A): +0.079 — 72.9% of the improvement.** 
+  Adding 12% null-affect Independents to the unchanged 8b engine
+  arithmetically pulls the population-mean less-negative.
+- **Mechanism shift (C − A): +0.021 — 19.7% of the improvement.**
+  The 8c §2 positive-going channel + Obama 2008 warmth + identity-
+  threat + 8e party-issue-coupling + 8e media_cue together
+  contribute roughly a fifth of the affect-in-band finding under
+  the 0% Independents condition.
+- **Interaction: +0.008 — 7.4%** (small positive — mechanisms
+  amplify slightly under the Independent-diluted partisan
+  population, or vice versa).
+
+**Honest re-statement of the §8d headline.** "The 2025 affect-in-
+band result is *predominantly compositional*. 12% null-affect
+Independents in the population pull mean affect arithmetically
+less-negative — that alone is ~73% of the improvement. The 8c §2
+positive-going + identity-threat + 8e mechanism additions
+contribute ~20%. The model's mechanism additions are *real* but
+not sufficient to bring affect into band by themselves; the
+demographic-composition shift does most of the work. Round-2 R2
+flagged this risk; the decomposition confirms it."
+
+### 4.7 X7 historical-arc measurement (Phase 8e §4)
+
+Round-2 R1 asked for X7 to be measured in its meaningful context
+(historical arc; the pillar release was null/null because the
+pillar doesn't seed perception). Fired at tick 90 (=2010) and tick
+105 (=2015) in the historical arc; measured 2025 endpoint vs
+unfired baseline at 15 seeds:
+
+| Cell | Δaffect | Δconstraint | Δparty_sep |
+|---|---|---|---|
+| baseline (no X7) | n/a (-0.791 absolute) | n/a (+0.570) | n/a (+0.569) |
+| X7 at 2010 | −0.007 ± 0.010 | +0.013 ± 0.018 | **−0.032 ± 0.007** |
+| X7 at 2015 | −0.005 ± 0.010 | +0.006 ± 0.017 | −0.007 ± 0.008 |
+
+**Honest reading.** X7 fired at 2010 (15 years before measurement)
+produces a small but measurable reduction in party separation
+(Δsep = −0.032). The affect direction is *slightly negative*
+(more polarized, by 0.007 — within ~1 SE of zero) because the
+perception correction also removes the bias-amplification that had
+been accelerating cooling; the post-X7 trajectory has slightly
+slower cooling, but the 2016 threat event still fires
+post-correction and dominates the remaining 15 years. **The
+intervention's effect in the historical context is modest
+issue-sorting reduction; the affect channel is unchanged within
+noise.** The literature anchors (Levendusky & Malhotra 2016, etc.)
+report effects on warmth, not on issue positions; the model
+inverts that emphasis under the implemented mechanism.
 
 ### 4.4 The story arc
 
-- **Two backfire** (X1, X3): the most-demanded interventions in
-  public discourse — "show the other side," "quit partisan media" —
-  *increase* issue sorting at the polarized end-state. X1 because R1
-  affect-gated repulsion fires reliably; X3 because the modeled US
-  media diet sits inward of the party centroids (a Phase 7
-  sensitivity item — see §5.1).
+- **One backfire** (X1): the flagship cross-cutting-exposure
+  intervention — "show the other side" — *increases* issue sorting
+  at the polarized end-state because R1 affect-gated repulsion
+  fires reliably (Bail 2018). X3 was the second backfire under
+  Phase 7 but the Phase 8c §3 re-implementation (cable-only zeroing
+  instead of full media kill) re-blessed it to **null** — R1's
+  "category error" diagnosis was correct.
 - **Three null** on issue sorting (X2, X4, X6): the platform-
-  intervention (X2), the participation-bounded one (X4), and even
-  the structural-contact one (X6) fail to move issue positions. F1
-  anchoring + active PartyPull tether agents to their starting side.
+  intervention (X2), the participation-bounded one (X4), and the
+  structural-contact one (X6) fail to move issue positions even when
+  X6 produces "real" affect warming. F1 anchoring + active PartyPull
+  tether agents to their starting side on positions; the affect
+  channel is what contact actually moves (Gidron, Adams & Horne
+  2020).
 - **One partial** (X5): RCV / electoral reform moves issue sorting
   meaningfully (−0.14) but doesn't clear "real" (−0.15). Honest
   reading: the most-promoted institutional reform produces only a
   *partial* effect on issue sorting over a 200-tick release.
-- **One backfire on affect** (X6): structural shared-life contact
-  with Allport-conditions framing *reduces* per-encounter prejudice
-  (cooperative_mute halves valence), but the increased volume of
-  cross-party encounters exceeds the per-encounter reduction. Affect
-  ends up MORE negative, not less, at the population level. A
-  defensible (conservative) reading of Pettigrew & Tropp: contact
-  reduces per-encounter prejudice but doesn't reverse accumulated
-  animus.
-- **Zero "real" on either axis.** That is the empirical reading the
-  model ships. The lay framing: most depolarization proposals don't
-  work, and even the best-evidence ones produce only partial effects.
+- **One "real" on affect** (X6 — Phase 8c §2 re-bless): structural
+  shared-life contact under the Pettigrew 2009 *secondary-transfer*
+  mechanism (agent-level cooperative-share mute applied to every
+  out-party encounter, plus a small positive valence on cooperative
+  edges when warmth is above the threshold) produces Δaff = +0.235
+  — meaningful warming at the population level. The bucket flipped
+  from "backfire" (Phase 7 edge-level mute, Δaff = -0.23) to "real"
+  under the §2 mechanism change without any change to the literature-
+  anchored `cooperative_mute = 0.5`. This is the literature-faithful
+  reading both external reviewers (R1, R2) argued for; the Phase 7
+  edge-level reading was conservative.
+- **One "real" / "zero real" split on issue sorting.** No
+  intervention clears "real" on issue sorting under the current
+  library. X5 reaches partial; the others are null or backfire. The
+  lay framing: institutional reforms and contact programs move
+  *affect* before they move *positions*; position-level sorting is
+  much stickier (F1 anchoring + PartyPull keeps agents on their side).
 
 ---
 
@@ -211,31 +456,36 @@ release.
 A short, honest list. Each item is also a Phase 8+ follow-up
 candidate.
 
-### 5.1 X3 outlet-roster sensitivity
+### 5.1 X3 cable-set sensitivity (Phase 8c §3)
 
-X3's backfire reading depends on the calibration of
-`US_MEDIA_OUTLETS_2024` in `abm/core/outlets.py` — the diet target
-sits *inward* of the party centroids because the roster includes
-centrist outlets (Local TV, WSJ) at non-trivial weight. The Phase 7
-sensitivity sweep in `scripts/phase7_sensitivity.py` measures X3's
-Δsep across three rosters:
+The Phase 8c §3 X3 zeros only MSNBC + Fox News weights (per Fork
+3-A default). Under that mechanism, X3 measures Δsep = -0.001
+(SE 0.003), Δaff = -0.014 (SE 0.001) — **null on both axes**. The
+Phase 7 "X3 backfires" reading was a category error (R1's
+diagnosis): the Phase 7 setup zeroed `MediaConsumption.strength`
+entirely, bundling broadcast/local's centripetal pull with cable's
+centrifugal pull and producing Δsep = +0.27 as a *bundling artifact*.
+The §3 rewrite separates the two.
 
-- **default roster:** Δsep = +0.27 (backfire)
-- **polarized roster** (Fox shifted to `[0.85, 0.65]`, MSNBC to
-  `[-0.85, -0.65]`): Δsep = +0.25 (still backfire)
-- **no Local TV** (remove the centrist anchor): Δsep = +0.21
-  (still backfire)
+**Open sensitivity item.** The "null" reading depends on the set of
+outlets classified as partisan cable (`X3_PARTISAN_CABLE_OUTLET_IDS`
+= {MSNBC, Fox News}). Broader definitions — e.g. adding NYT and/or
+WSJ as "partisan newspapers" — would tighten the cable-only set
+and might shift X3 toward "partial helpful" on issue sorting (the
+remaining outlets would lean more centrist). The narrower definition
+is Fork 3-A default; sensitivity to the broader definition is Phase
+8c §7's cutoff-and-roster sweep.
 
-**The backfire reading is robust across these perturbations** — even
-shifting Fox/MSNBC substantially outward, X3 still backfires because
-the remaining centrist anchors (WSJ, BBC) keep the diet target
-inward of party centroids. The X3 backfire claim is stronger than
-the spec initially flagged: not just contingent on the 2024 roster's
-specific Fox/MSNBC positioning, but on the *general* presence of any
-centrist anchor in the diet. A purely partisan roster (Fox + MSNBC
-only) would flip X3 to helpful; the default-roster regression guard
-in `test_phase7.py::test_x3_still_backfires_at_default_outlets`
-pins the current direction.
+### 5.1.bis Outlet calibration (historical note)
+
+The pre-§3 sensitivity reading found X3's backfire was robust
+across {default, polarized, no-Local-TV} rosters at the strength=0
+implementation. That robustness was an artifact of the bundling: any
+roster with even a single centrist outlet, killed by `strength=0`,
+removed inward-pulling content and let PartyPull drive the camps
+apart. Under the §3 cable-only X3, the centrist outlets stay in the
+diet at their original weights, so the bundling no longer drives
+the result.
 
 ### 5.2 X5 centroid-pull magnitude
 
@@ -254,17 +504,119 @@ A Phase 8 design choice could add `X5b "Drastic electoral reform"`
 at 0.25× as a separate intervention — the sweep confirms it would
 honestly land in "real" on issue sorting.
 
-### 5.3 X6 cooperative-mute mechanism — edge-level vs agent-level
+### 5.3 X6 cooperative-mute mechanism — Phase 8c §2 agent-level + §8e fragility
 
-The current implementation is **edge-level**: only encounters across
-edges explicitly tagged `cooperative=True` are muted. Pettigrew 2009
-"secondary transfer effect of intergroup contact" suggests a broader
-**agent-level** reading: contact reduces prejudice toward multiple
-out-groups, not just the contact target. An agent-level mute (per-
-agent `lr` reduction for any agent with cooperative ties) would be
-more aggressive and might tip X6 into partial or real on affect. The
-edge-level reading is the conservative default and is what ships;
-agent-level is flagged as a Phase 8 follow-up.
+**Phase 8e §5.1 magnitude-sensitivity sweep.** The X6 "real on
+affect" headline at Δaff = +0.242 (canonical magnitude 0.05) is
+**sensitive to `AffectiveUpdate.coop_positive_magnitude`**. Sweep
+at 20 seeds across {0.02, 0.05, 0.08, 0.10}:
+
+| `coop_positive_magnitude` | Δaff at X6 | Affect bucket |
+|---|---|---|
+| 0.02 | +0.123 ± 0.005 | **partial** |
+| 0.05 (canonical) | +0.242 ± 0.005 | **real** |
+| 0.08 | +0.401 ± 0.004 | **real** |
+| 0.10 | +0.509 ± 0.005 | **real** |
+
+**Honest reading.** X6's affect bucket flips from "real" to
+"partial" at magnitude ≤ ~0.04. The canonical 0.05 puts X6 at
+"real" with a margin of ~0.09 above the partial/real boundary —
+not borderline, but not robust to a halving of the magnitude. The
+literature (Pettigrew & Tropp 2006 + Pettigrew 2009) does not pin
+this magnitude; 0.05 is an extrapolation (E provenance per Phase
+8c D1 audit). A defensible alternative reading: at the most-
+conservative magnitude tested (0.02), X6 lands at "partial", not
+"real". The intervention library is robust on *direction* (warmth
+recovers) but the specific bucket label depends on the calibration
+choice.
+
+---
+
+### 5.3.legacy X6 cooperative-mute mechanism — Phase 8c §2 agent-level
+
+**The mechanism that ships (Phase 8c §2).** Each agent carries
+`cooperative_share ∈ [0, 1]` (default 0.0). Negative-going valence
+on every out-party encounter is muted by
+`neg_mute = 1 − cooperative_share * (1 − COOPERATIVE_MUTE)`. A
+fully-cooperative agent (`coop_share = 1.0`) gets
+`neg_mute = COOPERATIVE_MUTE = 0.5` — Pettigrew & Tropp 2006's
+"contact halves prejudice" reading. A non-cooperative agent
+(`coop_share = 0.0`) gets `neg_mute = 1.0` (no muting). X6's setup
+increments `cooperative_share` for participating agents based on the
+ratio of new cooperative ties to total ties.
+
+**On top of the negative mute, a positive-going path.** Cooperative
+edges (`network.is_cooperative(i, j) == True`) trigger a small
+positive valence (+`coop_positive_magnitude` = +0.05 per encounter)
+when the agent's current warmth is at or above
+`coop_positive_threshold` = -0.2. Cold-but-not-extreme agents on
+cooperative encounters warm; cold-extreme agents stay on the
+(muted) negative path — Pettigrew & Tropp 2006: very cold agents
+don't warm easily.
+
+**Pillar-fallback discipline.** Agents without `cooperative_share`
+read 0.0; pillar S0-S4 has no cooperative edges; positive-going
+path never triggers in S0-S4. Pillar trajectory bit-identical to
+Phase 8b. Verified at the §11 measurement: pillar 73-test invariant
+remains green through the Phase 8c §2 rewrite.
+
+**Phase 6/7 history.** The pre-§2 implementation was *edge-level*:
+only encounters across `cooperative=True` edges had their negative
+valence attenuated. Under that mechanism X6's affect bucket landed
+at *backfire* (Δaff = -0.23). Both external reviewers (R1, R2)
+argued the Pettigrew 2009 secondary-transfer reading was more
+literature-faithful; Phase 8c §2 implements it and X6 re-blesses to
+"real" (Δaff = +0.235) without any change to the literature-anchored
+`cooperative_mute = 0.5` value. The Phase 6/7 edge-level reading is
+documented for transparency; the §2 reading is what ships.
+
+### 5.4.bis Affect-gate firing-rate diagnostic (Phase 8e §5.3)
+
+Round-2 R1 noted that the Phase 8c D6 affect-gate firing-rate
+diagnostic was promised but never reported in §11. Now delivered.
+
+`BacklashRepulsion`'s affect-gate (`affect_threshold = -0.3`) is
+the conditional that distinguishes Bail-style backfire (fires on
+already-cold agents) from universal cross-cutting repulsion. The
+diagnostic reports: what fraction of out-party encounters meet
+`warmth < -0.3` at the polarized end-state?
+
+Measured at the pillar S4-end (12 seeds, N=250):
+
+| Phase | Setting | Gate firing rate | Median agent warmth | Cold agents (warmth < -0.3) |
+|---|---|---|---|---|
+| S4 baseline | (pre-X intervention) | **0.998** | −1.000 | 187/250 (75%) |
+| Post-X1 release | "Show other side" | 0.999 | −1.000 | 189/250 |
+| Post-X6 release | (after coop-share bump) | (similar) | (mixed) | (varies) |
+
+**Reading.** At S4-end the gate fires on essentially every out-
+party encounter because the median partisan agent is already at
+warmth = −1.0 (the affect clip floor). The conditional
+interpretation of the gate ("R1 backfires only on already-cold
+agents") is **not load-bearing in this regime** — almost every
+agent is already cold enough to trigger backfire. R2 raised this
+in round 1; the diagnostic confirms it. The gate's discriminative
+work is at S2/S3 transitions, not at S4-end where the
+intervention measurements happen. This does not invalidate the X1
+"backfire" bucket (the mechanism IS firing), but it does mean the
+"affect-gated" framing is descriptively accurate of the rule shape
+rather than empirically discriminating among agents.
+
+The diagnostic is now produced by
+`scripts/phase8c_diagnostics.py` (D6 deliverable from Phase 8c §1).
+
+### 5.4.ter Statistical reporting — CI bands + determinism (Phase 8e §5.4 + §5.5)
+
+**95% CI bands.** All Phase 8e measurements report 95% confidence
+intervals via the t-distribution at `n=15` (historical) or `n=20`
+(pillar). The `abm/calibration_parallel.ci_95` helper provides the
+interval. Format: `point ± SE  [95% CI: lo, hi]`.
+
+**Serial-vs-parallel determinism.** `tests/test_parallel_determinism.py`
+explicitly runs a small ensemble both serially and via
+`run_seeds_parallel`, asserting bit-identical per-seed results at
+`atol=0` (true equality, not float-close). The parallel-seed
+runner is determinism-verified, not just trusted.
 
 ### 5.4 FJ_ALPHA sweep — no-collapse property
 

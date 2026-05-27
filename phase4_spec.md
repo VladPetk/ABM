@@ -235,6 +235,20 @@ has no natural softness knob. The logistic was picked because the regression
 guard "`temperature = 0` = hard cutoff" is exact, which keeps the canonical
 HK test honest if we ever want to dial F2 off.
 
+**Provenance note (Phase 8c D1).** At `temperature > 0` the graded
+logistic filter departs from canonical Hegselmann-Krause. The HK
+phase transitions documented in Lorenz 2007 (review of bounded-
+confidence variants) shift under smoothed filters: small but non-zero
+weight on out-of-ε neighbours removes the sharp fragmentation
+transition that defines tight-ε HK. The pillar's `temperature = 0.05`
+recovers HK *exactly only at the T → 0 limit*; at the operational
+T = 0.05 the model is a smoothed variant of HK, not literal HK. The
+canonical HK replication tests (`compass_basic`, `actb`) explicitly
+keep T = 0.0 to preserve the hard-cutoff equivalence. The pillar's
+graded behaviour is **E (extrapolation from HK)**, not L (canonical
+HK). The HK phase-diagram sensitivity test (T ∈ {0.0, 0.01, 0.05,
+0.1} × ε sweep) is deferred to 8d.
+
 ### 4.3 Default value and pillar opt-in
 
 `temperature = 0.0` is the **rule default** — the canonical hard cutoff,

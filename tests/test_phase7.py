@@ -108,18 +108,23 @@ def test_pillar_affect_trajectory_matches_anes_within_band(s3_affect_engines):
 # --- C3: sensitivity-default regression guards ---------------------------
 
 
-def test_x3_still_backfires_at_default_outlets(intervention_buckets):
-    """X3 'Quit cable news' is honestly labelled `backfire` on issue
-    sorting because the modeled US media diet sits inward of party
-    centroids (Phase 6 §11 finding). This guard pins that direction
-    at the default `US_MEDIA_OUTLETS_2024` roster — if the outlet
-    calibration changes in a future scenario edit, X3 may flip and
-    the consolidated bucket test in test_phase6.py will fail.
-    Phase 7 §5.1 documents this as a sensitivity item."""
+def test_x3_setup_disables_partisan_cable_only(intervention_buckets):
+    """Phase 8c §3 reframe: the Phase 7 'X3 backfires' guard is
+    obsolete. The Phase 7 X3 zeroed `MediaConsumption.strength`
+    entirely, bundling broadcast/local's centripetal pull with
+    partisan cable's centrifugal pull — R1's "category error." The
+    Phase 8c §3 X3 zeros only MSNBC + Fox News weights; the
+    consolidated bucket test in `test_phase6.py` is the source of
+    truth for X3's measured direction. This test still asserts that
+    X3 *has a measurement* on issue_sorting (i.e., the mechanism
+    fires — not asserting direction)."""
     dsep = intervention_buckets["X3_quit_cable_news"]["sep"]
-    assert dsep > 0.05, (
-        f"X3 should backfire on issue sorting at default outlets "
-        f"(Δsep > 0.05); measured {dsep:+.3f}."
+    assert isinstance(dsep, float), (
+        f"X3 issue-sorting measurement should be a float; got {dsep!r}"
+    )
+    # Document the magnitude is bounded (sanity guard).
+    assert abs(dsep) < 1.0, (
+        f"X3 Δsep magnitude should be modest (<1.0); measured {dsep:+.3f}"
     )
 
 
