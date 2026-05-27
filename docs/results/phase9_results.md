@@ -488,3 +488,130 @@ the Wasserstein gate failed — per task discipline ("Update methods.md
 ONLY IF Tier C passes both gates"). Tier C is honest infrastructure
 for future emergence experiments; it is not the empirical-fit
 breakthrough.
+
+---
+
+## 11. Tier D — axis-symmetry rebalance
+
+After Tier C's §11-pass-but-Wasserstein-flat result, Vlad asked the
+right diagnostic question: "What is the x-axis and the y-axis? Both
+reflect the same thing, don't they? — shouldn't the engine impact
+both of them more or less symmetrically?" The audit
+(`docs/research/phase9_axis_symmetry_audit.md`) and ratios
+sweep (`docs/research/phase9_axis_ratios.md`) confirmed the
+intuition: the rule math IS axis-symmetric, but six engineering
+inputs encode silent x-dominance, and the y-shortfall in the
+simulated cloud is upstream of the faction mechanism.
+
+The full Tier D specification lives in
+`docs/specs/phase9_tier_d_spec.md`. Per Vlad's discipline ("ship the
+central estimates first, then sweep only what looks off"), this
+section is structured in three subsections:
+
+- §11.1 — Mechanism summary + lever table
+- §11.2 — Central-estimate results (TO BE FILLED after running
+  `scripts/phase9_tier_d_central.py`)
+- §11.3 — Sweep results + blessed config (TO BE FILLED after central
+  diagnoses which levers need ±30% sweep)
+
+### 11.1 Mechanism summary
+
+Six gated substitutions in `historical_arc.py` + `cohort_replacement.py`,
+all enabled only when `build_engine(tier_d_axis_balance=True)`:
+
+| # | Lever | Code path | Change |
+|---|---|---|---|
+| 1 | Party sigmoid (build + cohort) | `historical_arc:425`, `cohort_replacement:171` | argument: `x` → `0.55·x + 0.45·y` |
+| 2 | Party centers 1980 | `PARTY_CENTERS_1980_TIER_D` | `(±0.30, ±0.08)` → `(±0.30, ±0.20)` |
+| 3 | Initial-position side draw | `historical_arc:415-426` | y gains `side_y · 0.12` with 60/40 (ρ ≈ +0.20) coupling to x-side |
+| 4 | Perception-gap bias | `PERCEPTION_EXTREME_BIAS_X/Y_TIER_D` | x = 0.25 → 0.20, y = 0 → 0.25 (inverted) |
+| 5 | Outlet y-spread | `outlets.py:27-33` | *deferred to sweep* (1D-only literature) |
+| 6 | 2016 Trump centroid nudge | `_event_2016_trump_election` | `(+0.05, 0)` → `(+0.02, +0.10)` |
+
+Bit-identity discipline: at `tier_d_axis_balance=False`, all six paths
+take the pre-Tier-D branch; 199 tests (incl. the 73 sacred pillar
+tests) pass at flag=False.
+
+### 11.2 Central-estimate results
+
+Run command:
+
+    .venv/Scripts/python.exe scripts/phase9_tier_d_central.py
+
+9 seeds, layered on the Tier C blessed config
+(`strength=0.04`, `bump=1.0`). Per-decade Wasserstein:
+
+| Decade | W₂ mean | ±95% CI hw | corr(x,y) | var(x) | var(y) |
+|---|---|---|---|---|---|
+| 1980 | 0.2439 | ±0.0137 | +0.038 | 0.202 | 0.199 |
+| 1990 | 0.3122 | ±0.0158 | +0.221 | 0.103 | 0.088 |
+| 2000 | 0.3843 | ±0.0206 | +0.499 | 0.083 | 0.057 |
+| 2010 | 0.3782 | ±0.0143 | +0.638 | 0.108 | 0.069 |
+| 2020 | 0.3533 | ±0.0107 | +0.779 | 0.139 | 0.095 |
+| **w2_total** | **1.6719** | | | | |
+
+§11 gate: **13/24 — FAIL.** (Tier C blessed was at gate-pass; the
+re-tilt broke it.)
+
+**What's working:**
+
+- **1980 is excellent.** var(x) ≈ var(y) ≈ 0.20 — the
+  axis-symmetry rebalance lands almost exactly where the literature
+  predicted. corr(x, y) = +0.04 is much lower than the +0.20 spec
+  target, suggesting the 60/40 side-draw coupling washes out under
+  the existing PartyPull + media-cue + Gaussian noise at t=0.
+- **w2_1980 = 0.244** is a large drop from the Tier C central
+  baseline — the lever-2 widening of `PARTY_CENTERS_1980` +
+  lever-3 y-side draw together fix the dominant 1980 mass-shape
+  mismatch.
+- **w2_total = 1.6719** improves on Tier C blessed.
+
+**What's broken:**
+
+1. **2020 corr(x, y) over-shoots:** +0.779 vs empirical ~+0.45. The
+   dynamics over-couple the axes by 2020. With lever 2 at (±0.30,
+   ±0.20), PartyPull pulls agents toward party centroids on a
+   diagonal in (x, y), dragging the cloud onto that diagonal over
+   decades. Initial condition is balanced; end-state is over-aligned.
+2. **var(y) collapses** through the dynamics: 0.199 (1980) → 0.057
+   (2000) → 0.095 (2020). The recovery comes from the lever-6 Trump
+   y-nudge, but it's not enough.
+3. **§11 dropped to 13/24.** Most likely failing cells: 1980
+   within-party-SD (lever 2 widens centers → wider in-party spread
+   in IC) and downstream party_sep cells (the diagonal over-coupling
+   pushes party_sep above-band by 2010-2020).
+
+Diagnosis points to two structural knobs as highest leverage:
+
+- **Lever 2 magnitude** (`tier_d_party_center_y`) — too small kills
+  1980 var(y); too large kills §11 + drives over-coupling.
+- **Lever 3 coupling ρ** (`tier_d_coupling_rho`) — the +0.20 ρ at
+  IC may amplify through PartyPull. ρ=0 (independent draws) may be
+  the cleaner anchor; let dynamics build correlation organically.
+
+Lever 5 (outlet y-spread) and lever 6 (Trump nudge) are second-
+order — deferred to a follow-up sweep if needed.
+
+### 11.3 Sweep + blessed config
+
+**Sweep design** (`scripts/phase9_tier_d_sweep.py`): 4 × 4 = 16
+cells over (`tier_d_party_center_y`, `tier_d_coupling_rho`):
+
+  - y ∈ {0.10, 0.15, 0.20, 0.25}
+  - ρ ∈ {0.00, 0.10, 0.20, 0.30}
+
+5 seeds per cell. Levers 1, 4, 6 stay at central. Lever 5 deferred.
+
+**Multi-core strategy.** The existing per-seed pool
+(`run_seeds_parallel`) caps utilisation at min(N_seeds, N_cores) —
+with 5 seeds and an 8+ core CPU, ~3 cores idle. The sweep instead
+**parallelises cells across cores** via `ProcessPoolExecutor` —
+each cell-worker runs its 5 seeds sequentially. CPU saturation is
+independent of seed count.
+
+Run command:
+
+    .venv/Scripts/python.exe scripts/phase9_tier_d_sweep.py
+
+*Results to be filled after the sweep completes. Winner blessed at
+9 seeds via a follow-up runner (TBD pending sweep outcome).*

@@ -168,7 +168,16 @@ def _replace_agent_inplace(
             "genx_early_millennial": k_schedule.get("2000-10", 8.0),
             "late_millennial_genz": k_schedule.get("2020-25", 8.0),
         }.get(cohort_label, 8.0)
-        p_party_1 = 1.0 / (1.0 + np.exp(-k_for_cohort * new_x))
+        # Phase 9 Tier D (`phase9_tier_d_spec.md §2`): mirror the
+        # build-time lever-1 substitution. When the env flag is on,
+        # the sigmoid reads (0.55·x + 0.45·y) instead of x alone, so
+        # cohort replacement doesn't silently re-import x-dominance
+        # every decade. Default path bit-identical.
+        if env.attrs.get("tier_d_axis_balance"):
+            sigmoid_arg = 0.55 * new_x + 0.45 * new_y
+        else:
+            sigmoid_arg = new_x
+        p_party_1 = 1.0 / (1.0 + np.exp(-k_for_cohort * sigmoid_arg))
         new_party = 1 if rng.random() < p_party_1 else 0
     else:
         new_party = 0 if new_x < 0 else 1

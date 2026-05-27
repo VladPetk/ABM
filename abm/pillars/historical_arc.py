@@ -83,6 +83,17 @@ PARTY_CENTERS_1980 = {
     0: np.array([-0.30, -0.08]),
     1: np.array([+0.30, +0.08]),
 }
+
+# Phase 9 Tier D (`phase9_tier_d_spec.md §1`): rebalanced y-axis mass
+# centers from ±0.08 to ±0.20 — the mass-public 2D-IRT ratio per Hare
+# 2015 + Treier-Hillygus 2009 (~1.5:1), not the elite DW-NOMINATE ratio
+# (~3.75:1) the 8f value was modeling. Selected only when
+# build_engine(tier_d_axis_balance=True). Default path
+# (PARTY_CENTERS_1980) unchanged → bit-identical for pillars + Phase 8.
+PARTY_CENTERS_1980_TIER_D = {
+    0: np.array([-0.30, -0.20]),
+    1: np.array([+0.30, +0.20]),
+}
 PARTY_NAMES = {0: "Democrats (1980)", 1: "Republicans (1980)"}
 PARTY_COLORS = {0: "#1f3565", 1: "#8b2530"}
 
@@ -147,6 +158,16 @@ ELITE_DRIFT_ASYMMETRIC = {0: 0.5, 1: 1.5}
 PERCEPTION_EXTREME_BIAS = 0.25
 PERCEPTION_NOISE = 0.15
 PERCEPTION_CORRECTION_RATE = 0.01
+
+# Phase 9 Tier D (`phase9_tier_d_spec.md §1`, lever 4): split the
+# perception-gap bias per axis. The Phase 8c value (0.25, applied to x
+# only) implicitly encoded the gap as economic-axis. Ahler & Sood 2018
+# table 2 + More-in-Common 2018 *Perception Gap* table 4 both find
+# cultural-issue gaps modestly larger than economic-issue gaps — so
+# Tier D inverts the asymmetry: x = 0.20, y = 0.25. Only consulted
+# when build_engine(tier_d_axis_balance=True).
+PERCEPTION_EXTREME_BIAS_X_TIER_D = 0.20
+PERCEPTION_EXTREME_BIAS_Y_TIER_D = 0.25
 
 # Phase 8c §5 E5 — identity-threat (Mutz 2018). The 2016 event fires
 # a one-shot status-threat spike: `THREAT_2016_MAGNITUDE = 0.5` for
@@ -305,6 +326,17 @@ def build_engine(
     faction_anchor_strength: float = 0.04,
     faction_anchor_events: bool = True,
     event_stubbornness_bump_multiplier: float = 1.0,
+    # Phase 9 Tier D (`phase9_tier_d_spec.md §1`): axis-symmetry
+    # rebalance. Default False → bit-identical to head. When True,
+    # six engineering levers are re-tilted to literature-grounded
+    # x:y ratios. Pillars + Phase 8 are unaffected (default path).
+    tier_d_axis_balance: bool = False,
+    # Phase 9 Tier D sweep knobs (`phase9_tier_d_spec.md §4`). Only
+    # consulted when tier_d_axis_balance=True. Defaults reproduce
+    # the central estimates exactly — the sweep walks ±30% around
+    # these to diagnose lever sensitivity.
+    tier_d_party_center_y: float = 0.20,   # lever 2 magnitude
+    tier_d_coupling_rho: float = 0.20,     # lever 3 (x-side, y-side) corr target
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -327,6 +359,26 @@ def build_engine(
     """
     rng = np.random.default_rng(seed)
     net_rng = np.random.default_rng(seed + 9973)
+
+    # Phase 9 Tier D — pick active party centers + perception biases.
+    # Default path leaves the existing constants in place bit-
+    # identically (pillars + Phase 8 unchanged).
+    if tier_d_axis_balance:
+        # Lever 2 — y-magnitude is sweep-controlled. Default 0.20
+        # reproduces the central-estimate PARTY_CENTERS_1980_TIER_D.
+        _y = float(tier_d_party_center_y)
+        party_centers_active = {
+            0: np.array([-0.30, -_y]),
+            1: np.array([+0.30, +_y]),
+        }
+        perception_bias_x = PERCEPTION_EXTREME_BIAS_X_TIER_D
+        perception_bias_y = PERCEPTION_EXTREME_BIAS_Y_TIER_D
+    else:
+        party_centers_active = {
+            pid: c.copy() for pid, c in PARTY_CENTERS_1980.items()
+        }
+        perception_bias_x = PERCEPTION_EXTREME_BIAS
+        perception_bias_y = 0.0  # legacy: y-bias was inert
 
     # Phase 8d: pre-sample which agent ids will be Independents.
     # `n_indep == 0` early-exit preserves bit-identity to Phase 8b
@@ -413,7 +465,18 @@ def build_engine(
         # band while keeping a meaningful initial sort.
         side = -1.0 if i < n_agents // 2 else 1.0
         pos_x = float(np.clip(side * 0.15 + rng.normal(0, 0.45), -1.0, 1.0))
-        pos_y = float(np.clip(rng.normal(0, 0.45), -1.0, 1.0))
+        if tier_d_axis_balance:
+            # Lever 3: y-side draw with ρ=tier_d_coupling_rho coupling
+            # to x-side. P(side_y = side_x) = (1 + ρ) / 2. Default
+            # ρ=0.20 → 60/40 → matches ANES 1980 economic×cultural
+            # correlation. Sweep knob exposed for §4 diagnosis.
+            _p_match = 0.5 * (1.0 + float(tier_d_coupling_rho))
+            side_y = side if rng.random() < _p_match else -side
+            pos_y = float(np.clip(
+                side_y * 0.12 + rng.normal(0, 0.45), -1.0, 1.0
+            ))
+        else:
+            pos_y = float(np.clip(rng.normal(0, 0.45), -1.0, 1.0))
         pos = np.array([pos_x, pos_y])
         # Phase 8f §2: probabilistic party assignment with per-decade
         # K. At 1980 K=2.5 → ~68% sign-aligned at |x|=0.3 → many
@@ -422,7 +485,16 @@ def build_engine(
         # diagnosis). K rises across decades to 8.0 at modern era.
         # Cohort replacement uses cohort-aware K.
         k_1980 = PARTY_ASSIGNMENT_K["1980-90"]
-        p_party_1 = 1.0 / (1.0 + np.exp(-k_1980 * pos_x))
+        if tier_d_axis_balance:
+            # Lever 1: party assignment reads both axes with mild
+            # x-tilt α=0.55, β=0.45 (Mason 2018 app. B; Levendusky
+            # 2009 ch. 2-3 — partisan-sorting magnitudes are within
+            # ~10% on the two axes by the 2000s). Default path
+            # (sigmoid of x alone) is preserved bit-identically.
+            sigmoid_arg = 0.55 * pos_x + 0.45 * pos_y
+        else:
+            sigmoid_arg = pos_x
+        p_party_1 = 1.0 / (1.0 + np.exp(-k_1980 * sigmoid_arg))
         party = 1 if rng.random() < p_party_1 else 0
 
         # Phase 9 Tier A: override position + party from faction draw.
@@ -443,7 +515,7 @@ def build_engine(
             if fac["party"] is not None:
                 party = int(fac["party"])
 
-        diet = diet_for_party(PARTY_CENTERS_1980[party], outlets, rng)
+        diet = diet_for_party(party_centers_active[party], outlets, rng)
         identity_strength = float(rng.beta(2.0, 2.0))
         identities = np.clip(
             party_identity_centers[party] + rng.normal(0, 0.3, size=n_identities),
@@ -458,7 +530,7 @@ def build_engine(
 
         # Per-party party_cue σ (M4 asymmetric).
         sigma_pc = PARTY_CUE_SIGMA_HISTORICAL[party]
-        party_cue = PARTY_CENTERS_1980[party] + rng.normal(
+        party_cue = party_centers_active[party] + rng.normal(
             0.0, sigma_pc, size=2
         )
         # Phase 9 Tier A: factional cue + extremity-graded stubbornness.
@@ -495,13 +567,15 @@ def build_engine(
         # right party, negative for the left); agents seed perceptions
         # for ALL out-parties (i.e., parties other than their own).
         other_party = 1 - party
-        other_centroid = PARTY_CENTERS_1980[other_party]
-        # Dominant-axis bias direction: away from origin (more extreme
-        # than reality) on the x dimension.
-        bias_sign = 1.0 if other_centroid[0] >= 0.0 else -1.0
+        other_centroid = party_centers_active[other_party]
+        # Phase 9 Tier D: split bias per axis. Pre-Tier-D path
+        # (perception_bias_y == 0.0) preserves the original x-only
+        # behavior bit-identically.
+        bias_sign_x = 1.0 if other_centroid[0] >= 0.0 else -1.0
+        bias_sign_y = 1.0 if other_centroid[1] >= 0.0 else -1.0
         perceived_other = np.array([
-            other_centroid[0] + bias_sign * PERCEPTION_EXTREME_BIAS,
-            other_centroid[1],
+            other_centroid[0] + bias_sign_x * perception_bias_x,
+            other_centroid[1] + bias_sign_y * perception_bias_y,
         ]) + rng.normal(0.0, PERCEPTION_NOISE, size=2)
         perceived_other = np.clip(perceived_other, -1.0, 1.0)
         attrs = {
@@ -565,7 +639,7 @@ def build_engine(
         network, agents, net_rng, per_agent=INVOLUNTARY_PER_AGENT
     )
 
-    party_centers = {pid: c.copy() for pid, c in PARTY_CENTERS_1980.items()}
+    party_centers = {pid: c.copy() for pid, c in party_centers_active.items()}
     env = Environment(attrs={
         "parties": party_centers,
         "outlets": outlets_by_id,
@@ -608,6 +682,10 @@ def build_engine(
         "event_stubbornness_bump_multiplier": float(
             event_stubbornness_bump_multiplier
         ),
+        # Phase 9 Tier D — read by cohort_replacement (lever 1 sigmoid
+        # mirror) and the 2016 Trump-event handler (lever 6 centroid
+        # nudge). When False, both paths are bit-identical to head.
+        "tier_d_axis_balance": bool(tier_d_axis_balance),
         "viz": {
             "title": TITLE,
             "group_names": PARTY_NAMES,
@@ -794,11 +872,19 @@ def _event_2012_social_media_ramp_end(engine):
 
 
 def _event_2016_trump_election(engine):
-    """Trump election — GOP coalition shift + identity sorting bump."""
-    # Shift GOP party centroid slightly outward (asymmetric drift
-    # acceleration the elite drift rule will continue).
+    """Trump election — GOP coalition shift + identity sorting bump.
+
+    Phase 9 Tier D (`phase9_tier_d_spec.md §1`, lever 6): under
+    `tier_d_axis_balance=True`, the centroid nudge becomes (+0.02,
+    +0.10) — the Sides/Tesler/Vavreck 2018 fig. 7.3 ratio for the
+    Trump-coalition shift (overwhelmingly cultural, not economic).
+    Default path keeps the original (+0.05, 0.0) bit-identically.
+    """
     parties = engine.env.attrs["parties"]
-    parties[1] = parties[1] + np.array([0.05, 0.0])
+    if engine.env.attrs.get("tier_d_axis_balance"):
+        parties[1] = parties[1] + np.array([0.02, 0.10])
+    else:
+        parties[1] = parties[1] + np.array([0.05, 0.0])
     # Bump identity sorting for the next 2 years (6 ticks).
     for r in engine.rules.rules:
         if type(r).__name__ == "IdentitySorting":

@@ -689,6 +689,64 @@ S4 doesn't claim to be exactly 2022. The mapping pins the *rate of
 affective cooling* against the ANES headline; it does not claim
 calendar-accurate timestamps for specific simulation events.
 
+### 5.10 Phase 9 — per-decade KDE calibration + axis-symmetry rebalance
+
+Phase 9 extends the calibration target set from the §11 cells (band-
+based scalar gate) to **per-decade 2D KDE distribution targets**
+constructed from ANES + GSS + CCES + Pew + Hidden-Tribes data,
+moment-matched to DW-NOMINATE elite anchors (see
+`docs/specs/phase9_empirical_targets.md`). The primary metric is the
+2D Wasserstein distance (POT `ot.emd2`) between simulated and
+empirical clouds per decade. Three tiers were attempted in sequence:
+
+- **Tier A** — factional initial conditions (8 named 1980 factions
+  with hard-bound party assignment). Failed the §11 gate
+  structurally: discrete-faction topology forced within-party SD
+  below empirical band. 0/27 sweep cells passed §11.
+- **Tier C** — `FactionAnchor` rule firing on emergence-event tags
+  (Tea Party 2009, MAGA 2015, Bernie 2016, DSA 2018) with broad-
+  Gaussian initial conditions. Passes §11 at the blessed config but
+  Wasserstein only mildly improved over baseline: the cloud's y-axis
+  variance stays around 0.045 vs empirical 0.27.
+- **Tier D** — diagnoses the y-shortfall as upstream of the faction
+  mechanism. An audit (`docs/research/phase9_axis_symmetry_audit.md`)
+  identified six places where the engine inputs are silently x-biased
+  despite the rule math being axis-symmetric. A companion ratios doc
+  (`docs/research/phase9_axis_ratios.md`) puts literature-grounded
+  numbers on each lever's x:y ratio. The spec
+  (`docs/specs/phase9_tier_d_spec.md`) translates those into code.
+
+The six Tier-D levers + central estimates:
+
+| # | Lever | Current | Tier-D central | Source |
+|---|---|---|---|---|
+| 1 | Party-assignment sigmoid arg | `x` | `0.55·x + 0.45·y` | Mason 2018 app. B |
+| 2 | `PARTY_CENTERS_1980` | `(±0.30, ±0.08)` | `(±0.30, ±0.20)` | Hare 2015; Treier-Hillygus 2009 |
+| 3 | Initial-position side draw | `side · 0.15` on x only | adds `side_y · 0.12` with ρ ≈ +0.20 | ANES §3.5.1 |
+| 4 | Perception-gap bias | `+0.25` on x, 0 on y | `+0.20` on x, `+0.25` on y | Ahler & Sood 2018; MiC 2018 |
+| 5 | Outlet y-spread | max y / max x ≈ 0.65 | *(deferred to sweep)* | undetermined (1D-only lit) |
+| 6 | 2016 Trump centroid nudge | `(+0.05, 0)` | `(+0.02, +0.10)` | Sides/Tesler/Vavreck 2018 fig. 7.3 |
+
+The standout findings: **levers 4 and 6 are inverted** in the current
+code — the literature pins the perception gap and the Trump-coalition
+shift firmly on the *cultural* (y) axis, not the economic (x) axis,
+yet the pre-Tier-D code encodes both as x-axis effects. The
+contemporary US sorting story is cultural-axis-driven; encoding it as
+economic-axis-driven was empirically backwards.
+
+**Discipline.** Tier D is gated behind a new `build_engine` kwarg
+`tier_d_axis_balance: bool = False`. At the default, every code path
+is bit-identical to head — pillars + Phase 4-8 are untouched. Only the
+historical-arc Phase 9 runner script flips the flag on. The 73 sacred
+pillar tests stay green bit-identically (verified: 199 tests pass
+with Tier-D code in place at flag=False).
+
+**Procedure.** Central estimates run first (9 seeds via
+`scripts/phase9_tier_d_central.py`). After measuring §11 + Wasserstein,
+any lever whose impact is over- or under-shooting gets a focused ±30%
+sweep (5 seeds, single-lever). Winner re-run at 9 seeds; results land
+in `docs/results/phase9_results.md`.
+
 ---
 
 ## 6. What the model is for
