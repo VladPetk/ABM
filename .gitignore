@@ -35,6 +35,8 @@ phase9_tier_a_score_boost_*.json
 phase9_tier_a_descriptors_boost_*.csv
 phase9_tier_a_sweep_log.txt
 phase9_tier_a_blessed_log.txt
+phase9_tier_c_sweep_log.txt
+phase9_tier_c_blessed_log.txt
 
 # Editor / scratchpad detritus
 *.tmp

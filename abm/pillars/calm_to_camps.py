@@ -23,6 +23,7 @@ from ..core.space import ContinuousSpace2D
 from ..core.state import AgentState
 from ..rules.affective_update import AffectiveUpdate
 from ..rules.elite_drift import EliteDrift
+from ..rules.faction_anchor import FactionAnchor
 from ..rules.identity_prime import IdentityPrimeExpiry
 from ..rules.identity_sorting import IdentitySorting
 from ..rules.influence import BoundedConfidenceInfluence
@@ -340,6 +341,12 @@ def build_engine(
             temperature=BC_TEMPERATURE, affect_weight=0.0,
         ),
         PartyPull(strength=0.0),
+        # Phase 9 Tier C: FactionAnchor added at default strength 0.04.
+        # Pillar agents never carry `faction_center` → rule is no-op
+        # for every pillar agent on every tick. Pillar stays bit-
+        # identical (the rule self-gates on the attr; no flag-based
+        # gate needed). See `phase9_spec.md §9.1` and §9.4.
+        FactionAnchor(strength=0.04),
         MediaConsumption(strength=0.0),
         # Phase 5 A1: pass the corrected-sign baseline + identity weight.
         # Phase 7: cooperative_mute attenuates valence on Allport-

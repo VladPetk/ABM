@@ -331,3 +331,146 @@ diagnostic story.
 Tier B (BC eps reduction, PartyPull damp, EliteDrift recalibrate)
 and Tier C (additional event-driven faction dynamics) remain
 options if Tier A's Wasserstein fit is insufficient on any decade.
+
+---
+
+## 9. Tier C — addendum (2026-05-27, after Tier A negative result)
+
+Tier A failed both gates structurally (`phase9_results.md` §4):
+factional ICs hard-bind party to position from t=0, so 1980
+arrives already at modern polarization. Tier C inverts the
+mechanism: **ICs stay broad-Gaussian (1980 §11 cells preserved);
+factions emerge temporally as scheduled events fire post-2009.**
+
+### 9.1 Mechanism
+
+New rule `abm/rules/faction_anchor.py`:
+
+```python
+class FactionAnchor:
+    """Pulls each agent toward its `faction_center` attr at strength
+    `s * (1 - stubbornness) * (center - ideology)`. No-op for agents
+    without a `faction_center` attr — so the rule is inert at t=0
+    and inert in the pillar (which never tags factions)."""
+    def __init__(self, strength: float = 0.04):
+        self.strength = strength
+
+    def apply(self, engine):
+        for a in engine.agents:
+            center = a.state.attrs.get("faction_center")
+            if center is None:
+                continue
+            stubbornness = a.state.attrs.get("stubbornness", 0.0)
+            delta = self.strength * (1.0 - stubbornness) * (
+                center - a.state.ideology
+            )
+            a.state.ideology = np.clip(
+                a.state.ideology + delta, -1.0, 1.0
+            )
+```
+
+Rule placement: in the pipeline after `PartyPull`, before
+`BoundedConfidenceInfluence`. So PartyPull pulls toward `party_cue`
+(unchanged, party-centroid-noise), then FactionAnchor adds a
+faction-specific tug for tagged agents, then BC homogenizes.
+
+**Pillar bit-identity**: pillar agents never have `faction_center`
+set → rule is no-op → pillar tests bit-identical even if the rule
+is added to both pipelines. Safer than gating with a flag.
+
+### 9.2 Event semantics under Tier C
+
+The 4 existing faction-emergence events (`_event_2009_tea_party`,
+`_event_2015_maga`, `_event_2016_bernie`, `_event_2018_dsa`) need
+two changes:
+
+1. **Stop overwriting `party_cue`.** Under Tier A, events overwrote
+   `party_cue` to the sub-centroid — that compounded with
+   PartyPull's existing pull and contributed to over-anchoring.
+   Under Tier C, `party_cue` stays at its original party-centroid-
+   noise value; PartyPull keeps pulling toward party, FactionAnchor
+   adds the faction-specific tug.
+2. **Set `attrs["faction_center"] = sub_centroid`.** This is what
+   FactionAnchor reads. The current `attrs["faction"] = label` is
+   kept for diagnostics.
+
+The stubbornness bumps (+0.15 / +0.10) stay as specified in §4.
+
+### 9.3 ICs under Tier C
+
+**No factional ICs.** `factional_seeding` stays at its default
+`False`. The 1980 build is bit-identical to Phase 8f. The
+"factional structure" emerges entirely from the post-2009 events.
+
+This is the cleanest preservation of the §11 1980 cells (which
+Tier A broke). The trade-off: 1980 visualization has no visible
+faction sub-modes; sub-modes appear progressively as events fire
+from 2009 onward — closer to the historical narrative.
+
+### 9.4 New kwargs
+
+`historical_arc.build_engine` gains:
+- `faction_anchor_strength: float = 0.04` — passed to FactionAnchor
+  constructor.
+- `faction_anchor_events: bool = True` — gates whether the 4
+  emergence events fire. Default True under historical_arc (we want
+  them to fire); pillar build never invokes these events anyway.
+- `event_stubbornness_bump_multiplier: float = 1.0` — multiplies
+  the per-event Δstubbornness (0.15 → 0.15×mult, 0.10 → 0.10×mult).
+  Lets us sweep stubbornness anchoring without code edits.
+
+`abm/rules/faction_anchor.py.FactionAnchor` itself takes only
+`strength`. The rule is added to BOTH pillar and historical_arc
+pipelines unconditionally — it self-gates on the `faction_center`
+attribute being present.
+
+### 9.5 Sweep design
+
+12-cell sweep:
+- `faction_anchor_strength ∈ {0.02, 0.04, 0.06, 0.08}`
+- `event_stubbornness_bump_multiplier ∈ {0.5, 1.0, 1.5}`
+
+At 5 seeds per cell. Score Wasserstein + §11. Bless the cell that
+minimizes summed Wasserstein subject to §11 cells ≥ 18/24.
+
+### 9.6 Validation gates
+
+Same as Tier A:
+1. Pillar tests bit-identical (the new rule + new events are inert
+   without `faction_center` attr).
+2. Phase 8f §11 cells: must hold ≥18/24 under Tier C blessed config.
+3. Wasserstein: at least 2 of 5 decades must improve significantly
+   vs baseline (specifically 2010 and 2020, where faction-emergence
+   events have had time to act).
+
+### 9.7 What gets retired vs preserved from Tier A
+
+- **Retired:** `factional_seeding=True` flow is left in code but no
+  longer the recommended path. Tests that exercise it stay green.
+- **Preserved:** `HISTORICAL_FACTIONS_1980` dict is unused under Tier
+  C (no factional IC), but kept for the visualization tier if Vlad
+  later wants to ship it as the demo product. The 4 emergence
+  events are re-wired (per §9.2), not removed.
+
+### 9.8 Risk register (Tier C)
+
+1. **Strength × stubbornness compounding.** Stubbornness bump from
+   events (+0.15) reduces the FactionAnchor pull by a factor of
+   roughly (1 - 0.15·multiplier). Net pull on a tagged agent is
+   `strength · (1 - stubbornness)`. At default stubbornness 0.29
+   and bump 0.15, effective pull is 0.04·(1 - 0.44) ≈ 0.022. Sweep
+   range covers this — strength=0.08 with multiplier=0.5 gives
+   effective pull ≈ 0.045, comparable to PartyPull's 0.07.
+
+2. **Event timing.** 2009 / 2015 / 2016 / 2018 give the rule
+   ~16 / 10 / 9 / 7 years to act by 2025. Strength=0.04 with 16 ticks
+   moves a tagged Mainstream_Rep from ideology ~0.30 toward
+   Tea_Party sub-centroid (+0.55, +0.30) by roughly 0.4·(0.04·0.71)·16
+   ≈ 0.18 — meaningful but not extreme. Reality check by 2025.
+
+3. **2010 ENS-band wp_sd.** The events tag only 3-9% of partisans.
+   The bulk of within-party SD is unaffected. Hypothesis: §11 wp_sd
+   stays close to Phase 8f baseline (which is already in band).
+   Risk: if FactionAnchor's pull on tagged agents is strong enough,
+   it could *increase* wp_sd above the upper band edge by 2025.
+   Sweep will catch this.

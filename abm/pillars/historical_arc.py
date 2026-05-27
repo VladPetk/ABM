@@ -36,6 +36,7 @@ from ..core.state import AgentState
 from ..rules.affective_update import AffectiveUpdate
 from ..rules.cohort_replacement import CohortReplacement
 from ..rules.elite_drift import EliteDrift
+from ..rules.faction_anchor import FactionAnchor
 from ..rules.identity_prime import IdentityPrimeExpiry
 from ..rules.identity_sorting import IdentitySorting
 from ..rules.influence import BoundedConfidenceInfluence
@@ -300,6 +301,10 @@ def build_engine(
     faction_stubbornness_boost: float = FACTION_STUBBORNNESS_BOOST,
     faction_center_scale: float = FACTION_CENTER_SCALE_DEFAULT,
     faction_sigma_within: float = FACTION_SIGMA_WITHIN_DEFAULT,
+    # Phase 9 Tier C (`phase9_spec.md §9.4`):
+    faction_anchor_strength: float = 0.04,
+    faction_anchor_events: bool = True,
+    event_stubbornness_bump_multiplier: float = 1.0,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -597,6 +602,12 @@ def build_engine(
         # the build-time IC centers.
         "faction_center_scale": float(faction_center_scale),
         "faction_sigma_within": float(faction_sigma_within),
+        # Phase 9 Tier C: gate for whether the 4 emergence events fire,
+        # and the multiplier on event-level Δstubbornness.
+        "faction_anchor_events": bool(faction_anchor_events),
+        "event_stubbornness_bump_multiplier": float(
+            event_stubbornness_bump_multiplier
+        ),
         "viz": {
             "title": TITLE,
             "group_names": PARTY_NAMES,
@@ -622,6 +633,11 @@ def build_engine(
         # bundle-level 0.04 — Phase 8a value). Within Hetherington
         # 2001 elite-cue magnitude range (defensible).
         PartyPull(strength=0.07),   # ON from 1980 (8f §1.1 historical-only)
+        # Phase 9 Tier C: FactionAnchor — inert until events tag agents.
+        # Self-gates on the `faction_center` attr (no-op at t=0 and
+        # no-op for any agent without the attr). Placed AFTER PartyPull
+        # and BEFORE BoundedConfidenceInfluence per `phase9_spec.md §9.1`.
+        FactionAnchor(strength=faction_anchor_strength),
         MediaConsumption(strength=0.0),   # OFF — turns on at 1987 (Fairness)
         # Phase 8f §1.1 (combo_JJ): historical-only baseline 0.10 → 0.0.
         # Pillar default (Phase 5 baseline=0.10) unchanged at the rule
@@ -829,34 +845,76 @@ def _relabel_agents(engine, sampled_ids, new_label, sub_centroid, stub_delta,
                     stub_cap=0.95):
     """Apply the standard faction-emergence re-label to an agent set.
 
-    Phase 9 Tier-A-rescue: sub_centroid is multiplied by the env-level
-    `faction_center_scale` so emergence-event centroids track the
-    scaled IC world consistently. The stub_delta is left at the spec
-    value (event-level Δstubbornness is not swept — only the
-    build-time `faction_stubbornness_boost` is)."""
-    rng = np.random.default_rng(
-        engine.env.attrs.get("faction_event_rng_seed", 0) + hash(new_label) % (2**31)
-    )
+    Phase 9 Tier C (`phase9_spec.md §9.2`): events no longer overwrite
+    `party_cue` (that hard-binds the agent to the sub-centroid via
+    PartyPull and over-anchors). Instead, events set `faction_center`,
+    which the new `FactionAnchor` rule reads to add a faction-specific
+    tug on top of PartyPull's existing party-centroid pull. The
+    stubbornness bump multiplies by the env-level
+    `event_stubbornness_bump_multiplier` (default 1.0).
+
+    `faction_center_scale` is preserved from Tier A — default 1.0 →
+    sub_centroid passes through unchanged. The diagnostic `faction`
+    label is preserved.
+    """
     scale = float(engine.env.attrs.get("faction_center_scale", 1.0))
     scaled_centroid = np.asarray(sub_centroid, dtype=float) * scale
+    bump_mult = float(engine.env.attrs.get(
+        "event_stubbornness_bump_multiplier", 1.0
+    ))
+    effective_delta = stub_delta * bump_mult
     for a in engine.agents:
         if a.id not in sampled_ids:
             continue
         a.state.attrs["faction"] = new_label
-        a.state.attrs["party_cue"] = (
-            scaled_centroid + rng.normal(0.0, 0.04, size=2)
+        # Tier C: set faction_center (read by FactionAnchor). Fresh
+        # ndarray per agent — defensive against accidental aliasing.
+        a.state.attrs["faction_center"] = np.array(
+            [float(scaled_centroid[0]), float(scaled_centroid[1])]
         )
         s = float(a.state.attrs.get("stubbornness", 0.0))
-        a.state.attrs["stubbornness"] = float(min(stub_cap, s + stub_delta))
+        a.state.attrs["stubbornness"] = float(min(stub_cap, s + effective_delta))
 
 
 def _sample_from_faction(engine, source_faction, fraction, sampling_rng):
     """Return a set of agent ids sampled (without replacement) from the
-    given source faction at the given fraction."""
+    given source faction at the given fraction.
+
+    Under Tier A (`factional_seeding=True`), agents carry a `faction`
+    tag and the source set is the literal `attrs["faction"] == source_faction`
+    population. Under Tier C (default `factional_seeding=False`), no
+    agent has a `faction` tag at t=0; we fall back to a party-based
+    surrogate so the emergence events still tag a representative
+    subset:
+
+      Mainstream_Reps     → party=1 (Republican)
+      Mainstream_Dems     → party=0 (Democrat)
+      New_Right_Religious → party=1 with y > 0.2 (cultural-right)
+      New_Left            → party=0 with y < -0.2 (cultural-left)
+
+    The fraction is reinterpreted relative to the surrogate set's size.
+    Spec §9 Tier C: the absolute count tagged is not gospel; the
+    mechanism's effect strength is swept via `faction_anchor_strength`.
+    """
     source_ids = sorted(
         a.id for a in engine.agents
         if a.state.attrs.get("faction") == source_faction
     )
+    if not source_ids:
+        # Tier C fallback: party + position surrogate.
+        def _surrogate_match(a):
+            party = a.state.attrs.get("party")
+            y = float(a.state.ideology[1])
+            if source_faction == "Mainstream_Reps":
+                return party == 1
+            if source_faction == "Mainstream_Dems":
+                return party == 0
+            if source_faction == "New_Right_Religious":
+                return party == 1 and y > 0.2
+            if source_faction == "New_Left":
+                return party == 0 and y < -0.2
+            return False
+        source_ids = sorted(a.id for a in engine.agents if _surrogate_match(a))
     if not source_ids:
         return set()
     n = int(round(fraction * len(source_ids)))
@@ -871,7 +929,7 @@ def _sample_from_faction(engine, source_faction, fraction, sampling_rng):
 def _event_2009_tea_party(engine):
     """Spec §4: re-label ~7% of Mainstream_Reps as Tea_Party.
     Source: Skocpol & Williamson 2012."""
-    if not engine.env.attrs.get("factional_seeding"):
+    if not engine.env.attrs.get("faction_anchor_events", True):
         return
     sampling_rng = np.random.default_rng(
         engine.env.attrs["faction_event_rng_seed"] + 2009
@@ -888,7 +946,7 @@ def _event_2009_tea_party(engine):
 def _event_2015_maga(engine):
     """Spec §4: re-label ~9% of Mainstream_Reps + ~40% of
     New_Right_Religious as MAGA. Source: Sides, Tesler & Vavreck 2018."""
-    if not engine.env.attrs.get("factional_seeding"):
+    if not engine.env.attrs.get("faction_anchor_events", True):
         return
     sampling_rng = np.random.default_rng(
         engine.env.attrs["faction_event_rng_seed"] + 2015
@@ -909,7 +967,7 @@ def _event_2015_maga(engine):
 def _event_2016_bernie(engine):
     """Spec §4: re-label ~5% of Mainstream_Dems as Bernie_Progressives.
     Source: Heaney & Rojas 2015 + ANES 2016."""
-    if not engine.env.attrs.get("factional_seeding"):
+    if not engine.env.attrs.get("faction_anchor_events", True):
         return
     sampling_rng = np.random.default_rng(
         engine.env.attrs["faction_event_rng_seed"] + 2016
@@ -926,7 +984,7 @@ def _event_2016_bernie(engine):
 def _event_2018_dsa(engine):
     """Spec §4: re-label ~3% of New_Left as DSA. Source: DSA membership
     reports + Schwartz 2017."""
-    if not engine.env.attrs.get("factional_seeding"):
+    if not engine.env.attrs.get("faction_anchor_events", True):
         return
     sampling_rng = np.random.default_rng(
         engine.env.attrs["faction_event_rng_seed"] + 2018
@@ -1010,7 +1068,10 @@ def _decade_boundary_2020(engine):
         engine.env.attrs["party_issue_coupling"] = PARTY_ISSUE_COUPLING_SCHEDULE["2020-25"]
 
 
-def build_schedule(factional_seeding: bool = False) -> Schedule:
+def build_schedule(
+    factional_seeding: bool = False,
+    faction_anchor_events: bool = False,
+) -> Schedule:
     """Build the historical event schedule.
 
     All ticks are 1980-relative. TICKS_PER_YEAR = 3.
@@ -1078,7 +1139,7 @@ def build_schedule(factional_seeding: bool = False) -> Schedule:
     #   2015 → tick 105 (MAGA emergence; Sides/Tesler/Vavreck 2018)
     #   2016 → tick 108 (Bernie surge — same tick as Trump+threat)
     #   2018 → tick 114 (DSA emergence — same tick as bump revert)
-    if factional_seeding:
+    if factional_seeding or faction_anchor_events:
         events.extend([
             ScheduledEvent(87, "tea_party_2009",
                            "Tea Party emergence (2009) — 7% of "

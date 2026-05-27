@@ -325,3 +325,166 @@ parameter range. The reason is structural, not parameter-driven.
 Next direction is a Vlad-level decision among Options B-mix /
 C / N (§6). No further engine changes recommended until that
 fork is resolved.
+
+---
+
+## 10. Tier C results
+
+*Per `phase9_spec.md §9` Tier C addendum: ICs stay broad-Gaussian
+(`factional_seeding=False`); a new `FactionAnchor` rule pulls agents
+tagged by the 4 post-2009 emergence events toward their faction
+sub-centroid. Events no longer overwrite `party_cue` — they set
+`faction_center`, which the new rule reads.*
+
+### 10.1 Mechanism summary
+
+- New file `abm/rules/faction_anchor.py`. Per-agent rule, signature
+  `apply(agent, space, env, rng) → StateDelta`. Returns zero delta
+  when `attrs["faction_center"]` is missing — so the rule is inert
+  at t=0 (no agent tagged) and inert in the pillar (which never
+  tags). Added to **both** pillar and historical_arc pipelines
+  unconditionally; self-gates on the attr.
+- The 4 emergence events (`_event_2009_tea_party`, `_event_2015_maga`,
+  `_event_2016_bernie`, `_event_2018_dsa`) were rewired in
+  `_relabel_agents`:
+  - **Removed:** overwriting `party_cue` with sub-centroid + noise.
+  - **Added:** `attrs["faction_center"] = scaled_centroid` (fresh
+    ndarray per agent).
+  - Kept the `attrs["faction"]` diagnostic label.
+  - Kept the stubbornness bump, now multiplied by
+    `env.attrs["event_stubbornness_bump_multiplier"]`.
+- Under `factional_seeding=False` (Tier C default), no agent has a
+  `faction` tag at t=0. The events now sample from a **party + position
+  surrogate** in `_sample_from_faction` (e.g. `Mainstream_Reps → party=1`,
+  `New_Right_Religious → party=1 ∧ y > 0.2`). Spec §9 reinterprets the
+  fractions accordingly; the absolute count tagged is not gospel.
+- `historical_arc.build_engine` gains three kwargs:
+  - `faction_anchor_strength: float = 0.04`
+  - `faction_anchor_events: bool = True`
+  - `event_stubbornness_bump_multiplier: float = 1.0`
+- Pillar bit-identity preserved: `tests/test_pillar_stages.py` 9/9 green.
+
+### 10.2 Sweep (12 cells × 5 seeds)
+
+`scripts/phase9_tier_c_sweep.py`:
+`faction_anchor_strength ∈ {0.02, 0.04, 0.06, 0.08}` ×
+`event_stubbornness_bump_multiplier ∈ {0.5, 1.0, 1.5}`.
+
+**Result: 12/12 cells pass §11 (≥18/24).** This is the inverse of
+Tier A's 0/27.
+
+Top 3 by `w2_total` among §11-passers:
+
+| strength | bump | w2_total | §11 cells |
+|---|---|---|---|
+| 0.08 | 0.5 | 1.8123 | 18/24 |
+| 0.08 | 1.0 | 1.8134 | 18/24 |
+| 0.06 | 0.5 | 1.8144 | 19/24 |
+
+The sweep is essentially flat: all 12 cells land within 0.007 on
+`w2_total` and within ±1 cell of the 18 threshold. Effect is
+monotone-mild — higher strength gives marginally lower w2_total
+(consistent with the small FactionAnchor pull producing a small
+nudge toward sub-centroids on a small subpopulation).
+
+Winner: `strength=0.08, bump=0.5`, `w2_total=1.8123`, §11=18/24.
+
+### 10.3 Blessed re-run (9 seeds)
+
+`scripts/phase9_tier_c_blessed.py` at strength=0.08, bump=0.5:
+
+| Decade | Baseline | Tier C blessed | Δ | 2×CI gate | Significant? |
+|---|---|---|---|---|---|
+| 1980 | 0.249 | 0.249 | +0.000 | 0.046 | No (identical IC) |
+| 1990 | 0.325 | 0.325 | +0.000 | 0.024 | No (no events yet) |
+| 2000 | 0.414 | 0.414 | +0.000 | 0.042 | No (no events yet) |
+| 2010 | 0.413 | 0.413 | -0.000 | 0.032 | No |
+| 2020 | 0.415 | 0.407 | +0.008 | 0.028 | No |
+| **sum** | 1.816 | 1.809 | **+0.008** | — | — |
+
+**§11 cells under Tier C blessed: 21/24** (vs Phase 8f baseline 21/25
+and Tier A's catastrophic 8/24). Misses:
+- 2000 party_sep 0.519 vs band [0.55, 0.70] — LOW.
+- 2000 affect -0.555 vs band [-0.55, -0.40] — HOT by 0.005.
+- 1980 variance 0.387 vs band [0.45, 0.60] — LOW (pre-existing baseline
+  miss, not caused by Tier C; Tier C 1980 IC is bit-identical to
+  baseline).
+
+### 10.4 2020 shape descriptors
+
+| Metric | Empirical | Baseline | Tier C blessed | Δ (TC - base) |
+|---|---|---|---|---|
+| var(x) | 0.29 | 0.144 | 0.146 | +0.002 |
+| var(y) | 0.27 | 0.042 | 0.045 | **+0.003 (still 6× under)** |
+| corr(x,y) | 0.57 | 0.540 | 0.596 | **+0.056** |
+| mean(\|x\|) | 0.46 | 0.334 | 0.339 | +0.005 |
+
+The y-axis fix is **not achieved.** FactionAnchor on a small surrogate
+subset (3-9% of partisans by party-surrogate sampling) produces a
+modest correlation lift but does not meaningfully disperse the
+cultural axis. Wasserstein at 2020 improves by +0.008 — about
+one-third of the 2×CI gate, so not statistically significant.
+
+### 10.5 Verdict
+
+- **§11 gate: PASS** (21/24 ≥ 18). Tier C preserves the 1980-2025
+  trajectory bands that Tier A broke.
+- **Wasserstein gate: FAIL** (spec §9.6: at least 2 of 5 decades must
+  improve significantly; actual: 0 of 5).
+- **Overall: PARTIAL.** Tier C avoids Tier A's structural regression
+  but doesn't move the needle on the empirical-distribution fit.
+  The mechanism does exactly what Vlad's spec §9 said it would — a
+  small, late-emerging factional tug on a small subpopulation — and
+  that magnitude is, empirically, too small to bridge the 6× gap
+  between model var(y) and empirical var(y).
+
+### 10.6 Open questions / caveats
+
+1. **Party + position surrogate sampling** under Tier C. The spec
+   §9 doesn't specify how to sample without faction labels; under
+   broad-Gaussian ICs no agent has a faction tag at t=0. The
+   literature-faithful default chosen here (party + y-axis filter
+   for the cultural-issue factions) tags 3-9% of partisans per event,
+   matching the Tier A absolute counts within ~1pp. Inline-documented
+   in `_sample_from_faction`. If Vlad prefers a different surrogate
+   (e.g. broader fraction at higher strength), the existing kwargs
+   permit it without code edits.
+2. **`event_stubbornness_bump_multiplier` is essentially neutral**
+   across the swept range {0.5, 1.0, 1.5} — w2_total varies by ≤0.003.
+   The mechanism's effect is dominated by `faction_anchor_strength`
+   and by how many ticks the rule has to act between event firing
+   and decade snapshot.
+3. **The structural gap remains.** Tier A demonstrated that
+   IC-anchored factions over-bind party-to-position. Tier C
+   demonstrated that emergence-anchored factions are too weak to
+   close the var(y) gap. Neither tier is a Wasserstein fix; both
+   tell us something real about the mechanism space.
+4. **Pillar bit-identity gate**: pillar tests pass bit-identical with
+   FactionAnchor in the pipeline. The self-gating attr-check works
+   as designed.
+
+### 10.7 Files produced
+
+- New: `abm/rules/faction_anchor.py` (~50 LOC).
+- New: `scripts/phase9_tier_c_sweep.py`, `scripts/phase9_tier_c_blessed.py`,
+  `scripts/phase9_compare_tier_c_vs_baseline.py`.
+- New: `tests/test_phase9_faction_anchor.py` (8 tests, green).
+- Modified: `abm/pillars/historical_arc.py` — 3 new kwargs, event
+  rewire (party_cue → faction_center), surrogate sampling fallback.
+- Modified: `abm/pillars/calm_to_camps.py` — FactionAnchor in pipeline.
+- Modified: `tests/test_phase9_factional_seeding.py` — updated 2 tests
+  to Tier C semantics (faction_center, not party_cue).
+- Data: `phase9_tier_c_sweep.{csv,json}`, `phase9_tier_c_sweep_winner.json`,
+  `phase9_tier_c_blessed_score.json`,
+  `phase9_section11_under_tier_c_blessed.json`,
+  `phase9_tier_c_blessed_descriptors.csv`,
+  `phase9_tier_c_vs_baseline.csv`.
+
+### 10.8 Sign-off
+
+Tier C is the structural inverse of Tier A and ships behind defaults
+that preserve every existing test. `methods.md` is NOT updated since
+the Wasserstein gate failed — per task discipline ("Update methods.md
+ONLY IF Tier C passes both gates"). Tier C is honest infrastructure
+for future emergence experiments; it is not the empirical-fit
+breakthrough.

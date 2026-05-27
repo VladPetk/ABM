@@ -134,6 +134,10 @@ def test_independents_unaffected():
 
 
 def test_tea_party_event_relabels():
+    """Phase 9 Tier C: event sets `faction_center` (NOT `party_cue`).
+    Spec §9.2 — party_cue stays at its original party-centroid-noise
+    value; FactionAnchor reads faction_center for the faction-specific
+    tug."""
     eng = build_engine(seed=0, n_agents=500, factional_seeding=True)
     sched = build_schedule(factional_seeding=True)
     # Run past tick 87 (2009 Tea Party event).
@@ -145,9 +149,9 @@ def test_tea_party_event_relabels():
     assert len(tp_agents) > 0, "Tea Party event should re-label some agents"
     target = np.array([0.55, 0.30])
     for a in tp_agents:
-        cue = np.asarray(a.state.attrs["party_cue"])
-        # cue is centroid + N(0, 0.04): within ~4 sigma in each axis.
-        assert np.linalg.norm(cue - target) < 0.30
+        center = np.asarray(a.state.attrs["faction_center"])
+        # Tier C: faction_center is the exact sub-centroid (no noise).
+        assert np.allclose(center, target)
 
 
 def test_maga_event_two_source_factions():
@@ -171,19 +175,23 @@ def test_maga_event_two_source_factions():
 
 
 def test_event_does_not_move_ideology():
-    """The MAGA event re-labels and updates party_cue + stubbornness
-    only — the agent's `state.ideology` is unchanged at the firing
-    moment (drift afterward comes from PartyPull, not the event)."""
+    """Phase 9 Tier C: event re-labels and sets `faction_center` +
+    bumps stubbornness only — the agent's `state.ideology` is unchanged
+    at the firing moment (drift afterward comes from FactionAnchor + the
+    existing PartyPull, not the event itself)."""
     eng = build_engine(seed=0, n_agents=500, factional_seeding=True)
     sched = build_schedule(factional_seeding=True)
     # Advance to tick 104 — the MAGA event at tick 105 has NOT yet fired.
     run_to(eng, sched, 104)
     pre_ideology = {a.id: a.state.ideology.copy() for a in eng.agents}
     pre_faction = {a.id: a.state.attrs.get("faction") for a in eng.agents}
-    pre_party_cue = {
-        a.id: np.asarray(a.state.attrs.get("party_cue")).copy()
+    pre_faction_center = {
+        a.id: (
+            np.asarray(a.state.attrs.get("faction_center")).copy()
+            if a.state.attrs.get("faction_center") is not None
+            else None
+        )
         for a in eng.agents
-        if a.state.attrs.get("party_cue") is not None
     }
     # Directly invoke the MAGA event handler — no engine ticks fire in
     # between, so any ideology delta would be from the event itself.
@@ -198,6 +206,8 @@ def test_event_does_not_move_ideology():
     for a in new_maga:
         # Ideology unchanged at the firing moment.
         assert np.array_equal(a.state.ideology, pre_ideology[a.id])
-        # But party_cue DID move (event re-anchors the target).
-        new_cue = np.asarray(a.state.attrs["party_cue"])
-        assert not np.array_equal(new_cue, pre_party_cue[a.id])
+        # Tier C: faction_center is set (it was None before, the event
+        # is the one that sets it).
+        new_center = a.state.attrs["faction_center"]
+        assert new_center is not None
+        assert pre_faction_center[a.id] is None
