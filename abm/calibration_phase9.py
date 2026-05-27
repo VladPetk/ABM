@@ -1,7 +1,7 @@
 """Phase 9 — Empirical-distribution calibration harness.
 
 Score an engine run against per-decade empirical KDE / pointcloud
-targets in `phase9_data/`. The primary metric is 2D Wasserstein-2
+targets in `data/phase9_empirical/`. The primary metric is 2D Wasserstein-2
 distance via POT (`ot.emd2`) with squared-Euclidean cost on
 sub-sampled point clouds (n_sub=250 per side per the spec §2.1).
 

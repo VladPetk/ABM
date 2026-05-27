@@ -31,7 +31,7 @@ FACTIONAL_SEEDING = True
 FACTION_STUBBORNNESS_BOOST_VALUE = float(
     os.environ.get("PHASE9_BOOST", "0.5")
 )
-DATA_DIR = Path("phase9_data")
+DATA_DIR = Path("data/phase9_empirical")
 
 DECADE_TICKS = [
     (1980, 0),

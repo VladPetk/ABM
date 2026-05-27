@@ -51,7 +51,7 @@ from abm.calibration_parallel import ci_95, run_seeds_parallel
 SEEDS = tuple(range(9))
 N = 250
 INDEPENDENT_FRACTION = 0.12
-DATA_DIR = Path("phase9_data")
+DATA_DIR = Path("data/phase9_empirical")
 
 # Tick → decade map. 1980 is the initial state at tick 0. The other
 # decade ticks come from `historical_arc.DECADE_BOUNDARIES`.

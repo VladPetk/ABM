@@ -139,7 +139,7 @@ def _evaluate_cell(scale: float, sigma: float, boost: float) -> dict:
     for seed, res in zip(SEEDS, results):
         df = score_engine_run(
             positions_by_decade=res["snapshots"],
-            target_dir=Path("phase9_data"),
+            target_dir=Path("data/phase9_empirical"),
             seed_for_subsample=seed,
         )
         for _, row in df.iterrows():

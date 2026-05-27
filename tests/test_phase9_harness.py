@@ -16,7 +16,7 @@ import pytest
 
 import abm.calibration_phase9 as cp9
 
-DATA_DIR = Path(__file__).parent.parent / "phase9_data"
+DATA_DIR = Path(__file__).parent.parent / "data" / "phase9_empirical"
 
 
 def test_load_empirical_targets():

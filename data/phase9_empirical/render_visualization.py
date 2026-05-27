@@ -1,6 +1,6 @@
 """
-phase9_data/render_visualization.py
-====================================
+data/phase9_empirical/render_visualization.py
+==============================================
 
 Render a one-page-per-decade PDF visualizing the empirical target KDEs
 alongside the per-source synthetic point clouds.
@@ -13,7 +13,7 @@ Augmentation pass adds:
     against the post-augmentation (raw + typology) KDE per decade.
   - correlation trajectory plot before/after.
 
-Output: D:\\MyApps\\ABM\\phase9_empirical_targets_visualization.pdf
+Output: D:\\MyApps\\ABM\\docs\\results\\phase9_empirical_targets_visualization.pdf
 """
 
 import os
@@ -34,7 +34,7 @@ from build_empirical_targets import (
 
 
 OUT_PDF = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "phase9_empirical_targets_visualization.pdf")
+    os.path.join(os.path.dirname(__file__), "..", "..", "docs", "results", "phase9_empirical_targets_visualization.pdf")
 )
 PREAUG_DIR = os.path.dirname(os.path.abspath(__file__))
 
