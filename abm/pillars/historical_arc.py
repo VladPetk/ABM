@@ -226,6 +226,42 @@ PARTY_ASSIGNMENT_K = {
 MEDIA_CUE_SIGMA = 0.40
 
 
+# ---------------------------------------------------------------------
+# Phase 9 Tier A — factional seeding (spec §3.1, §3.2, §3.3, §4).
+# ---------------------------------------------------------------------
+# 8-faction 1980-appropriate population mix. Weights sum to 1.00.
+# `party=None` → Centrist faction draws party via the existing K-sigmoid
+# (kept un-anchored). All other factions assign party deterministically
+# from this dict. Within-faction draw: pos = center + N(0, 0.05),
+# clipped to [-1, 1]^2. See `phase9_spec.md §3.1`.
+HISTORICAL_FACTIONS_1980 = {
+    "New_Left":             {"center": np.array([-0.55, -0.40]), "weight": 0.08, "party": 0},
+    "Mainstream_Dems":      {"center": np.array([-0.30, -0.15]), "weight": 0.22, "party": 0},
+    "Blue_Dog_Dems":        {"center": np.array([-0.20, +0.20]), "weight": 0.12, "party": 0},
+    "Centrists":            {"center": np.array([+0.00, +0.00]), "weight": 0.12, "party": None},
+    "Classical_Liberals":   {"center": np.array([+0.30, -0.30]), "weight": 0.06, "party": 1},
+    "Mainstream_Reps":      {"center": np.array([+0.30, +0.15]), "weight": 0.22, "party": 1},
+    "Old_Right":            {"center": np.array([+0.45, +0.35]), "weight": 0.12, "party": 1},
+    "New_Right_Religious":  {"center": np.array([+0.40, +0.55]), "weight": 0.06, "party": 1},
+}
+assert abs(sum(f["weight"] for f in HISTORICAL_FACTIONS_1980.values()) - 1.0) < 1e-9, (
+    "HISTORICAL_FACTIONS_1980 weights must sum to 1.0"
+)
+
+# Stubbornness-boost magnitude (spec §3.3, `kitchen_sink_v3` value).
+FACTION_STUBBORNNESS_BOOST = 0.5
+FACTION_STUBBORNNESS_CAP = 0.90
+
+# Phase 9 Tier A tuning knobs (Tier-A-rescue sweep). Defaults preserve
+# the spec §3 behavior bit-identically. See `scripts/phase9_tier_a_sweep.py`.
+FACTION_CENTER_SCALE_DEFAULT = 1.0  # multiplies all faction centers
+FACTION_SIGMA_WITHIN_DEFAULT = 0.05  # within-faction Gaussian σ at IC
+
+# Faction-event RNG seed offset — keeps faction-emergence events
+# deterministic per build seed but independent of build-time draws.
+FACTION_EVENT_RNG_SEED_OFFSET = 4242
+
+
 def _per_agent_heterogeneity(identity_strength: float, rng: np.random.Generator):
     """Compute per-agent (epsilon, fj_alpha, affect_lr) given
     identity_strength + a small Beta(2, 5)-shaped jitter. Phase 8b
@@ -260,6 +296,10 @@ def build_engine(
     n_agents: int = 250,
     independent_fraction: float = 0.0,
     phase8e_baseline: bool = False,
+    factional_seeding: bool = False,
+    faction_stubbornness_boost: float = FACTION_STUBBORNNESS_BOOST,
+    faction_center_scale: float = FACTION_CENTER_SCALE_DEFAULT,
+    faction_sigma_within: float = FACTION_SIGMA_WITHIN_DEFAULT,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -291,6 +331,26 @@ def build_engine(
         indep_ids = set(int(i) for i in rng.permutation(n_agents)[:n_indep])
     else:
         indep_ids = set()
+
+    # Phase 9 Tier A: pre-sample factions for non-Independents.
+    # Done as a single rng.choice call so the rng-state advance is
+    # localised — keeps the per-agent rng sequence behaviour clean.
+    # When factional_seeding=False this branch does NOT run, preserving
+    # bit-identity to pre-Phase-9 head.
+    faction_assignments: dict[int, str] = {}
+    if factional_seeding:
+        faction_labels = list(HISTORICAL_FACTIONS_1980.keys())
+        faction_weights = np.array(
+            [HISTORICAL_FACTIONS_1980[k]["weight"] for k in faction_labels],
+            dtype=float,
+        )
+        partisan_ids = [i for i in range(n_agents) if i not in indep_ids]
+        if partisan_ids:
+            sampled = rng.choice(
+                len(faction_labels), size=len(partisan_ids), p=faction_weights,
+            )
+            for aid, idx in zip(partisan_ids, sampled):
+                faction_assignments[int(aid)] = faction_labels[int(idx)]
 
     outlets = list(US_MEDIA_OUTLETS_2024)
     outlets_by_id = {o.id: o for o in outlets}
@@ -360,6 +420,24 @@ def build_engine(
         p_party_1 = 1.0 / (1.0 + np.exp(-k_1980 * pos_x))
         party = 1 if rng.random() < p_party_1 else 0
 
+        # Phase 9 Tier A: override position + party from faction draw.
+        # For Centrists, only override position (party stays sigmoid-drawn).
+        # For partisans, override party too (deterministic from faction).
+        faction_label = faction_assignments.get(i) if factional_seeding else None
+        if faction_label is not None:
+            fac = HISTORICAL_FACTIONS_1980[faction_label]
+            # Phase 9 Tier-A-rescue sweep: faction_center_scale and
+            # faction_sigma_within tune the initial-condition sort.
+            # Defaults (1.0, 0.05) preserve spec §3.1 behavior bit-
+            # identically.
+            faction_center = fac["center"] * faction_center_scale
+            faction_pos = faction_center + rng.normal(
+                0.0, faction_sigma_within, size=2,
+            )
+            pos = np.clip(faction_pos, -1.0, 1.0)
+            if fac["party"] is not None:
+                party = int(fac["party"])
+
         diet = diet_for_party(PARTY_CENTERS_1980[party], outlets, rng)
         identity_strength = float(rng.beta(2.0, 2.0))
         identities = np.clip(
@@ -378,6 +456,26 @@ def build_engine(
         party_cue = PARTY_CENTERS_1980[party] + rng.normal(
             0.0, sigma_pc, size=2
         )
+        # Phase 9 Tier A: factional cue + extremity-graded stubbornness.
+        # Applied for non-Centrist faction-seeded partisans only.
+        # Centrists keep PARTY_CENTERS_1980-based cue + unboosted
+        # stubbornness (they're not faction-anchored, spec §3.2/§3.3).
+        if (
+            faction_label is not None
+            and HISTORICAL_FACTIONS_1980[faction_label]["party"] is not None
+        ):
+            # Phase 9 Tier-A-rescue: scale the cue centroid by
+            # faction_center_scale so the cue tracks the scaled IC.
+            fac_center = (
+                HISTORICAL_FACTIONS_1980[faction_label]["center"]
+                * faction_center_scale
+            )
+            party_cue = fac_center + rng.normal(0.0, 0.04, size=2)
+            extremity = float(np.linalg.norm(fac_center))
+            stubbornness = float(min(
+                FACTION_STUBBORNNESS_CAP,
+                stubbornness + faction_stubbornness_boost * extremity,
+            ))
 
         # 1980 affect — ANES out-party therm ~40° = mild-moderate
         # coolness ≈ -0.20 normalised to [-1, 1]. Seed at build with
@@ -430,6 +528,8 @@ def build_engine(
             attrs["perceived_threat"] = 0.0
             # Phase 8e §3: per-agent media_cue bias. Partisans only.
             attrs["media_cue"] = rng.normal(0.0, MEDIA_CUE_SIGMA, size=2)
+        if faction_label is not None:
+            attrs["faction"] = faction_label
         agents.append(Agent(id=i, state=AgentState(ideology=pos, attrs=attrs)))
 
     # social_coord — same Phase 3 pattern, modest in 1980 (residential
@@ -486,6 +586,17 @@ def build_engine(
         "cohort_diet_factory": (lambda pty, rng_: diet_for_party(
             party_centers[pty], outlets, rng_
         )),
+        # Phase 9 Tier A: deterministic per-build RNG seed for the
+        # faction-emergence events. Each event handler builds its own
+        # `np.random.default_rng(seed)` from this — keeps the events
+        # bit-deterministic given the build seed.
+        "faction_event_rng_seed": int(seed) + FACTION_EVENT_RNG_SEED_OFFSET,
+        "factional_seeding": bool(factional_seeding),
+        # Phase 9 Tier-A-rescue sweep knobs. Read by faction-emergence
+        # event handlers so their sub-centroids scale consistently with
+        # the build-time IC centers.
+        "faction_center_scale": float(faction_center_scale),
+        "faction_sigma_within": float(faction_sigma_within),
         "viz": {
             "title": TITLE,
             "group_names": PARTY_NAMES,
@@ -704,6 +815,131 @@ def _event_2016_status_threat(engine):
             a.state.attrs["perceived_threat"] = float(THREAT_2016_MAGNITUDE)
 
 
+# ---------------------------------------------------------------------
+# Phase 9 Tier A — faction-emergence events (spec §4).
+# Each event re-labels a sampled subset of agents from a source faction,
+# updates their `party_cue` to the new sub-centroid, bumps stubbornness.
+# Crucially: agent.state.ideology is NOT moved — only target (party_cue)
+# and anchor strength (stubbornness) change. Agents drift toward the new
+# sub-centroid under existing PartyPull dynamics over subsequent ticks.
+# ---------------------------------------------------------------------
+
+
+def _relabel_agents(engine, sampled_ids, new_label, sub_centroid, stub_delta,
+                    stub_cap=0.95):
+    """Apply the standard faction-emergence re-label to an agent set.
+
+    Phase 9 Tier-A-rescue: sub_centroid is multiplied by the env-level
+    `faction_center_scale` so emergence-event centroids track the
+    scaled IC world consistently. The stub_delta is left at the spec
+    value (event-level Δstubbornness is not swept — only the
+    build-time `faction_stubbornness_boost` is)."""
+    rng = np.random.default_rng(
+        engine.env.attrs.get("faction_event_rng_seed", 0) + hash(new_label) % (2**31)
+    )
+    scale = float(engine.env.attrs.get("faction_center_scale", 1.0))
+    scaled_centroid = np.asarray(sub_centroid, dtype=float) * scale
+    for a in engine.agents:
+        if a.id not in sampled_ids:
+            continue
+        a.state.attrs["faction"] = new_label
+        a.state.attrs["party_cue"] = (
+            scaled_centroid + rng.normal(0.0, 0.04, size=2)
+        )
+        s = float(a.state.attrs.get("stubbornness", 0.0))
+        a.state.attrs["stubbornness"] = float(min(stub_cap, s + stub_delta))
+
+
+def _sample_from_faction(engine, source_faction, fraction, sampling_rng):
+    """Return a set of agent ids sampled (without replacement) from the
+    given source faction at the given fraction."""
+    source_ids = sorted(
+        a.id for a in engine.agents
+        if a.state.attrs.get("faction") == source_faction
+    )
+    if not source_ids:
+        return set()
+    n = int(round(fraction * len(source_ids)))
+    if n <= 0:
+        return set()
+    if n >= len(source_ids):
+        return set(source_ids)
+    chosen = sampling_rng.choice(source_ids, size=n, replace=False)
+    return set(int(i) for i in chosen)
+
+
+def _event_2009_tea_party(engine):
+    """Spec §4: re-label ~7% of Mainstream_Reps as Tea_Party.
+    Source: Skocpol & Williamson 2012."""
+    if not engine.env.attrs.get("factional_seeding"):
+        return
+    sampling_rng = np.random.default_rng(
+        engine.env.attrs["faction_event_rng_seed"] + 2009
+    )
+    sampled = _sample_from_faction(
+        engine, "Mainstream_Reps", 0.07, sampling_rng,
+    )
+    _relabel_agents(
+        engine, sampled, "Tea_Party",
+        sub_centroid=(0.55, 0.30), stub_delta=0.15,
+    )
+
+
+def _event_2015_maga(engine):
+    """Spec §4: re-label ~9% of Mainstream_Reps + ~40% of
+    New_Right_Religious as MAGA. Source: Sides, Tesler & Vavreck 2018."""
+    if not engine.env.attrs.get("factional_seeding"):
+        return
+    sampling_rng = np.random.default_rng(
+        engine.env.attrs["faction_event_rng_seed"] + 2015
+    )
+    from_mreps = _sample_from_faction(
+        engine, "Mainstream_Reps", 0.09, sampling_rng,
+    )
+    from_nrr = _sample_from_faction(
+        engine, "New_Right_Religious", 0.40, sampling_rng,
+    )
+    sampled = from_mreps | from_nrr
+    _relabel_agents(
+        engine, sampled, "MAGA",
+        sub_centroid=(0.50, 0.55), stub_delta=0.15,
+    )
+
+
+def _event_2016_bernie(engine):
+    """Spec §4: re-label ~5% of Mainstream_Dems as Bernie_Progressives.
+    Source: Heaney & Rojas 2015 + ANES 2016."""
+    if not engine.env.attrs.get("factional_seeding"):
+        return
+    sampling_rng = np.random.default_rng(
+        engine.env.attrs["faction_event_rng_seed"] + 2016
+    )
+    sampled = _sample_from_faction(
+        engine, "Mainstream_Dems", 0.05, sampling_rng,
+    )
+    _relabel_agents(
+        engine, sampled, "Bernie_Progressives",
+        sub_centroid=(-0.55, -0.30), stub_delta=0.10,
+    )
+
+
+def _event_2018_dsa(engine):
+    """Spec §4: re-label ~3% of New_Left as DSA. Source: DSA membership
+    reports + Schwartz 2017."""
+    if not engine.env.attrs.get("factional_seeding"):
+        return
+    sampling_rng = np.random.default_rng(
+        engine.env.attrs["faction_event_rng_seed"] + 2018
+    )
+    sampled = _sample_from_faction(
+        engine, "New_Left", 0.03, sampling_rng,
+    )
+    _relabel_agents(
+        engine, sampled, "DSA",
+        sub_centroid=(-0.70, -0.55), stub_delta=0.10,
+    )
+
+
 def _event_2018_trump_bump_revert(engine):
     """The Trump-era identity-sorting bump reverts to the decade's
     scheduled rate after 2 years."""
@@ -774,7 +1010,7 @@ def _decade_boundary_2020(engine):
         engine.env.attrs["party_issue_coupling"] = PARTY_ISSUE_COUPLING_SCHEDULE["2020-25"]
 
 
-def build_schedule() -> Schedule:
+def build_schedule(factional_seeding: bool = False) -> Schedule:
     """Build the historical event schedule.
 
     All ticks are 1980-relative. TICKS_PER_YEAR = 3.
@@ -834,6 +1070,33 @@ def build_schedule() -> Schedule:
                        "Affect spike reverts after 2020-21",
                        _event_2021_affect_revert),
     ]
+    # Phase 9 Tier A — faction-emergence events (spec §4). Gated behind
+    # factional_seeding=True; the handlers themselves also no-op when the
+    # env flag is off, so this gate is defence-in-depth.
+    # Tick assignments use TICKS_PER_YEAR=3, base 1980:
+    #   2009 → tick 87  (Tea Party emergence; Skocpol & Williamson 2012)
+    #   2015 → tick 105 (MAGA emergence; Sides/Tesler/Vavreck 2018)
+    #   2016 → tick 108 (Bernie surge — same tick as Trump+threat)
+    #   2018 → tick 114 (DSA emergence — same tick as bump revert)
+    if factional_seeding:
+        events.extend([
+            ScheduledEvent(87, "tea_party_2009",
+                           "Tea Party emergence (2009) — 7% of "
+                           "Mainstream_Reps re-labeled Tea_Party",
+                           _event_2009_tea_party),
+            ScheduledEvent(105, "maga_2015",
+                           "MAGA emergence (2015) — 9% of Mainstream_Reps "
+                           "+ 40% of New_Right_Religious re-labeled MAGA",
+                           _event_2015_maga),
+            ScheduledEvent(108, "bernie_2016",
+                           "Bernie surge (2016) — 5% of Mainstream_Dems "
+                           "re-labeled Bernie_Progressives",
+                           _event_2016_bernie),
+            ScheduledEvent(114, "dsa_2018",
+                           "DSA emergence (2018) — 3% of New_Left "
+                           "re-labeled DSA",
+                           _event_2018_dsa),
+        ])
     return Schedule(events)
 
 

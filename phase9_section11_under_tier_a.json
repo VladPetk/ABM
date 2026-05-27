@@ -1,0 +1,354 @@
+{
+  "variant": "tier_a_factional_seeding",
+  "n_agents": 250,
+  "independent_fraction": 0.12,
+  "faction_stubbornness_boost": 0.5,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "means": {
+    "1980": {
+      "variance": 0.1930229817440915,
+      "constraint": 0.7132581805251151,
+      "party_sep": 0.6554756080501511,
+      "affect": -0.25240925375944845,
+      "within_party_sd": 0.1480963374416032,
+      "xc_fraction": 0.37878587054651475,
+      "modularity": 0.20506685923550969
+    },
+    "1990": {
+      "variance": 0.14815262335491738,
+      "constraint": 0.748560766847493,
+      "party_sep": 0.6336686552046097,
+      "affect": -0.4437698938933009,
+      "within_party_sd": 0.13104665935189422,
+      "xc_fraction": 0.37116901107769196,
+      "modularity": 0.21124638183352726
+    },
+    "2000": {
+      "variance": 0.14239236983618614,
+      "constraint": 0.7541202244372497,
+      "party_sep": 0.6429154009348982,
+      "affect": -0.6153558054271833,
+      "within_party_sd": 0.1380821909395448,
+      "xc_fraction": 0.37585424627366154,
+      "modularity": 0.2072028102704557
+    },
+    "2010": {
+      "variance": 0.17027414577682295,
+      "constraint": 0.7642381156140111,
+      "party_sep": 0.7246362499474954,
+      "affect": -0.7006918881644081,
+      "within_party_sd": 0.14999434081396046,
+      "xc_fraction": 0.3747337898806705,
+      "modularity": 0.21046701641123253
+    },
+    "2020": {
+      "variance": 0.19619972042593067,
+      "constraint": 0.7949844387459764,
+      "party_sep": 0.7987211212654826,
+      "affect": -0.7913884814277091,
+      "within_party_sd": 0.15268269754359529,
+      "xc_fraction": 0.3628098520572319,
+      "modularity": 0.22501835567295045
+    },
+    "2025": {
+      "variance": 0.20865878667081705,
+      "constraint": 0.8101501565487726,
+      "party_sep": 0.8348786899608233,
+      "affect": -0.8256317362573528,
+      "within_party_sd": 0.15049665182413102,
+      "xc_fraction": 0.358172532304224,
+      "modularity": 0.2317374613001872
+    }
+  },
+  "ses": {
+    "1980": {
+      "variance": 0.0030925530551974383,
+      "constraint": 0.007115071772335234,
+      "party_sep": 0.006365658159397817,
+      "affect": 0.0021197925498107864,
+      "within_party_sd": 0.0022173846751096893,
+      "xc_fraction": 0.006121402724514999,
+      "modularity": 0.0069115610315182985
+    },
+    "1990": {
+      "variance": 0.0017906491761084525,
+      "constraint": 0.011320749298962715,
+      "party_sep": 0.004616951965377596,
+      "affect": 0.007299651673512612,
+      "within_party_sd": 0.002997206453393242,
+      "xc_fraction": 0.006275800285172647,
+      "modularity": 0.008143944757116732
+    },
+    "2000": {
+      "variance": 0.0019866428032090434,
+      "constraint": 0.00838710657297717,
+      "party_sep": 0.007217746022481669,
+      "affect": 0.013119942905748751,
+      "within_party_sd": 0.0025957001611448,
+      "xc_fraction": 0.00734157170512758,
+      "modularity": 0.008109652686318856
+    },
+    "2010": {
+      "variance": 0.002322975753660159,
+      "constraint": 0.012373619663517368,
+      "party_sep": 0.011328856750445515,
+      "affect": 0.01467120646561764,
+      "within_party_sd": 0.004111562940943511,
+      "xc_fraction": 0.008299205065502456,
+      "modularity": 0.008377910503273335
+    },
+    "2020": {
+      "variance": 0.003920312913111841,
+      "constraint": 0.0114061926427738,
+      "party_sep": 0.01453374745758123,
+      "affect": 0.015155402014904862,
+      "within_party_sd": 0.00461388301149832,
+      "xc_fraction": 0.008534967757381105,
+      "modularity": 0.009652602625934625
+    },
+    "2025": {
+      "variance": 0.004543102208457904,
+      "constraint": 0.011123438776477505,
+      "party_sep": 0.016182635810978358,
+      "affect": 0.013383136072101986,
+      "within_party_sd": 0.004468225907360304,
+      "xc_fraction": 0.007687301455582555,
+      "modularity": 0.007789958692055469
+    }
+  },
+  "cells_4x5": [
+    {
+      "year": 1990,
+      "metric": "constraint",
+      "value": 0.748560766847493,
+      "se": 0.011320749298962715,
+      "band_lo": 0.35,
+      "band_hi": 0.5,
+      "in_band": false
+    },
+    {
+      "year": 1990,
+      "metric": "party_sep",
+      "value": 0.6336686552046097,
+      "se": 0.004616951965377596,
+      "band_lo": 0.5,
+      "band_hi": 0.65,
+      "in_band": true
+    },
+    {
+      "year": 1990,
+      "metric": "affect",
+      "value": -0.4437698938933009,
+      "se": 0.007299651673512612,
+      "band_lo": -0.45,
+      "band_hi": -0.3,
+      "in_band": true
+    },
+    {
+      "year": 1990,
+      "metric": "within_party_sd",
+      "value": 0.13104665935189422,
+      "se": 0.002997206453393242,
+      "band_lo": 0.18,
+      "band_hi": 0.32,
+      "in_band": false
+    },
+    {
+      "year": 2000,
+      "metric": "constraint",
+      "value": 0.7541202244372497,
+      "se": 0.00838710657297717,
+      "band_lo": 0.45,
+      "band_hi": 0.6,
+      "in_band": false
+    },
+    {
+      "year": 2000,
+      "metric": "party_sep",
+      "value": 0.6429154009348982,
+      "se": 0.007217746022481669,
+      "band_lo": 0.55,
+      "band_hi": 0.7,
+      "in_band": true
+    },
+    {
+      "year": 2000,
+      "metric": "affect",
+      "value": -0.6153558054271833,
+      "se": 0.013119942905748751,
+      "band_lo": -0.55,
+      "band_hi": -0.4,
+      "in_band": false
+    },
+    {
+      "year": 2000,
+      "metric": "within_party_sd",
+      "value": 0.1380821909395448,
+      "se": 0.0025957001611448,
+      "band_lo": 0.18,
+      "band_hi": 0.3,
+      "in_band": false
+    },
+    {
+      "year": 2010,
+      "metric": "constraint",
+      "value": 0.7642381156140111,
+      "se": 0.012373619663517368,
+      "band_lo": 0.55,
+      "band_hi": 0.7,
+      "in_band": false
+    },
+    {
+      "year": 2010,
+      "metric": "party_sep",
+      "value": 0.7246362499474954,
+      "se": 0.011328856750445515,
+      "band_lo": 0.6,
+      "band_hi": 0.75,
+      "in_band": true
+    },
+    {
+      "year": 2010,
+      "metric": "affect",
+      "value": -0.7006918881644081,
+      "se": 0.01467120646561764,
+      "band_lo": -0.65,
+      "band_hi": -0.5,
+      "in_band": false
+    },
+    {
+      "year": 2010,
+      "metric": "within_party_sd",
+      "value": 0.14999434081396046,
+      "se": 0.004111562940943511,
+      "band_lo": 0.17,
+      "band_hi": 0.28,
+      "in_band": false
+    },
+    {
+      "year": 2020,
+      "metric": "constraint",
+      "value": 0.7949844387459764,
+      "se": 0.0114061926427738,
+      "band_lo": 0.6,
+      "band_hi": 0.75,
+      "in_band": false
+    },
+    {
+      "year": 2020,
+      "metric": "party_sep",
+      "value": 0.7987211212654826,
+      "se": 0.01453374745758123,
+      "band_lo": 0.65,
+      "band_hi": 0.8,
+      "in_band": true
+    },
+    {
+      "year": 2020,
+      "metric": "affect",
+      "value": -0.7913884814277091,
+      "se": 0.015155402014904862,
+      "band_lo": -0.78,
+      "band_hi": -0.6,
+      "in_band": false
+    },
+    {
+      "year": 2020,
+      "metric": "within_party_sd",
+      "value": 0.15268269754359529,
+      "se": 0.00461388301149832,
+      "band_lo": 0.15,
+      "band_hi": 0.25,
+      "in_band": true
+    },
+    {
+      "year": 2025,
+      "metric": "constraint",
+      "value": 0.8101501565487726,
+      "se": 0.011123438776477505,
+      "band_lo": 0.62,
+      "band_hi": 0.78,
+      "in_band": false
+    },
+    {
+      "year": 2025,
+      "metric": "party_sep",
+      "value": 0.8348786899608233,
+      "se": 0.016182635810978358,
+      "band_lo": 0.68,
+      "band_hi": 0.82,
+      "in_band": false
+    },
+    {
+      "year": 2025,
+      "metric": "affect",
+      "value": -0.8256317362573528,
+      "se": 0.013383136072101986,
+      "band_lo": -0.85,
+      "band_hi": -0.65,
+      "in_band": true
+    },
+    {
+      "year": 2025,
+      "metric": "within_party_sd",
+      "value": 0.15049665182413102,
+      "se": 0.004468225907360304,
+      "band_lo": 0.15,
+      "band_hi": 0.22,
+      "in_band": true
+    }
+  ],
+  "cells_1980_initial": [
+    {
+      "year": 1980,
+      "metric": "variance",
+      "value": 0.1930229817440915,
+      "se": 0.0030925530551974383,
+      "band_lo": 0.45,
+      "band_hi": 0.6,
+      "in_band": false
+    },
+    {
+      "year": 1980,
+      "metric": "constraint",
+      "value": 0.7132581805251151,
+      "se": 0.007115071772335234,
+      "band_lo": 0.25,
+      "band_hi": 0.4,
+      "in_band": false
+    },
+    {
+      "year": 1980,
+      "metric": "party_sep",
+      "value": 0.6554756080501511,
+      "se": 0.006365658159397817,
+      "band_lo": 0.45,
+      "band_hi": 0.6,
+      "in_band": false
+    },
+    {
+      "year": 1980,
+      "metric": "within_party_sd",
+      "value": 0.1480963374416032,
+      "se": 0.0022173846751096893,
+      "band_lo": 0.2,
+      "band_hi": 0.35,
+      "in_band": false
+    }
+  ],
+  "tally_4x5": 8,
+  "tally_4x5_total": 20,
+  "tally_24": 8,
+  "tally_24_total": 24,
+  "gate_pass_18_of_24": false
+}
