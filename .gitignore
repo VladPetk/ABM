@@ -27,6 +27,10 @@ phase8f_diag_*.json
 phase9_div_*.json
 phase9_logs/
 
+# Local research artifacts — kept on workstation, not in repo.
+# Diagnostic dumps from sweep scripts land here.
+local_artifacts/
+
 # Phase 9 Tier-A sweep noise — keep blessed/baseline/sweep CSV,
 # drop the per-boost intermediate JSONs that aren't referenced
 # from phase9_results.md.
