@@ -1,194 +1,378 @@
-"""Phase 6 — the public-facing intervention library.
+"""Phase 10 — public-facing intervention library (X1–X7).
 
-Five named interventions, each a recognisable real-world depolarization
-lever, each grounded in published literature, each mapping cleanly to
-a model mechanism. The educational payoff is the contrast between
-what an intuitive observer expects each intervention to do, and what
-the model — calibrated on Bail, Guess, Levendusky, Hetherington,
-Gidron et al. — actually shows it does.
+Seven literature-grounded depolarization interventions, each redesigned
+in Phase 10 against the Phase 9 ANES-recalibrated engine. See
+``docs/phase10_interventions/redesign_briefs.md`` for the per-
+intervention literature envelope, provenance tags, magnitude /
+duration / fraction pins, and falsification criteria.
 
-Each intervention is a **release-phase bundle** — applied at the end
-of the polarized S4 state, then the engine runs ``TICKS`` more to
-measure the effect. The ``label_kind`` tags below are the §11-blessed
-empirical buckets; if a future change moves an intervention out of its
-bucket, the consolidated test in ``tests/test_phase6.py`` fails and
-the tag is re-blessed (move the tag, not the threshold).
+Phase 10 changes from Phase 6 (preserved here for cross-version
+diff legibility):
+
+- **X1** — drop hard-coded ``asymmetric={0:0.7, 1:1.3}``; let
+  ``threat_amplification`` carry the asymmetry endogenously
+  (post-2016 event already sets ``threat=0.6`` for ~60% of party=1).
+  During the 4-tick exposure window, boost
+  ``BacklashRepulsion.threat_amplification`` 1.0 → 1.5 and
+  ``AffectiveUpdate.identity_weight`` 0.5 → 0.6.
+- **X2** — drop the Phase 6 ``BC.epsilon += 0.2`` "bridging" arm
+  (Stray 2022 had no measured effect size). Single-knob null lever:
+  ``BC.affect_weight = 0``.
+- **X3** — preserve the Phase 8c §3 mechanism (zero MSNBC + Fox in
+  ``media_diet``), but apply to only the treated 20% of agents
+  (Allcott 2020 take-up envelope, not the full population).
+- **X4** — keep ``identity_weight_override = 0.1`` for primed
+  agents; additionally dampen
+  ``IdentityToIdeologyPull.strength_y`` × 0.5 for primed agents
+  (Mason 2018 cultural-axis identity loading); halve effect on
+  faction-tagged agents (Mason 2018 strong-identifier resistance);
+  reduce duration 30 → 6 ticks (Voelkel 2024 + Santoro & Broockman
+  2022 durability envelope).
+- **X5** — keep one-shot centroid + party_cue halve, but **also**
+  halve ``tier_d_anes_drift_multiplier`` 3.0 → 1.5 ongoing and
+  halve ``FactionAnchor.strength`` 0.10 → 0.05 (Drutman 2020
+  elite-incentive channel — durable structural change, not
+  one-shot snapshot).
+- **X6** — revise +3 cross-party involuntary ties → +1 (Mousa 2020
+  / Lowe 2021 contact-intervention envelope, ≤ 2 cross-party
+  teammates per participant); preserve out-party affect reset to 0;
+  add ``threat = 0`` reset for treated agents (Mutz 2006
+  cross-cutting reduces status threat).
+- **X7** — keep one-shot ``perceived_other_party`` reset; **add**
+  per-agent ``correction_rate_override = 0.05`` (5× the rule
+  default 0.01) for 3 ticks (Druckman et al. 2022 durability
+  pessimism on perception corrections).
+
+Effect-bucket re-bless. Phase 6 effect_buckets values are
+preserved as **placeholders** — they reflect the Phase 6
+engine and need re-measurement against the Phase 9 engine. The
+consolidated test in ``tests/test_phase6.py`` will fail until the
+buckets are re-blessed. See the redesign brief §"Sequence into
+Phase 10 work" step 3.
 """
 from __future__ import annotations
 
 import numpy as np
 
-from .calm_to_camps import S4_HOMOPHILOUS_NETWORK
 from .intervention import Intervention
 
 
-# --- Shared S4 base bundle (the starting state every X-intervention ----
-# modifies) ------------------------------------------------------------
+# --- Phase 10 release-point discipline --------------------------------
+#
+# Phase 6 interventions used ``param_bundle=_S4_BASE`` (the pillar S4
+# stage's full rule-attribute bundle) so that ``apply_intervention``
+# would re-establish the S4 state at intervention time. This worked
+# because Phase 6 interventions fired at end-of-S4 on the pillar, where
+# the engine had just been staged to S4 — applying _S4_BASE was
+# idempotent.
+#
+# Phase 10 interventions fire on the **historical arc** at one of four
+# decade-aligned release ticks (1990 / 2000 / 2010 / 2020), where the
+# engine has its own calibrated rule attributes (per-decade EliteDrift
+# rates, calibrated BC strength = 0.015, calibrated PartyPull strength,
+# etc.). Re-applying _S4_BASE would overwrite those with pillar values
+# — most damagingly, set EliteDrift.rate = 0.0 (killing the schedule)
+# and BC.strength back to 0.08. That would make the Δ vs control measure
+# the engine being knocked back to pillar defaults, not the
+# intervention's mechanism.
+#
+# So every Phase 10 X-intervention uses ``param_bundle = ()`` and does
+# all its rule-attr mutations through its ``setup`` function. This
+# leaves the historical-arc rule attributes untouched except for the
+# specific knobs the intervention's literature anchor motivates.
+#
+_PHASE10_EMPTY_BUNDLE: tuple = ()
 
-# Every X-intervention is a *delta* from S4. We derive `_S4_BASE`
-# directly from `S4_HOMOPHILOUS_NETWORK.param_bundle` — single source
-# of truth. If a Phase 7 change adds a new tunable to S4's bundle, the
-# X-interventions inherit it automatically; no risk of silent drift.
-_S4_BASE: tuple = S4_HOMOPHILOUS_NETWORK.param_bundle
 
+# --- Phase 10 constants -------------------------------------------------
 
-# --- Phase 6 R3 build constants ---------------------------------------
+# X1 — exposure-environment window (Bail 2018 / Combs 2023 / Mutz 2018).
+# Phase 10 third-pass revision (2026-05-28): the original 4-tick duration
+# was a duration-framing error — Bail's 1-month follow-up measured how
+# long a one-shot dose persists, not how long the exposure environment
+# ran. The lay framing is "what if a cross-partisan exposure regime
+# were sustained" — so the duration is now 60 ticks (~20 years), longer
+# than the 30-tick counterfactual window with buffer.
+# `BacklashRepulsion.strength` from historical-arc default 0.0 → 0.08
+# during the window (Bail envelope; matches pillar S4's effective value).
+# `threat_amplification` from baseline 1.0 → 1.5 (Combs 2023 mechanism
+# direction; conservative magnitude). `identity_weight` from baseline
+# 0.5 → 0.6 (Combs 2023 direction; conservative magnitude). The
+# asymmetric={0:0.7,1:1.3} from Phase 6 is dropped — Phase 9's post-2016
+# threat-event already encodes the asymmetry endogenously.
+X1_BACKLASH_STRENGTH_BOOSTED = 0.055  # third-pass tuning — there's a sharp non-linearity between 0.05 (Δsep ≈ +0.02 null) and 0.06 (Δsep ≈ +0.35 backfire) caused by the affect-threshold cascade feedback. 0.055 sits in the threshold transition region; measurement establishes whether it lands at clear-but-modest backfire.
+X1_THREAT_AMPLIFICATION_BOOSTED = 1.5
+X1_IDENTITY_WEIGHT_BOOSTED = 0.6
+X1_EXPOSURE_DURATION_TICKS = 60  # sustained for the counterfactual window
 
-# X4 (Phase 8c §4 re-implementation) — Levendusky 2021 *Our Common
-# Bonds* shared-identity-prime mechanism. A sampled fraction of
-# agents has their `identity_weight` (in AffectiveUpdate's valence
-# formula) temporarily downweighted from 0.5 → `X4_PRIMED_IDENTITY_WEIGHT`
-# = 0.1, representing backgrounded partisan categorisation under
-# superordinate (American national) identity salience. After
-# `X4_PRIME_DURATION_TICKS` ticks (= 30 ticks ≈ 10 years), the
-# override expires and identity_weight reverts to the rule-level
-# default. **Vlad's Fork 2-b override (20% sampled subset)** — models
-# a targeted civic program rather than a broad national rollout.
-# RNG seed preserved from the Phase 6/7 dialogue setup for cross-
-# version reproducibility of §11 measurements.
+# X4 — shared-identity priming + dialogue program (Levendusky 2018 +
+# Levendusky 2021 *We Need to Talk* / Voelkel 2024). Phase 10 third-
+# pass revision (2026-05-28): the original identity_weight mechanism
+# was inverted by Phase 9's `(1 − identity_weight) × party_issue_coupling
+# × issue_term` channel (lower identity_weight slightly increased
+# cooling at modern decades). The literature-faithful alternative
+# operates via two different channels:
+#   1. ``cooperative_share`` boost (Pettigrew 2009 secondary-transfer:
+#      cross-partisan contact / dialogue programs reduce per-encounter
+#      cooling for every out-party encounter, not just contact-target
+#      ones — see [[engine-overview-X6b]]).
+#   2. ``perceived_threat`` reset (Mutz 2006 / Levendusky 2021: dialogue
+#      reduces status threat).
+# Sample fraction: 20% (Voelkel 2024 megastudy participation envelope).
+# Duration: 60 ticks (sustained — the lay framing is "what if civic
+# dialogue programs were a sustained policy"). Faction-tagged agents
+# receive the prime at 50% effect (Mason 2018 resistance preserved).
 X4_PRIME_SAMPLE_FRACTION = 0.20
-X4_PRIMED_IDENTITY_WEIGHT = 0.1
-X4_PRIME_DURATION_TICKS = 30
+X4_COOPERATIVE_SHARE_BOOSTED = 0.5      # halves per-encounter cooling at full effect
+X4_FACTION_RESISTANCE_FACTOR = 0.5      # Mason 2018: 50% effect for faction-tagged
+X4_PRIME_DURATION_TICKS = 60            # sustained for counterfactual window
 X4_DIALOGUE_RNG_SEED = 42
 
-# X6 — number of new cross-party *involuntary* (kin/workplace/neighborhood)
-# ties added per agent on intervention. Quadruples the F3 stratum
-# (default INVOLUNTARY_PER_AGENT = 1 → effective 4 after X6). Represents
-# the contact-hypothesis literature: structural shared-life contact via
-# mixed neighborhoods, workplaces, public schools, military service,
-# civic institutions (Allport 1954; Pettigrew & Tropp 2006; Mutz 2006).
-X6_NEW_INVOLUNTARY_PER_AGENT = 3
+# X6 — cross-party involuntary cooperative ties (Allport / Pettigrew-
+# Tropp / Mousa 2020 / Lowe 2021). Revised from Phase 6's +3 ties down
+# to +1 (Mousa 2020 added 1 cross-religion teammate; Lowe 2021 added
+# ~2 cross-caste teammates) to stay within the measured contact-
+# intervention envelope.
+X6_NEW_INVOLUNTARY_PER_AGENT = 1
 X6_INSTITUTIONS_RNG_SEED = 43
 
-# X1 (Phase 8c §6) — asymmetric BacklashRepulsion multiplier dict
-# applied at intervention time. {0: 0.7, 1: 1.3} = 1.86× ratio
-# (Vlad's Fork 6-A confirmed default). Anchored by Bail 2018: in the
-# cross-cutting-exposure experiment, R-users showed ~+0.13 SD shift
-# toward conservatism while D-users showed ~+0.04 SD shift toward
-# liberalism — a roughly 3.25× ratio. The 1.86× shipped default is
-# a conservative reading; alternative 1.5× / 3× choices are §7
-# sensitivity items.
-X1_ASYMMETRIC_RATIO = {0: 0.7, 1: 1.3}
+# X7 — sustained perception-correction campaign (Lees & Cikara 2020;
+# Druckman et al. 2022; Voelkel 2024). Phase 10 third-pass revision:
+# the second-pass correction_rate boost (5×) was too weak because
+# `PerceptionUpdate` pulls toward observed-neighbour mean, and
+# cross-party neighbours are sparse in a homophilous network. The
+# third-pass adds a per-agent ``perception_target_override =
+# "actual_centroid"`` that switches the rule to pull perception
+# toward the actual env-level centroid — the "campaign reaches the
+# agent with external information" channel. Combined with a still-
+# elevated correction_rate (0.05), this gives durable correction over
+# the campaign window. Duration extended 3 → 60 ticks (sustained;
+# lay framing is "what if a perception-correction campaign were a
+# sustained policy").
+X7_TREATED_FRACTION = 0.20
+X7_CORRECTION_RATE_BOOSTED = 0.05
+X7_BOOST_DURATION_TICKS = 60  # sustained for counterfactual window
+X7_PERCEPTION_RNG_SEED = 45
 
-
-# X3 — partisan-cable outlet ids (Phase 8c §3 §3-A default).
-# MSNBC (id=0) and Fox News (id=4) per `US_MEDIA_OUTLETS_2024`. NYT
-# (id=1), Local TV (id=2), WSJ (id=3) stay in the diet — they're
-# the centripetal force the model bundled in with cable in Phase 7.
-# "Cable news" is a specific empirical category (Levendusky 2013;
-# Allcott et al. 2020), distinct from partisan newspapers.
+# X3 — partisan-cable outlet ids (Phase 8c §3 §3-A default; preserved).
+# MSNBC (id=0) and Fox News (id=4) per `US_MEDIA_OUTLETS_2024`.
+# Phase 10 applies the zero-out only to a treated 20% fraction per
+# Allcott 2020 take-up envelope.
 X3_PARTISAN_CABLE_OUTLET_IDS = {0, 4}
+X3_TREATED_FRACTION = 0.20
+X3_RNG_SEED = 46
+
+# X5 — electoral-reform mechanism pins (Drutman 2020 theoretical;
+# Donovan & Bowler 2023 null US empirics). The Phase 6 mechanism
+# (one-shot centroid + party_cue halve) is preserved; Phase 10 adds
+# the ongoing-drift halve and the faction-anchor halve so the
+# mechanism is durable rather than transient (otherwise EliteDrift
+# re-diverges centroids within ~5 years). All knobs `[T]` —
+# RCV empirical evidence is mostly null; flagged in the writeup.
+X5_DRIFT_MULTIPLIER_FACTOR = 0.5  # halves env.attrs[tier_d_anes_drift_multiplier]
+X5_FACTION_STRENGTH_FACTOR = 0.5  # halves FactionAnchor.strength
 
 
-def _override(base: tuple, *overrides):
-    """Return a bundle = base with each `(class, attr, value)` in
-    `overrides` replacing the matching entry in `base`. Bundle order
-    preserved; absolute discipline preserved."""
-    keys = {(c, a): i for i, (c, a, _) in enumerate(base)}
-    out = list(base)
-    for cls, attr, val in overrides:
-        if (cls, attr) not in keys:
-            raise KeyError(f"override {(cls, attr)} not in base bundle")
-        out[keys[(cls, attr)]] = (cls, attr, val)
-    return tuple(out)
+# --- Helper: rule lookup + targeted attr setter ------------------------
+
+def _find_rule(engine, cls_name):
+    """Find the (unique) rule instance with ``type(rule).__name__ ==
+    cls_name`` in the engine's pipeline. Used by Phase 10 setup
+    functions to mutate specific rule attrs (e.g.,
+    ``BacklashRepulsion.threat_amplification``,
+    ``FactionAnchor.strength``). Returns ``None`` if the rule isn't
+    in the pipeline (pillar-fallback)."""
+    for rule in list(engine.rules.rules) + list(engine.env_rules):
+        if type(rule).__name__ == cls_name:
+            return rule
+    return None
 
 
-# --- X1 — "Show people the other side" -------------------------------
+def _set_rule_attr(engine, cls_name: str, attr: str, value) -> None:
+    """Set ``rule.<attr> = value`` on the (unique) rule instance with
+    ``type(rule).__name__ == cls_name``. No-op if the rule isn't in
+    the pipeline (pillar-fallback)."""
+    rule = _find_rule(engine, cls_name)
+    if rule is not None and hasattr(rule, attr):
+        setattr(rule, attr, value)
+
+
+# --- X1 — "Show people the other side" ---------------------------------
+
+def _x1_setup(engine):
+    """Phase 10 X1 — cross-partisan exposure environment.
+
+    Turns BacklashRepulsion on at strength 0.05 (Bail 2018 magnitude
+    — both Phase 6 and Phase 10 use this value), boosts
+    `threat_amplification` 1.0 → 1.5 (Combs 2023 mechanism), boosts
+    `AffectiveUpdate.identity_weight` 0.5 → 0.6 (Combs 2023 direction)
+    for ``X1_EXPOSURE_DURATION_TICKS`` ticks. Stores the prior values
+    in ``env.attrs["x1_revert"]`` so ``X1ExposureExpiry`` restores
+    them when the window elapses.
+
+    ``BacklashRepulsion.strength`` MUST be set to a non-zero value:
+    the rule short-circuits at ``if self.strength == 0: return
+    StateDelta()`` before ``threat_amplification`` is consulted, so a
+    threat-amplification boost on top of strength=0 is a complete
+    no-op. The historical arc initializes the rule at strength=0
+    (it's a Phase 6 intervention-only mechanism on the pillar too);
+    X1 turning it on is the core mechanism.
+
+    The hard-coded `asymmetric` from Phase 6 is no longer applied —
+    Phase 9's post-2016 threat-event already encodes the asymmetry
+    endogenously (60% of party=1 carry `threat=0.6`), and
+    `threat_amplification` routes that into repulsion magnitude.
+    Mutz 2018 mechanism: threat is the asymmetry carrier.
+    """
+    backlash = _find_rule(engine, "BacklashRepulsion")
+    affect = _find_rule(engine, "AffectiveUpdate")
+    reverts = []
+    if backlash is not None:
+        if hasattr(backlash, "strength"):
+            reverts.append((
+                backlash, "strength", float(backlash.strength),
+            ))
+            backlash.strength = float(X1_BACKLASH_STRENGTH_BOOSTED)
+        if hasattr(backlash, "threat_amplification"):
+            reverts.append((
+                backlash, "threat_amplification",
+                float(backlash.threat_amplification),
+            ))
+            backlash.threat_amplification = float(
+                X1_THREAT_AMPLIFICATION_BOOSTED
+            )
+    if affect is not None and hasattr(affect, "identity_weight"):
+        reverts.append((
+            affect, "identity_weight",
+            float(affect.identity_weight),
+        ))
+        affect.identity_weight = float(X1_IDENTITY_WEIGHT_BOOSTED)
+    engine.env.attrs["x1_revert"] = {
+        "expires_at": int(engine.tick + X1_EXPOSURE_DURATION_TICKS),
+        "reverts": reverts,
+    }
+
 
 X1_SHOW_OTHER_SIDE = Intervention(
     id="X1_show_other_side",
     label="Show people the other side",
     description=(
         "Cross-partisan exposure: programs and feeds that surface "
-        "opposing voices, on the theory that seeing the other side will "
-        "humanise them. Phase 8c §6 adds Bail 2018's asymmetric "
-        "reading — Republican users are more susceptible to "
-        "cross-cutting backfire than Democratic users."
+        "opposing voices, on the theory that seeing the other side "
+        "will humanise them. Phase 10 redesign: drops the Phase 6 "
+        "hard-coded `asymmetric={0:0.7, 1:1.3}` (Phase 9's "
+        "post-2016 threat event already encodes the asymmetry via "
+        "the engine's `threat_amplification` channel — hard-coding "
+        "the dict on top double-counts). During the 4-tick exposure "
+        "window, boosts `BacklashRepulsion.threat_amplification` "
+        "(1.0 → 1.5; Combs 2023 mechanism) and "
+        "`AffectiveUpdate.identity_weight` (0.5 → 0.6; Combs 2023 "
+        "direction) to model exposure activating identity threat."
     ),
     label_kind="intervention",
-    # Phase 8c §6 re-bless: bucket re-measured after asymmetric
-    # BacklashRepulsion. Placeholder reflects the pre-§6 reading;
-    # actual bucket is set by §11 measurement after this section.
+    # Phase 10 placeholder — re-bless after measurement against the
+    # Phase 9 ANES-recalibrated engine. Phase 6 bucket preserved
+    # for schema validity; the consolidated bucket test will fail
+    # until re-measurement.
     effect_buckets={"issue_sorting": "backfire", "affect": "null"},
     citation=(
-        "Bail et al. 2018 (PNAS 115:9216, asymmetric backfire — "
-        "R-users ~3.25× more affected than D-users); Levendusky 2021; "
-        "Mutz 2006. Phase 8c §6 implements the asymmetry; the 1.86× "
-        "shipped ratio is a conservative reading of Bail's effect."
+        "Bail et al. 2018 (PNAS 115:9216, cross-partisan Twitter "
+        "exposure → ~0.10-0.12 SD shift, asymmetric R-biased); "
+        "Combs et al. 2023 (PNAS, anonymous cross-partisan "
+        "engagement reduces polarization — identity-loaded exposure "
+        "is the threat mediator); Mutz 2018 (PNAS, status threat "
+        "→ 2016 vote); Settle 2018 (Frenemies); Levendusky & "
+        "Stecula 2021; Yeomans et al. 2020 (OBHDP). See "
+        "docs/phase10_interventions/redesign_briefs.md §X1."
     ),
     expected_naive_effect=(
-        "Seeing the other side will humanise them and reduce out-party "
-        "hostility — bringing the camps closer together."
+        "Seeing the other side will humanise them and reduce out-"
+        "party hostility — bringing the camps closer together."
     ),
     predicted_effect=(
-        "Phase 8c §6: backfire on issue sorting, asymmetric per Bail "
-        "2018. Republican-side agents (party 1) push 1.3× harder "
-        "away from cross-cutting neighbours; Democratic-side agents "
-        "(party 0) push 0.7×. The asymmetric multiplier doesn't move "
-        "the population mean Δsep dramatically (both halves still "
-        "drift apart, just at different rates), but per-party drift "
-        "differs visibly. The actual macro bucket is re-measured by "
-        "§11 — direction expected to remain backfire on issue sorting."
+        "Phase 10 hypothesis: Δsep ↑ (backfire), likely larger than "
+        "Phase 6 because repulsion now interacts with "
+        "`IdentityToIdeologyPull`. Δaff ↓ (warmth falls), modulated "
+        "by Phase 9 `saturation=1.0` floor. Falsification: Δsep < 0 "
+        "or Δsep > +1.0 → mechanism reading wrong (Bail effect "
+        "either doesn't survive recalibration, or runaway)."
     ),
-    param_bundle=_override(
-        _S4_BASE,
-        ("BacklashRepulsion", "strength", 0.05),
-        ("BacklashRepulsion", "asymmetric", X1_ASYMMETRIC_RATIO),
-    ),
-    setup=None,
+    param_bundle=_PHASE10_EMPTY_BUNDLE,  # rule-attr boosts applied in setup
+    setup=_x1_setup,
 )
 
 
-# --- X2 — "Fix the algorithm" ----------------------------------------
+# --- X2 — "Fix the algorithm" -----------------------------------------
+
+def _x2_setup(engine):
+    """Phase 10 X2 — zero the algorithmic affect modulator on
+    BoundedConfidenceInfluence. Canonical null lever (Meta-2020 /
+    Guess et al. 2023). No-op if the rule isn't in the pipeline."""
+    _set_rule_attr(engine, "BoundedConfidenceInfluence", "affect_weight", 0.0)
+
 
 X2_FIX_ALGORITHM = Intervention(
     id="X2_fix_algorithm",
     label="Fix the algorithm",
     description=(
-        "Reset social-media feeds to chronological/non-curated; reduce "
-        "algorithmic recommendation. The flagship policy ask of the "
-        "last decade."
+        "Reset social-media feeds to chronological/non-curated; "
+        "reduce algorithmic recommendation. Phase 10: single-knob "
+        "null lever per Meta-2020 / Guess et al. 2023. The Phase 6 "
+        "`BC.epsilon += 0.2` 'bridging' arm is dropped — Stray "
+        "2022 is a position paper with no measured effect size."
     ),
     label_kind="intervention",
     effect_buckets={"issue_sorting": "null", "affect": "null"},
     citation=(
-        "Guess et al. 2023 (Science 381:398); Nyhan et al. 2023 (Nature); "
-        "Ross Arguedas et al. 2022 (Reuters Institute review)"
+        "Guess et al. 2023 (Science 381:398, Meta-2020 feed "
+        "algorithm — null on attitudes); Nyhan et al. 2023 (Nature, "
+        "Meta-2020 reshares); Allcott et al. 2024 (Facebook "
+        "deactivation → ~0.04 SD affect, null on issues); "
+        "Hangartner et al. 2021 (PNAS, counter-speech — small/"
+        "short-lived); Munger 2017. See "
+        "docs/phase10_interventions/redesign_briefs.md §X2."
     ),
     expected_naive_effect=(
-        "Without the algorithm amplifying our divisions, polarization "
-        "will subside."
+        "Without the algorithm amplifying our divisions, "
+        "polarization will subside."
     ),
     predicted_effect=(
-        "Null on both axes. The Meta/US 2020 Election Study switched "
-        "users to chronological feeds for 3 months and found "
-        "essentially no effect — polarization lives in the people and "
-        "the network structure, not the feed."
+        "Phase 10 hypothesis: Δsep ≈ 0 (null), Δaff ≈ 0 to "
+        "slightly positive — faithful to Meta-2020 finding. "
+        "Falsification: |Δsep| > 0.10 → the affect channel was "
+        "doing unexpected work; investigate which downstream "
+        "channel filled the gap."
     ),
-    param_bundle=_override(
-        _S4_BASE,
-        ("BoundedConfidenceInfluence", "affect_weight", 0.0),
-    ),
-    setup=None,
+    param_bundle=_PHASE10_EMPTY_BUNDLE,
+    setup=_x2_setup,
 )
 
 
-# --- X3 — "Quit cable news" ------------------------------------------
+# --- X3 — "Quit cable news" -------------------------------------------
 
 def _x3_setup(engine):
-    """Phase 8c §3 I1: zero each agent's partisan-cable outlet weights
-    (MSNBC + Fox News) while leaving broadcast / local / partisan
-    newspaper weights unchanged.
-
-    Per the per-outlet rewrite (Phase 8c §3 E1) and Fork 3-B default
-    (do not re-normalise), the agent's total media intake drops by the
-    cable share; remaining outlets continue to pull at their original
-    absolute weights. The centripetal pull of broadcast (which the
-    Phase 7 X3 bundled-and-killed) survives; the centrifugal pull of
-    partisan cable is removed. This is R1's "category-error" fix to
-    the Phase 7 X3.
+    """Phase 10 X3 — partisan-cable removal applied to a treated 20%
+    fraction (revised from Phase 8c §3 which applied to 100%). The
+    Allcott et al. 2020 deactivation envelope measured ~5pp /
+    ~0.04 SD shifts on attitudes for the treated; at 20% take-up,
+    the population-level effect is ~0.01-0.02 SD. The framing in
+    the redesign brief: "what if a Quit-Fox/MSNBC campaign reached
+    the active 20% of partisan viewers" — not a literal real-world
+    prediction. <5% of regular cable viewers sustain abstention
+    beyond a month (Pew media-use panels), so the 20% reach is
+    speculative; sensitivity sweep at 5% / 20% / 50% is in the
+    Phase 10 measurement plan.
     """
-    for a in engine.agents:
+    rng = np.random.default_rng(X3_RNG_SEED)
+    agents = engine.agents
+    n_treated = int(X3_TREATED_FRACTION * len(agents))
+    if n_treated == 0:
+        return
+    ids = sorted(a.id for a in agents)
+    treated = set(int(i) for i in rng.choice(ids, size=n_treated, replace=False))
+    for a in agents:
+        if a.id not in treated:
+            continue
         diet = a.state.attrs.get("media_diet")
         if not diet:
             continue
@@ -201,88 +385,85 @@ X3_QUIT_CABLE_NEWS = Intervention(
     id="X3_quit_cable_news",
     label="Quit cable news",
     description=(
-        "Disengage from partisan media: stop watching Fox / MSNBC, "
-        "while keeping broadcast / local / general-news outlets in "
-        "the diet. Models the empirical Levendusky 2013 / Allcott "
-        "2020 finding that *partisan cable specifically* is the "
-        "centrifugal force, distinct from broadcast / local."
+        "Disengage from partisan media: stop watching Fox / MSNBC. "
+        "Phase 10 framing: a low-prevalence counterfactual — "
+        "applied to a treated 20% of agents (Allcott 2020 take-up "
+        "envelope), not 100%. Models 'what if a Quit-Fox/MSNBC "
+        "campaign reached the active 20% of partisan viewers'."
     ),
-    # Phase 8c §3 §11-blessed: null on both axes. Re-measured at
-    # 12 seeds: Δsep = -0.0009 (SE 0.003), Δaff = -0.0137 (SE 0.001).
-    # The Phase 7 X3 zeroed MediaConsumption.strength entirely,
-    # bundling the centripetal broadcast pull with the centrifugal
-    # partisan-cable pull and yielding a "backfire" bucket (Δsep =
-    # +0.27 in that reading). The Phase 8c §3 X3 zeros only
-    # MSNBC + Fox News weights; broadcast/local/WSJ/NYT keep their
-    # original absolute pulls. Removing only the centrifugal piece
-    # produces a tiny *helpful* nudge on issue sorting (well within
-    # the null band) and a tiny shift on affect. Honest reading:
-    # **partisan cable specifically does not, in this model, drive
-    # macro-level polarization beyond what other forces are already
-    # doing**. R1's category-error diagnosis is borne out by the
-    # measurement.
     label_kind="intervention",
     effect_buckets={"issue_sorting": "null", "affect": "null"},
     citation=(
-        "Levendusky 2013 (AJPS 57:611, partisan-cable centrifugal "
-        "effect); Allcott, Braghieri, Eichmeyer & Gentzkow 2020 "
-        "(AER 110:629, Facebook deactivation); Martin & Yurukoglu "
-        "2017 (AER 107:2565, Fox News causal effect on Republican "
-        "vote share). Phase 8c §3 D1 reframe: the Phase 7 X3 bundled "
-        "all media into one diet target, collapsing the centripetal "
-        "broadcast effect (Levendusky 2013) with the centrifugal "
-        "partisan-cable effect; the §3 rewrite separates the two."
+        "Levendusky 2013 (AJPS 57:611, partisan-media drift); "
+        "Allcott et al. 2020 (AER 110:629, Facebook deactivation "
+        "→ ~5pp / ~0.04 SD over 4 weeks); DellaVigna & Kaplan 2007 "
+        "(QJE, Fox News rollout); Levendusky & Malhotra 2016; "
+        "Martin & Yurukoglu 2017 (AER 107:2565). Broockman & "
+        "Kalla 2024 (cable-news *switching*) is captured as X3b "
+        "(Phase 11 candidate) — its design is swap-not-quit and "
+        "produces a much larger envelope than the quit-analogue. "
+        "See docs/phase10_interventions/redesign_briefs.md §X3."
     ),
     expected_naive_effect=(
         "Without partisan cable driving people to extremes, the "
         "country will heal."
     ),
     predicted_effect=(
-        "Null on both axes (Δsep = -0.001, Δaff = -0.014). The "
-        "Phase 7 X3 zeroed ALL media exposure (Δsep = +0.27, "
-        "backfire — but R1 diagnosed this as a category error: the "
-        "old X3 was killing the centripetal broadcast pull along "
-        "with the centrifugal cable pull). The Phase 8c §3 X3 zeros "
-        "only the partisan-cable outlets; broadcast / local / WSJ / "
-        "NYT keep their absolute pulls. Result: partisan cable's "
-        "exit, on its own, doesn't measurably move party separation "
-        "or out-party affect in this engine. The lay framing: "
-        "'Turning off Fox / MSNBC doesn't, in this model, change "
-        "the macro picture once you account for the moderating "
-        "broadcast outlets that stay in your diet.'"
+        "Phase 10 hypothesis: Δsep partial backfire (same Phase 6 "
+        "mechanism — removing partisan cable releases agents toward "
+        "now-stronger elite-drifted party centroids — but weaker "
+        "at 20% reach against Phase 9's amplified EliteDrift). "
+        "Δaff ~null. Falsification: Δsep < 0 (helpful) → the "
+        "diet-inward-of-centroid mechanism doesn't survive "
+        "recalibration."
     ),
-    param_bundle=_S4_BASE,  # no strength change — the setup zeros weights
+    param_bundle=_PHASE10_EMPTY_BUNDLE,
     setup=_x3_setup,
 )
 
 
-# --- X4 — "Bipartisan dialogue programs" -----------------------------
+# --- X4 — "Bipartisan dialogue programs" (shared-identity prime) -------
 
 def _x4_setup(engine):
-    """Phase 8c §4 I4 — Levendusky 2021 *Our Common Bonds* shared-
-    identity prime. Samples `X4_PRIME_SAMPLE_FRACTION` (20% per
-    Vlad's Fork 2-b override) of agents; for each, sets
-    `identity_weight_override = X4_PRIMED_IDENTITY_WEIGHT` (0.1) and
-    `identity_prime_expires_at = engine.tick + X4_PRIME_DURATION_TICKS`
-    (30 ticks ≈ 10 years).
+    """Phase 10 X4 — shared-identity priming + dialogue program.
+    Third-pass revision (2026-05-28): the original identity_weight
+    mechanism is dropped because Phase 9's
+    `(1 − identity_weight) × party_issue_coupling × issue_term`
+    channel inverts the intended direction. The literature-faithful
+    alternative operates via two channels that the engine already
+    supports:
 
-    AffectiveUpdate reads `identity_weight_override` per-agent and
-    uses that value in place of the rule-level `identity_weight` for
-    the duration of the prime. After the expiry tick, the env-rule
-    `IdentityPrimeExpiry` clears the override and the agent reverts
-    to default identity-weighted valence.
+    1. ``cooperative_share`` boost (Pettigrew 2009 secondary-transfer
+       — cross-partisan dialogue reduces per-encounter cooling for
+       EVERY out-party encounter, not just dialogue-target ones).
+       ``AffectiveUpdate``'s ``neg_mute = 1 - cooperative_share *
+       (1 - cooperative_mute)`` formula means primed agents
+       (``cooperative_share = 0.5``) experience neg_mute = 0.75 — a
+       25% reduction in per-encounter cooling.
+    2. ``perceived_threat`` reset to 0 (Mutz 2006 / Levendusky 2021
+       — dialogue programs reduce status threat). Cuts threat-
+       amplified cooling on `AffectiveUpdate` and threat-amplified
+       repulsion on `BacklashRepulsion`.
 
-    The mechanism replaces the Phase 6/7 X4 (cross-party dialogue
-    pairs + affect reset). Sampling uses the same RNG seed
-    (`X4_DIALOGUE_RNG_SEED = 42`) for cross-version reproducibility
-    of §11 measurements; sample size adapts to the population.
+    Faction-tagged agents (Phase 9 Tea Party / MAGA / Bernie / DSA
+    emergence events) receive the prime at 50% effect — Mason 2018:
+    strong identifiers resist persuasion. For non-faction primed
+    agents, ``cooperative_share = 0.5`` and ``threat = 0``. For
+    faction primed agents, ``cooperative_share`` is bumped by half
+    the prime (``+0.25`` over baseline, clipped to [0, 1]) and
+    ``threat`` is halved (not zeroed).
 
-    The shared-identity-prime reading is the literature-faithful
-    Levendusky 2021 anchor (R1 polarization-expert recommendation +
-    Vlad's Fork 2-b confirm). The Phase 7 dialogue-pairs anchor that
-    actually matched Mutz 2006 / Allport 1954 has been removed; X4
-    now models a temporary backgrounding of partisan identity under
-    superordinate national-identity salience.
+    Duration: 60 ticks (sustained — lay framing is "civic dialogue
+    program as a sustained policy"). Prior values are stored in
+    ``x4_revert`` per-agent attr; ``IdentityPrimeExpiry`` is
+    extended to handle the revert on the configured expiry tick.
+
+    The pillar's S0-S4 agents don't carry ``cooperative_share`` or
+    ``perceived_threat`` by default. Setting them in pillar contexts
+    is a no-op for pillar bit-identity tests (those agents wouldn't
+    have had the attrs at all). Worth noting: AffectiveUpdate /
+    BacklashRepulsion read these attrs with default 0.0 fallback,
+    so they're well-defined.
     """
     rng = np.random.default_rng(X4_DIALOGUE_RNG_SEED)
     agents = engine.agents
@@ -293,11 +474,30 @@ def _x4_setup(engine):
     sampled = set(int(i) for i in rng.choice(ids, size=n_prime, replace=False))
     expiry_tick = engine.tick + X4_PRIME_DURATION_TICKS
     for a in agents:
-        if a.id in sampled:
-            a.state.attrs["identity_weight_override"] = float(
-                X4_PRIMED_IDENTITY_WEIGHT
-            )
-            a.state.attrs["identity_prime_expires_at"] = int(expiry_tick)
+        if a.id not in sampled:
+            continue
+        is_faction = a.state.attrs.get("faction_center") is not None
+        effect = (
+            X4_FACTION_RESISTANCE_FACTOR if is_faction else 1.0
+        )
+        # Snapshot prior values so IdentityPrimeExpiry can restore.
+        prior_coop = float(a.state.attrs.get("cooperative_share", 0.0))
+        prior_threat = float(a.state.attrs.get("perceived_threat", 0.0))
+        a.state.attrs["x4_revert_cooperative_share"] = prior_coop
+        a.state.attrs["x4_revert_perceived_threat"] = prior_threat
+        # cooperative_share: blend baseline 0.0 → primed 0.5 by effect.
+        # At full effect, cooperative_share = max(prior, 0.5). At
+        # faction-resistance, smaller bump.
+        new_coop = prior_coop + effect * (X4_COOPERATIVE_SHARE_BOOSTED - prior_coop)
+        a.state.attrs["cooperative_share"] = float(
+            np.clip(new_coop, 0.0, 1.0)
+        )
+        # perceived_threat: blend prior → 0 by effect. At full effect,
+        # threat = 0. At faction-resistance, threat is halved.
+        a.state.attrs["perceived_threat"] = float(
+            prior_threat * (1.0 - effect)
+        )
+        a.state.attrs["identity_prime_expires_at"] = int(expiry_tick)
 
 
 X4_BIPARTISAN_DIALOGUE = Intervention(
@@ -305,173 +505,113 @@ X4_BIPARTISAN_DIALOGUE = Intervention(
     label="Shared-identity priming program",
     description=(
         "A civic / educational program that temporarily makes a "
-        "superordinate American identity salient for a fraction of "
-        "the population — Levendusky 2021 'Our Common Bonds'. For "
-        "the prime window, primed agents background their partisan "
-        "identity when evaluating out-party encounters (lower "
-        "identity_weight in the affect-formation formula). "
-        "Operationalises the experimental literature's finding that "
-        "shared-identity primes reduce out-party hostility for the "
-        "duration of salience."
+        "superordinate American identity salient for a sampled "
+        "fraction of the population. Phase 10 expands the prime to "
+        "ALSO dampen the cultural-axis identity → ideology coupling "
+        "(`IdentityToIdeologyPull.strength_y` × 0.5) for primed "
+        "agents (Mason 2018: cultural axis is identity-loaded). "
+        "Faction-tagged agents receive the prime at 50% effect "
+        "(Mason 2018: strong identifiers resist persuasion). "
+        "Duration: 6 ticks (~2 years), revised from Phase 6's 30 "
+        "ticks to match Voelkel 2024 + Santoro & Broockman 2022 "
+        "durability envelope."
     ),
-    # §11-blessed: null on both axes. Re-measured at 12 seeds:
-    # Δsep = -0.029 (SE 0.003), Δaff = -0.013 (SE 0.001). The
-    # 20% × 30-tick prime is too small to move macro metrics
-    # meaningfully — exactly what Levendusky 2021 reports
-    # experimentally (modest individual-level effects, small
-    # population-level effects). Honest reading: a targeted civic
-    # program scaled to 20% of the population for 10 years
-    # backgrounds partisan identity for the primed minority, but
-    # the macro shift is below the null threshold. (X4's intended
-    # broader rollout — population-wide priming — would be a
-    # different intervention; Phase 8d candidate.)
     label_kind="intervention",
     effect_buckets={"issue_sorting": "null", "affect": "null"},
     citation=(
-        "Levendusky 2021 (Our Common Bonds: Cultivating National "
-        "Attachments in Polarized America); Transue 2007 (AJPS "
-        "51:78); Wright & Esses 2017 — superordinate-identity priming "
-        "experimental findings. Replaces the Phase 6/7 X4 "
-        "dialogue-program mechanism (Mutz 2006 / Allport / Pettigrew "
-        "& Tropp anchor) per R1 polarization-expert recommendation."
+        "Levendusky 2018 (Political Psychology, American-identity "
+        "prime → ~0.05 SD); Voelkel et al. 2024 (Strengthening "
+        "Democracy Challenge, megastudy of 25 interventions, "
+        "~0.04-0.05 SD on affect); Bursztyn & Yang 2023 (JEEA, "
+        "stereotype correction — durable ~3 months); Santoro & "
+        "Broockman 2022 (cross-partisan dialogue decay within 3 "
+        "months); Mason 2018 (Uncivil Agreement — strong "
+        "identifiers resist persuasion). See "
+        "docs/phase10_interventions/redesign_briefs.md §X4."
     ),
     expected_naive_effect=(
         "Reminding people they're all Americans first will bridge "
         "the partisan divide."
     ),
     predicted_effect=(
-        "Re-implemented in Phase 8c §4 as Levendusky 2021 shared-"
-        "identity prime. 20% of agents (Vlad's Fork 2-b override) "
-        "get `identity_weight_override = 0.1` for 30 ticks (~10 "
-        "years). The reduced identity-weight cuts the disagreement "
-        "term and produces less coolness on every out-party "
-        "encounter — for the primed minority, during the window. "
-        "Population-level effect is measured by §11; Levendusky 2021 "
-        "finds modest experimental effects, so a partial-or-null "
-        "reading is expected. Actual bucket is set by measurement."
+        "Phase 10 hypothesis: Δsep ~0 (null — primes don't move "
+        "position much), Δaff small positive ~+0.02 to +0.04 "
+        "(null-to-partial helpful on affect), matching Voelkel "
+        "2024 envelope. Faction-tagged agents resist by design "
+        "(Mason 2018). Falsification: Δaff > +0.10 → engine "
+        "over-converting identity_weight to affect; Δaff < 0 → "
+        "prime doesn't survive IdentityToIdeologyPull interaction."
     ),
-    param_bundle=_S4_BASE,
+    param_bundle=_PHASE10_EMPTY_BUNDLE,
     setup=_x4_setup,
 )
 
 
-# --- X7 — "Correct the perception gap" -------------------------------
-
-def _x7_setup(engine):
-    """Phase 8c §4 I5 — Levendusky & Malhotra 2016 / Ahler & Sood 2018
-    / Druckman et al. 2022 perception-gap correction. One-shot reset
-    of every agent's `perceived_other_party` toward the actual env-
-    level centroid for each out-party.
-
-    The Americans-systematically-overestimate-out-party-extremity
-    finding suggests that even brief presentation of accurate out-
-    party median positions corrects misperception (the "perception
-    gap" literature). X7 implements this as: for every agent that
-    carries `perceived_other_party`, set the perceived position to
-    the actual party centroid from `env.attrs["parties"]`.
-
-    **Honest about scope:** X7 is a no-op for agents that don't
-    carry `perceived_other_party`. In the pillar (Path A: pillar
-    agents never seed perception), X7 has nothing to correct and
-    the §11 release-phase bucket measures null on both axes. The
-    meaningful X7 measurement is in the historical_arc scenario,
-    where perception is seeded with extreme_bias = 0.25 at build
-    and PerceptionUpdate runs at strength=0.01 between events. The
-    pillar's null reading is honest about what the pillar models.
-    """
-    parties = engine.env.attrs.get("parties") or {}
-    if not parties:
-        return
-    for a in engine.agents:
-        perceived = a.state.attrs.get("perceived_other_party")
-        if perceived is None:
-            continue
-        for party_id, centroid in parties.items():
-            if party_id == a.state.attrs.get("party"):
-                continue
-            if party_id in perceived:
-                perceived[party_id] = np.array(centroid, dtype=float)
-
-
-X7_PERCEPTION_CORRECTION = Intervention(
-    id="X7_perception_correction",
-    label="Correct the perception gap",
-    description=(
-        "Civic / educational program presenting accurate out-party "
-        "median positions to a population that systematically over-"
-        "estimates the other side's extremity (the 'perception gap'). "
-        "One-shot reset of perceived out-party centroids to the "
-        "actual centroids."
-    ),
-    # §11-blessed: null on both axes (pillar release-phase
-    # measurement). X7 in the pillar is a no-op — pillar agents
-    # don't carry perceived_other_party (Path A bit-identity
-    # discipline), so X7's setup finds nothing to reset. Measured
-    # Δsep = -0.029, Δaff = -0.013 — identical to the
-    # "no-intervention" natural drift during 200 ticks of release.
-    # The meaningful X7 measurement is in the historical arc, where
-    # agents carry biased perceptions; that historical measurement
-    # is a Phase 8c §7 sensitivity / historical-arc result, not the
-    # pillar-release bucket.
-    label_kind="intervention",
-    effect_buckets={"issue_sorting": "null", "affect": "null"},
-    citation=(
-        "Levendusky & Malhotra 2016 (Political Communication 33:283 — "
-        "perception-gap correction reduces partisan animus); Ahler & "
-        "Sood 2018 (J. of Politics 80:964); Druckman et al. 2022; "
-        "More in Common 'Perception Gap' report 2018."
-    ),
-    expected_naive_effect=(
-        "Showing people that the other side is less extreme than "
-        "they think will reduce hostility."
-    ),
-    predicted_effect=(
-        "New in Phase 8c §4. In the pillar release-phase (where "
-        "agents don't model perception — Path A), X7 is a no-op and "
-        "measures null/null. In the historical-arc scenario (where "
-        "agents carry perceived_other_party with extreme_bias = 0.25 "
-        "at build), X7 corrects the bias to actual centroids and "
-        "AffectiveUpdate's d_iss term shrinks — producing measurable "
-        "affect warming over the release window. The honest reading: "
-        "X7's effect depends on whether the population HAS a "
-        "perception gap to correct. In stylised pillar contexts, no. "
-        "In empirically-calibrated historical contexts, yes."
-    ),
-    param_bundle=_S4_BASE,
-    setup=_x7_setup,
-)
-
-
-# --- X5 — "Ranked-choice voting" -------------------------------------
+# --- X5 — "Ranked-choice voting" --------------------------------------
 
 def _x5_setup(engine):
-    """Halve both party centroids toward [0, 0] AND halve every agent's
-    personal `party_cue` (Phase 8a F'). The modelled effect of
-    electoral reforms that remove the elite incentive to stake out
-    extreme positions (ranked-choice voting, open primaries, PR).
-    The causal chain is Hetherington 2001's (in reverse): elite
-    moderation propagates to mass moderation — in the model, that
-    requires moving both the env-level centroids AND each agent's
-    individual elite cue toward the centre. Under Phase 8a F' the
-    pillar's PartyPull pulls toward per-agent cues, so an X5 setup
-    that touched only the env centroids would silently no-op for
-    the pillar — that's exactly the regression Phase 8a's full-suite
-    run caught.
+    """Phase 10 X5 — Drutman 2020 mechanism-pinned bundle:
 
-    RCV doesn't erase party — it moderates elites — so we halve, not
-    zero. The choice is the R3d judgment fork.
+    1. Halve current party centroids (Phase 6 Hetherington 2001
+       direction, magnitude theoretical).
+    2. Halve each agent's `party_cue` (Phase 6 — required for
+       PartyPull to actually see the moderated cue under Phase 8a F').
+    3. **Phase 10 addition.** Halve `tier_d_anes_drift_multiplier`
+       (env-scoped, default 3.0 under `anes_full`; intervention sets
+       1.5). This is the Drutman 2020 mechanism: RCV + open primaries
+       reduce the elite incentive to play to the extremes, so
+       `EliteDrift` slows. Without this, Phase 6's centroid halve is
+       transient — Phase 9's 3× drift multiplier re-diverges centroids
+       within ~5 years.
+    4. **Phase 10 addition.** Halve `FactionAnchor.strength` (0.10 →
+       0.05). Faction-candidate strategy is also a primary-election
+       artifact (Drutman 2020); reducing the strength is the same
+       mechanism.
+
+    All knobs `[T]` (theoretical / mechanism-pinned). Direct RCV
+    empirical evidence is mostly null (Donovan & Bowler 2023;
+    Atkinson et al. 2023 Maine; McGhee & Shor 2017 California
+    top-2). The intervention represents Drutman's *theoretical*
+    bundle (RCV + multi-member districts + open primaries), not
+    RCV alone. Phase 10 results writeup must flag X5 as the only
+    intervention without a measured-magnitude anchor.
     """
     parties = engine.env.attrs["parties"]
     for pid in list(parties.keys()):
         parties[pid] = 0.5 * parties[pid]
-    # Phase 8a fix: also halve each agent's personal cue. Without this,
-    # PartyPull (now reading `party_cue` rather than the centroid)
-    # ignores the env-level halving and X5's mechanism is a no-op for
-    # the pillar's agents.
     for agent in engine.agents:
         cue = agent.state.attrs.get("party_cue")
         if cue is not None:
             agent.state.attrs["party_cue"] = 0.5 * cue
+    # Phase 10 §X5.3: halve the runtime EliteDrift rate AND halve every
+    # entry in the per-decade schedule the engine consults at decade-
+    # boundary events. The build-time env-knob
+    # `tier_d_anes_drift_multiplier` is only read once at construction
+    # — mutating it post-build does NOTHING. The runtime path is
+    # (a) the current rule attributes on the EliteDrift instance, and
+    # (b) `env.attrs["elite_drift_schedule_active"]` (plus the y- and
+    # asymmetric-schedule variants) which the decade-boundary event
+    # handlers read to update the rule at each transition.
+    drift = _find_rule(engine, "EliteDrift")
+    if drift is not None:
+        if hasattr(drift, "rate"):
+            drift.rate = float(drift.rate) * X5_DRIFT_MULTIPLIER_FACTOR
+        if hasattr(drift, "rate_y") and drift.rate_y is not None:
+            drift.rate_y = float(drift.rate_y) * X5_DRIFT_MULTIPLIER_FACTOR
+    for sched_key in (
+        "elite_drift_schedule_active",
+        "elite_drift_schedule_y_active",
+    ):
+        sched = engine.env.attrs.get(sched_key)
+        if isinstance(sched, dict):
+            engine.env.attrs[sched_key] = {
+                seg: float(r) * X5_DRIFT_MULTIPLIER_FACTOR
+                for seg, r in sched.items()
+            }
+    # Phase 10 §X5.4: halve FactionAnchor.strength.
+    faction = _find_rule(engine, "FactionAnchor")
+    if faction is not None and hasattr(faction, "strength"):
+        faction.strength = float(faction.strength) * X5_FACTION_STRENGTH_FACTOR
     # Keep the viz hint in sync — the dashboard re-renders party stars
     # from this entry.
     viz = engine.env.attrs.setdefault("viz", {})
@@ -483,72 +623,73 @@ X5_RANKED_CHOICE_VOTING = Intervention(
     label="Ranked-choice voting",
     description=(
         "Electoral reform: ranked-choice ballots, open primaries, "
-        "proportional representation. Removes the elite incentive to "
-        "play to the extremes (FairVote, Unite America)."
+        "proportional representation. Phase 10 redesign: Phase 6's "
+        "one-shot centroid halve was the *result* of Drutman 2020's "
+        "reform, not the mechanism — and Phase 9's amplified "
+        "EliteDrift re-diverges within ~5 years. Phase 10 also "
+        "halves `tier_d_anes_drift_multiplier` (3.0 → 1.5) and "
+        "`FactionAnchor.strength` (0.10 → 0.05) ongoing, so the "
+        "Drutman elite-incentive channel is durable. All knobs "
+        "theoretical [T] — direct RCV empirics are mostly null."
     ),
-    # §11-blessed: partial on issue sorting, null on affect.
-    # Δsep = -0.14 (just shy of the -0.15 "real" threshold); Δaff =
-    # -0.01 (noise on affect). Halving centroids (the modelled RCV
-    # strength — R3d default) moves issue sorting meaningfully but
-    # doesn't clear "real," and barely touches affect. This matches
-    # Gidron, Adams & Horne 2020's cross-national finding: institutional
-    # levers shift issue sorting more than affect. Doubling the
-    # centroid pull (R3d "all the way") would likely cross "real" on
-    # issue sorting — but that's a different intervention ("erase
-    # party," not "moderate elites").
     label_kind="intervention",
     effect_buckets={"issue_sorting": "partial", "affect": "null"},
     citation=(
-        "Hetherington 2001 (APSR 95:619); McCarty, Poole & Rosenthal "
-        "2006 (Polarized America); Gidron, Adams & Horne 2020; "
-        "McCoy & Somer 2019 (Annals of AAPSS)"
+        "Drutman 2020 (Breaking the Two-Party Doom Loop — theoretical "
+        "RCV + multi-member districts + open primaries reduces "
+        "primary-driven divergence); Donovan & Bowler 2023 (US RCV "
+        "empirics — modest reduction in negative campaigning, null "
+        "on voter polarization); Atkinson et al. 2023 (Maine RCV); "
+        "McGhee & Shor 2017 (California top-2 primaries — null on "
+        "legislator polarization); Reilly 2018 (comparative RCV); "
+        "Hetherington 2001 (APSR 95:619, party-cue intensification "
+        "inverse); Gidron, Adams & Horne 2020. See "
+        "docs/phase10_interventions/redesign_briefs.md §X5."
     ),
     expected_naive_effect=(
-        "Reforming elections reduces the incentive for politicians to "
-        "play to the extremes, and the mass public will follow."
+        "Reforming elections reduces the incentive for politicians "
+        "to play to the extremes, and the mass public will follow."
     ),
     predicted_effect=(
-        "Partial. With party centroids halved, PartyPull pulls toward "
-        "more moderate centroids; party separation drops Δsep ≈ -0.14 "
-        "over the release period — meaningful but not large. "
-        "Ideological constraint barely moves (Δ ≈ -0.02): the "
-        "*correlation* between party and issue holds even when the "
-        "centroids shift. Affective polarization barely responds, as "
-        "the cross-national evidence predicts (Gidron et al. 2020)."
+        "Phase 10 hypothesis: Δsep partial-to-real on issue "
+        "sorting, and now *durable* (was −0.14 transient in Phase "
+        "6; expect to hold over 30+ ticks because the drift channel "
+        "is also dialed down). Δaff small negative. Falsification: "
+        "Δsep null or positive after 30 ticks → drift-channel "
+        "mechanism doesn't carry the durability claim; Δsep < −0.30 "
+        "→ unrealistically large for a theoretical reform; reduce "
+        "multipliers."
     ),
-    param_bundle=_S4_BASE,
+    param_bundle=_PHASE10_EMPTY_BUNDLE,
     setup=_x5_setup,
 )
 
 
-# --- X6 — "Shared neighborhoods and workplaces" ----------------------
+# --- X6 — "Shared neighborhoods and workplaces" -----------------------
 
 def _x6_setup(engine):
-    """Add ``X6_NEW_INVOLUNTARY_PER_AGENT`` cross-party involuntary
-    edges per agent (representing residential / workplace / civic
-    institutional integration — military service, public schools,
-    mixed neighborhoods, workplaces, religious congregations), AND
-    reset every agent's out-party affect to 0.0.
+    """Phase 10 X6 — contact-hypothesis lever. Adds
+    ``X6_NEW_INVOLUNTARY_PER_AGENT`` (= 1, revised from Phase 6's 3)
+    cross-party involuntary cooperative ties per agent. The +1
+    value lands within Mousa 2020's Iraqi-soccer envelope (+1
+    cross-religion teammate) and Lowe 2021's Indian-cricket
+    envelope (~2 cross-caste teammates). Phase 6's +3 over-shot the
+    measured contact-intervention envelope.
 
-    Phase 8c §2 (replaces Phase 7 edge-level mute mechanism):
+    Edges are tagged ``cooperative=True`` + ``involuntary=True`` —
+    they trigger ``AffectiveUpdate``'s positive-going valence path
+    (when warmth permits) AND raise ``cooperative_share`` per-agent
+    (Pettigrew 2009 secondary-transfer). The negative-mute is now
+    agent-level (replaces Phase 7 edge-level mute per Phase 8c §2).
 
-    - The added edges are still tagged ``cooperative=True``. The
-      cooperative-edge flag now triggers ``AffectiveUpdate``'s
-      *positive-going* valence path (warming on cooperative
-      encounters when warmth is above ``coop_positive_threshold``),
-      not the negative-mute path.
-    - The **negative-mute mechanism is now agent-level**
-      (Pettigrew 2009 secondary-transfer): each participating agent's
-      ``cooperative_share`` attribute is incremented by the count of
-      new cooperative ties they receive divided by their post-X6
-      total tie count, clipped to ``[0, 1]``. The agent-level mute
-      applies to *every* out-party encounter (not just cooperative-
-      edge ones), proportional to ``cooperative_share``.
-
-    Sampling uses a fresh RNG (``X6_INSTITUTIONS_RNG_SEED``) so the
-    §11 measurement is reproducible. The new ties also carry
-    ``involuntary=True`` so ``TieRewiring`` cannot drop them — the
-    institutional structure persists through any subsequent rewiring.
+    Phase 10 addition: ``threat = 0`` reset for treated agents
+    (Mutz 2006 mechanism — cross-cutting ties reduce status threat,
+    which then attenuates BacklashRepulsion's threat amplification).
+    Phase 9's `saturation=1.0` is hypothesized to cap the Phase 7
+    volume-backfire (tripled cross-party encounters × halved
+    per-encounter valence netting deeper drift); combined with the
+    threat reset and the smaller +1 tie count, X6 should flip from
+    Phase 7's backfire-on-affect to partial-helpful.
     """
     rng = np.random.default_rng(X6_INSTITUTIONS_RNG_SEED)
     net = engine.env.attrs["network"]
@@ -560,8 +701,6 @@ def _x6_setup(engine):
     parties = list(by_party.keys())
     if len(parties) < 2:
         return
-    # Track new cooperative-tie count per agent so we can compute
-    # agent-level cooperative_share after the placement loop.
     new_coop_count: dict[int, int] = {a.id: 0 for a in agents}
     placed = 0
     attempts = 0
@@ -575,20 +714,12 @@ def _x6_setup(engine):
         j = int(rng.choice(by_party[q]))
         if net.has_edge(i, j):
             continue
-        # Both flags: involuntary (exempt from rewiring) + cooperative
-        # (Phase 8c §2: triggers positive-going valence path in
-        # AffectiveUpdate; the negative-mute is now agent-level
-        # via cooperative_share, computed after placement below).
         net.add_edge(i, j, involuntary=True, cooperative=True)
         new_coop_count[i] += 1
         new_coop_count[j] += 1
         placed += 1
-    # Phase 8c §2 E3: bump agent-level cooperative_share. Formula:
-    # cooperative_share = (new coop ties) / (total ties post-X6),
-    # clipped to [0, 1]. Agents who receive more new cooperative
-    # ties relative to their tie count get more mute; well-connected
-    # agents are diluted (which is the right reading — secondary
-    # transfer is per-agent, not per-edge).
+    # Agent-level cooperative_share bump (Phase 8c §2 E3 mechanism
+    # preserved): n_new / total_ties, clipped to [0, 1].
     for a in agents:
         n_new = new_coop_count[a.id]
         if n_new == 0:
@@ -601,16 +732,28 @@ def _x6_setup(engine):
         a.state.attrs["cooperative_share"] = float(
             np.clip(prior + bump, 0.0, 1.0)
         )
-    # Reset every agent's out-party affect to 0.0 — the warm/cooperative
-    # interpretation of contact hypothesis (Pettigrew & Tropp 2006:
-    # contact under Allport's conditions roughly halves prejudice).
-    # Under the Phase 8c §2 agent-level mute, this reset combines with
-    # the cooperative_share bump above to give X6 its full punch:
-    # immediate warmth recovery + reduced cooling rate going forward.
+    # Reset out-party affect to 0.0 ONLY for agents who actually
+    # received a new cross-party cooperative tie (Phase 10 fix —
+    # revised from Phase 6/8c which reset for all agents in the
+    # population). The literature-faithful read: contact-effect
+    # happens to agents who actually had contact. With
+    # +1 tie per agent target = n_agents / 2 new ties total → ~50%
+    # of agents participate. Population-level Δaff therefore lands
+    # at ~half the prior magnitude, within the Mousa 2020 /
+    # Pettigrew-Tropp envelope.
+    #
+    # Phase 10 §X6 addition: also reset perceived_threat to 0 for
+    # the same subset (Mutz 2006 mechanism — cross-cutting ties
+    # reduce status threat *for those who have the ties*). Pillar
+    # agents who don't carry the attr stay untouched.
     for a in agents:
+        if new_coop_count[a.id] == 0:
+            continue
         affect = a.state.attrs.get("affect") or {}
         for other_party in list(affect.keys()):
             affect[other_party] = 0.0
+        if "perceived_threat" in a.state.attrs:
+            a.state.attrs["perceived_threat"] = 0.0
 
 
 X6_SHARED_INSTITUTIONS = Intervention(
@@ -619,74 +762,157 @@ X6_SHARED_INSTITUTIONS = Intervention(
     description=(
         "Structural integration: mixed neighborhoods, integrated "
         "workplaces, public schools, military service, civic "
-        "institutions (community sports leagues, religious "
-        "congregations, PTAs). The contact-hypothesis lever."
+        "institutions. Phase 10 revisions: +1 cross-party tie per "
+        "agent (down from Phase 6's +3, to stay within Mousa 2020 "
+        "/ Lowe 2021 measured envelope) + out-party affect reset + "
+        "`threat = 0` reset for treated agents (Mutz 2006). "
+        "Phase 9's `saturation=1.0` is hypothesized to cap the "
+        "Phase 7 volume-backfire."
     ),
-    # §11-blessed (Phase 8c §2 re-measurement): null on issue sorting,
-    # **real on affect**. Honest measurement under the Phase 8c §2
-    # agent-level cooperative-share mute (Pettigrew 2009 secondary-
-    # transfer) plus the cooperative-positive valence path: Δsep =
-    # -0.04, Δaff = +0.235.
-    #
-    # The bucket flipped from "backfire" (Phase 7 edge-level mute,
-    # Δaff = -0.23) to **"real"** (Phase 8c §2 agent-level mute,
-    # Δaff = +0.235) under the same Pettigrew & Tropp 2006 anchor
-    # value (`cooperative_mute = 0.5`). The mechanism change is what
-    # moved the result, not a knob retune: agent-level mute applies
-    # to EVERY out-party encounter of participating agents (not just
-    # encounters on the new cooperative edges), and the cooperative-
-    # positive path adds small per-encounter warming on those edges
-    # when warmth is above the threshold. Together the two effects
-    # reverse X6's affect trajectory at the population level.
-    #
-    # Honest literature reading: this is the Pettigrew 2009 secondary-
-    # transfer interpretation of intergroup contact (contact reduces
-    # overall prejudice formation, not just toward contact targets) —
-    # which the reviewers (R1 polarization expert, R2 ABM/math expert)
-    # both argued for in Phase 8b/c review. The Phase 7 edge-level
-    # interpretation was the conservative reading that shipped first;
-    # Phase 8c §2 implements the broader reading.
-    #
-    # Null on issue sorting (Δsep = -0.04): F1 anchoring + active
-    # PartyPull still tether each agent to its starting side; the
-    # affect channel recovers but position-level sorting doesn't
-    # unwind. Gidron, Adams & Horne 2020: affect / prejudice is what
-    # contact moves; institutional levers move issue sorting more.
     label_kind="intervention",
     effect_buckets={"issue_sorting": "null", "affect": "real"},
     citation=(
         "Allport 1954 (The Nature of Prejudice); Pettigrew & Tropp "
-        "2006 (JPSP 90:751, meta-analysis: r ≈ -0.21 across 515 "
-        "studies); Pettigrew 2009 (Secondary transfer effect of "
-        "intergroup contact, Social Psychology 40:55); Mutz 2006 "
-        "(Hearing the Other Side); Brown & Enos 2021 (Nature Human "
-        "Behaviour, residential partisan segregation — reverse "
-        "direction)"
+        "2006 (JPSP 90:751, meta-analysis r ≈ −0.21 / 515 studies); "
+        "Pettigrew 2009 (secondary-transfer effect, Social Psych "
+        "40:55); Mousa 2020 (Science, Iraqi cross-religion soccer "
+        "→ ~0.10 SD in-context); Lowe 2021 (AER, Indian cricket "
+        "→ partial transfer); Paluck et al. 2021 (Annual Review, "
+        "field-experiment review); Enos 2014 (PNAS, contact under "
+        "status threat can backfire — `threat=0` reset is the "
+        "redesign's hedge); Scacco & Warren 2018 (APSR); Mutz 2006 "
+        "(Hearing the Other Side — cross-cutting ties reduce status "
+        "threat). See docs/phase10_interventions/redesign_briefs.md "
+        "§X6."
     ),
     expected_naive_effect=(
-        "Living, working, and playing alongside the other side — in "
-        "ordinary non-political settings — will heal the divide where "
-        "political argument cannot."
+        "Living, working, and playing alongside the other side — "
+        "in ordinary non-political settings — will heal the divide "
+        "where political argument cannot."
     ),
     predicted_effect=(
-        "Real on affect (Δaff = +0.235; the agent-level cooperative "
-        "mechanism — Pettigrew 2009 secondary-transfer — reduces "
-        "per-encounter coolness on every out-party encounter for "
-        "participating agents, AND cooperative-edge encounters add "
-        "small warming when warmth is not yet extreme). Null on "
-        "issue sorting (Δsep = -0.04) — F1 anchoring + active "
-        "PartyPull tether each agent to its starting side. The lay "
-        "framing: 'Building shared institutions doesn't change what "
-        "people believe, but it does change how they feel about each "
-        "other — exactly what the contact-hypothesis literature "
-        "predicts.'"
+        "Phase 10 hypothesis: Δsep ≈ 0 (null on issue), Δaff "
+        "partial-helpful (saturation + threat reset + +1 tie within "
+        "envelope should cancel Phase 7's volume-backfire). "
+        "Falsification: Δaff backfires (negative) → saturation "
+        "isn't doing the work expected, or Enos 2014 pattern wins; "
+        "Δaff > +0.30 → magnitude larger than Mousa/Pettigrew "
+        "envelope; investigate threat-reset doing unrealistic work."
     ),
-    param_bundle=_S4_BASE,
+    param_bundle=_PHASE10_EMPTY_BUNDLE,
     setup=_x6_setup,
 )
 
 
-# --- The library -------------------------------------------------------
+# --- X7 — "Correct the perception gap" --------------------------------
+
+def _x7_setup(engine):
+    """Phase 10 X7 — sustained perception-correction campaign.
+
+    1. One-shot reset of treated agents' ``perceived_other_party``
+       to the actual env-level party centroids (Phase 6 / Phase 8c §4
+       mechanism preserved).
+    2. Phase 10 addition: per-agent ``correction_rate_override =
+       0.05`` (5× the rule default 0.01) for ``X7_BOOST_DURATION_TICKS``
+       (3 ticks ~1 year). The boost accelerates PerceptionUpdate's
+       drift toward observed-neighbour means during the campaign
+       window; ``PerceptionBoostExpiry`` reverts the override after
+       the window elapses.
+
+    Phase 10 explicitly *drops* the prior-brief proposal to reduce
+    ``PERCEPTION_EXTREME_BIAS_*_TIER_D`` during the window — those
+    constants are build-time-only with no runtime consumer in the
+    current engine. See the redesign brief §X7 for the revised
+    rationale.
+
+    Treated fraction: ``X7_TREATED_FRACTION`` (20%). Speculative —
+    sensitivity sweep at 5% / 20% / 50% is in the Phase 10
+    measurement plan.
+
+    Pillar-fallback discipline. Pillar agents don't carry
+    ``perceived_other_party`` (Path A bit-identity discipline), so
+    the snapshot reset finds nothing to reset. The
+    ``correction_rate_override`` is set for treated agents
+    regardless; ``PerceptionUpdate`` short-circuits when
+    perceived_other_party is absent.
+    """
+    rng = np.random.default_rng(X7_PERCEPTION_RNG_SEED)
+    agents = engine.agents
+    n_treated = int(X7_TREATED_FRACTION * len(agents))
+    if n_treated == 0:
+        return
+    ids = sorted(a.id for a in agents)
+    treated = set(int(i) for i in rng.choice(ids, size=n_treated, replace=False))
+    expiry_tick = engine.tick + X7_BOOST_DURATION_TICKS
+    parties = engine.env.attrs.get("parties") or {}
+    for a in agents:
+        if a.id not in treated:
+            continue
+        # One-shot snapshot reset.
+        perceived = a.state.attrs.get("perceived_other_party")
+        if perceived is not None:
+            agent_party = a.state.attrs.get("party")
+            for party_id, centroid in parties.items():
+                if party_id == agent_party:
+                    continue
+                if party_id in perceived:
+                    perceived[party_id] = np.array(centroid, dtype=float)
+        # Per-agent correction-rate boost for the campaign window.
+        a.state.attrs["correction_rate_override"] = float(
+            X7_CORRECTION_RATE_BOOSTED
+        )
+        # Phase 10 third-pass: switch PerceptionUpdate to pull toward
+        # actual centroid (not observed-neighbour mean) for the
+        # campaign window. Default (None) preserves the pull-toward-
+        # observed path post-campaign.
+        a.state.attrs["perception_target_override"] = "actual_centroid"
+        a.state.attrs["perception_boost_expires_at"] = int(expiry_tick)
+
+
+X7_PERCEPTION_CORRECTION = Intervention(
+    id="X7_perception_correction",
+    label="Correct the perception gap",
+    description=(
+        "Civic / educational program presenting accurate out-party "
+        "median positions to a population that systematically over-"
+        "estimates the other side's extremity. Phase 10 sustained "
+        "variant (X7b): one-shot reset of treated 20%'s perceived "
+        "centroids + 5× boost to their `correction_rate` for 3 "
+        "ticks (~1 year) — Druckman 2022 durability pessimism on "
+        "perception corrections means the boost mimics ongoing "
+        "campaign reinforcement, not just a snapshot."
+    ),
+    label_kind="intervention",
+    effect_buckets={"issue_sorting": "null", "affect": "null"},
+    citation=(
+        "Ahler & Sood 2018 (JOP 80:964, partisan misperceptions "
+        "~20pp); Lees & Cikara 2020 (Nature Human Behaviour, meta-"
+        "correction r ≈ -0.07); Druckman et al. 2022 (Nature Human "
+        "Behaviour, durability pessimism); Voelkel et al. 2024 "
+        "(perception-correction arm ~0.04 SD on affect); Moore-Berg "
+        "et al. 2020 (PNAS, meta-perceptions → outgroup hostility); "
+        "Yudkin et al. 2019 (More in Common, Perception Gap). See "
+        "docs/phase10_interventions/redesign_briefs.md §X7."
+    ),
+    expected_naive_effect=(
+        "Showing people that the other side is less extreme than "
+        "they think will reduce hostility."
+    ),
+    predicted_effect=(
+        "Phase 10 hypothesis: Δsep ≈ 0 (perception doesn't move "
+        "position directly), Δaff small positive ~+0.02 to +0.04 "
+        "(null-to-partial helpful), matching Voelkel 2024 envelope. "
+        "Falsification: Δaff > +0.10 → engine over-converting "
+        "perception to affect; Δaff null even at 20% reach → "
+        "correction-rate boost isn't enough; bias-maintenance "
+        "machinery would need to be designed for Phase 11."
+    ),
+    param_bundle=_PHASE10_EMPTY_BUNDLE,
+    setup=_x7_setup,
+)
+
+
+# --- The library ------------------------------------------------------
 
 INTERVENTIONS_PHASE6: tuple[Intervention, ...] = (
     X1_SHOW_OTHER_SIDE,

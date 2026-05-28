@@ -77,9 +77,22 @@ class IdentityToIdeologyPull:
         # IdentitySorting), so the mean carries both the systematic
         # party-aligned component and per-agent deviation.
         signal = float(np.mean(identities))
+        # Phase 10 X4 — per-agent override for the y-axis pull
+        # magnitude (Levendusky 2018 identity prime dampens the
+        # cultural-axis identity → ideology coupling for primed
+        # agents). Default `None` reads the rule's `strength_y`,
+        # preserving bit-identity for any scenario that doesn't seed
+        # the override.
+        sy_override = agent.state.attrs.get(
+            "identity_pull_strength_y_override"
+        )
+        eff_strength_y = (
+            float(sy_override) if sy_override is not None
+            else self.strength_y
+        )
         d = np.array([
             coupling * self.strength_x * signal,
-            coupling * self.strength_y * signal,
+            coupling * eff_strength_y * signal,
         ])
         # Friedkin-Johnsen anchoring: stubborn agents resist the pull,
         # matching the rest of the historical-arc pipeline.

@@ -42,6 +42,10 @@ from ..rules.cohort_replacement import CohortReplacement
 from ..rules.elite_drift import EliteDrift
 from ..rules.faction_anchor import FactionAnchor
 from ..rules.identity_prime import IdentityPrimeExpiry
+from ..rules.intervention_expiry import (
+    PerceptionBoostExpiry,
+    X1ExposureExpiry,
+)
 from ..rules.identity_sorting import IdentitySorting
 from ..rules.identity_to_position import IdentityToIdeologyPull
 from ..rules.influence import BoundedConfidenceInfluence
@@ -1222,6 +1226,12 @@ def build_engine(
         # Phase 8c §4 I4: clears X4 shared-identity-prime overrides
         # at the configured expiry tick. Inert until X4 fires.
         IdentityPrimeExpiry(),
+        # Phase 10: PerceptionBoostExpiry and X1ExposureExpiry
+        # added for X7's sustained-correction window and X1's
+        # exposure-environment window respectively. Both inert
+        # until their intervention sets the watched state.
+        PerceptionBoostExpiry(),
+        X1ExposureExpiry(),
         # Phase 8c §5 E5: decays `perceived_threat` toward zero each
         # tick. Inert until the 2016 status-threat event sets non-
         # zero threat for a fraction of agents. `THREAT_DECAY_RATE

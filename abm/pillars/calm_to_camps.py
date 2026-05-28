@@ -381,10 +381,20 @@ def build_engine(
     # added to the env-rule pipeline so X4's prime overrides are
     # cleared at their configured expiry tick. Inert until X4 fires
     # (no agent has `identity_prime_expires_at`).
+    # Phase 10: PerceptionBoostExpiry and X1ExposureExpiry added
+    # for the X7 sustained-correction and X1 exposure-environment
+    # interventions respectively. Both are inert until their
+    # corresponding intervention sets the watched state.
+    from ..rules.intervention_expiry import (
+        PerceptionBoostExpiry,
+        X1ExposureExpiry,
+    )
     env_rules = [
         EliteDrift(rate=0.0),
         TieRewiring(rewire_rate=0.0),
         IdentityPrimeExpiry(),
+        PerceptionBoostExpiry(),
+        X1ExposureExpiry(),
         # Phase 8c §5 E5: ThreatDecay added at decay_rate=0 (inert).
         # Pillar agents never carry `perceived_threat`; the rule
         # no-ops in both senses (the early-return at decay_rate=0

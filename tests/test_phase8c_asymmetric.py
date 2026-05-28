@@ -1,14 +1,28 @@
 """Phase 8c §6 — asymmetric BacklashRepulsion tests.
 
-Covers:
+Covers (rule-level, preserved through Phase 10):
 
 - `asymmetric = None` (pillar default) preserves Phase 8c §5
   behaviour exactly (symmetric multiplier 1.0).
 - `asymmetric = {0: 0.7, 1: 1.3}` scales push per-party (Bail 2018
-  reading: R-users push harder away).
-- X1 setup applies the asymmetric multiplier dict.
+  reading: R-users push harder away). The mechanism remains
+  available on the rule for any future intervention that wants it.
 - Pillar S0-S4 bundles carry `asymmetric = None`; pillar
   invariant preserved.
+
+**Phase 10 update.** The Phase 6 X1 intervention applied
+``asymmetric = {0: 0.7, 1: 1.3}`` at intervention time. Phase 10's
+X1 redesign drops this — Phase 9's post-2016 threat event already
+encodes the asymmetry endogenously (60% of party=1 carry
+``threat=0.6``) and ``BacklashRepulsion.threat_amplification``
+routes that into push magnitude, so hard-coding ``asymmetric`` on
+top double-counts. The two X1-specific asymmetric tests
+(``test_x1_setup_applies_asymmetric_dict``,
+``test_x1_produces_asymmetric_per_party_drift``) are dropped; X1's
+new threat-amplification mechanism is covered by Phase 10 tests
+in ``test_phase10_interventions.py`` (TODO if/when added). The
+rule-level + pillar-invariant tests below stay — the
+``asymmetric`` knob remains a live engine capability.
 """
 from __future__ import annotations
 
@@ -21,11 +35,9 @@ from abm.core.space import ContinuousSpace2D
 from abm.core.state import AgentState
 from abm.pillars import (
     PILLAR,
-    X1_SHOW_OTHER_SIDE,
     apply_intervention,
 )
 from abm.pillars.calm_to_camps import build_engine as pillar_build
-from abm.pillars.interventions_phase6 import X1_ASYMMETRIC_RATIO
 from abm.rules.repulsion import BacklashRepulsion
 
 
@@ -129,53 +141,14 @@ def test_asymmetric_missing_party_defaults_to_1():
 
 
 # ---------------------------------------------------------------------
-# X1 intervention under asymmetric mechanism.
-# ---------------------------------------------------------------------
-
-
-def test_x1_setup_applies_asymmetric_dict():
-    """X1's param_bundle includes the asymmetric dict; after X1 fires,
-    BacklashRepulsion has the dict set."""
-    eng = pillar_build(seed=0, n_agents=50)
-    apply_intervention(eng, PILLAR.interventions[4])
-    # Pre-X1: asymmetric is None.
-    br = next(
-        r for r in eng.rules.rules if type(r).__name__ == "BacklashRepulsion"
-    )
-    assert br.asymmetric is None, f"pre-X1: asymmetric should be None; got {br.asymmetric}"
-    # Apply X1.
-    apply_intervention(eng, X1_SHOW_OTHER_SIDE)
-    assert br.asymmetric == X1_ASYMMETRIC_RATIO, (
-        f"post-X1: asymmetric should be {X1_ASYMMETRIC_RATIO}; got {br.asymmetric}"
-    )
-
-
-def test_x1_produces_asymmetric_per_party_drift():
-    """Under X1 (asymmetric ratio 0.7:1.3), party 1's mean drift is
-    larger in magnitude than party 0's mean drift."""
-    eng = pillar_build(seed=0, n_agents=250)
-    apply_intervention(eng, PILLAR.interventions[4])
-    eng.run(200)
-    pos_pre = eng.positions()
-    parties = np.array([a.state.attrs["party"] for a in eng.agents])
-    pre_d_x = float(pos_pre[parties == 0, 0].mean())
-    pre_r_x = float(pos_pre[parties == 1, 0].mean())
-    apply_intervention(eng, X1_SHOW_OTHER_SIDE)
-    eng.run(200)
-    pos_post = eng.positions()
-    post_d_x = float(pos_post[parties == 0, 0].mean())
-    post_r_x = float(pos_post[parties == 1, 0].mean())
-    d_drift = abs(post_d_x - pre_d_x)
-    r_drift = abs(post_r_x - pre_r_x)
-    assert r_drift > d_drift, (
-        f"R drift {r_drift:.4f} should exceed D drift {d_drift:.4f} "
-        f"under asymmetric X1"
-    )
-
-
-# ---------------------------------------------------------------------
 # Pillar invariant: bit-identical (pillar carries asymmetric=None).
 # ---------------------------------------------------------------------
+#
+# Phase 10 note: the Phase 6 X1 tests that asserted X1 mutated
+# `BacklashRepulsion.asymmetric` to `{0:0.7, 1:1.3}` were dropped here.
+# Phase 10 X1 instead boosts `threat_amplification` and
+# `identity_weight` for a 4-tick window; the asymmetry is carried
+# endogenously by the historical-arc's post-2016 threat event.
 
 
 def test_pillar_S4_carries_asymmetric_none():

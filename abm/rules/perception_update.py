@@ -63,7 +63,18 @@ class PerceptionUpdate:
         env: Environment,
         rng: np.random.Generator,
     ) -> StateDelta:
-        if self.correction_rate == 0:
+        # Phase 10 X7 — per-agent override for the correction rate
+        # (sustained perception-correction campaign accelerates the
+        # correction during the campaign window). Default `None`
+        # reads the rule's `self.correction_rate`, preserving
+        # bit-identity for any scenario that doesn't seed the
+        # override.
+        rate_override = agent.state.attrs.get("correction_rate_override")
+        eff_rate = (
+            float(rate_override) if rate_override is not None
+            else self.correction_rate
+        )
+        if eff_rate == 0:
             return StateDelta()
         agent_party = agent.state.attrs.get("party")
         if agent_party is None:
@@ -72,6 +83,39 @@ class PerceptionUpdate:
         if perceived is None or not perceived:
             # Pillar-fallback: agent doesn't carry the perception attr.
             return StateDelta()
+        # Phase 10 X7 third-pass — perception-campaign mode. When the
+        # agent carries ``perception_target_override == "actual_centroid"``,
+        # pull perception toward the ACTUAL env-level party centroid
+        # (the campaign's "external information" channel) instead of
+        # toward the observed-neighbour mean. In a homophilous network
+        # cross-party neighbours are sparse, so the default pull-toward-
+        # observed barely moves perception even at boosted rates; the
+        # campaign mode lets a sustained correction reach the agent.
+        # Default ``None`` preserves the legacy pull-toward-observed
+        # mechanism — bit-identity for any scenario that doesn't set
+        # the override.
+        target_override = agent.state.attrs.get(
+            "perception_target_override"
+        )
+        if target_override == "actual_centroid":
+            parties = env.attrs.get("parties") or {}
+            if not parties:
+                return StateDelta()
+            deltas: dict[int, np.ndarray] = {}
+            for other_party, centroid in parties.items():
+                if other_party == agent_party:
+                    continue
+                current = perceived.get(other_party)
+                if current is None:
+                    continue
+                target = np.asarray(centroid, dtype=float)
+                deltas[other_party] = eff_rate * (target - current)
+            if not deltas:
+                return StateDelta()
+            return StateDelta(d_attrs={"perceived_other_party": deltas})
+        # Default mode (Phase 8c §4 E4.4): pull toward observed-neighbour
+        # mean. Cross-party observation is rare in a homophilous network,
+        # so this correction is slow even at boosted rates.
         neighbors = neighbor_agents(agent, space, env)
         if not neighbors:
             return StateDelta()
@@ -90,7 +134,7 @@ class PerceptionUpdate:
             if current is None:
                 continue
             mean_obs = np.mean(positions, axis=0)
-            delta = self.correction_rate * (mean_obs - current)
+            delta = eff_rate * (mean_obs - current)
             deltas[other_party] = delta
         if not deltas:
             return StateDelta()

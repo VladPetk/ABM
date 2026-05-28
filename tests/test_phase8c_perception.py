@@ -37,9 +37,9 @@ from abm.pillars.historical_arc import (
     build_engine as historical_build,
 )
 from abm.pillars.interventions_phase6 import (
+    X4_COOPERATIVE_SHARE_BOOSTED,
     X4_PRIME_DURATION_TICKS,
     X4_PRIME_SAMPLE_FRACTION,
-    X4_PRIMED_IDENTITY_WEIGHT,
 )
 from abm.rules.affective_update import AffectiveUpdate
 from abm.rules.identity_prime import IdentityPrimeExpiry
@@ -294,14 +294,22 @@ def test_affective_update_pillar_fallback_to_neighbor_position():
 
 
 def test_x4_prime_samples_20_percent():
-    """X4 setup primes 20% of agents (Vlad's Fork 2-b override)."""
+    """X4 setup primes 20% of agents.
+
+    Phase 10 third-pass mechanism (2026-05-28): X4 sets
+    ``identity_prime_expires_at`` per primed agent (still used as the
+    expiry marker). The identity_weight_override path was dropped
+    because Phase 9's coupling channel inverts the predicted
+    direction; the new mechanism uses ``cooperative_share`` boost
+    and ``perceived_threat`` reset instead.
+    """
     eng = pillar_build(seed=0, n_agents=250)
     apply_intervention(eng, PILLAR.interventions[4])
     eng.run(100)
     apply_intervention(eng, X4_BIPARTISAN_DIALOGUE)
     primed = sum(
         1 for a in eng.agents
-        if a.state.attrs.get("identity_weight_override") is not None
+        if a.state.attrs.get("identity_prime_expires_at") is not None
     )
     expected = int(X4_PRIME_SAMPLE_FRACTION * len(eng.agents))
     assert primed == expected, (
@@ -310,30 +318,49 @@ def test_x4_prime_samples_20_percent():
     )
 
 
-def test_x4_prime_sets_identity_weight_override():
-    """Primed agents have identity_weight_override = 0.1 and a future
-    expiry tick."""
+def test_x4_prime_sets_cooperative_share_and_expiry():
+    """Phase 10 third-pass: primed agents get cooperative_share
+    boosted to X4_COOPERATIVE_SHARE_BOOSTED (0.5), perceived_threat
+    reset to 0, and identity_prime_expires_at set to a future tick.
+    Faction-tagged agents (which the pillar doesn't have) would
+    receive halved effect — that's covered by the historical-arc
+    measurement, not this pillar smoke check.
+    """
     eng = pillar_build(seed=0, n_agents=50)
     apply_intervention(eng, PILLAR.interventions[4])
     eng.run(100)  # tick = 100
     apply_intervention(eng, X4_BIPARTISAN_DIALOGUE)
     expected_expiry = 100 + X4_PRIME_DURATION_TICKS
+    n_primed = 0
     for a in eng.agents:
-        override = a.state.attrs.get("identity_weight_override")
-        if override is None:
-            continue
-        assert override == X4_PRIMED_IDENTITY_WEIGHT, (
-            f"agent {a.id}: override should be {X4_PRIMED_IDENTITY_WEIGHT}; "
-            f"got {override}"
-        )
         expiry = a.state.attrs.get("identity_prime_expires_at")
+        if expiry is None:
+            continue
+        n_primed += 1
         assert expiry == expected_expiry, (
             f"agent {a.id}: expiry should be {expected_expiry}; got {expiry}"
         )
+        coop = a.state.attrs.get("cooperative_share")
+        # Non-faction primed agents get cooperative_share = max(prior, 0.5).
+        # Pillar agents start with cooperative_share absent (== 0.0
+        # default), so after prime it should equal exactly 0.5.
+        assert coop == X4_COOPERATIVE_SHARE_BOOSTED, (
+            f"agent {a.id}: cooperative_share should be "
+            f"{X4_COOPERATIVE_SHARE_BOOSTED}; got {coop}"
+        )
+        threat = a.state.attrs.get("perceived_threat")
+        # Non-faction primed agents get perceived_threat = 0 (full effect).
+        assert threat == 0.0, (
+            f"agent {a.id}: perceived_threat should be 0.0; got {threat}"
+        )
+    assert n_primed > 0, "expected at least one primed agent"
 
 
-def test_x4_prime_expires_after_30_ticks():
-    """IdentityPrimeExpiry env-rule clears the override at expiry."""
+def test_x4_prime_expires_after_duration():
+    """IdentityPrimeExpiry env-rule restores cooperative_share and
+    perceived_threat at the configured expiry tick (Phase 10 third-
+    pass). Test name updated from the Phase 6/8c '30 ticks' (the
+    Phase 10 duration is now 60 ticks)."""
     eng = pillar_build(seed=0, n_agents=50)
     apply_intervention(eng, PILLAR.interventions[4])
     eng.run(50)
@@ -342,24 +369,34 @@ def test_x4_prime_expires_after_30_ticks():
     eng.run(X4_PRIME_DURATION_TICKS - 1)
     n_primed_before = sum(
         1 for a in eng.agents
-        if a.state.attrs.get("identity_weight_override") is not None
+        if a.state.attrs.get("identity_prime_expires_at") is not None
     )
     assert n_primed_before > 0, "expected primed agents before expiry"
     # At expiry: cleared.
     eng.run(2)
     n_primed_after = sum(
         1 for a in eng.agents
-        if a.state.attrs.get("identity_weight_override") is not None
+        if a.state.attrs.get("identity_prime_expires_at") is not None
     )
     assert n_primed_after == 0, (
-        f"All overrides should be cleared at expiry; got "
-        f"{n_primed_after} still primed"
+        f"All expiry markers should be cleared at expiry; got "
+        f"{n_primed_after} still set"
     )
 
 
 def test_affective_update_uses_override_in_valence():
     """AffectiveUpdate uses identity_weight_override (when present)
-    instead of the rule-level identity_weight."""
+    instead of the rule-level identity_weight.
+
+    Phase 10 third-pass note: X4 no longer sets identity_weight_override
+    (the mechanism was swapped to cooperative_share + threat reset
+    because Phase 9's coupling inverts the identity_weight path). The
+    rule's override READING capability is still in place for any
+    other intervention that wants it — this test verifies that
+    capability with a literal 0.1 value, formerly
+    ``X4_PRIMED_IDENTITY_WEIGHT``.
+    """
+    _legacy_override_value = 0.1  # was X4_PRIMED_IDENTITY_WEIGHT pre-third-pass
     rule = AffectiveUpdate(
         radius=1.5, learning_rate=0.01, identity_weight=0.5,
         baseline=0.10, cooperative_mute=0.5,
@@ -373,7 +410,7 @@ def test_affective_update_uses_override_in_valence():
 
     a_override, _, space, env = _two_agents(
         [-0.3, 0.0], [0.5, 0.0], party_a=0, party_b=1, warmth_a=-0.5,
-        identity_override=X4_PRIMED_IDENTITY_WEIGHT,
+        identity_override=_legacy_override_value,
     )
     d_yes = rule.apply(a_override, space, env, np.random.default_rng(0))
     # With identity_term == issue_term (both ~0.5333), the disagreement
@@ -411,28 +448,52 @@ def test_x7_setup_no_op_in_pillar():
 
 
 def test_x7_setup_resets_perception_in_historical():
-    """X7 in the historical arc: agents have perceived_other_party
-    seeded with bias. X7 setup resets to actual env centroid."""
+    """X7 in the historical arc: treated 20% of agents have their
+    perceived_other_party reset to actual env centroid AND have a
+    correction_rate_override set.
+
+    Phase 10 reframe: the Phase 6 X7 was setup-only and applied to
+    ALL agents; Phase 10 X7 is a sustained campaign applied to a
+    treated 20% fraction (Allcott-envelope take-up speculation) and
+    also boosts `PerceptionUpdate.correction_rate` per-agent for 3
+    ticks. The test now filters to treated agents (identified by
+    the boosted correction_rate_override) and verifies the snapshot
+    reset for those.
+    """
     eng = historical_build(seed=0, n_agents=50)
-    # Pre-X7: agents perceive party 0 as more negative-x than its
-    # actual centroid.
-    a_before = next(
-        a for a in eng.agents if a.state.attrs["party"] == 1
-    )
-    perceived_before_x0 = a_before.state.attrs["perceived_other_party"][0][0]
+    # Pre-X7: agents perceive party 0 as more extreme than actual.
+    a_pre = next(a for a in eng.agents if a.state.attrs["party"] == 1)
+    perceived_before_x0 = a_pre.state.attrs["perceived_other_party"][0][0]
     actual_centroid_x = float(eng.env.attrs["parties"][0][0])
-    # Verify it was biased outward (more negative than actual).
     assert abs(perceived_before_x0) > abs(actual_centroid_x) - 0.5, (
         "agent should perceive out-party as more extreme than actual"
     )
-    # Apply X7.
     apply_intervention(eng, X7_PERCEPTION_CORRECTION)
-    # Post-X7: perceived should equal the actual centroid exactly.
-    perceived_after = a_before.state.attrs["perceived_other_party"][0]
+    # Identify treated agents (those that received the correction-
+    # rate boost). For each treated party=1 agent that has a
+    # perceived entry for party 0, perceived should now equal the
+    # actual centroid exactly.
     actual_centroid = eng.env.attrs["parties"][0]
-    assert np.allclose(perceived_after, actual_centroid), (
-        f"X7 should reset perceived_other_party to actual centroid. "
-        f"perceived={perceived_after}, actual={actual_centroid}"
+    treated = [
+        a for a in eng.agents
+        if a.state.attrs.get("correction_rate_override") is not None
+    ]
+    assert len(treated) > 0, "X7 should treat at least one agent"
+    checked = 0
+    for a in treated:
+        if a.state.attrs.get("party") != 1:
+            continue
+        perceived = a.state.attrs.get("perceived_other_party")
+        if perceived is None or 0 not in perceived:
+            continue
+        assert np.allclose(perceived[0], actual_centroid), (
+            f"X7 should reset perceived_other_party to actual centroid "
+            f"for treated agents. agent {a.id}: "
+            f"perceived={perceived[0]}, actual={actual_centroid}"
+        )
+        checked += 1
+    assert checked > 0, (
+        "test should have checked at least one treated party=1 agent"
     )
 
 

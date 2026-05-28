@@ -147,34 +147,63 @@ def test_per_outlet_no_renormalisation_after_x3():
 
 
 def test_x3_setup_zeros_only_partisan_cable_outlets():
-    """X3 zeroes MSNBC (id=0) + Fox News (id=4) weights; leaves
-    NYT (id=1), Local TV (id=2), WSJ (id=3) untouched."""
+    """X3 zeroes MSNBC (id=0) + Fox News (id=4) weights for the
+    treated 20% of agents; leaves all non-cable outlets untouched
+    for every agent.
+
+    Phase 10 reframe (was Phase 8c §3 §3-A): Phase 6 / Phase 8c X3
+    zeroed the cable outlets for *all* agents (100% reach). Phase
+    10 X3 redesigns this as a low-prevalence counterfactual per
+    Allcott et al. 2020 take-up envelope — applied to a treated
+    20% fraction of agents. The test therefore checks: (a) ~20%
+    of agents have cable zeroed (deterministic given the X3 RNG
+    seed); (b) non-cable outlets are untouched for ALL agents
+    regardless of treatment; (c) untreated agents retain their
+    original cable weights.
+    """
+    from abm.pillars.interventions_phase6 import X3_TREATED_FRACTION
     eng = pillar_build(seed=0, n_agents=100)
     apply_intervention(eng, PILLAR.interventions[4])
     eng.run(50)
-    # Snapshot pre-X3 diets for non-cable outlets.
+    # Snapshot pre-X3 diets in full.
     pre = {
-        a.id: {
-            oid: w for oid, w in (a.state.attrs.get("media_diet") or {}).items()
-            if oid not in X3_PARTISAN_CABLE_OUTLET_IDS
-        }
+        a.id: dict(a.state.attrs.get("media_diet") or {})
         for a in eng.agents
     }
     apply_intervention(eng, X3_QUIT_CABLE_NEWS)
-    # Post-X3: cable weights zero, non-cable weights unchanged.
+    # Count treated (cable zeroed).
+    n_treated = 0
     for a in eng.agents:
         diet = a.state.attrs.get("media_diet") or {}
-        for cable_id in X3_PARTISAN_CABLE_OUTLET_IDS:
-            assert diet.get(cable_id, 0.0) == 0.0, (
-                f"agent {a.id}: cable outlet {cable_id} weight "
-                f"{diet.get(cable_id)} should be 0 after X3"
-            )
+        # Non-cable outlets unchanged for every agent.
         for oid, pre_w in pre[a.id].items():
+            if oid in X3_PARTISAN_CABLE_OUTLET_IDS:
+                continue
             assert diet.get(oid) == pre_w, (
                 f"agent {a.id}: non-cable outlet {oid} weight "
                 f"changed from {pre_w} to {diet.get(oid)} — X3 should "
                 f"leave it alone"
             )
+        # Determine treatment status from cable weights.
+        cable_all_zero = all(
+            diet.get(cable_id, 0.0) == 0.0
+            for cable_id in X3_PARTISAN_CABLE_OUTLET_IDS
+        )
+        if cable_all_zero:
+            n_treated += 1
+        else:
+            # Untreated agent: cable weights match pre-X3.
+            for cable_id in X3_PARTISAN_CABLE_OUTLET_IDS:
+                if cable_id in pre[a.id]:
+                    assert diet.get(cable_id) == pre[a.id][cable_id], (
+                        f"untreated agent {a.id}: cable outlet "
+                        f"{cable_id} weight changed unexpectedly"
+                    )
+    expected = int(X3_TREATED_FRACTION * len(eng.agents))
+    assert n_treated == expected, (
+        f"X3 should treat {expected} agents ({X3_TREATED_FRACTION:.0%} "
+        f"of {len(eng.agents)}); got {n_treated}"
+    )
 
 
 def test_x3_partisan_cable_outlet_ids_are_msnbc_and_fox():
