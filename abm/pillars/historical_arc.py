@@ -699,20 +699,33 @@ def build_engine(
         _ic_sigma = (
             float(tier_d_ic_sigma) if tier_d_ic_sigma is not None else 0.45
         )
-        # Phase 9 §11.7-D4 — under ANES knobs + tier_d_ic_sigma, anchor
-        # the IC draw to the ANES party centroid rather than (side·0.15, 0).
-        # The default ±0.15 bias gives partisans IC mean ±0.15 which
-        # produces 1980 wp_sd too wide (≈ 0.41) under the §11.7-D stack;
-        # ANES 1980 centroids D=(-0.09,+0.05), R=(+0.27,+0.23) instead
-        # land 1980 sep + variance + wp_sd in the ANES band together.
-        if anes_knobs_active and tier_d_ic_sigma is not None:
-            _ic_party = 1 if side > 0 else 0
-            _ic_cent = party_centers_active[_ic_party]
+        # Phase 9 §11.7-D6 — under ANES knobs, anchor IC to the ANES
+        # 1980 centroids D=(-0.09,+0.05), R=(+0.27,+0.23). The
+        # asymmetry is empirical (R sorted post-Reagan, D still near
+        # centre in 1986/88) and the symmetric ±0.15 IC bias was
+        # producing R centroid at y≈0 in the 1980 visual, vs ANES
+        # R y≈+0.23. The party is pre-committed from `side`; the
+        # K-sigmoid below is skipped under this path. Cross-pressuring
+        # is supplied naturally by the centroid-anchored noise (≈ 35%
+        # of D-side agents draw pos_x > 0 at σ_ic = 0.35, matching
+        # ANES sign-alignment ≈ 65%).
+        if anes_knobs_active:
+            _ic_party_pre = 1 if side > 0 else 0
+            _ic_cent = party_centers_active[_ic_party_pre]
+            # ρ-correlated IC noise so the IC distribution itself
+            # carries the diagonal tilt (in addition to the cue/per-tick
+            # noise correlation from D-5).
+            _cue_rho_ic = float(tier_d_cue_correlation)
+            _u, _v = rng.normal(0.0, 1.0), rng.normal(0.0, 1.0)
+            _ic_noise_y = (
+                _cue_rho_ic * _u
+                + float(np.sqrt(max(0.0, 1.0 - _cue_rho_ic ** 2))) * _v
+            )
             pos_x = float(np.clip(
-                float(_ic_cent[0]) + rng.normal(0, _ic_sigma), -1.0, 1.0
+                float(_ic_cent[0]) + _ic_sigma * _u, -1.0, 1.0
             ))
             pos_y = float(np.clip(
-                float(_ic_cent[1]) + rng.normal(0, _ic_sigma), -1.0, 1.0
+                float(_ic_cent[1]) + _ic_sigma * _ic_noise_y, -1.0, 1.0
             ))
         else:
             pos_x = float(np.clip(side * 0.15 + rng.normal(0, _ic_sigma), -1.0, 1.0))
@@ -729,26 +742,32 @@ def build_engine(
             else:
                 pos_y = float(np.clip(rng.normal(0, _ic_sigma), -1.0, 1.0))
         pos = np.array([pos_x, pos_y])
-        # Phase 8f §2: probabilistic party assignment with per-decade
-        # K. At 1980 K=2.5 → ~68% sign-aligned at |x|=0.3 → many
-        # cross-pressured partisans (party-as-coalition without
-        # tight coupling, per the round-1 polarization-expert
-        # diagnosis). K rises across decades to 8.0 at modern era.
-        # Cohort replacement uses cohort-aware K.
-        k_1980 = party_assignment_k_active["1980-90"]
-        if tier_d_axis_balance and not tier_d_lever1_off:
-            # Lever 1: party assignment reads both axes with mild
-            # x-tilt α=0.55, β=0.45 (Mason 2018 app. B; Levendusky
-            # 2009 ch. 2-3 — partisan-sorting magnitudes are within
-            # ~10% on the two axes by the 2000s). Default path
-            # (sigmoid of x alone) is preserved bit-identically.
-            # tier_d_lever1_off ablation: master Tier D on but lever 1
-            # falls back to x-only sigmoid (diagnostic for §11 break).
-            sigmoid_arg = 0.55 * pos_x + 0.45 * pos_y
+        if anes_knobs_active:
+            # Phase 9 §11.7-D6: party pre-committed from `side`; the
+            # centroid-anchored IC draw naturally produces ANES-matching
+            # sign-alignment (~65% at σ_ic = 0.35).
+            party = _ic_party_pre
         else:
-            sigmoid_arg = pos_x
-        p_party_1 = 1.0 / (1.0 + np.exp(-k_1980 * sigmoid_arg))
-        party = 1 if rng.random() < p_party_1 else 0
+            # Phase 8f §2: probabilistic party assignment with per-decade
+            # K. At 1980 K=2.5 → ~68% sign-aligned at |x|=0.3 → many
+            # cross-pressured partisans (party-as-coalition without
+            # tight coupling, per the round-1 polarization-expert
+            # diagnosis). K rises across decades to 8.0 at modern era.
+            # Cohort replacement uses cohort-aware K.
+            k_1980 = party_assignment_k_active["1980-90"]
+            if tier_d_axis_balance and not tier_d_lever1_off:
+                # Lever 1: party assignment reads both axes with mild
+                # x-tilt α=0.55, β=0.45 (Mason 2018 app. B; Levendusky
+                # 2009 ch. 2-3 — partisan-sorting magnitudes are within
+                # ~10% on the two axes by the 2000s). Default path
+                # (sigmoid of x alone) is preserved bit-identically.
+                # tier_d_lever1_off ablation: master Tier D on but lever 1
+                # falls back to x-only sigmoid (diagnostic for §11 break).
+                sigmoid_arg = 0.55 * pos_x + 0.45 * pos_y
+            else:
+                sigmoid_arg = pos_x
+            p_party_1 = 1.0 / (1.0 + np.exp(-k_1980 * sigmoid_arg))
+            party = 1 if rng.random() < p_party_1 else 0
 
         # Phase 9 Tier A: override position + party from faction draw.
         # For Centrists, only override position (party stays sigmoid-drawn).

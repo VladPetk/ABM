@@ -156,6 +156,7 @@ PRESETS = {
         "tier_c_bc_strength": 0.015,
         "tier_d_coupling_rho": 0.30,        # IC x-y correlation (mild)
         "tier_d_cue_correlation": 0.60,     # D5: cue + per-tick noise ρ
+        "tier_d_ic_sigma": 0.35,            # D6: centroid-anchored IC σ
     },
 }
 
