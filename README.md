@@ -1,31 +1,60 @@
-# ABM — Political Polarization Sandbox
+# polarlab
 
-A flexible agent-based modeling framework built around a 2D political compass
-(`economic left ↔ right`, `libertarian ↔ authoritarian`). Agents drift through
-ideology space according to composable rules; polarization patterns emerge.
+An agent-based model of US political polarization over a stylised ~60-year
+window (~1960 → ~2020), built to do one thing publicly and honestly: **show
+what real depolarization interventions actually do**, with the empirical
+literature as the calibration anchor.
+
+The headline finding the model produces: **most depolarization interventions
+people loudly demand don't work in the model.** The seven-intervention library
+(Phase 10) lands one as backfire, two as helpful (one partial, one real on
+affect), and four as null — each null with a documented reason.
+
+## Where to read
+
+The model is documented at three altitudes. Read top-down:
+
+- **[`docs/ENGINE_OVERVIEW.md`](docs/ENGINE_OVERVIEW.md)** — what the engine
+  is, what each rule does, and why. Higher-altitude than the citation-pinned
+  methods document.
+- **[`docs/INTERVENTIONS_OVERVIEW.md`](docs/INTERVENTIONS_OVERVIEW.md)** — the
+  seven public-facing interventions (X1–X7), their mechanisms, literature
+  anchors, and measured buckets.
+- **[`docs/methods.md`](docs/methods.md)** — citation-pinned methods. Every
+  number, every knob, every choice anchored to a published paper.
+- **[`docs/ENGINE_KNOBS.md`](docs/ENGINE_KNOBS.md)** — the runtime knob
+  registry.
+
+Phase-by-phase results live under [`docs/results/`](docs/results); the
+landing summary for the latest phase is
+[`docs/results/phase10_results.md`](docs/results/phase10_results.md).
 
 ## Architecture
 
-The simulation core (`abm/core/`, `abm/rules/`, `abm/scenarios/`, `abm/metrics/`)
-is **pure Python — zero framework imports**. The Mesa adapter
-(`abm/adapters/mesa_adapter.py`) is the only file that touches Mesa, and only
-when explicitly loaded. The Solara dashboard (`abm/viz/`) is one of many
-possible front-ends.
+The engine is pure Python — `numpy`, `scipy`, `plotly`. No agent framework.
 
 ```
 abm/
-  core/        state, agent, environment, space, rules, engine
-  rules/       composable behavior — influence, repulsion, noise, party_pull, ...
-  scenarios/   wirings of env + agents + rules
-  metrics/     polarization measures
-  adapters/    framework bridges (Mesa, etc.)
-  viz/         Solara research dashboard
-  web/         FastAPI + WebSocket bridge for the public website
-website/       static frontend (HTML/CSS/JS) — talks to abm.web over WebSocket
+  core/        state, agent, environment, space, rules engine
+  rules/       composable behaviour — influence, repulsion, party-pull,
+               affective update, elite drift, perception update, …
+  pillars/     the named pillar (calm_to_camps), the historical-arc release
+               schedule, and the Phase 10 intervention bundles
+  scenarios/   compass_basic — Hegselmann-Krause sanity substrate (tests)
+  metrics/     polarization measures (issue sorting, affect, network)
+data/
+  literature/         primary-source PDFs the calibration is anchored to
+  phase9_empirical/   ANES recoded into the model's 2D compass space
+docs/
+  ENGINE_OVERVIEW.md, INTERVENTIONS_OVERVIEW.md, methods.md, ENGINE_KNOBS.md
+  specs/      per-phase design specs (phases 1 → 9)
+  research/   expert reviews, investigation reports
+  results/    per-phase measurement records + phase10_results.md
 scripts/
-  run_headless.py  text-mode smoke test
-  run_web.py       launch the public website locally
-  compare.py       literature-validation comparisons
+  phase10_measure.py        the intervention sweep that produces phase10
+  phase9_anes_score.py      ANES-band scoring
+  phase9_*                  Phase 9 sweep + diagnostic tooling
+tests/                      ~200 tests pinned to literature targets
 ```
 
 ## Quickstart (Windows PowerShell)
@@ -33,64 +62,21 @@ scripts/
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-pip install -e .
+pip install -e .[dev]
 
-# headless smoke test — pick a scenario
-python scripts\run_headless.py --scenario compass_basic       --steps 200
-python scripts\run_headless.py --scenario actb                --steps 200
-python scripts\run_headless.py --scenario two_party_sorting   --steps 200
-python scripts\run_headless.py --scenario multi_party_4       --steps 200
-python scripts\run_headless.py --scenario elite_dynamics      --steps 200
+# run the test suite (pins literature targets, ~14 min full run)
+.venv\Scripts\python.exe -m pytest
 
-# validation comparisons against the literature
-python scripts\compare.py sorting    # Mason 2018
-python scripts\compare.py parties    # Gidron et al. 2020
-python scripts\compare.py elite      # Hetherington 2001
-
-# interactive research dashboard (Solara)
-solara run abm.viz.solara_app
-
-# polished public website (FastAPI + WebSocket + static frontend)
-python scripts\run_web.py
-# then open http://127.0.0.1:8000
+# re-measure the Phase 10 intervention library
+.venv\Scripts\python.exe scripts\phase10_measure.py
 ```
 
-Open the URL Solara prints (default `http://localhost:8765`).
+## Status
 
-## Scenarios
-
-Three scenarios let you contrast the major ABM families from the
-political-polarization literature:
-
-| Scenario | Rules | Tests |
-|---|---|---|
-| `compass_basic` | Hegselmann-Krause attraction + noise (+ optional Macy-Flache repulsion) | Family A baseline. Without repulsion: convergence. With repulsion: classic polarization. |
-| `actb` | Mäs-Flache argument exchange + noise | Family C-without-negative-influence. Can homophily + argument adoption alone produce bi-polarization? (Yes — and the headless run confirms it.) |
-| `two_party_sorting` | HK + party-pull (elite cue) + affective update + noise (+ optional identity sorting) | Two-layer Stage 2 model. Reproduces affective ≠ ideological polarization (Iyengar et al. 2019); identity sorting amplifies affective polarization (Mason 2018). |
-| `multi_party_4` | Two-layer Stage 2 + identity sorting, 4 parties at corners | Reproduces Gidron et al. 2020: multiparty shows lower affective polarization than two-party at equal sorting. |
-| `elite_dynamics` | Stage 2 + EliteDrift + MediaShock + PartisanMediaExposure | Stage 3.1. Party centers drift outward over time; periodic shocks; heavy-media-diet agents polarize further. Reproduces Hetherington 2001: elite cue divergence drives mass polarization. |
-
-Stage 2 scenarios add identity-based metrics: **affective polarization**
-(mean out-party warmth) and **ideological constraint** (party-issue
-correlation). These mirror the operationalizations in Reiljan (2020)
-and Baldassarri & Gelman (2008).
-
-Why repulsion is off by default: the empirical record for negative
-influence is mixed. Mäs-Flache (2013) showed bi-polarization can emerge
-*without* it, so we default to the more conservative mechanism and let
-repulsion be opt-in for comparison runs.
-
-## Extending
-
-Add a new rule: drop a file in `abm/rules/`, implement `apply(agent, space, env, rng) -> StateDelta`,
-register it in your scenario. Add a new scenario: drop a file in `abm/scenarios/`
-that builds an `Engine` with whatever rule pipeline + initial conditions you want.
-Add a field to agents: stash it in `AgentState.attrs` — no class change required.
-
-## Stage 2 (planned)
-
-- Parties as env state; party-pull rule
-- Stubborn / "true believer" agents
-- Media-event rule (external shocks)
-- Multi-party scenario (EU-style)
-- Custom D3/Three.js web front-end fed by headless engine output (for the website)
+**Phase 10 complete.** The engine has been ANES-recalibrated (Phase 9) and
+the seven-intervention library has been re-measured against that
+recalibrated baseline (Phase 10). What's planned next is the public-facing
+UI — the engine is a back-end ready to be paired with a teaching artefact.
+The model is a teaching artefact, not a policy-prediction tool: every
+claim is within a literature citation envelope, every limitation is
+documented.
