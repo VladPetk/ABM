@@ -875,6 +875,21 @@ def build_engine(
         "elite_drift_schedule_active": dict(elite_drift_schedule_active),
         "elite_drift_asymmetric_active": dict(elite_drift_asymmetric_active),
         "tier_d_anes_knobs": bool(anes_knobs_active),
+        # Phase 9 §11.7-D — cohort replacement anchors. Only consulted
+        # when tier_d_anes_knobs is True. The cohort-anchor σ controls
+        # the width new arrivals are drawn around the CURRENT party
+        # centroid (rather than around origin), preserving accumulated
+        # ElitDrift through replacement. ANES σ_pc replacement keeps
+        # new agents' party_cues at ANES width (the 0.25 default was
+        # eroding the cue distribution over decades).
+        "tier_d_cohort_anes_anchor_sigma": (
+            0.30 if anes_knobs_active else 0.45
+        ),
+        "tier_d_anes_sigma_pc_replacement": (
+            (party_cue_sigma_active[0] + party_cue_sigma_active[1]) / 2.0
+            if anes_knobs_active
+            else 0.25
+        ),
         # M3 hooks for cohort replacement at runtime.
         "party_cue_sigma_replacement": 0.25,   # symmetric for replacements
         "cohort_diet_factory": (lambda pty, rng_: diet_for_party(

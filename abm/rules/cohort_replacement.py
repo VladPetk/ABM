@@ -141,62 +141,71 @@ def _replace_agent_inplace(
     mean — new arrivals inherit it rather than starting at zero
     (Phillips 2022 cohort theory, not blank-slate). If None,
     defaults to 0 (legacy behaviour)."""
-    # New ideology drawn from the cohort distribution.
-    # Phase 9 §11.6 — cohort y_mean sign bug fix. The original spec
-    # had genx y_mean=+0.05, genz y_mean=+0.10, encoding "younger =
-    # more cultural-traditional", which is the OPPOSITE of empirical
-    # cohort drift (Phillips 2022, Mason 2018 ch.6: younger cohorts
-    # are substantially more PROGRESSIVE on cultural issues —
-    # pro-LGBT, pro-immigration, secular, racial-progressive). The
-    # x_mean signs (younger = -x = more economic-liberal) are
-    # correct; only y was sign-flipped. The bug compresses the
-    # population's y-axis drift over decades because cohort
-    # replacement is constantly inserting agents on the wrong side
-    # of y.
-    # When env["tier_d_cohort_y_signs_fix"] is True, flip the y_mean
-    # and identities_mean_shift signs to match empirical drift. Off
-    # by default → bit-identical to head.
     _fix_y = bool(env.attrs.get("tier_d_cohort_y_signs_fix"))
-    new_x = float(np.clip(
-        rng.normal(cohort["x_mean"], cohort["x_sd"]), -1.0, 1.0
-    ))
-    _y_mean = -cohort["y_mean"] if _fix_y else cohort["y_mean"]
-    new_y = float(np.clip(
-        rng.normal(_y_mean, cohort["y_sd"]), -1.0, 1.0
-    ))
-    new_pos = np.array([new_x, new_y])
-    # Phase 8f §2 — cohort-aware sigmoid party assignment for new
-    # arrivals. The pre-§2 sign-only assignment (party = 0 if x<0
-    # else 1) was a hard threshold; under the per-decade K schedule
-    # the cohort's K determines fuzziness. Fallback to sign-only
-    # when no schedule is in env (compass_basic / pillar). The
-    # cohort label ("boomer" / "genx_early_millennial" /
-    # "late_millennial_genz") maps to a decade window; pick the
-    # K appropriate to that cohort's adult-formation era.
-    k_schedule = env.attrs.get("party_assignment_k_schedule")
-    if k_schedule is not None:
-        # Cohort-formation-era → K. Boomers formed in 1980-90;
-        # genx_early_millennial in 1990-2010; late_millennial_genz
-        # in 2010+. (Stylised mapping.)
-        cohort_label = cohort.get("_label") or "late_millennial_genz"
-        k_for_cohort = {
-            "boomer": k_schedule.get("1980-90", 8.0),
-            "genx_early_millennial": k_schedule.get("2000-10", 8.0),
-            "late_millennial_genz": k_schedule.get("2020-25", 8.0),
-        }.get(cohort_label, 8.0)
-        # Phase 9 Tier D (`phase9_tier_d_spec.md §2`): mirror the
-        # build-time lever-1 substitution. When the env flag is on,
-        # the sigmoid reads (0.55·x + 0.45·y) instead of x alone, so
-        # cohort replacement doesn't silently re-import x-dominance
-        # every decade. Default path bit-identical.
-        if env.attrs.get("tier_d_axis_balance") and not env.attrs.get("tier_d_lever1_off"):
-            sigmoid_arg = 0.55 * new_x + 0.45 * new_y
-        else:
-            sigmoid_arg = new_x
-        p_party_1 = 1.0 / (1.0 + np.exp(-k_for_cohort * sigmoid_arg))
+
+    # Phase 9 §11.7-D — under ANES knobs, draw replacements anchored
+    # to the CURRENT party centroid (which EliteDrift has been moving)
+    # rather than from N(0, σ_cohort). The default path draws each new
+    # arrival from N(0, 0.45) and re-sorts via the K-sigmoid; that
+    # injects centrist mass at every tick and dilutes party_sep over
+    # decades. Empirically the dominant remaining bottleneck after
+    # §11.7-C (late party_sep stuck at ~0.78 vs ANES 1.04+).
+    #
+    # The ANES-anchored path:
+    #   1. Pick party probabilistically (cohort identity bias →
+    #      younger cohorts lean Dem)
+    #   2. Draw position from N(centroid[party], σ_cohort_anchor)
+    # This preserves accumulated EliteDrift through replacement.
+    parties = env.attrs.get("parties", {})
+    if env.attrs.get("tier_d_anes_knobs") and parties:
+        # Cohort identity bias: younger cohorts more Dem (more negative
+        # x_mean in the original spec). Treat as a Dem-lean offset to a
+        # 50/50 base rate.
+        dem_lean = -float(cohort["x_mean"]) * 1.5  # 0 / +0.075 / +0.15
+        p_party_1 = float(np.clip(0.5 - dem_lean, 0.05, 0.95))
         new_party = 1 if rng.random() < p_party_1 else 0
+        # σ_cohort_anchor: within-party SD around centroid for new
+        # arrivals. Anchored to ANES wp_sd ~0.34 so replacements don't
+        # compress the cluster. Default 0.30 (slightly tighter than
+        # ANES wp_sd to allow other rules to add the rest).
+        sigma_anchor = float(env.attrs.get(
+            "tier_d_cohort_anes_anchor_sigma", 0.30
+        ))
+        cent = np.asarray(parties[new_party], dtype=float)
+        new_pos = np.clip(
+            cent + rng.normal(0.0, sigma_anchor, size=2),
+            -1.0, 1.0,
+        )
+        new_x = float(new_pos[0])
+        new_y = float(new_pos[1])
     else:
-        new_party = 0 if new_x < 0 else 1
+        # Original (default) path — bit-identical to head.
+        # Phase 9 §11.6 — cohort y_mean sign bug fix.
+        new_x = float(np.clip(
+            rng.normal(cohort["x_mean"], cohort["x_sd"]), -1.0, 1.0
+        ))
+        _y_mean = -cohort["y_mean"] if _fix_y else cohort["y_mean"]
+        new_y = float(np.clip(
+            rng.normal(_y_mean, cohort["y_sd"]), -1.0, 1.0
+        ))
+        new_pos = np.array([new_x, new_y])
+        # Phase 8f §2 — cohort-aware sigmoid party assignment.
+        k_schedule = env.attrs.get("party_assignment_k_schedule")
+        if k_schedule is not None:
+            cohort_label = cohort.get("_label") or "late_millennial_genz"
+            k_for_cohort = {
+                "boomer": k_schedule.get("1980-90", 8.0),
+                "genx_early_millennial": k_schedule.get("2000-10", 8.0),
+                "late_millennial_genz": k_schedule.get("2020-25", 8.0),
+            }.get(cohort_label, 8.0)
+            if env.attrs.get("tier_d_axis_balance") and not env.attrs.get("tier_d_lever1_off"):
+                sigmoid_arg = 0.55 * new_x + 0.45 * new_y
+            else:
+                sigmoid_arg = new_x
+            p_party_1 = 1.0 / (1.0 + np.exp(-k_for_cohort * sigmoid_arg))
+            new_party = 1 if rng.random() < p_party_1 else 0
+        else:
+            new_party = 0 if new_x < 0 else 1
 
     # Identity strength drawn from the cohort's Beta distribution.
     new_id_strength = float(rng.beta(
@@ -243,7 +252,17 @@ def _replace_agent_inplace(
     # If the agent already has a party_cue set, use its σ_pc; else
     # default to PARTY_CUE_SIGMA from the env if registered, else
     # 0.25 (Phase 8a default).
-    sigma_pc = float(env.attrs.get("party_cue_sigma_replacement", 0.25))
+    # Phase 9 §11.7-D — under ANES knobs use the ANES-anchored σ_pc
+    # for replacements too, so cohort turnover doesn't narrow the
+    # cue distribution back down (the build-time bump was being
+    # eroded over time because each tick ~0.3% of cues got redrawn
+    # at the 0.25 default).
+    if env.attrs.get("tier_d_anes_knobs"):
+        sigma_pc = float(env.attrs.get(
+            "tier_d_anes_sigma_pc_replacement", 0.50
+        ))
+    else:
+        sigma_pc = float(env.attrs.get("party_cue_sigma_replacement", 0.25))
     centroid = env.attrs.get("parties", {}).get(
         new_party, np.array([-0.5 if new_party == 0 else 0.5, 0.0])
     )
