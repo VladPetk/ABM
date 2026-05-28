@@ -7,14 +7,9 @@ dependencies = [
     "numpy>=1.26",
     "scipy>=1.11",
     "plotly>=5.20",
-    "solara>=1.30",
-    "anywidget>=0.9",
-    "fastapi>=0.110",
-    "uvicorn[standard]>=0.27",
 ]
 
 [project.optional-dependencies]
-mesa = ["mesa>=3.0"]
 dev = ["pytest>=8.0"]
 
 [build-system]
