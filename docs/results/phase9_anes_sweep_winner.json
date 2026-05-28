@@ -1,0 +1,340 @@
+{
+  "w2_total": 1.3874333601175257,
+  "per_decade": {
+    "1980": {
+      "w2_mean": 0.2434212893312385,
+      "corr_xy": 0.06805304309699672,
+      "var_x": 0.20552599584527914,
+      "var_y": 0.2000413039367981
+    },
+    "1990": {
+      "w2_mean": 0.2481983788801195,
+      "corr_xy": 0.13268263895705046,
+      "var_x": 0.10345644972543913,
+      "var_y": 0.08294039581912785
+    },
+    "2000": {
+      "w2_mean": 0.2894927861229504,
+      "corr_xy": 0.3315659455987944,
+      "var_x": 0.08269850319806994,
+      "var_y": 0.052476055899331554
+    },
+    "2010": {
+      "w2_mean": 0.2972706799737616,
+      "corr_xy": 0.5825508473330656,
+      "var_x": 0.10723464304297678,
+      "var_y": 0.07177270967919777
+    },
+    "2020": {
+      "w2_mean": 0.30905022580945574,
+      "corr_xy": 0.7167978564670733,
+      "var_x": 0.13244659296916683,
+      "var_y": 0.09280024116167349
+    }
+  },
+  "anes_tally_24": 10,
+  "anes_tally_4x5": 9,
+  "anes_tally_init": 1,
+  "cells_4x5": [
+    {
+      "year": 1990,
+      "metric": "constraint",
+      "value": 0.3080063420201806,
+      "band": [
+        0.37,
+        0.51
+      ],
+      "in_band": false
+    },
+    {
+      "year": 1990,
+      "metric": "party_sep",
+      "value": 0.34764827410104704,
+      "band": [
+        0.42,
+        0.58
+      ],
+      "in_band": false
+    },
+    {
+      "year": 1990,
+      "metric": "affect",
+      "value": -0.4232717625594091,
+      "band": [
+        -0.45,
+        -0.3
+      ],
+      "in_band": true
+    },
+    {
+      "year": 1990,
+      "metric": "within_party_sd",
+      "value": 0.27786573122696623,
+      "band": [
+        0.27,
+        0.41
+      ],
+      "in_band": true
+    },
+    {
+      "year": 2000,
+      "metric": "constraint",
+      "value": 0.5238055833406154,
+      "band": [
+        0.46,
+        0.6
+      ],
+      "in_band": true
+    },
+    {
+      "year": 2000,
+      "metric": "party_sep",
+      "value": 0.4480715521611476,
+      "band": [
+        0.59,
+        0.74
+      ],
+      "in_band": false
+    },
+    {
+      "year": 2000,
+      "metric": "affect",
+      "value": -0.5614613214239278,
+      "band": [
+        -0.55,
+        -0.4
+      ],
+      "in_band": false
+    },
+    {
+      "year": 2000,
+      "metric": "within_party_sd",
+      "value": 0.21698212606290226,
+      "band": [
+        0.28,
+        0.41
+      ],
+      "in_band": false
+    },
+    {
+      "year": 2010,
+      "metric": "constraint",
+      "value": 0.6993285413037882,
+      "band": [
+        0.58,
+        0.72
+      ],
+      "in_band": true
+    },
+    {
+      "year": 2010,
+      "metric": "party_sep",
+      "value": 0.6396615239630008,
+      "band": [
+        0.79,
+        0.93
+      ],
+      "in_band": false
+    },
+    {
+      "year": 2010,
+      "metric": "affect",
+      "value": -0.6237412656983804,
+      "band": [
+        -0.65,
+        -0.5
+      ],
+      "in_band": true
+    },
+    {
+      "year": 2010,
+      "metric": "within_party_sd",
+      "value": 0.2166416129605432,
+      "band": [
+        0.26,
+        0.4
+      ],
+      "in_band": false
+    },
+    {
+      "year": 2020,
+      "metric": "constraint",
+      "value": 0.7861649378660424,
+      "band": [
+        0.67,
+        0.8
+      ],
+      "in_band": true
+    },
+    {
+      "year": 2020,
+      "metric": "party_sep",
+      "value": 0.7978934435799032,
+      "band": [
+        1.04,
+        1.18
+      ],
+      "in_band": false
+    },
+    {
+      "year": 2020,
+      "metric": "affect",
+      "value": -0.7089202904650983,
+      "band": [
+        -0.78,
+        -0.6
+      ],
+      "in_band": true
+    },
+    {
+      "year": 2020,
+      "metric": "within_party_sd",
+      "value": 0.21369507741804233,
+      "band": [
+        0.28,
+        0.41
+      ],
+      "in_band": false
+    },
+    {
+      "year": 2025,
+      "metric": "constraint",
+      "value": 0.8028930224208743,
+      "band": [
+        0.69,
+        0.82
+      ],
+      "in_band": true
+    },
+    {
+      "year": 2025,
+      "metric": "party_sep",
+      "value": 0.8385446664594784,
+      "band": [
+        1.08,
+        1.22
+      ],
+      "in_band": false
+    },
+    {
+      "year": 2025,
+      "metric": "affect",
+      "value": -0.7434184262810135,
+      "band": [
+        -0.85,
+        -0.65
+      ],
+      "in_band": true
+    },
+    {
+      "year": 2025,
+      "metric": "within_party_sd",
+      "value": 0.21553266004480007,
+      "band": [
+        0.28,
+        0.41
+      ],
+      "in_band": false
+    }
+  ],
+  "cells_init": [
+    {
+      "year": 1980,
+      "metric": "variance",
+      "value": 0.40556729978207723,
+      "band": [
+        0.22,
+        0.36
+      ],
+      "in_band": false
+    },
+    {
+      "year": 1980,
+      "metric": "constraint",
+      "value": 0.22018742261742252,
+      "band": [
+        0.27,
+        0.41
+      ],
+      "in_band": false
+    },
+    {
+      "year": 1980,
+      "metric": "party_sep",
+      "value": 0.3679080660333513,
+      "band": [
+        0.33,
+        0.47
+      ],
+      "in_band": true
+    },
+    {
+      "year": 1980,
+      "metric": "within_party_sd",
+      "value": 0.4216142143370522,
+      "band": [
+        0.27,
+        0.41
+      ],
+      "in_band": false
+    }
+  ],
+  "means": {
+    "1980": {
+      "variance": 0.40556729978207723,
+      "constraint": 0.22018742261742252,
+      "party_sep": 0.3679080660333513,
+      "affect": -0.25072252320254224,
+      "within_party_sd": 0.4216142143370522,
+      "xc_fraction": 0.5627185549570749,
+      "modularity": 0.056581196023442026
+    },
+    "1990": {
+      "variance": 0.18639684554456698,
+      "constraint": 0.3080063420201806,
+      "party_sep": 0.34764827410104704,
+      "affect": -0.4232717625594091,
+      "within_party_sd": 0.27786573122696623,
+      "xc_fraction": 0.5458918261252663,
+      "modularity": 0.07359073204798718
+    },
+    "2000": {
+      "variance": 0.13517455909740145,
+      "constraint": 0.5238055833406154,
+      "party_sep": 0.4480715521611476,
+      "affect": -0.5614613214239278,
+      "within_party_sd": 0.21698212606290226,
+      "xc_fraction": 0.5193606225791414,
+      "modularity": 0.10196514362447447
+    },
+    "2010": {
+      "variance": 0.1790073527221745,
+      "constraint": 0.6993285413037882,
+      "party_sep": 0.6396615239630008,
+      "affect": -0.6237412656983804,
+      "within_party_sd": 0.2166416129605432,
+      "xc_fraction": 0.49447304246912555,
+      "modularity": 0.12926551303472902
+    },
+    "2020": {
+      "variance": 0.22524683413084032,
+      "constraint": 0.7861649378660424,
+      "party_sep": 0.7978934435799032,
+      "affect": -0.7089202904650983,
+      "within_party_sd": 0.21369507741804233,
+      "xc_fraction": 0.46508072499168496,
+      "modularity": 0.1593581213499868
+    },
+    "2025": {
+      "variance": 0.23981284838711833,
+      "constraint": 0.8028930224208743,
+      "party_sep": 0.8385446664594784,
+      "affect": -0.7434184262810135,
+      "within_party_sd": 0.21553266004480007,
+      "xc_fraction": 0.4517416699321002,
+      "modularity": 0.1745073888466802
+    }
+  },
+  "drift_mult": 4.0,
+  "sigma_pc_mult": 1.6
+}

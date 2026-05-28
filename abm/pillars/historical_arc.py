@@ -447,6 +447,12 @@ def build_engine(
     # docs/results/phase9_anes_knob_anchors.json. The pillar
     # (calm_to_camps.py) is unaffected.
     tier_d_anes_knobs: bool = False,
+    # Phase 9 §11.7-B sweep multipliers — let the calibration harness
+    # search around the central ANES values without re-editing
+    # constants. Multipliers default to 1.0 (no change). Only consulted
+    # when tier_d_anes_knobs=True.
+    tier_d_anes_drift_multiplier: float = 1.0,
+    tier_d_anes_sigma_pc_multiplier: float = 1.0,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -516,14 +522,19 @@ def build_engine(
     party_assignment_k_active = (
         PARTY_ASSIGNMENT_K_ANES if anes_knobs_active else PARTY_ASSIGNMENT_K
     )
-    party_cue_sigma_active = (
-        PARTY_CUE_SIGMA_HISTORICAL_ANES if anes_knobs_active
-        else PARTY_CUE_SIGMA_HISTORICAL
-    )
-    elite_drift_schedule_active = (
-        ELITE_DRIFT_SCHEDULE_ANES if anes_knobs_active
-        else ELITE_DRIFT_SCHEDULE
-    )
+    if anes_knobs_active:
+        _sm = float(tier_d_anes_sigma_pc_multiplier)
+        party_cue_sigma_active = {
+            pid: float(s) * _sm
+            for pid, s in PARTY_CUE_SIGMA_HISTORICAL_ANES.items()
+        }
+        _dm = float(tier_d_anes_drift_multiplier)
+        elite_drift_schedule_active = {
+            seg: float(r) * _dm for seg, r in ELITE_DRIFT_SCHEDULE_ANES.items()
+        }
+    else:
+        party_cue_sigma_active = PARTY_CUE_SIGMA_HISTORICAL
+        elite_drift_schedule_active = ELITE_DRIFT_SCHEDULE
     elite_drift_asymmetric_active = (
         ELITE_DRIFT_ASYMMETRIC_ANES if anes_knobs_active
         else ELITE_DRIFT_ASYMMETRIC
