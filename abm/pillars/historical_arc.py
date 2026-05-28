@@ -1467,39 +1467,54 @@ def _sample_from_faction(engine, source_faction, fraction, sampling_rng):
 
 def _event_2009_tea_party(engine):
     """Spec §4: re-label ~7% of Mainstream_Reps as Tea_Party.
-    Source: Skocpol & Williamson 2012."""
+    Source: Skocpol & Williamson 2012. Sub-centroid (+0.58, +0.32) =
+    DW-NOMINATE 112th Congress House Freedom Caucus."""
     if not engine.env.attrs.get("faction_anchor_events", True):
         return
     sampling_rng = np.random.default_rng(
         engine.env.attrs["faction_event_rng_seed"] + 2009
     )
+    # Phase 9 §11.7-F — under ANES knobs use Mason 2018 ch.7
+    # "strong-partisan" fractions and Voteview-anchored sub-centroids.
+    if engine.env.attrs.get("tier_d_anes_knobs"):
+        frac, sub_c = 0.10, (0.58, 0.32)
+    else:
+        frac, sub_c = 0.07, (0.55, 0.30)
     sampled = _sample_from_faction(
-        engine, "Mainstream_Reps", 0.07, sampling_rng,
+        engine, "Mainstream_Reps", frac, sampling_rng,
     )
     _relabel_agents(
         engine, sampled, "Tea_Party",
-        sub_centroid=(0.55, 0.30), stub_delta=0.15,
+        sub_centroid=sub_c, stub_delta=0.15,
     )
 
 
 def _event_2015_maga(engine):
     """Spec §4: re-label ~9% of Mainstream_Reps + ~40% of
-    New_Right_Religious as MAGA. Source: Sides, Tesler & Vavreck 2018."""
+    New_Right_Religious as MAGA. Source: Sides, Tesler & Vavreck 2018.
+    Phase 9 §11.7-F: under ANES knobs the sub-centroid is updated to
+    (+0.60, +0.40) per Voteview House Freedom Caucus 115th Congress
+    (the previous (0.50, 0.55) overstated the cultural y-coordinate
+    relative to the actual policy positions, per PHASE9_HANDOFF.md §6.4)."""
     if not engine.env.attrs.get("faction_anchor_events", True):
         return
     sampling_rng = np.random.default_rng(
         engine.env.attrs["faction_event_rng_seed"] + 2015
     )
+    if engine.env.attrs.get("tier_d_anes_knobs"):
+        frac_mreps, frac_nrr, sub_c = 0.13, 0.50, (0.60, 0.40)
+    else:
+        frac_mreps, frac_nrr, sub_c = 0.09, 0.40, (0.50, 0.55)
     from_mreps = _sample_from_faction(
-        engine, "Mainstream_Reps", 0.09, sampling_rng,
+        engine, "Mainstream_Reps", frac_mreps, sampling_rng,
     )
     from_nrr = _sample_from_faction(
-        engine, "New_Right_Religious", 0.40, sampling_rng,
+        engine, "New_Right_Religious", frac_nrr, sampling_rng,
     )
     sampled = from_mreps | from_nrr
     _relabel_agents(
         engine, sampled, "MAGA",
-        sub_centroid=(0.50, 0.55), stub_delta=0.15,
+        sub_centroid=sub_c, stub_delta=0.15,
     )
 
 
@@ -1511,12 +1526,16 @@ def _event_2016_bernie(engine):
     sampling_rng = np.random.default_rng(
         engine.env.attrs["faction_event_rng_seed"] + 2016
     )
+    if engine.env.attrs.get("tier_d_anes_knobs"):
+        frac, sub_c = 0.08, (-0.60, -0.40)
+    else:
+        frac, sub_c = 0.05, (-0.55, -0.30)
     sampled = _sample_from_faction(
-        engine, "Mainstream_Dems", 0.05, sampling_rng,
+        engine, "Mainstream_Dems", frac, sampling_rng,
     )
     _relabel_agents(
         engine, sampled, "Bernie_Progressives",
-        sub_centroid=(-0.55, -0.30), stub_delta=0.10,
+        sub_centroid=sub_c, stub_delta=0.10,
     )
 
 
@@ -1528,12 +1547,16 @@ def _event_2018_dsa(engine):
     sampling_rng = np.random.default_rng(
         engine.env.attrs["faction_event_rng_seed"] + 2018
     )
+    if engine.env.attrs.get("tier_d_anes_knobs"):
+        frac, sub_c = 0.05, (-0.75, -0.65)
+    else:
+        frac, sub_c = 0.03, (-0.70, -0.55)
     sampled = _sample_from_faction(
-        engine, "New_Left", 0.03, sampling_rng,
+        engine, "New_Left", frac, sampling_rng,
     )
     _relabel_agents(
         engine, sampled, "DSA",
-        sub_centroid=(-0.70, -0.55), stub_delta=0.10,
+        sub_centroid=sub_c, stub_delta=0.10,
     )
 
 

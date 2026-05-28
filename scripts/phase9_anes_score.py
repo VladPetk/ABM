@@ -138,15 +138,17 @@ PRESETS = {
         "tier_d_anes_knobs": True,             # the new Phase B switch
     },
     "anes_full": {
-        # Phase 9 §11.7-D — full ANES pipeline:
+        # Phase 9 §11.7-F — full ANES pipeline:
         # B (ANES knobs) + C (identity pull + BC softening + noise) +
         # D-1 (cohort centroid anchor) + D-2 (widened outlets) +
-        # D-3 (per-axis EliteDrift y/x ratio 1.3) + D-4 (narrower IC σ).
+        # D-3 (per-axis EliteDrift) + D-5 (ρ-correlated cue/noise) +
+        # D-6 (centroid-anchored IC) + E (temporal alignment) +
+        # F (activist sub-populations + ρ dial-back to 0.40).
         "n_agents": N,
         "independent_fraction": INDEPENDENT_FRACTION,
-        "factional_seeding": False,
-        "faction_anchor_strength": 0.04,
-        "faction_anchor_events": True,
+        "factional_seeding": False,            # broad IC; activists from events
+        "faction_anchor_strength": 0.10,       # F: stronger activist anchor
+        "faction_anchor_events": True,         # F: emergence events fire
         "event_stubbornness_bump_multiplier": 1.0,
         "tier_d_axis_balance": True,
         "tier_d_lever1_off": True,
@@ -154,15 +156,15 @@ PRESETS = {
         "tier_d_anes_knobs": True,
         "tier_d_anes_drift_multiplier": 3.0,
         "tier_d_anes_sigma_pc_multiplier": 1.6,
-        "tier_c_identity_pull_x": 0.020,    # back near §11.7-D peak
+        "tier_c_identity_pull_x": 0.020,
         "tier_c_identity_pull_y": 0.040,
         "tier_d_aniso_noise_sigma_x": 0.08,
         "tier_d_aniso_noise_sigma_y": 0.08,
         "tier_c_party_pull_strength": 0.04,
         "tier_c_bc_strength": 0.015,
-        "tier_d_coupling_rho": 0.30,        # IC x-y correlation (mild)
-        "tier_d_cue_correlation": 0.60,     # D5: cue + per-tick noise ρ
-        "tier_d_ic_sigma": 0.35,            # D6: centroid-anchored IC σ
+        "tier_d_coupling_rho": 0.30,           # mild IC x-y coupling
+        "tier_d_cue_correlation": 0.40,        # F: dial back 0.60 → 0.40
+        "tier_d_ic_sigma": 0.35,
     },
 }
 
