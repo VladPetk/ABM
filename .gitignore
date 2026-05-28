@@ -50,6 +50,30 @@ data/phase9_empirical/raw/timeseries_csv.csv
 data/phase9_empirical/raw/codebook_html.html
 data/phase9_empirical/raw/codebook_html_files/
 
+# Phase 9 derived data — keep only `respondent_coordinates.csv` (the
+# canonical recoded ANES output, ~1.25 MB) under version control.
+# Everything else under data/phase9_empirical/ is regenerable:
+#   - `.npy` pointclouds + KDEs: built by scripts/phase9_anes_target_builder.py
+#   - derived/{coverage_table,party_centroids,polarization_series,
+#     recode_log}.csv + acceptance_checks.txt + build_log.md +
+#     {scaling,kde}_params.json + densities/: build diagnostics from
+#     scripts/anes_2d_compass.py
+#   - phase9_empirical_build_anes.json: build metadata from target_builder.
+# After a fresh clone, run:
+#   .venv/Scripts/python.exe scripts/phase9_anes_target_builder.py
+# to regenerate the .npy fixtures the calibration loads.
+data/phase9_empirical/*.npy
+data/phase9_empirical/phase9_empirical_build_anes.json
+data/phase9_empirical/derived/coverage_table.csv
+data/phase9_empirical/derived/party_centroids.csv
+data/phase9_empirical/derived/polarization_series.csv
+data/phase9_empirical/derived/recode_log.csv
+data/phase9_empirical/derived/acceptance_checks.txt
+data/phase9_empirical/derived/build_log.md
+data/phase9_empirical/derived/scaling_params.json
+data/phase9_empirical/derived/kde_params.json
+data/phase9_empirical/derived/densities/
+
 # Editor / scratchpad detritus
 *.tmp
 *.bak

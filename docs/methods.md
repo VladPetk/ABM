@@ -3,7 +3,7 @@
 *The artifact that backs the project's "intellectually rigorous"
 claim. Every calibration choice, every honesty-label, every limitation
 recorded here is the one the model actually carries. Last updated at
-the close of Phase 7.*
+the close of Phase 9 (ANES recalibration).*
 
 ---
 
@@ -273,13 +273,15 @@ for X2)
   signature visible in the centroids: Dem economic mean is left-of-zero
   throughout 1986–2024, but Dem cultural mean only crosses to
   left-of-zero from 2012 on.
-- **Pinning / model check.** Supersedes the `phase9_empirical_targets`
-  bundle as the canonical empirical fit target. The engine's per-decade
-  KDE outputs (Tier C/D, §5.10) are compared against the matching
-  ANES-wave density on the same fixed [−1.05, 1.05]² × 81-grid frame.
-  `ovl_2d` per wave from `polarization_series.csv` is the primary curve
-  for engine calibration; `scaled_separation`, per-axis Wasserstein, and
-  dip statistics are supporting series.
+- **Pinning / model check.** Canonical empirical fit target for Phase 9
+  onward. The engine's per-decade pointclouds (under
+  `tier_d_anes_knobs=True`, §5.10) are compared via 2D Wasserstein-2
+  (`abm.calibration_phase9.aggregate`) to the matching ANES-derived
+  `phase9_empirical_pointcloud_{decade}.npy` files. Engine snapshot
+  ticks are bucket-centered (1980 ← 21, 1990 ← 42, 2000 ← 72,
+  2010 ← 102, 2020 ← 126) so engine and ANES are temporally aligned.
+  At the blessed `anes_full` preset, per-decade W₂ sits within ~0.05
+  of the achievable Gaussian floor (~0.20 per decade).
 - **Acceptance.** Three isolation tests in
   `data/phase9_empirical/derived/acceptance_checks.txt`: re-running
   normalization per-wave (with z-then-clip, a genuinely different scaling
@@ -742,63 +744,92 @@ S4 doesn't claim to be exactly 2022. The mapping pins the *rate of
 affective cooling* against the ANES headline; it does not claim
 calendar-accurate timestamps for specific simulation events.
 
-### 5.10 Phase 9 — per-decade KDE calibration + axis-symmetry rebalance
+### 5.10 Phase 9 — per-decade ANES recalibration
 
-Phase 9 extends the calibration target set from the §11 cells (band-
-based scalar gate) to **per-decade 2D KDE distribution targets**
-constructed from ANES + GSS + CCES + Pew + Hidden-Tribes data,
-moment-matched to DW-NOMINATE elite anchors (see
-`docs/specs/phase9_empirical_targets.md`). The primary metric is the
-2D Wasserstein distance (POT `ot.emd2`) between simulated and
-empirical clouds per decade. Three tiers were attempted in sequence:
+Phase 9 replaces the §11 scalar-band-only gate with a **2D
+Wasserstein-2 distance against real ANES respondent clouds**, and
+recalibrates the historical-arc scenario's knobs against ANES 1986-
+2024 data (§3.6). The final landing summary is in
+`docs/results/phase9_results.md`; the per-rule and per-knob
+inventory is in [`docs/ENGINE_KNOBS.md`](ENGINE_KNOBS.md). This
+section records the calibration philosophy and the architectural
+boundaries shipped.
 
-- **Tier A** — factional initial conditions (8 named 1980 factions
-  with hard-bound party assignment). Failed the §11 gate
-  structurally: discrete-faction topology forced within-party SD
-  below empirical band. 0/27 sweep cells passed §11.
-- **Tier C** — `FactionAnchor` rule firing on emergence-event tags
-  (Tea Party 2009, MAGA 2015, Bernie 2016, DSA 2018) with broad-
-  Gaussian initial conditions. Passes §11 at the blessed config but
-  Wasserstein only mildly improved over baseline: the cloud's y-axis
-  variance stays around 0.045 vs empirical 0.27.
-- **Tier D** — diagnoses the y-shortfall as upstream of the faction
-  mechanism. An audit (`docs/research/phase9_axis_symmetry_audit.md`)
-  identified six places where the engine inputs are silently x-biased
-  despite the rule math being axis-symmetric. A companion ratios doc
-  (`docs/research/phase9_axis_ratios.md`) puts literature-grounded
-  numbers on each lever's x:y ratio. The spec
-  (`docs/specs/phase9_tier_d_spec.md`) translates those into code.
+**What's being calibrated against.** Per-decade pointclouds
+(1000 points each, weighted-sample from ANES) built from
+`data/phase9_empirical/derived/respondent_coordinates.csv`. Each
+decade's "snapshot" tick is centered on the ANES waves it
+represents — 1980 ← tick 21 (≈1987, post-Reagan), 1990 ← 42
+(1994), 2000 ← 72 (2004), 2010 ← 102 (2014), 2020 ← 126 (2022) —
+so engine and ANES are temporally aligned. Pre-Reagan initial
+conditions at tick 0 use party centroids estimated from pre-1986
+Voteview / Mass IRT (`PARTY_CENTERS_PRE_REAGAN_ANES`); the engine
+drifts to 1986 centroids by tick 21.
 
-The six Tier-D levers + central estimates:
+**Both metrics now run.** The primary gate is the 2D Wasserstein
+(`abm.calibration_phase9.aggregate`); the §11 cell tally is kept
+as a secondary band-based regression gate. Both old (Levendusky-
+derived) and new (ANES-derived) band sets are scored side-by-side
+by `scripts/phase9_anes_score.py` — see
+`ANES_PRIMARY_TARGETS` / `ANES_INITIAL_TARGETS_1980` in
+`scripts/phase8f_lib.py`. The ANES bands consistently relax the
+upper edge of `within_party_sd` and `party_sep` by ~0.10, which
+reflects that the original Levendusky / Baldassarri-Gelman bands
+were silently compressed below what the ANES cumulative file
+actually measures.
 
-| # | Lever | Current | Tier-D central | Source |
-|---|---|---|---|---|
-| 1 | Party-assignment sigmoid arg | `x` | `0.55·x + 0.45·y` | Mason 2018 app. B |
-| 2 | `PARTY_CENTERS_1980` | `(±0.30, ±0.08)` | `(±0.30, ±0.20)` | Hare 2015; Treier-Hillygus 2009 |
-| 3 | Initial-position side draw | `side · 0.15` on x only | adds `side_y · 0.12` with ρ ≈ +0.20 | ANES §3.5.1 |
-| 4 | Perception-gap bias | `+0.25` on x, 0 on y | `+0.20` on x, `+0.25` on y | Ahler & Sood 2018; MiC 2018 |
-| 5 | Outlet y-spread | max y / max x ≈ 0.65 | *(deferred to sweep)* | undetermined (1D-only lit) |
-| 6 | 2016 Trump centroid nudge | `(+0.05, 0)` | `(+0.02, +0.10)` | Sides/Tesler/Vavreck 2018 fig. 7.3 |
+**Discipline.** All engine changes outside the pillar are gated
+behind a master flag `tier_d_anes_knobs: bool = False` in
+`build_engine`. At its default, every code path takes the
+pre-Phase-9 branch and the 73 sacred pillar tests + the Phase
+4-8 regression tests stay green bit-identically. The pillar
+(`abm/pillars/calm_to_camps.py`) was not touched at all during
+Phase 9. The ANES recalibration affects only the historical-arc
+scenario.
 
-The standout findings: **levers 4 and 6 are inverted** in the current
-code — the literature pins the perception gap and the Trump-coalition
-shift firmly on the *cultural* (y) axis, not the economic (x) axis,
-yet the pre-Tier-D code encodes both as x-axis effects. The
-contemporary US sorting story is cultural-axis-driven; encoding it as
-economic-axis-driven was empirically backwards.
+**Architectural moves that landed.** Six classes of change, all
+gated:
 
-**Discipline.** Tier D is gated behind a new `build_engine` kwarg
-`tier_d_axis_balance: bool = False`. At the default, every code path
-is bit-identical to head — pillars + Phase 4-8 are untouched. Only the
-historical-arc Phase 9 runner script flips the flag on. The 73 sacred
-pillar tests stay green bit-identically (verified: 199 tests pass
-with Tier-D code in place at flag=False).
+1. **Per-axis cue σ + Cholesky-correlated noise + cue ρ** —
+   `GaussianNoise(sigma_x, sigma_y, rho)`; cue draws use
+   `tier_d_cue_correlation`. Lets within-party clouds match the
+   ANES diagonal tilt rather than being round.
+2. **Per-axis & per-decade-asymmetric ElitDrift** — adds
+   `rate_y` and `ELITE_DRIFT_ASYMMETRIC_ANES_SCHEDULE` (Reagan-
+   era R-heavy 1980-1990, balanced 1990-2010, D-heavy 2010-
+   2020 cult sort). Drives centroid trajectories that match the
+   ANES party-centroid path.
+3. **Centroid-anchored cohort replacement** — under
+   `tier_d_anes_knobs`, `CohortReplacement` draws new agents
+   from `N(party_centroid, σ_anchor=0.30)` instead of
+   `N(0, σ_cohort)`. Removes the centrist-injection dilution
+   that was depressing late-decade `party_sep`.
+4. **Identity → ideology coupling** — new rule
+   `IdentityToIdeologyPull` (Mason 2018 mega-identity →
+   position) wired in at small per-axis strengths
+   (`tier_c_identity_pull_x = 0.020`, `tier_c_identity_pull_y =
+   0.040`). Inert at default `sx = sy = 0`.
+5. **Activist sub-populations on emergence** — pre-existing
+   `FactionAnchor` rule (Tier C) re-tuned to Mason 2018 strong-
+   partisan tail magnitudes; subpopulations (Tea Party 10%,
+   MAGA 13% + 50%, Bernie 8%, DSA 5%) pull toward sub-centroids
+   with `faction_anchor_strength=0.10`.
+6. **Affect saturation** — `AffectiveUpdate(saturation=1.0)`
+   adds a soft cap `max(0, 1 − w²)` on per-encounter step size,
+   replacing the hard-clip at ±1 with the Iyengar et al. 2019
+   ch. 4 saturation curve.
 
-**Procedure.** Central estimates run first (9 seeds via
-`scripts/phase9_tier_d_central.py`). After measuring §11 + Wasserstein,
-any lever whose impact is over- or under-shooting gets a focused ±30%
-sweep (5 seeds, single-lever). Winner re-run at 9 seeds; results land
-in `docs/results/phase9_results.md`.
+**Result.** At 9 seeds, the blessed `anes_full` preset scores
+W₂ sum = 0.876 over five decades (sub-sample noise floor ≈ 0.71;
+achievable Gaussian floor ≈ 1.0) and passes the ANES-band §11
+gate at 18/24. Final scorecard:
+`docs/results/phase9_anes_score_anes_full.json`.
+
+**Boundary on what Phase 9 changed.** No intervention semantics
+(X1–X7) were re-blessed in Phase 9. The intervention library and
+its bucket labels are unchanged. The next phase will re-run the
+intervention sweeps on the recalibrated engine and re-score the
+buckets.
 
 ---
 
