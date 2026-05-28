@@ -39,6 +39,7 @@ from ..rules.elite_drift import EliteDrift
 from ..rules.faction_anchor import FactionAnchor
 from ..rules.identity_prime import IdentityPrimeExpiry
 from ..rules.identity_sorting import IdentitySorting
+from ..rules.identity_to_position import IdentityToIdeologyPull
 from ..rules.influence import BoundedConfidenceInfluence
 from ..rules.media_consumption import MediaConsumption
 from ..rules.noise import GaussianNoise
@@ -453,6 +454,21 @@ def build_engine(
     # when tier_d_anes_knobs=True.
     tier_d_anes_drift_multiplier: float = 1.0,
     tier_d_anes_sigma_pc_multiplier: float = 1.0,
+    # Phase 9 §11.7-C — IdentityToIdeologyPull strengths (Mason 2018
+    # mega-identity → ideology channel). Default 0.0 → bit-identical
+    # no-op. The rule is in the pipeline unconditionally but it skips
+    # entirely when both strengths are zero, so non-ANES paths stay
+    # bit-identical.
+    tier_c_identity_pull_x: float = 0.0,
+    tier_c_identity_pull_y: float = 0.0,
+    # Phase 9 §11.7-C — historical PartyPull strength. The 8f value
+    # (0.07) was bumped from the pillar's 0.04 to drive party_sep
+    # against the OLD §11 bands. Under ANES bands wp_sd needs to be
+    # ~0.34 (vs old 0.18-0.25), so PartyPull's convergence force is
+    # now over-strong: it clamps wp_sd at ~0.22 regardless of σ_pc.
+    # Default None preserves current 0.07 (bit-identical to head); when
+    # set, overrides the rule's strength.
+    tier_c_party_pull_strength: float | None = None,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -824,6 +840,11 @@ def build_engine(
         "parties": party_centers,
         "outlets": outlets_by_id,
         "network": network,
+        # Phase 9 §11.7-C — exposed so IdentityToIdeologyPull can read
+        # the party-identity centroid and compute per-agent deviation.
+        "party_identity_centers": {
+            pid: c.copy() for pid, c in party_identity_centers.items()
+        },
         "fj_alpha": FJ_ALPHA,
         # Phase 8e §2: party-issue coupling at 1980 baseline.
         # Updated at each decade-boundary event. When
@@ -905,8 +926,14 @@ def build_engine(
         # Phase 8f §1.1 (combo_JJ): historical-only PartyPull strength
         # 0.04 → 0.07. Pillar default unchanged (calm_to_camps.py uses
         # bundle-level 0.04 — Phase 8a value). Within Hetherington
-        # 2001 elite-cue magnitude range (defensible).
-        PartyPull(strength=0.07),   # ON from 1980 (8f §1.1 historical-only)
+        # 2001 elite-cue magnitude range (defensible). Phase 9 §11.7-C
+        # exposes this as a kwarg so the ANES-knob path can soften it
+        # (the 0.07 over-clamps wp_sd at ~0.22 vs ANES 0.34).
+        PartyPull(strength=(
+            float(tier_c_party_pull_strength)
+            if tier_c_party_pull_strength is not None
+            else 0.07
+        )),
         # Phase 9 Tier C: FactionAnchor — inert until events tag agents.
         # Self-gates on the `faction_center` attr (no-op at t=0 and
         # no-op for any agent without the attr). Placed AFTER PartyPull
@@ -956,6 +983,15 @@ def build_engine(
                 if (tier_d_axis_balance and tier_d_aniso_noise_sigma_y is not None)
                 else None
             ),
+        ),
+        # Phase 9 §11.7-C — Mason mega-identity → ideology pull.
+        # At strength_x = strength_y = 0 (the default), the rule's
+        # apply() short-circuits before touching any agent state, so
+        # baseline and pre-§11.7-C configs stay bit-identical. The
+        # historical-arc test suite verifies this.
+        IdentityToIdeologyPull(
+            strength_x=float(tier_c_identity_pull_x),
+            strength_y=float(tier_c_identity_pull_y),
         ),
     ]
     env_rules = [

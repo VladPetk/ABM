@@ -131,6 +131,31 @@ PRESETS = {
         "tier_d_cohort_y_signs_fix": True,     # §11.6 bug fix
         "tier_d_anes_knobs": True,             # the new Phase B switch
     },
+    "anes_full": {
+        # Phase 9 §11.7-C — Phase B (ANES knobs) + sweep-best
+        # multipliers (drift=3.0, sigma_pc=1.3) + IdentityToIdeologyPull
+        # at literature-anchored strengths (cult-axis stronger per Mason)
+        # + modest isotropic GaussianNoise bump to lift wp_sd injection
+        # rate against BC compression (σ=0.02 derived from equilibrium
+        # wp_sd ≈ σ · √(1/compression_rate); current 0.01 produces
+        # equilibrium wp_sd ≈ 0.20, ANES target 0.34 needs σ ≈ 0.017).
+        "n_agents": N,
+        "independent_fraction": INDEPENDENT_FRACTION,
+        "factional_seeding": False,
+        "faction_anchor_strength": 0.04,
+        "faction_anchor_events": True,
+        "event_stubbornness_bump_multiplier": 1.0,
+        "tier_d_axis_balance": True,
+        "tier_d_lever1_off": True,
+        "tier_d_cohort_y_signs_fix": True,
+        "tier_d_anes_knobs": True,
+        "tier_d_anes_drift_multiplier": 3.0,
+        "tier_d_anes_sigma_pc_multiplier": 1.3,
+        "tier_c_identity_pull_x": 0.015,    # weaker econ-identity channel
+        "tier_c_identity_pull_y": 0.025,    # stronger cult-identity (Mason)
+        "tier_d_aniso_noise_sigma_x": 0.025, # wp_sd injection (both axes)
+        "tier_d_aniso_noise_sigma_y": 0.025,
+    },
 }
 
 
