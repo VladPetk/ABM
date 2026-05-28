@@ -148,12 +148,14 @@ PRESETS = {
         "tier_d_anes_knobs": True,
         "tier_d_anes_drift_multiplier": 3.0,
         "tier_d_anes_sigma_pc_multiplier": 1.6,
-        "tier_c_identity_pull_x": 0.015,
+        "tier_c_identity_pull_x": 0.020,    # back near §11.7-D peak
         "tier_c_identity_pull_y": 0.040,
         "tier_d_aniso_noise_sigma_x": 0.08,
         "tier_d_aniso_noise_sigma_y": 0.08,
         "tier_c_party_pull_strength": 0.04,
         "tier_c_bc_strength": 0.015,
+        "tier_d_coupling_rho": 0.30,        # IC x-y correlation (mild)
+        "tier_d_cue_correlation": 0.60,     # D5: cue + per-tick noise ρ
     },
 }
 

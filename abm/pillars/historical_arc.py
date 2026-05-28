@@ -502,6 +502,14 @@ def build_engine(
     # (bit-identical). Recommended ANES value ≈ 0.35 (lands 1980 var
     # ≈ 0.25, in the ANES band).
     tier_d_ic_sigma: float | None = None,
+    # Phase 9 §11.7-D5 — within-cue x-y correlation. Default 0.0 = the
+    # cue draws (party_cue + media_cue) remain x-y independent — bit-
+    # identical to head. The ANES "great sort" produces corr +0.76 at
+    # 2020; isotropic cues cap engine corr at ~0.65 because every cue
+    # draw is perpendicular-to-diagonal noise. ρ ≈ 0.5-0.7 tilts the
+    # cue distributions into the NE-SW diagonal ANES shows.
+    # Only consulted when tier_d_anes_knobs=True.
+    tier_d_cue_correlation: float = 0.0,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -784,13 +792,29 @@ def build_engine(
         # new. See `phase9_axis_symmetry_audit.md §6` and Mason 2018
         # mega-identity for the motivation (cultural-axis within-party
         # heterogeneity > economic-axis).
+        # Phase 9 §11.7-D5 — optional ρ-correlated cue draw. When
+        # tier_d_cue_correlation > 0 (only under ANES knobs), the
+        # cue's x and y are drawn from a Cholesky'd 2D Gaussian with
+        # off-diagonal ρ. The cue distribution then tilts into the
+        # NE-SW diagonal ANES shows; isotropic cues cap engine corr
+        # at ~0.65.
+        _cue_rho = (
+            float(tier_d_cue_correlation) if anes_knobs_active else 0.0
+        )
         if tier_d_axis_balance and abs(tier_d_party_cue_sigma_y_mult - 1.0) > 1e-9:
             _r = float(tier_d_party_cue_sigma_y_mult)
             _sx = sigma_pc * np.sqrt(2.0 / (1.0 + _r * _r))
             _sy = _r * _sx
+            _u, _v = rng.normal(0.0, 1.0), rng.normal(0.0, 1.0)
             party_cue = party_centers_active[party] + np.array([
-                rng.normal(0.0, _sx),
-                rng.normal(0.0, _sy),
+                _sx * _u,
+                _sy * (_cue_rho * _u + np.sqrt(max(0.0, 1.0 - _cue_rho ** 2)) * _v),
+            ])
+        elif _cue_rho > 0.0:
+            _u, _v = rng.normal(0.0, 1.0), rng.normal(0.0, 1.0)
+            party_cue = party_centers_active[party] + np.array([
+                sigma_pc * _u,
+                sigma_pc * (_cue_rho * _u + np.sqrt(max(0.0, 1.0 - _cue_rho ** 2)) * _v),
             ])
         else:
             party_cue = party_centers_active[party] + rng.normal(
@@ -869,7 +893,18 @@ def build_engine(
             # of party=1 agents. ThreatDecay decays it.
             attrs["perceived_threat"] = 0.0
             # Phase 8e §3: per-agent media_cue bias. Partisans only.
-            attrs["media_cue"] = rng.normal(0.0, MEDIA_CUE_SIGMA, size=2)
+            # Phase 9 §11.7-D5: optional ρ-correlation between x and y.
+            if anes_knobs_active and _cue_rho > 0.0:
+                _mu, _mv = rng.normal(0.0, 1.0), rng.normal(0.0, 1.0)
+                attrs["media_cue"] = np.array([
+                    MEDIA_CUE_SIGMA * _mu,
+                    MEDIA_CUE_SIGMA * (
+                        _cue_rho * _mu
+                        + np.sqrt(max(0.0, 1.0 - _cue_rho ** 2)) * _mv
+                    ),
+                ])
+            else:
+                attrs["media_cue"] = rng.normal(0.0, MEDIA_CUE_SIGMA, size=2)
         if faction_label is not None:
             attrs["faction"] = faction_label
         agents.append(Agent(id=i, state=AgentState(ideology=pos, attrs=attrs)))
@@ -1073,6 +1108,10 @@ def build_engine(
                 float(tier_d_aniso_noise_sigma_y)
                 if (tier_d_axis_balance and tier_d_aniso_noise_sigma_y is not None)
                 else None
+            ),
+            rho=(
+                float(tier_d_cue_correlation)
+                if anes_knobs_active else 0.0
             ),
         ),
         # Phase 9 §11.7-C — Mason mega-identity → ideology pull.

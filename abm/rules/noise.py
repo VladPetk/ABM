@@ -24,7 +24,12 @@ from ..core.state import StateDelta
 
 
 class GaussianNoise:
-    def __init__(self, sigma: float = 0.01, sigma_y: float | None = None):
+    def __init__(
+        self,
+        sigma: float = 0.01,
+        sigma_y: float | None = None,
+        rho: float = 0.0,
+    ):
         self.sigma = sigma
         # Phase 9 §11.4 — optional anisotropic σ_y. None preserves
         # current isotropic behavior bit-identically. When set, the
@@ -37,6 +42,14 @@ class GaussianNoise:
         # because the per-tick noise is uncorrelated and BC averages
         # neighbors (which preserves the variance injection).
         self.sigma_y = sigma_y
+        # Phase 9 §11.7-D5 — optional ρ-correlated noise on (x, y).
+        # Default 0.0 preserves the head behaviour (independent draws).
+        # When set, the y-axis component is drawn from a Cholesky'd
+        # 2D Gaussian: noise_y = σ_y · (ρ·u + √(1-ρ²)·v) where u, v are
+        # independent N(0, 1) and σ_x · u is the x-axis component.
+        # ANES corr+0.76 at 2020 needs ρ ≈ 0.5-0.7 to tilt the
+        # equilibrium distribution into the NE-SW diagonal.
+        self.rho = float(rho)
 
     def apply(
         self,
@@ -68,13 +81,24 @@ class GaussianNoise:
                 d_ideology=alpha * s * (anchor - agent.state.ideology)
             )
 
-        if self.sigma_y is None:
-            noise = rng.normal(0.0, self.sigma, size=2)
+        sx = float(self.sigma)
+        sy = float(self.sigma_y) if self.sigma_y is not None else sx
+        if self.rho == 0.0:
+            if self.sigma_y is None:
+                noise = rng.normal(0.0, self.sigma, size=2)
+            else:
+                noise = np.array([
+                    rng.normal(0.0, self.sigma),
+                    rng.normal(0.0, float(self.sigma_y)),
+                ])
         else:
-            # Anisotropic per-axis noise
+            # Phase 9 §11.7-D5: ρ-correlated draw via Cholesky.
+            u = rng.normal(0.0, 1.0)
+            v = rng.normal(0.0, 1.0)
+            r = self.rho
             noise = np.array([
-                rng.normal(0.0, self.sigma),
-                rng.normal(0.0, float(self.sigma_y)),
+                sx * u,
+                sy * (r * u + float(np.sqrt(max(0.0, 1.0 - r * r))) * v),
             ])
         if not fj_active:
             return StateDelta(d_ideology=noise)

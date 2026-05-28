@@ -61,26 +61,9 @@ PARTY_COLORS = {"D": "tab:blue", "R": "tab:red"}
 
 
 def _build_kwargs():
-    return dict(
-        n_agents=250,
-        independent_fraction=0.12,
-        factional_seeding=False,
-        faction_anchor_strength=0.04,
-        faction_anchor_events=True,
-        event_stubbornness_bump_multiplier=1.0,
-        tier_d_axis_balance=True,
-        tier_d_lever1_off=True,
-        tier_d_cohort_y_signs_fix=True,
-        tier_d_anes_knobs=True,
-        tier_d_anes_drift_multiplier=3.0,
-        tier_d_anes_sigma_pc_multiplier=1.6,
-        tier_c_identity_pull_x=0.015,
-        tier_c_identity_pull_y=0.040,
-        tier_d_aniso_noise_sigma_x=0.08,
-        tier_d_aniso_noise_sigma_y=0.08,
-        tier_c_party_pull_strength=0.04,
-        tier_c_bc_strength=0.015,
-    )
+    # Import the source-of-truth preset from the scorer.
+    from scripts.phase9_anes_score import PRESETS
+    return dict(PRESETS["anes_full"])
 
 
 def _worker(seed: int) -> dict:
