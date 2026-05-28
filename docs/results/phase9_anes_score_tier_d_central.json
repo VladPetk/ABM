@@ -1,0 +1,756 @@
+{
+  "preset": "tier_d_central",
+  "seeds": [
+    0,
+    1
+  ],
+  "build_kwargs": {
+    "n_agents": 250,
+    "independent_fraction": 0.12,
+    "factional_seeding": false,
+    "faction_anchor_strength": 0.04,
+    "faction_anchor_events": true,
+    "event_stubbornness_bump_multiplier": 1.0,
+    "tier_d_axis_balance": true
+  },
+  "pot_available": true,
+  "w2_total": 1.3564454491535287,
+  "per_decade": {
+    "1980": {
+      "w2_mean": 0.24873508944901912,
+      "w2_ci95_halfwidth": 0.14470624354575484,
+      "corr_xy": 0.07060112882710362,
+      "var_x": 0.18576737218624795,
+      "var_y": 0.21952381959233258
+    },
+    "1990": {
+      "w2_mean": 0.2381709459620563,
+      "w2_ci95_halfwidth": 0.12635650340471116,
+      "corr_xy": 0.2788656680996722,
+      "var_x": 0.09307768522528895,
+      "var_y": 0.09652393569501355
+    },
+    "2000": {
+      "w2_mean": 0.2690730350459689,
+      "w2_ci95_halfwidth": 0.012985451669223547,
+      "corr_xy": 0.5648784625466549,
+      "var_x": 0.07268008405676096,
+      "var_y": 0.06446271120301633
+    },
+    "2010": {
+      "w2_mean": 0.27806075401424446,
+      "w2_ci95_halfwidth": 0.5832902549784597,
+      "corr_xy": 0.6516035169136167,
+      "var_x": 0.09705055711217986,
+      "var_y": 0.08011783072014322
+    },
+    "2020": {
+      "w2_mean": 0.3224056246822397,
+      "w2_ci95_halfwidth": 0.0367311101138591,
+      "corr_xy": 0.7832599128822139,
+      "var_x": 0.1300851886799983,
+      "var_y": 0.09818585008988856
+    }
+  },
+  "means": {
+    "1980": {
+      "variance": 0.4052911917785804,
+      "constraint": 0.4320380266685757,
+      "party_sep": 0.56185445740804,
+      "affect": -0.25487290926159895,
+      "within_party_sd": 0.39953873964133946,
+      "xc_fraction": 0.5300753134086468,
+      "modularity": 0.08231163731787369
+    },
+    "1990": {
+      "variance": 0.18960162092030253,
+      "constraint": 0.5891072742157579,
+      "party_sep": 0.5211250195517845,
+      "affect": -0.4268006892590703,
+      "within_party_sd": 0.24875975404352418,
+      "xc_fraction": 0.5051170217836884,
+      "modularity": 0.10790798600052301
+    },
+    "2000": {
+      "variance": 0.1371427952597773,
+      "constraint": 0.7215330638983516,
+      "party_sep": 0.5528599308806506,
+      "affect": -0.5751360217986011,
+      "within_party_sd": 0.1829463741893051,
+      "xc_fraction": 0.49728776395443064,
+      "modularity": 0.11642017457523438
+    },
+    "2010": {
+      "variance": 0.17716838783232303,
+      "constraint": 0.7755393338082375,
+      "party_sep": 0.6840545237274596,
+      "affect": -0.6521741592665108,
+      "within_party_sd": 0.18781826611453917,
+      "xc_fraction": 0.47590447590447593,
+      "modularity": 0.13734008234842404
+    },
+    "2020": {
+      "variance": 0.22827103876988702,
+      "constraint": 0.8529655836446177,
+      "party_sep": 0.8584244477811973,
+      "affect": -0.7385758124613635,
+      "within_party_sd": 0.18196226477992847,
+      "xc_fraction": 0.4502264168930835,
+      "modularity": 0.16592418770064674
+    },
+    "2025": {
+      "variance": 0.2505844681824849,
+      "constraint": 0.8694489074975996,
+      "party_sep": 0.9176898053062854,
+      "affect": -0.7691695913612318,
+      "within_party_sd": 0.18265681161141145,
+      "xc_fraction": 0.4288621955288622,
+      "modularity": 0.18872176187682171
+    }
+  },
+  "ses": {
+    "1980": {
+      "variance": 0.007679936004533732,
+      "constraint": 0.03505744686826329,
+      "party_sep": 0.03103458717388013,
+      "affect": 0.0016246233218403792,
+      "within_party_sd": 0.0003200754975269948,
+      "xc_fraction": 0.02037513704180371,
+      "modularity": 0.02081825204070461
+    },
+    "1990": {
+      "variance": 0.0026127411724825023,
+      "constraint": 0.022734793010993844,
+      "party_sep": 0.019024474113341346,
+      "affect": 0.0036187904840132568,
+      "within_party_sd": 0.007747810166746791,
+      "xc_fraction": 0.02010820344153677,
+      "modularity": 0.02064112454447231
+    },
+    "2000": {
+      "variance": 0.001696070400652616,
+      "constraint": 0.00046662309290890214,
+      "party_sep": 0.00026087651410861,
+      "affect": 0.00684945666966319,
+      "within_party_sd": 0.011140115817041149,
+      "xc_fraction": 0.003594070260736909,
+      "modularity": 0.003147636479063153
+    },
+    "2010": {
+      "variance": 0.000732760452555381,
+      "constraint": 0.016010599718052798,
+      "party_sep": 0.01370125013629103,
+      "affect": 0.017337286387162698,
+      "within_party_sd": 0.011215366719932604,
+      "xc_fraction": 0.002931502931502933,
+      "modularity": 0.0025255941388740988
+    },
+    "2020": {
+      "variance": 0.0007608284920793544,
+      "constraint": 0.009307202842446958,
+      "party_sep": 0.007729970904852389,
+      "affect": 0.010371102388098406,
+      "within_party_sd": 0.0008271586183499491,
+      "xc_fraction": 0.012836646169979508,
+      "modularity": 0.01308310337307586
+    },
+    "2025": {
+      "variance": 0.00179932960238241,
+      "constraint": 0.010739680480292502,
+      "party_sep": 0.011097291002257368,
+      "affect": 0.007228854969627663,
+      "within_party_sd": 0.0024083520871753666,
+      "xc_fraction": 0.015281948615281952,
+      "modularity": 0.015820617489190822
+    }
+  },
+  "s11_old_bands": {
+    "tally_24": 12,
+    "tally_4x5": 11,
+    "tally_init": 1,
+    "cells_4x5": [
+      {
+        "year": 1990,
+        "metric": "constraint",
+        "value": 0.5891072742157579,
+        "se": 0.022734793010993844,
+        "band_lo": 0.35,
+        "band_hi": 0.5,
+        "in_band": false
+      },
+      {
+        "year": 1990,
+        "metric": "party_sep",
+        "value": 0.5211250195517845,
+        "se": 0.019024474113341346,
+        "band_lo": 0.5,
+        "band_hi": 0.65,
+        "in_band": true
+      },
+      {
+        "year": 1990,
+        "metric": "affect",
+        "value": -0.4268006892590703,
+        "se": 0.0036187904840132568,
+        "band_lo": -0.45,
+        "band_hi": -0.3,
+        "in_band": true
+      },
+      {
+        "year": 1990,
+        "metric": "within_party_sd",
+        "value": 0.24875975404352418,
+        "se": 0.007747810166746791,
+        "band_lo": 0.18,
+        "band_hi": 0.32,
+        "in_band": true
+      },
+      {
+        "year": 2000,
+        "metric": "constraint",
+        "value": 0.7215330638983516,
+        "se": 0.00046662309290890214,
+        "band_lo": 0.45,
+        "band_hi": 0.6,
+        "in_band": false
+      },
+      {
+        "year": 2000,
+        "metric": "party_sep",
+        "value": 0.5528599308806506,
+        "se": 0.00026087651410861,
+        "band_lo": 0.55,
+        "band_hi": 0.7,
+        "in_band": true
+      },
+      {
+        "year": 2000,
+        "metric": "affect",
+        "value": -0.5751360217986011,
+        "se": 0.00684945666966319,
+        "band_lo": -0.55,
+        "band_hi": -0.4,
+        "in_band": false
+      },
+      {
+        "year": 2000,
+        "metric": "within_party_sd",
+        "value": 0.1829463741893051,
+        "se": 0.011140115817041149,
+        "band_lo": 0.18,
+        "band_hi": 0.3,
+        "in_band": true
+      },
+      {
+        "year": 2010,
+        "metric": "constraint",
+        "value": 0.7755393338082375,
+        "se": 0.016010599718052798,
+        "band_lo": 0.55,
+        "band_hi": 0.7,
+        "in_band": false
+      },
+      {
+        "year": 2010,
+        "metric": "party_sep",
+        "value": 0.6840545237274596,
+        "se": 0.01370125013629103,
+        "band_lo": 0.6,
+        "band_hi": 0.75,
+        "in_band": true
+      },
+      {
+        "year": 2010,
+        "metric": "affect",
+        "value": -0.6521741592665108,
+        "se": 0.017337286387162698,
+        "band_lo": -0.65,
+        "band_hi": -0.5,
+        "in_band": false
+      },
+      {
+        "year": 2010,
+        "metric": "within_party_sd",
+        "value": 0.18781826611453917,
+        "se": 0.011215366719932604,
+        "band_lo": 0.17,
+        "band_hi": 0.28,
+        "in_band": true
+      },
+      {
+        "year": 2020,
+        "metric": "constraint",
+        "value": 0.8529655836446177,
+        "se": 0.009307202842446958,
+        "band_lo": 0.6,
+        "band_hi": 0.75,
+        "in_band": false
+      },
+      {
+        "year": 2020,
+        "metric": "party_sep",
+        "value": 0.8584244477811973,
+        "se": 0.007729970904852389,
+        "band_lo": 0.65,
+        "band_hi": 0.8,
+        "in_band": false
+      },
+      {
+        "year": 2020,
+        "metric": "affect",
+        "value": -0.7385758124613635,
+        "se": 0.010371102388098406,
+        "band_lo": -0.78,
+        "band_hi": -0.6,
+        "in_band": true
+      },
+      {
+        "year": 2020,
+        "metric": "within_party_sd",
+        "value": 0.18196226477992847,
+        "se": 0.0008271586183499491,
+        "band_lo": 0.15,
+        "band_hi": 0.25,
+        "in_band": true
+      },
+      {
+        "year": 2025,
+        "metric": "constraint",
+        "value": 0.8694489074975996,
+        "se": 0.010739680480292502,
+        "band_lo": 0.62,
+        "band_hi": 0.78,
+        "in_band": false
+      },
+      {
+        "year": 2025,
+        "metric": "party_sep",
+        "value": 0.9176898053062854,
+        "se": 0.011097291002257368,
+        "band_lo": 0.68,
+        "band_hi": 0.82,
+        "in_band": false
+      },
+      {
+        "year": 2025,
+        "metric": "affect",
+        "value": -0.7691695913612318,
+        "se": 0.007228854969627663,
+        "band_lo": -0.85,
+        "band_hi": -0.65,
+        "in_band": true
+      },
+      {
+        "year": 2025,
+        "metric": "within_party_sd",
+        "value": 0.18265681161141145,
+        "se": 0.0024083520871753666,
+        "band_lo": 0.15,
+        "band_hi": 0.22,
+        "in_band": true
+      }
+    ],
+    "cells_init": [
+      {
+        "year": 1980,
+        "metric": "variance",
+        "value": 0.4052911917785804,
+        "se": 0.007679936004533732,
+        "band_lo": 0.45,
+        "band_hi": 0.6,
+        "in_band": false
+      },
+      {
+        "year": 1980,
+        "metric": "constraint",
+        "value": 0.4320380266685757,
+        "se": 0.03505744686826329,
+        "band_lo": 0.25,
+        "band_hi": 0.4,
+        "in_band": false
+      },
+      {
+        "year": 1980,
+        "metric": "party_sep",
+        "value": 0.56185445740804,
+        "se": 0.03103458717388013,
+        "band_lo": 0.45,
+        "band_hi": 0.6,
+        "in_band": true
+      },
+      {
+        "year": 1980,
+        "metric": "within_party_sd",
+        "value": 0.39953873964133946,
+        "se": 0.0003200754975269948,
+        "band_lo": 0.2,
+        "band_hi": 0.35,
+        "in_band": false
+      }
+    ],
+    "pass_18_of_24": false
+  },
+  "s11_anes_bands": {
+    "tally_24": 5,
+    "tally_4x5": 4,
+    "tally_init": 1,
+    "cells_4x5": [
+      {
+        "year": 1990,
+        "metric": "constraint",
+        "value": 0.5891072742157579,
+        "se": 0.022734793010993844,
+        "band_lo": 0.37,
+        "band_hi": 0.51,
+        "in_band": false
+      },
+      {
+        "year": 1990,
+        "metric": "party_sep",
+        "value": 0.5211250195517845,
+        "se": 0.019024474113341346,
+        "band_lo": 0.42,
+        "band_hi": 0.58,
+        "in_band": true
+      },
+      {
+        "year": 1990,
+        "metric": "affect",
+        "value": -0.4268006892590703,
+        "se": 0.0036187904840132568,
+        "band_lo": -0.45,
+        "band_hi": -0.3,
+        "in_band": true
+      },
+      {
+        "year": 1990,
+        "metric": "within_party_sd",
+        "value": 0.24875975404352418,
+        "se": 0.007747810166746791,
+        "band_lo": 0.27,
+        "band_hi": 0.41,
+        "in_band": false
+      },
+      {
+        "year": 2000,
+        "metric": "constraint",
+        "value": 0.7215330638983516,
+        "se": 0.00046662309290890214,
+        "band_lo": 0.46,
+        "band_hi": 0.6,
+        "in_band": false
+      },
+      {
+        "year": 2000,
+        "metric": "party_sep",
+        "value": 0.5528599308806506,
+        "se": 0.00026087651410861,
+        "band_lo": 0.59,
+        "band_hi": 0.74,
+        "in_band": false
+      },
+      {
+        "year": 2000,
+        "metric": "affect",
+        "value": -0.5751360217986011,
+        "se": 0.00684945666966319,
+        "band_lo": -0.55,
+        "band_hi": -0.4,
+        "in_band": false
+      },
+      {
+        "year": 2000,
+        "metric": "within_party_sd",
+        "value": 0.1829463741893051,
+        "se": 0.011140115817041149,
+        "band_lo": 0.28,
+        "band_hi": 0.41,
+        "in_band": false
+      },
+      {
+        "year": 2010,
+        "metric": "constraint",
+        "value": 0.7755393338082375,
+        "se": 0.016010599718052798,
+        "band_lo": 0.58,
+        "band_hi": 0.72,
+        "in_band": false
+      },
+      {
+        "year": 2010,
+        "metric": "party_sep",
+        "value": 0.6840545237274596,
+        "se": 0.01370125013629103,
+        "band_lo": 0.79,
+        "band_hi": 0.93,
+        "in_band": false
+      },
+      {
+        "year": 2010,
+        "metric": "affect",
+        "value": -0.6521741592665108,
+        "se": 0.017337286387162698,
+        "band_lo": -0.65,
+        "band_hi": -0.5,
+        "in_band": false
+      },
+      {
+        "year": 2010,
+        "metric": "within_party_sd",
+        "value": 0.18781826611453917,
+        "se": 0.011215366719932604,
+        "band_lo": 0.26,
+        "band_hi": 0.4,
+        "in_band": false
+      },
+      {
+        "year": 2020,
+        "metric": "constraint",
+        "value": 0.8529655836446177,
+        "se": 0.009307202842446958,
+        "band_lo": 0.67,
+        "band_hi": 0.8,
+        "in_band": false
+      },
+      {
+        "year": 2020,
+        "metric": "party_sep",
+        "value": 0.8584244477811973,
+        "se": 0.007729970904852389,
+        "band_lo": 1.04,
+        "band_hi": 1.18,
+        "in_band": false
+      },
+      {
+        "year": 2020,
+        "metric": "affect",
+        "value": -0.7385758124613635,
+        "se": 0.010371102388098406,
+        "band_lo": -0.78,
+        "band_hi": -0.6,
+        "in_band": true
+      },
+      {
+        "year": 2020,
+        "metric": "within_party_sd",
+        "value": 0.18196226477992847,
+        "se": 0.0008271586183499491,
+        "band_lo": 0.28,
+        "band_hi": 0.41,
+        "in_band": false
+      },
+      {
+        "year": 2025,
+        "metric": "constraint",
+        "value": 0.8694489074975996,
+        "se": 0.010739680480292502,
+        "band_lo": 0.69,
+        "band_hi": 0.82,
+        "in_band": false
+      },
+      {
+        "year": 2025,
+        "metric": "party_sep",
+        "value": 0.9176898053062854,
+        "se": 0.011097291002257368,
+        "band_lo": 1.08,
+        "band_hi": 1.22,
+        "in_band": false
+      },
+      {
+        "year": 2025,
+        "metric": "affect",
+        "value": -0.7691695913612318,
+        "se": 0.007228854969627663,
+        "band_lo": -0.85,
+        "band_hi": -0.65,
+        "in_band": true
+      },
+      {
+        "year": 2025,
+        "metric": "within_party_sd",
+        "value": 0.18265681161141145,
+        "se": 0.0024083520871753666,
+        "band_lo": 0.28,
+        "band_hi": 0.41,
+        "in_band": false
+      }
+    ],
+    "cells_init": [
+      {
+        "year": 1980,
+        "metric": "variance",
+        "value": 0.4052911917785804,
+        "se": 0.007679936004533732,
+        "band_lo": 0.22,
+        "band_hi": 0.36,
+        "in_band": false
+      },
+      {
+        "year": 1980,
+        "metric": "constraint",
+        "value": 0.4320380266685757,
+        "se": 0.03505744686826329,
+        "band_lo": 0.27,
+        "band_hi": 0.41,
+        "in_band": false
+      },
+      {
+        "year": 1980,
+        "metric": "party_sep",
+        "value": 0.56185445740804,
+        "se": 0.03103458717388013,
+        "band_lo": 0.33,
+        "band_hi": 0.47,
+        "in_band": false
+      },
+      {
+        "year": 1980,
+        "metric": "within_party_sd",
+        "value": 0.39953873964133946,
+        "se": 0.0003200754975269948,
+        "band_lo": 0.27,
+        "band_hi": 0.41,
+        "in_band": true
+      }
+    ],
+    "pass_18_of_24": false
+  },
+  "band_flips": [
+    {
+      "year": 1990,
+      "metric": "within_party_sd",
+      "value": 0.24875975404352418,
+      "old_band": [
+        0.18,
+        0.32
+      ],
+      "anes_band": [
+        0.27,
+        0.41
+      ],
+      "old_in_band": true,
+      "anes_in_band": false
+    },
+    {
+      "year": 2000,
+      "metric": "party_sep",
+      "value": 0.5528599308806506,
+      "old_band": [
+        0.55,
+        0.7
+      ],
+      "anes_band": [
+        0.59,
+        0.74
+      ],
+      "old_in_band": true,
+      "anes_in_band": false
+    },
+    {
+      "year": 2000,
+      "metric": "within_party_sd",
+      "value": 0.1829463741893051,
+      "old_band": [
+        0.18,
+        0.3
+      ],
+      "anes_band": [
+        0.28,
+        0.41
+      ],
+      "old_in_band": true,
+      "anes_in_band": false
+    },
+    {
+      "year": 2010,
+      "metric": "party_sep",
+      "value": 0.6840545237274596,
+      "old_band": [
+        0.6,
+        0.75
+      ],
+      "anes_band": [
+        0.79,
+        0.93
+      ],
+      "old_in_band": true,
+      "anes_in_band": false
+    },
+    {
+      "year": 2010,
+      "metric": "within_party_sd",
+      "value": 0.18781826611453917,
+      "old_band": [
+        0.17,
+        0.28
+      ],
+      "anes_band": [
+        0.26,
+        0.4
+      ],
+      "old_in_band": true,
+      "anes_in_band": false
+    },
+    {
+      "year": 2020,
+      "metric": "within_party_sd",
+      "value": 0.18196226477992847,
+      "old_band": [
+        0.15,
+        0.25
+      ],
+      "anes_band": [
+        0.28,
+        0.41
+      ],
+      "old_in_band": true,
+      "anes_in_band": false
+    },
+    {
+      "year": 2025,
+      "metric": "within_party_sd",
+      "value": 0.18265681161141145,
+      "old_band": [
+        0.15,
+        0.22
+      ],
+      "anes_band": [
+        0.28,
+        0.41
+      ],
+      "old_in_band": true,
+      "anes_in_band": false
+    },
+    {
+      "year": 1980,
+      "metric": "party_sep",
+      "value": 0.56185445740804,
+      "old_band": [
+        0.45,
+        0.6
+      ],
+      "anes_band": [
+        0.33,
+        0.47
+      ],
+      "old_in_band": true,
+      "anes_in_band": false
+    },
+    {
+      "year": 1980,
+      "metric": "within_party_sd",
+      "value": 0.39953873964133946,
+      "old_band": [
+        0.2,
+        0.35
+      ],
+      "anes_band": [
+        0.27,
+        0.41
+      ],
+      "old_in_band": false,
+      "anes_in_band": true
+    }
+  ]
+}
