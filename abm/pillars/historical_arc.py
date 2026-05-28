@@ -1139,6 +1139,13 @@ def build_engine(
             radius=1.5, learning_rate=0.01,
             identity_weight=0.5, baseline=0.0,   # 8f §1.1: 0.10 → 0.0
             cooperative_mute=COOPERATIVE_MUTE,
+            # Phase 9 §11.7-G — soft affect saturation. The hard clip
+            # at ±1 was producing step-function-like cooling that
+            # over-shoots ANES affect bands at every decade. Under ANES
+            # knobs use saturation=1.0 (per-encounter delta dampened
+            # by 1 − w² as warmth approaches ±1). Default 0.0 keeps
+            # the pillar bit-identical.
+            saturation=1.0 if anes_knobs_active else 0.0,
         ),
         IdentitySorting(
             sort_rate=IDENTITY_SORTING_SCHEDULE["1980-90"],

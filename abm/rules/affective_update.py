@@ -84,6 +84,7 @@ class AffectiveUpdate:
         coop_positive_threshold: float = -0.2,
         coop_positive_magnitude: float = 0.05,
         threat_amplification: float = 1.0,
+        saturation: float = 0.0,
     ):
         # `radius` is the issue-distance normalisation scale (the
         # divisor in `d_iss / self.radius`). It is **not** a query
@@ -127,6 +128,17 @@ class AffectiveUpdate:
         # The pillar's S0-S4 baseline never sets `perceived_threat`,
         # so this is bit-identical to Phase 8c §4 for the pillar.
         self.threat_amplification = threat_amplification
+        # Phase 9 §11.7-G — affect-saturation strength. Default 0.0 →
+        # no saturation, bit-identical to pre-Phase-9. When > 0, each
+        # per-encounter delta is multiplied by max(0, 1 − s · w²),
+        # where w is the agent's current warmth toward the out-party
+        # (after deltas already accumulated this tick). At s=1.0 the
+        # cooling rate drops to zero as warmth approaches ±1, matching
+        # the empirically-observed diminishing-returns shape of
+        # out-party affect (Iyengar et al. 2019 fig. 1 saturation;
+        # Mason 2018 ch. 6 ceiling effect). The accumulating clip at
+        # ±1 still applies as the hard backstop.
+        self.saturation = float(saturation)
 
     def apply(
         self,
@@ -300,8 +312,21 @@ class AffectiveUpdate:
                 # amplified.
                 valence = -(disagreement + self.baseline) * neg_mute * threat_factor
 
+            # Phase 9 §11.7-G — soft saturation: per-encounter delta
+            # is dampened as the agent's warmth approaches ±1. Without
+            # this the only floor is the metric-reader's hard clip at
+            # ±1, which produces a step-function-like cooling profile
+            # that over-shoots ANES affect bands at every decade. Soft
+            # saturation matches the diminishing-returns shape (Iyengar
+            # et al. 2019 fig. 1; Mason 2018 ch. 6).
+            if self.saturation > 0.0:
+                w_now = own_warmth + affect_delta.get(other_party, 0.0)
+                sat = max(0.0, 1.0 - self.saturation * w_now * w_now)
+                step = lr * valence * sat
+            else:
+                step = lr * valence
             affect_delta[other_party] = (
-                affect_delta.get(other_party, 0.0) + lr * valence
+                affect_delta.get(other_party, 0.0) + step
             )
 
         if not affect_delta:
