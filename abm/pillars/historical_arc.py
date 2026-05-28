@@ -29,7 +29,11 @@ from ..core.agent import Agent
 from ..core.engine import Engine
 from ..core.environment import Environment
 from ..core.network import Network, generate_involuntary_edges
-from ..core.outlets import US_MEDIA_OUTLETS_2024, diet_for_party
+from ..core.outlets import (
+    US_MEDIA_OUTLETS_2024,
+    US_MEDIA_OUTLETS_2024_ANES,
+    diet_for_party,
+)
 from ..core.rules import RulePipeline
 from ..core.space import ContinuousSpace2D
 from ..core.state import AgentState
@@ -181,6 +185,21 @@ ELITE_DRIFT_SCHEDULE_ANES = {
     "2000-10": 0.009,
     "2010-20": 0.013,   # peak (Trump-era sort)
     "2020-25": 0.008,
+}
+
+# Phase 9 §11.7-D3 — y-axis ElitDrift schedule (per-axis support).
+# ANES per-decade centroid velocities show cultural-axis shift is
+# roughly 30% larger than economic-axis on average (Dem cultural
+# mean +0.05 → -0.41 vs economic mean -0.09 → -0.41 in absolute
+# terms; per-tick rate ratio y/x ≈ 1.3-1.4 across decades). Setting
+# the y schedule 30% higher than x lifts late party_sep into the
+# ANES band without breaking the x-axis trajectory.
+ELITE_DRIFT_SCHEDULE_ANES_Y = {
+    "1980-90": 0.0039,
+    "1990-00": 0.0078,
+    "2000-10": 0.0117,
+    "2010-20": 0.0169,
+    "2020-25": 0.0104,
 }
 
 # Phase 9 §11.7-B — FLIPPED asymmetric ratio. Current {D:0.5, R:1.5}
@@ -477,6 +496,12 @@ def build_engine(
     # legitimately tunable under Vlad's bit-identity policy. Default
     # None preserves 0.08 (bit-identical to head).
     tier_c_bc_strength: float | None = None,
+    # Phase 9 §11.7-D4 — initial-condition σ. The build draws each
+    # agent at side·0.15 + N(0, 0.45); the 0.45 produces 1980 variance
+    # ~0.41 vs ANES band [0.22, 0.36]. Default None preserves 0.45
+    # (bit-identical). Recommended ANES value ≈ 0.35 (lands 1980 var
+    # ≈ 0.25, in the ANES band).
+    tier_d_ic_sigma: float | None = None,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -556,9 +581,17 @@ def build_engine(
         elite_drift_schedule_active = {
             seg: float(r) * _dm for seg, r in ELITE_DRIFT_SCHEDULE_ANES.items()
         }
+        # Phase 9 §11.7-D3 — per-axis y-schedule (only when ANES knobs
+        # active). The ELITE_DRIFT_SCHEDULE_ANES_Y values are ~30%
+        # higher than ANES_X per ANES voter centroid velocities.
+        elite_drift_schedule_y_active = {
+            seg: float(r) * _dm
+            for seg, r in ELITE_DRIFT_SCHEDULE_ANES_Y.items()
+        }
     else:
         party_cue_sigma_active = PARTY_CUE_SIGMA_HISTORICAL
         elite_drift_schedule_active = ELITE_DRIFT_SCHEDULE
+        elite_drift_schedule_y_active = None  # isotropic default path
     elite_drift_asymmetric_active = (
         ELITE_DRIFT_ASYMMETRIC_ANES if anes_knobs_active
         else ELITE_DRIFT_ASYMMETRIC
@@ -593,7 +626,13 @@ def build_engine(
             for aid, idx in zip(partisan_ids, sampled):
                 faction_assignments[int(aid)] = faction_labels[int(idx)]
 
-    outlets = list(US_MEDIA_OUTLETS_2024)
+    # Phase 9 §11.7-D2 — under ANES knobs use the widened outlet
+    # roster (Lever 5 of the axis-symmetry audit). Default path keeps
+    # the original US_MEDIA_OUTLETS_2024 bit-identically.
+    outlets = list(
+        US_MEDIA_OUTLETS_2024_ANES if anes_knobs_active
+        else US_MEDIA_OUTLETS_2024
+    )
     outlets_by_id = {o.id: o for o in outlets}
 
     n_identities = 3
@@ -648,19 +687,39 @@ def build_engine(
         # Republicans). This reduces 1980 party_sep into the target
         # band while keeping a meaningful initial sort.
         side = -1.0 if i < n_agents // 2 else 1.0
-        pos_x = float(np.clip(side * 0.15 + rng.normal(0, 0.45), -1.0, 1.0))
-        if tier_d_axis_balance:
-            # Lever 3: y-side draw with ρ=tier_d_coupling_rho coupling
-            # to x-side. P(side_y = side_x) = (1 + ρ) / 2. Default
-            # ρ=0.20 → 60/40 → matches ANES 1980 economic×cultural
-            # correlation. Sweep knob exposed for §4 diagnosis.
-            _p_match = 0.5 * (1.0 + float(tier_d_coupling_rho))
-            side_y = side if rng.random() < _p_match else -side
+        # Phase 9 §11.7-D4 — tier_d_ic_sigma overrides the 0.45 default.
+        _ic_sigma = (
+            float(tier_d_ic_sigma) if tier_d_ic_sigma is not None else 0.45
+        )
+        # Phase 9 §11.7-D4 — under ANES knobs + tier_d_ic_sigma, anchor
+        # the IC draw to the ANES party centroid rather than (side·0.15, 0).
+        # The default ±0.15 bias gives partisans IC mean ±0.15 which
+        # produces 1980 wp_sd too wide (≈ 0.41) under the §11.7-D stack;
+        # ANES 1980 centroids D=(-0.09,+0.05), R=(+0.27,+0.23) instead
+        # land 1980 sep + variance + wp_sd in the ANES band together.
+        if anes_knobs_active and tier_d_ic_sigma is not None:
+            _ic_party = 1 if side > 0 else 0
+            _ic_cent = party_centers_active[_ic_party]
+            pos_x = float(np.clip(
+                float(_ic_cent[0]) + rng.normal(0, _ic_sigma), -1.0, 1.0
+            ))
             pos_y = float(np.clip(
-                side_y * 0.12 + rng.normal(0, 0.45), -1.0, 1.0
+                float(_ic_cent[1]) + rng.normal(0, _ic_sigma), -1.0, 1.0
             ))
         else:
-            pos_y = float(np.clip(rng.normal(0, 0.45), -1.0, 1.0))
+            pos_x = float(np.clip(side * 0.15 + rng.normal(0, _ic_sigma), -1.0, 1.0))
+            if tier_d_axis_balance:
+                # Lever 3: y-side draw with ρ=tier_d_coupling_rho coupling
+                # to x-side. P(side_y = side_x) = (1 + ρ) / 2. Default
+                # ρ=0.20 → 60/40 → matches ANES 1980 economic×cultural
+                # correlation.
+                _p_match = 0.5 * (1.0 + float(tier_d_coupling_rho))
+                side_y = side if rng.random() < _p_match else -side
+                pos_y = float(np.clip(
+                    side_y * 0.12 + rng.normal(0, _ic_sigma), -1.0, 1.0
+                ))
+            else:
+                pos_y = float(np.clip(rng.normal(0, _ic_sigma), -1.0, 1.0))
         pos = np.array([pos_x, pos_y])
         # Phase 8f §2: probabilistic party assignment with per-decade
         # K. At 1980 K=2.5 → ~68% sign-aligned at |x|=0.3 → many
@@ -873,6 +932,10 @@ def build_engine(
         # so the decade-boundary functions don't need to know about the
         # ANES vs default split. Default values preserve bit-identity.
         "elite_drift_schedule_active": dict(elite_drift_schedule_active),
+        "elite_drift_schedule_y_active": (
+            dict(elite_drift_schedule_y_active)
+            if elite_drift_schedule_y_active is not None else None
+        ),
         "elite_drift_asymmetric_active": dict(elite_drift_asymmetric_active),
         "tier_d_anes_knobs": bool(anes_knobs_active),
         # Phase 9 §11.7-D — cohort replacement anchors. Only consulted
@@ -1030,6 +1093,10 @@ def build_engine(
         # onset.
         EliteDrift(
             rate=elite_drift_schedule_active["1980-90"],
+            rate_y=(
+                elite_drift_schedule_y_active["1980-90"]
+                if elite_drift_schedule_y_active is not None else None
+            ),
             asymmetric=elite_drift_asymmetric_active,
         ),
         TieRewiring(
@@ -1133,9 +1200,12 @@ def _event_2010_citizens_united(engine):
     sched = engine.env.attrs.get(
         "elite_drift_schedule_active", ELITE_DRIFT_SCHEDULE,
     )
+    sched_y = engine.env.attrs.get("elite_drift_schedule_y_active")
     for r in engine.env_rules:
         if type(r).__name__ == "EliteDrift":
             r.rate = sched["2010-20"]
+            if sched_y is not None:
+                r.rate_y = sched_y["2010-20"]
 
 
 def _event_2012_social_media_ramp_end(engine):
@@ -1393,18 +1463,24 @@ def _set_identity_sorting(engine, rate):
             r.sort_rate = rate
 
 
-def _set_elite_drift_rate(engine, rate):
+def _set_elite_drift_rate(engine, rate, rate_y=None):
     for r in engine.env_rules:
         if type(r).__name__ == "EliteDrift":
             r.rate = rate
+            if rate_y is not None:
+                r.rate_y = rate_y
 
 
 def _decade_boundary_1990(engine):
     sched = engine.env.attrs.get(
         "elite_drift_schedule_active", ELITE_DRIFT_SCHEDULE,
     )
+    sched_y = engine.env.attrs.get("elite_drift_schedule_y_active")
     _set_identity_sorting(engine, IDENTITY_SORTING_SCHEDULE["1990-00"])
-    _set_elite_drift_rate(engine, sched["1990-00"])
+    _set_elite_drift_rate(
+        engine, sched["1990-00"],
+        rate_y=(sched_y["1990-00"] if sched_y is not None else None),
+    )
     # Phase 8e §2: party-issue coupling rises with the great sort.
     # Phase 8e §4: under phase8e_baseline=True, coupling stays at 1.0.
     if not engine.env.attrs.get("phase8e_baseline"):
@@ -1415,8 +1491,12 @@ def _decade_boundary_2000(engine):
     sched = engine.env.attrs.get(
         "elite_drift_schedule_active", ELITE_DRIFT_SCHEDULE,
     )
+    sched_y = engine.env.attrs.get("elite_drift_schedule_y_active")
     _set_identity_sorting(engine, IDENTITY_SORTING_SCHEDULE["2000-10"])
-    _set_elite_drift_rate(engine, sched["2000-10"])
+    _set_elite_drift_rate(
+        engine, sched["2000-10"],
+        rate_y=(sched_y["2000-10"] if sched_y is not None else None),
+    )
     if not engine.env.attrs.get("phase8e_baseline"):
         engine.env.attrs["party_issue_coupling"] = PARTY_ISSUE_COUPLING_SCHEDULE["2000-10"]
 
@@ -1432,8 +1512,12 @@ def _decade_boundary_2020(engine):
     sched = engine.env.attrs.get(
         "elite_drift_schedule_active", ELITE_DRIFT_SCHEDULE,
     )
+    sched_y = engine.env.attrs.get("elite_drift_schedule_y_active")
     _set_identity_sorting(engine, IDENTITY_SORTING_SCHEDULE["2020-25"])
-    _set_elite_drift_rate(engine, sched["2020-25"])
+    _set_elite_drift_rate(
+        engine, sched["2020-25"],
+        rate_y=(sched_y["2020-25"] if sched_y is not None else None),
+    )
     if not engine.env.attrs.get("phase8e_baseline"):
         engine.env.attrs["party_issue_coupling"] = PARTY_ISSUE_COUPLING_SCHEDULE["2020-25"]
 

@@ -132,11 +132,10 @@ PRESETS = {
         "tier_d_anes_knobs": True,             # the new Phase B switch
     },
     "anes_full": {
-        # Phase 9 §11.7-C — Phase B (ANES knobs) + sweep-best
-        # multipliers + IdentityToIdeologyPull (Mason mega-identity) +
-        # softer BC + GaussianNoise σ=0.08 (wp_sd injection rate that
-        # finally clears BC compression to lift wp_sd into ANES band).
-        # This is the §11.7-C peak: §11_ANES = 15/24, w2 ≈ 1.20.
+        # Phase 9 §11.7-D — full ANES pipeline:
+        # B (ANES knobs) + C (identity pull + BC softening + noise) +
+        # D-1 (cohort centroid anchor) + D-2 (widened outlets) +
+        # D-3 (per-axis EliteDrift y/x ratio 1.3) + D-4 (narrower IC σ).
         "n_agents": N,
         "independent_fraction": INDEPENDENT_FRACTION,
         "factional_seeding": False,
@@ -153,8 +152,8 @@ PRESETS = {
         "tier_c_identity_pull_y": 0.040,
         "tier_d_aniso_noise_sigma_x": 0.08,
         "tier_d_aniso_noise_sigma_y": 0.08,
-        "tier_c_party_pull_strength": 0.04,   # back to 8a value
-        "tier_c_bc_strength": 0.015,          # softer than 8f 0.08
+        "tier_c_party_pull_strength": 0.04,
+        "tier_c_bc_strength": 0.015,
     },
 }
 

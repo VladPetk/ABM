@@ -32,6 +32,24 @@ US_MEDIA_OUTLETS_2024 = [
     MediaOutlet(id=4, name="Fox News",     position=np.array([ 0.65,  0.45]), color="#8b2530"),
 ]
 
+# Phase 9 §11.7-D2 — widened outlet positions under ANES knobs.
+# The default positions span x ∈ [-0.55, +0.65] and y ∈ [-0.35, +0.45],
+# clustering too close to center. MediaConsumption pulls agents toward
+# weighted diet targets bounded by these positions, so agents past
+# ±0.65 on x get pulled BACK toward center — capping party_sep growth.
+# Levendusky 2013 + DellaVigna & Kaplan 2007 + AllSides modern ratings
+# all place Fox / MSNBC closer to ±0.8 on the policy-ideology axis.
+# The y-axis (cultural) widens proportionally (Mason 2018 finds
+# cultural-media polarization tracks ideology-media polarization at
+# roughly the same rate post-2000).
+US_MEDIA_OUTLETS_2024_ANES = [
+    MediaOutlet(id=0, name="MSNBC",        position=np.array([-0.80, -0.55]), color="#1f3565"),
+    MediaOutlet(id=1, name="New York Times", position=np.array([-0.50, -0.30]), color="#2a4a52"),
+    MediaOutlet(id=2, name="Local TV",     position=np.array([ 0.00,  0.05]), color="#74797f"),
+    MediaOutlet(id=3, name="Wall St Journal", position=np.array([ 0.60,  0.25]), color="#553f6b"),
+    MediaOutlet(id=4, name="Fox News",     position=np.array([ 0.85,  0.65]), color="#8b2530"),
+]
+
 
 def diet_for_party(party_pos: np.ndarray, outlets: list[MediaOutlet], rng) -> dict[int, float]:
     """

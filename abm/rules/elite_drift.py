@@ -22,14 +22,25 @@ from ..core.space import ContinuousSpace2D
 
 
 class EliteDrift:
-    def __init__(self, rate: float = 0.0005, asymmetric: dict[int, float] | None = None):
+    def __init__(
+        self,
+        rate: float = 0.0005,
+        asymmetric: dict[int, float] | None = None,
+        rate_y: float | None = None,
+    ):
         """
-        rate: per-tick drift magnitude
-        asymmetric: optional {party_id: rate_multiplier} for asymmetric drift
-                    (e.g., {0: 0.5, 1: 1.5} for one party drifting faster —
-                    McCarty et al.'s "Republicans moved further right" pattern)
+        rate: per-tick drift magnitude (x-axis when rate_y is set,
+              otherwise isotropic across both axes)
+        rate_y: optional per-tick drift magnitude on the y-axis. When
+                None (default) drift is isotropic — bit-identical to
+                pre-§11.7-D3 behaviour. Phase 9 §11.7-D3: ANES voter
+                centroid velocities show cultural-axis shift ~30%
+                bigger than economic-axis 2000-2020.
+        asymmetric: optional {party_id: rate_multiplier} for asymmetric
+                    drift between parties.
         """
         self.rate = rate
+        self.rate_y = rate_y
         self.asymmetric = asymmetric or {}
 
     def apply(
@@ -64,7 +75,17 @@ class EliteDrift:
                 if d < 1e-9:
                     continue
             mult = self.asymmetric.get(pid, 1.0)
-            step = self.rate * mult * direction / d
+            unit = direction / d
+            if self.rate_y is None:
+                step = self.rate * mult * unit
+            else:
+                # Per-axis: scale x by self.rate, y by self.rate_y. The
+                # direction is still the outward unit vector; only its
+                # per-axis magnitude differs.
+                step = mult * np.array([
+                    self.rate * unit[0],
+                    float(self.rate_y) * unit[1],
+                ])
             # Record the *applied* step (post-clip) so per-agent cue
             # propagation tracks what actually happened to the env
             # centroid. Without this, a saturated centroid would
