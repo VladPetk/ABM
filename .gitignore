@@ -42,6 +42,14 @@ phase9_tier_a_blessed_log.txt
 phase9_tier_c_sweep_log.txt
 phase9_tier_c_blessed_log.txt
 
+# Phase 9 empirical raw data — ANES CDF is 156 MB and the HTML
+# codebook is 4 MB. Both are reproducible by re-downloading from
+# https://electionstudies.org (urls in docs/specs/phase9_raw_data_sources.md).
+# Keep the small methodology MDs and the codebook PDF; drop the bulk.
+data/phase9_empirical/raw/timeseries_csv.csv
+data/phase9_empirical/raw/codebook_html.html
+data/phase9_empirical/raw/codebook_html_files/
+
 # Editor / scratchpad detritus
 *.tmp
 *.bak

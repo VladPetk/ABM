@@ -1,0 +1,5 @@
+[norm-isolation] year=2000  per-wave-z-rescaled econ=+0.0341, cult=+0.0091  vs  global econ=+0.1120, cult=+0.2123  diff_econ=-0.0779, diff_cult=-0.2032
+  -> PASS
+[kde-isolation]  year=2000  own_bw=0.4058  global_bw=0.2022  diff=+0.2036
+  -> PASS
+[direction]  PASS - Rep mean >= Dem mean on both axes in every wave with both parties present

@@ -1,0 +1,9 @@
+{
+  "bandwidth_method": "scott_on_pooled",
+  "bandwidth_factor": 0.2022043210546602,
+  "grid_lo": -1.05,
+  "grid_hi": 1.05,
+  "grid_n": 81,
+  "grid_cell": 0.026250000000000002,
+  "grid_area_cell": 0.0006890625000000001
+}

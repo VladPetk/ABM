@@ -142,11 +142,27 @@ def _replace_agent_inplace(
     (Phillips 2022 cohort theory, not blank-slate). If None,
     defaults to 0 (legacy behaviour)."""
     # New ideology drawn from the cohort distribution.
+    # Phase 9 §11.6 — cohort y_mean sign bug fix. The original spec
+    # had genx y_mean=+0.05, genz y_mean=+0.10, encoding "younger =
+    # more cultural-traditional", which is the OPPOSITE of empirical
+    # cohort drift (Phillips 2022, Mason 2018 ch.6: younger cohorts
+    # are substantially more PROGRESSIVE on cultural issues —
+    # pro-LGBT, pro-immigration, secular, racial-progressive). The
+    # x_mean signs (younger = -x = more economic-liberal) are
+    # correct; only y was sign-flipped. The bug compresses the
+    # population's y-axis drift over decades because cohort
+    # replacement is constantly inserting agents on the wrong side
+    # of y.
+    # When env["tier_d_cohort_y_signs_fix"] is True, flip the y_mean
+    # and identities_mean_shift signs to match empirical drift. Off
+    # by default → bit-identical to head.
+    _fix_y = bool(env.attrs.get("tier_d_cohort_y_signs_fix"))
     new_x = float(np.clip(
         rng.normal(cohort["x_mean"], cohort["x_sd"]), -1.0, 1.0
     ))
+    _y_mean = -cohort["y_mean"] if _fix_y else cohort["y_mean"]
     new_y = float(np.clip(
-        rng.normal(cohort["y_mean"], cohort["y_sd"]), -1.0, 1.0
+        rng.normal(_y_mean, cohort["y_sd"]), -1.0, 1.0
     ))
     new_pos = np.array([new_x, new_y])
     # Phase 8f §2 — cohort-aware sigmoid party assignment for new
@@ -173,7 +189,7 @@ def _replace_agent_inplace(
         # the sigmoid reads (0.55·x + 0.45·y) instead of x alone, so
         # cohort replacement doesn't silently re-import x-dominance
         # every decade. Default path bit-identical.
-        if env.attrs.get("tier_d_axis_balance"):
+        if env.attrs.get("tier_d_axis_balance") and not env.attrs.get("tier_d_lever1_off"):
             sigmoid_arg = 0.55 * new_x + 0.45 * new_y
         else:
             sigmoid_arg = new_x
@@ -195,8 +211,17 @@ def _replace_agent_inplace(
 
     # New agent's identities — base centred per cohort's mean shift,
     # with the Phase 4 noise pattern.
+    # §11.6 fix: also flip identities_mean_shift sign. Positive shift
+    # in the original code pushes younger cohorts toward party=1
+    # (Republican) identity territory because party_identity_centers
+    # uses +0.20 for party 1. Empirically younger cohorts are
+    # Dem-aligned, so the shift should be negative.
+    _id_shift = (
+        -cohort["identities_mean_shift"]
+        if _fix_y else cohort["identities_mean_shift"]
+    )
     new_identities = np.clip(
-        np.array([0.0, 0.0, cohort["identities_mean_shift"]])
+        np.array([0.0, 0.0, _id_shift])
         + rng.normal(0, 0.3, size=3),
         -1.0, 1.0,
     )
@@ -222,7 +247,18 @@ def _replace_agent_inplace(
     centroid = env.attrs.get("parties", {}).get(
         new_party, np.array([-0.5 if new_party == 0 else 0.5, 0.0])
     )
-    new_party_cue = centroid + rng.normal(0.0, sigma_pc, size=2)
+    # Phase 9 §11.4 — anisotropic σ_pc when tier_d_axis_balance on +
+    # multiplier ≠ 1.0. Variance-preserving: σ_x² + σ_y² = 2σ_pc².
+    _r = float(env.attrs.get("tier_d_party_cue_sigma_y_mult", 1.0) or 1.0)
+    if env.attrs.get("tier_d_axis_balance") and abs(_r - 1.0) > 1e-9:
+        _sx = sigma_pc * np.sqrt(2.0 / (1.0 + _r * _r))
+        _sy = _r * _sx
+        new_party_cue = centroid + np.array([
+            rng.normal(0.0, _sx),
+            rng.normal(0.0, _sy),
+        ])
+    else:
+        new_party_cue = centroid + rng.normal(0.0, sigma_pc, size=2)
 
     # Per-agent heterogeneity attrs — re-seed using the deterministic
     # correlation with identity_strength (Phase 8b M1 magnitudes).
@@ -312,3 +348,4 @@ def _replace_independent_inplace(
         "epsilon", "fj_alpha", "affect_lr",
     ):
         agent.state.attrs.pop(stale_key, None)
+    

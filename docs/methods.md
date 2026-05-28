@@ -242,6 +242,59 @@ for X2)
   inert in the pillar; it fires only in the historical arc's
   Schedule.
 
+### 3.6 ANES 2D ideological compass, 1986–2024 (distribution-level fit target)
+
+- **Source:** ANES Time Series Cumulative Data File (CDF), 1986–2024.
+  Methodology spec: `data/phase9_empirical/raw/anes_2d_ideology_methodology.md`.
+  Build: `scripts/anes_2d_compass.py`. Derived outputs:
+  `data/phase9_empirical/derived/{coverage_table,recode_log,party_centroids,polarization_series}.csv`,
+  `respondent_coordinates.csv`, `scaling_params.json`, `kde_params.json`,
+  `densities/{year}_{D,I,R,ALL}.npy`. Small-multiples plot:
+  `docs/phase9_empirical/density_small_multiples.png`.
+- **Construction.** Window 1986–2024 (14 effective waves; 2002 excluded —
+  ANES CDF did not field the cultural items that year). Fixed core panel
+  chosen from the actual coverage table: economic = {`VCF0803` lib-cons
+  self-placement, `VCF0809` guaranteed jobs/income, `VCF0839` services-
+  spending}, cultural = {`VCF0838` abortion, `VCF0830` aid to blacks,
+  `VCF0852` adjust moral views, `VCF0853` traditional values}. Listwise
+  drop on all 7 items: 44,308 → 22,761 (51.4% retained). Each item
+  recoded so higher = conservative; rescaled to [−1, 1] using
+  **theoretical scale endpoints** (stricter than the spec's pooled
+  min/max — provably zero pooled-stat leakage by construction). Axis
+  score = equal-weight mean. KDE bandwidth = Scott's rule on the pooled
+  weighted sample (factor 0.2022, frozen) evaluated on an 81×81 grid
+  over [−1.05, 1.05]². Survey weight `VCF0009z` applied.
+- **Finding (the new calibration curve).** Per-wave 2D overlapping
+  coefficient between Dem and Rep joint densities — the **primary fit
+  target** — drops from 0.60 (1986) → 0.20 (2020), partial recovery to
+  0.25 (2024). Scaled centroid separation rises from 0.96 to 3.20.
+  Hartigan's dip rejects unimodality on both axes in essentially every
+  wave (only exception: cultural axis 2000, p = 0.09). Realignment
+  signature visible in the centroids: Dem economic mean is left-of-zero
+  throughout 1986–2024, but Dem cultural mean only crosses to
+  left-of-zero from 2012 on.
+- **Pinning / model check.** Supersedes the `phase9_empirical_targets`
+  bundle as the canonical empirical fit target. The engine's per-decade
+  KDE outputs (Tier C/D, §5.10) are compared against the matching
+  ANES-wave density on the same fixed [−1.05, 1.05]² × 81-grid frame.
+  `ovl_2d` per wave from `polarization_series.csv` is the primary curve
+  for engine calibration; `scaled_separation`, per-axis Wasserstein, and
+  dip statistics are supporting series.
+- **Acceptance.** Three isolation tests in
+  `data/phase9_empirical/derived/acceptance_checks.txt`: re-running
+  normalization per-wave (with z-then-clip, a genuinely different scaling
+  family) produces axis means that differ from the global build → scaling
+  is not leaking per-wave; refitting KDE on a single wave gives bandwidth
+  0.41 vs the frozen global 0.20 → density is not leaking per-wave;
+  Rep ≥ Dem on both axes in every wave with both parties present → no
+  direction-coding bug.
+- **Known caveats.** Listwise retention biases toward respondents who
+  answered every core item (more politically engaged subset); the engine
+  should treat the densities as the population of opinionated voters, not
+  the full electorate. 1990 cultural items and 1986 `VCF0809` are
+  half-form fielded → smaller N after listwise. CDF skips midterm years
+  after 2004 (2006/2010/2014/2018/2022 absent by data design).
+
 ---
 
 ## 4. The honesty-labels schema

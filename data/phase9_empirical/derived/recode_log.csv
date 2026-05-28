@@ -1,0 +1,8 @@
+variable,axis,label,original_lo,original_hi,missing_codes_dropped,direction_reversed_for_conservative_up,valid_n_pooled,pooled_mean_recoded,pooled_min_recoded,pooled_max_recoded
+VCF0803,economic,lib-cons 7-pt self-placement (1=ex-lib..7=ex-cons),1,7,"[0, 9]",False,34801,0.06492150608698982,-1.0,1.0
+VCF0809,economic,guaranteed jobs/income (1=govt..7=self-reliance),1,7,"[0, 9]",False,35266,0.07356471766952115,-1.0,1.0
+VCF0839,economic,services-spending (1=fewer/cons..7=more/lib) REVERSED,1,7,"[0, 9]",True,34997,-0.0824261127144231,-1.0,1.0
+VCF0838,cultural,abortion 4-pt (1=never/cons..4=personal/lib) REVERSED,1,4,"[0, 9]",True,39940,-0.3030879652812551,-1.0,1.0
+VCF0830,cultural,aid to blacks (1=govt-help..7=self-help),1,7,"[0, 9]",False,37156,0.1177647396562242,-1.0,1.0
+VCF0852,cultural,adjust moral views to changes (1=agree-lib..5=disagree-cons),1,5,"[8, 9]",False,37598,0.029669131336773232,-1.0,1.0
+VCF0853,cultural,more emphasis on traditional values (1=agree-cons..5=disagree-lib) REVERSED,1,5,"[8, 9]",True,37595,0.4460167575475462,-1.0,1.0

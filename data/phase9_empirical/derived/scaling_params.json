@@ -1,0 +1,95 @@
+{
+  "window": [
+    1986,
+    2024
+  ],
+  "econ_core": [
+    "VCF0803",
+    "VCF0809",
+    "VCF0839"
+  ],
+  "cult_core": [
+    "VCF0838",
+    "VCF0830",
+    "VCF0852",
+    "VCF0853"
+  ],
+  "rescaling": "(raw - theoretical_lo) / (theoretical_hi - theoretical_lo) -> [0,1], reversed if needed, then *2 - 1 -> [-1,1]",
+  "axis_aggregation": "equal-weight mean across core items per respondent",
+  "missing_handling": "listwise drop on core; drop don't-know/refused per recode_log",
+  "items": {
+    "VCF0803": {
+      "axis": "economic",
+      "lo": 1,
+      "hi": 7,
+      "miss": [
+        0,
+        9
+      ],
+      "reverse": false
+    },
+    "VCF0809": {
+      "axis": "economic",
+      "lo": 1,
+      "hi": 7,
+      "miss": [
+        0,
+        9
+      ],
+      "reverse": false
+    },
+    "VCF0839": {
+      "axis": "economic",
+      "lo": 1,
+      "hi": 7,
+      "miss": [
+        0,
+        9
+      ],
+      "reverse": true
+    },
+    "VCF0838": {
+      "axis": "cultural",
+      "lo": 1,
+      "hi": 4,
+      "miss": [
+        0,
+        9
+      ],
+      "reverse": true
+    },
+    "VCF0830": {
+      "axis": "cultural",
+      "lo": 1,
+      "hi": 7,
+      "miss": [
+        0,
+        9
+      ],
+      "reverse": false
+    },
+    "VCF0852": {
+      "axis": "cultural",
+      "lo": 1,
+      "hi": 5,
+      "miss": [
+        8,
+        9
+      ],
+      "reverse": false
+    },
+    "VCF0853": {
+      "axis": "cultural",
+      "lo": 1,
+      "hi": 5,
+      "miss": [
+        8,
+        9
+      ],
+      "reverse": true
+    }
+  },
+  "weight_var": "VCF0009z",
+  "party_var": "VCF0301",
+  "n_respondents": 22761
+}

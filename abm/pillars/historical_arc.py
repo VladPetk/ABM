@@ -337,6 +337,44 @@ def build_engine(
     # these to diagnose lever sensitivity.
     tier_d_party_center_y: float = 0.20,   # lever 2 magnitude
     tier_d_coupling_rho: float = 0.20,     # lever 3 (x-side, y-side) corr target
+    # Phase 9 §11.4 — per-lever ablation switches (diagnostic only).
+    # Only consulted when tier_d_axis_balance=True. When True for a
+    # given lever, that lever falls back to the pre-Tier-D code path
+    # while the other levers stay active. Defaults False preserve
+    # current Tier-D-central behavior bit-identically.
+    tier_d_lever1_off: bool = False,
+    tier_d_lever4_off: bool = False,
+    tier_d_lever6_off: bool = False,
+    # Phase 9 §11.4 — anisotropic PARTY_CUE_SIGMA. Default 1.0 →
+    # isotropic σ_pc (bit-identical to current behavior). At r > 1.0,
+    # σ_y is r times σ_x with σ_x² + σ_y² = 2 σ_orig² (variance-
+    # preserving — the existing forbidden-knob magnitude scalar
+    # (0.22/0.30) controls the joint variance; only the axis split is
+    # new). Motivated by Mason 2018 mega-identity: within-partisan
+    # heterogeneity on cultural axis is wider than on economic axis,
+    # which the isotropic σ_pc was missing.
+    tier_d_party_cue_sigma_y_mult: float = 1.0,
+    # Phase 9 §11.4 — anisotropic GaussianNoise σ on y-axis. None →
+    # isotropic σ=0.01 (bit-identical to head). When set AND
+    # tier_d_axis_balance=True, GaussianNoise gets per-axis (σ_x=0.01,
+    # σ_y=this). Audit-flagged "band-aid" (variance with no semantic
+    # content) but empirically the rate-limiter for var_y is BC's
+    # compression of within-party spread, which only an
+    # uncorrelated per-tick injection can escape.
+    tier_d_aniso_noise_sigma_y: float | None = None,
+    # Phase 9 §11.7 — option to raise the GaussianNoise σ on the x-axis
+    # too (default keeps 0.01). With ANES-derived §11 bands the engine
+    # is no longer required to compress on either axis, so a symmetric
+    # noise boost is the simplest path to widen within-party SD on both
+    # axes simultaneously.
+    tier_d_aniso_noise_sigma_x: float | None = None,
+    # Phase 9 §11.6 — flip the cohort_replacement.py y_mean and
+    # identities_mean_shift signs to match empirical cohort drift
+    # (younger = more progressive). Default False → bit-identical
+    # to head (preserves the legacy sign-flip bug). When True AND
+    # tier_d_axis_balance=True, cohort replacement uses the
+    # corrected signs.
+    tier_d_cohort_y_signs_fix: bool = False,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -372,7 +410,13 @@ def build_engine(
             1: np.array([+0.30, +_y]),
         }
         perception_bias_x = PERCEPTION_EXTREME_BIAS_X_TIER_D
-        perception_bias_y = PERCEPTION_EXTREME_BIAS_Y_TIER_D
+        if tier_d_lever4_off:
+            # Ablation: keep Tier D master on but restore legacy
+            # y-bias = 0 (lever 4 disabled). Diagnostic for whether
+            # lever 4 contributes to §11 break.
+            perception_bias_y = 0.0
+        else:
+            perception_bias_y = PERCEPTION_EXTREME_BIAS_Y_TIER_D
     else:
         party_centers_active = {
             pid: c.copy() for pid, c in PARTY_CENTERS_1980.items()
@@ -485,12 +529,14 @@ def build_engine(
         # diagnosis). K rises across decades to 8.0 at modern era.
         # Cohort replacement uses cohort-aware K.
         k_1980 = PARTY_ASSIGNMENT_K["1980-90"]
-        if tier_d_axis_balance:
+        if tier_d_axis_balance and not tier_d_lever1_off:
             # Lever 1: party assignment reads both axes with mild
             # x-tilt α=0.55, β=0.45 (Mason 2018 app. B; Levendusky
             # 2009 ch. 2-3 — partisan-sorting magnitudes are within
             # ~10% on the two axes by the 2000s). Default path
             # (sigmoid of x alone) is preserved bit-identically.
+            # tier_d_lever1_off ablation: master Tier D on but lever 1
+            # falls back to x-only sigmoid (diagnostic for §11 break).
             sigmoid_arg = 0.55 * pos_x + 0.45 * pos_y
         else:
             sigmoid_arg = pos_x
@@ -530,9 +576,27 @@ def build_engine(
 
         # Per-party party_cue σ (M4 asymmetric).
         sigma_pc = PARTY_CUE_SIGMA_HISTORICAL[party]
-        party_cue = party_centers_active[party] + rng.normal(
-            0.0, sigma_pc, size=2
-        )
+        # Phase 9 §11.4 — anisotropic σ_pc when tier_d_axis_balance is
+        # on AND the y-multiplier ≠ 1.0. Variance-preserving:
+        # σ_x = σ_pc · sqrt(2/(1+r²)), σ_y = r · σ_x, so
+        # σ_x² + σ_y² = 2 σ_pc². At r=1.0 σ_x = σ_y = σ_pc
+        # (bit-identical to isotropic). The scalar σ_pc (forbidden
+        # knob magnitude) is unchanged; only the axis decomposition is
+        # new. See `phase9_axis_symmetry_audit.md §6` and Mason 2018
+        # mega-identity for the motivation (cultural-axis within-party
+        # heterogeneity > economic-axis).
+        if tier_d_axis_balance and abs(tier_d_party_cue_sigma_y_mult - 1.0) > 1e-9:
+            _r = float(tier_d_party_cue_sigma_y_mult)
+            _sx = sigma_pc * np.sqrt(2.0 / (1.0 + _r * _r))
+            _sy = _r * _sx
+            party_cue = party_centers_active[party] + np.array([
+                rng.normal(0.0, _sx),
+                rng.normal(0.0, _sy),
+            ])
+        else:
+            party_cue = party_centers_active[party] + rng.normal(
+                0.0, sigma_pc, size=2
+            )
         # Phase 9 Tier A: factional cue + extremity-graded stubbornness.
         # Applied for non-Centrist faction-seeded partisans only.
         # Centrists keep PARTY_CENTERS_1980-based cue + unboosted
@@ -686,6 +750,16 @@ def build_engine(
         # mirror) and the 2016 Trump-event handler (lever 6 centroid
         # nudge). When False, both paths are bit-identical to head.
         "tier_d_axis_balance": bool(tier_d_axis_balance),
+        # Phase 9 §11.4 — per-lever ablation flags propagated to runtime
+        # consumers. Default False each → no behavior change.
+        "tier_d_lever1_off": bool(tier_d_lever1_off),
+        "tier_d_lever6_off": bool(tier_d_lever6_off),
+        # Anisotropic-σ_pc multiplier for cohort replacement to read.
+        "tier_d_party_cue_sigma_y_mult": float(tier_d_party_cue_sigma_y_mult),
+        # §11.6 cohort y-sign fix flag (gates by master flag).
+        "tier_d_cohort_y_signs_fix": bool(
+            tier_d_axis_balance and tier_d_cohort_y_signs_fix
+        ),
         "viz": {
             "title": TITLE,
             "group_names": PARTY_NAMES,
@@ -749,7 +823,18 @@ def build_engine(
         PerceptionUpdate(
             correction_rate=0.0 if phase8e_baseline else PERCEPTION_CORRECTION_RATE
         ),
-        GaussianNoise(sigma=0.01),
+        GaussianNoise(
+            sigma=(
+                float(tier_d_aniso_noise_sigma_x)
+                if (tier_d_axis_balance and tier_d_aniso_noise_sigma_x is not None)
+                else 0.01
+            ),
+            sigma_y=(
+                float(tier_d_aniso_noise_sigma_y)
+                if (tier_d_axis_balance and tier_d_aniso_noise_sigma_y is not None)
+                else None
+            ),
+        ),
     ]
     env_rules = [
         # Phase 8b: EliteDrift active from 1980 at low rate, ramping
@@ -881,7 +966,7 @@ def _event_2016_trump_election(engine):
     Default path keeps the original (+0.05, 0.0) bit-identically.
     """
     parties = engine.env.attrs["parties"]
-    if engine.env.attrs.get("tier_d_axis_balance"):
+    if engine.env.attrs.get("tier_d_axis_balance") and not engine.env.attrs.get("tier_d_lever6_off"):
         parties[1] = parties[1] + np.array([0.02, 0.10])
     else:
         parties[1] = parties[1] + np.array([0.05, 0.0])

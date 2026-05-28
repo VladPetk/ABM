@@ -24,8 +24,19 @@ from ..core.state import StateDelta
 
 
 class GaussianNoise:
-    def __init__(self, sigma: float = 0.01):
+    def __init__(self, sigma: float = 0.01, sigma_y: float | None = None):
         self.sigma = sigma
+        # Phase 9 §11.4 — optional anisotropic σ_y. None preserves
+        # current isotropic behavior bit-identically. When set, the
+        # y-axis noise component uses sigma_y while x uses sigma.
+        # Audit `phase9_axis_symmetry_audit.md §6` calls this a
+        # "band-aid" because the variance lift has no semantic
+        # content — agents drift on y for reasons unconnected to
+        # identity/faction/media/perception. Documented honestly.
+        # Empirically this IS the path that escapes BC compression
+        # because the per-tick noise is uncorrelated and BC averages
+        # neighbors (which preserves the variance injection).
+        self.sigma_y = sigma_y
 
     def apply(
         self,
@@ -45,7 +56,10 @@ class GaussianNoise:
         ))
         fj_active = s > 0.0 and anchor is not None and alpha > 0.0
 
-        if self.sigma <= 0:
+        # Anisotropic skip-check: only short-circuit when BOTH sigmas
+        # are zero (otherwise we'd miss y-only noise).
+        _sy_active = (self.sigma_y is not None and float(self.sigma_y) > 0.0)
+        if self.sigma <= 0 and not _sy_active:
             if not fj_active:
                 return StateDelta()
             # Anchor pull still fires even when noise is off — F1 is
@@ -54,7 +68,14 @@ class GaussianNoise:
                 d_ideology=alpha * s * (anchor - agent.state.ideology)
             )
 
-        noise = rng.normal(0.0, self.sigma, size=2)
+        if self.sigma_y is None:
+            noise = rng.normal(0.0, self.sigma, size=2)
+        else:
+            # Anisotropic per-axis noise
+            noise = np.array([
+                rng.normal(0.0, self.sigma),
+                rng.normal(0.0, float(self.sigma_y)),
+            ])
         if not fj_active:
             return StateDelta(d_ideology=noise)
         # Brownian motion scales with mobility (1 - s); anchor pull adds

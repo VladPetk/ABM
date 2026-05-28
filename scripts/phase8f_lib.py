@@ -37,6 +37,66 @@ INITIAL_TARGETS_1980 = {
 }
 
 
+# Phase 9 §11.7 — ANES-recalibrated band set. Derived directly from
+# real ANES 1986-2024 per-decade statistics in
+# `data/phase9_empirical/derived/respondent_coordinates.csv`:
+#
+# | Decade | party_sep | constraint | wp_sd_x |
+# |--------|-----------|------------|---------|
+# | 1980   |  0.394    |  0.344     | 0.343   |
+# | 1990   |  0.499    |  0.437     | 0.342   |
+# | 2000   |  0.664    |  0.534     | 0.346   |
+# | 2010   |  0.858    |  0.649     | 0.329   |
+# | 2020   |  1.111    |  0.737     | 0.346   |
+#
+# Bands are point estimate ±0.07 to acknowledge sampling noise. The
+# main differences vs the original Levendusky-derived bands:
+#   * party_sep grows MUCH wider (real 2020 = 1.11 vs old band 0.65-0.80).
+#   * within_party_sd_x stays FLAT at ~0.34 across all decades
+#     (real ANES shows no compression with sorting). Old bands had
+#     it declining 0.32 -> 0.22.
+#   * constraint band roughly matches (0.34-0.74 trajectory).
+#   * affect band kept identical -- ANES respondent_coordinates does
+#     not measure affect directly; preserve Iyengar/Finkel anchors.
+#
+# Opt-in by using `get_primary_targets(use_anes_bands=True)`. Default
+# False preserves original bands bit-identically.
+
+ANES_PRIMARY_TARGETS = {
+    1990: {"constraint": (0.37, 0.51), "party_sep": (0.42, 0.58),
+           "affect": (-0.45, -0.30), "within_party_sd": (0.27, 0.41)},
+    2000: {"constraint": (0.46, 0.60), "party_sep": (0.59, 0.74),
+           "affect": (-0.55, -0.40), "within_party_sd": (0.28, 0.41)},
+    2010: {"constraint": (0.58, 0.72), "party_sep": (0.79, 0.93),
+           "affect": (-0.65, -0.50), "within_party_sd": (0.26, 0.40)},
+    2020: {"constraint": (0.67, 0.80), "party_sep": (1.04, 1.18),
+           "affect": (-0.78, -0.60), "within_party_sd": (0.28, 0.41)},
+    2025: {"constraint": (0.69, 0.82), "party_sep": (1.08, 1.22),
+           "affect": (-0.85, -0.65), "within_party_sd": (0.28, 0.41)},
+}
+ANES_INITIAL_TARGETS_1980 = {
+    "variance": (0.22, 0.36), "constraint": (0.27, 0.41),
+    "party_sep": (0.33, 0.47), "affect": (-0.35, -0.20),
+    "within_party_sd": (0.27, 0.41), "xc_fraction": (0.30, 0.40),
+}
+
+
+def get_primary_targets(use_anes_bands: bool = False):
+    """Return the active primary-targets dict.
+
+    Default returns the original Levendusky-derived bands (bit-identical
+    to head). When use_anes_bands=True, returns the §11.7 ANES-
+    recalibrated bands.
+    """
+    return ANES_PRIMARY_TARGETS if use_anes_bands else PRIMARY_TARGETS
+
+
+def get_initial_targets_1980(use_anes_bands: bool = False):
+    """Return the active 1980 IC targets dict."""
+    return ANES_INITIAL_TARGETS_1980 if use_anes_bands else INITIAL_TARGETS_1980
+
+
+
 def party_sep_metric(eng):
     parties = np.array([a.state.attrs["party"] for a in eng.agents])
     pos = eng.positions()
