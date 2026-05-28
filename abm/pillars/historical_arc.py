@@ -94,6 +94,17 @@ PARTY_CENTERS_1980_TIER_D = {
     0: np.array([-0.30, -0.20]),
     1: np.array([+0.30, +0.20]),
 }
+
+# Phase 9 §11.7-B — ANES-derived 1980 party centroids. Per
+# `data/phase9_empirical/derived/respondent_coordinates.csv` 1986+1988
+# bucket, weighted two-party centroids. The asymmetry is real: in
+# 1986/88 Reps had already sorted post-Reagan while Dems sat near
+# centre on both axes. Selected when
+# `build_engine(tier_d_anes_knobs=True)`.
+PARTY_CENTERS_1980_ANES = {
+    0: np.array([-0.09, +0.05]),
+    1: np.array([+0.27, +0.23]),
+}
 PARTY_NAMES = {0: "Democrats (1980)", 1: "Republicans (1980)"}
 PARTY_COLORS = {0: "#1f3565", 1: "#8b2530"}
 
@@ -101,6 +112,15 @@ PARTY_COLORS = {0: "#1f3565", 1: "#8b2530"}
 PARTY_CUE_SIGMA_HISTORICAL = {
     0: 0.22,   # Dems: narrower cue distribution
     1: 0.30,   # Reps: wider cue distribution
+}
+
+# Phase 9 §11.7-B — ANES-derived PARTY_CUE_SIGMA. Engine wp_sd ≈ 0.18
+# vs ANES 0.34 means σ_pc must roughly double. Empirical back-solve at
+# pooled wp_sd_x = 0.345 (flat 1980-2020 in ANES) gives σ_pc ≈ {D: 0.42,
+# R: 0.57} preserving the D:R 1:1.36 asymmetry (Hacker-Pierson 2020).
+PARTY_CUE_SIGMA_HISTORICAL_ANES = {
+    0: 0.42,
+    1: 0.57,
 }
 
 # Per-agent heterogeneity magnitudes (Phase 8b M1 §3.2; B-Heterogeneity-
@@ -146,6 +166,30 @@ ELITE_DRIFT_SCHEDULE = {
     "2020-25": 0.006,
 }
 ELITE_DRIFT_ASYMMETRIC = {0: 0.5, 1: 1.5}
+
+# Phase 9 §11.7-B — ANES-derived ElitDrift schedule.
+# Engine baseline currently produces party_sep growth ≈ 0.0017/tick
+# (0.20 sep increase over 120 ticks 1980→2020). ANES needs 0.0060/tick
+# (sep 0.39 → 1.11 = 0.72 increase). So roughly 3× the current
+# magnitude on average — but front-loaded differently. The ANES per-
+# decade trajectory is empirically NON-monotone (peaks 2010-20 with
+# Trump-era sort). See docs/results/phase9_anes_knob_anchors.json.
+ELITE_DRIFT_SCHEDULE_ANES = {
+    "1980-90": 0.003,
+    "1990-00": 0.006,
+    "2000-10": 0.009,
+    "2010-20": 0.013,   # peak (Trump-era sort)
+    "2020-25": 0.008,
+}
+
+# Phase 9 §11.7-B — FLIPPED asymmetric ratio. Current {D:0.5, R:1.5}
+# was sourced from Hacker & Pierson 2020's ELITE DW-NOMINATE finding.
+# ANES VOTER-LEVEL centroid velocities show Dems drift harder than
+# Republicans, especially post-2000 (D cult mean +0.05 → -0.41 between
+# 1980 and 2020; R cent on both axes plateaus or moves back slightly
+# 2010-20). The Hacker-Pierson framing applies to legislators, not
+# voters. See docs/results/phase9_anes_knob_anchors.json.
+ELITE_DRIFT_ASYMMETRIC_ANES = {0: 1.5, 1: 0.5}
 
 # Phase 8c §4 E4 — perception-gap construct. Agents seed their
 # `perceived_other_party` at build with the actual centroid plus a
@@ -228,6 +272,21 @@ PARTY_ASSIGNMENT_K = {
     "2000-10": 7.0,
     "2010-20": 8.0,
     "2020-25": 8.0,
+}
+
+# Phase 9 §11.7-B — ANES-derived K-schedule. Back-solved from the
+# empirical per-decade weighted sign-alignment (party-with-econ-sign)
+# such that E[sigmoid(K * econ)] matches the observed alignment. See
+# docs/results/phase9_anes_knob_anchors.json sigmoid_K_anchors.
+# Engine over-sorts at every decade under the 8f schedule; ANES bands
+# require a much softer K-trajectory, with mild fuzziness even at the
+# modern endpoint (2020 still has ~15% cross-pressured partisans).
+PARTY_ASSIGNMENT_K_ANES = {
+    "1980-90": 2.1,
+    "1990-00": 2.3,
+    "2000-10": 3.1,
+    "2010-20": 3.9,
+    "2020-25": 5.1,
 }
 
 # Phase 8e §3 — per-agent `media_cue` bias. Each partisan agent
@@ -375,6 +434,19 @@ def build_engine(
     # tier_d_axis_balance=True, cohort replacement uses the
     # corrected signs.
     tier_d_cohort_y_signs_fix: bool = False,
+    # Phase 9 §11.7-B — ANES-knob master switch. When True AND
+    # tier_d_axis_balance=True, swaps the historical-arc "calibrated"
+    # constants for their ANES-derived counterparts:
+    #   PARTY_CENTERS_1980          → PARTY_CENTERS_1980_ANES
+    #   PARTY_CUE_SIGMA_HISTORICAL  → PARTY_CUE_SIGMA_HISTORICAL_ANES
+    #   PARTY_ASSIGNMENT_K          → PARTY_ASSIGNMENT_K_ANES
+    #   ELITE_DRIFT_SCHEDULE        → ELITE_DRIFT_SCHEDULE_ANES
+    #   ELITE_DRIFT_ASYMMETRIC      → ELITE_DRIFT_ASYMMETRIC_ANES
+    # Default False → bit-identical to head. Each replacement value
+    # is anchored to a per-decade ANES statistic; see
+    # docs/results/phase9_anes_knob_anchors.json. The pillar
+    # (calm_to_camps.py) is unaffected.
+    tier_d_anes_knobs: bool = False,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -401,7 +473,21 @@ def build_engine(
     # Phase 9 Tier D — pick active party centers + perception biases.
     # Default path leaves the existing constants in place bit-
     # identically (pillars + Phase 8 unchanged).
-    if tier_d_axis_balance:
+    #
+    # Phase 9 §11.7-B: when tier_d_anes_knobs=True (under master
+    # tier_d_axis_balance=True), party centers come from the ANES
+    # 1980 empirical centroids regardless of tier_d_party_center_y
+    # (the sweep knob is ignored — ANES is the empirical anchor).
+    anes_knobs_active = bool(tier_d_axis_balance and tier_d_anes_knobs)
+    if anes_knobs_active:
+        party_centers_active = {
+            pid: c.copy() for pid, c in PARTY_CENTERS_1980_ANES.items()
+        }
+        perception_bias_x = PERCEPTION_EXTREME_BIAS_X_TIER_D
+        perception_bias_y = (
+            0.0 if tier_d_lever4_off else PERCEPTION_EXTREME_BIAS_Y_TIER_D
+        )
+    elif tier_d_axis_balance:
         # Lever 2 — y-magnitude is sweep-controlled. Default 0.20
         # reproduces the central-estimate PARTY_CENTERS_1980_TIER_D.
         _y = float(tier_d_party_center_y)
@@ -423,6 +509,25 @@ def build_engine(
         }
         perception_bias_x = PERCEPTION_EXTREME_BIAS
         perception_bias_y = 0.0  # legacy: y-bias was inert
+
+    # Phase 9 §11.7-B: pick active K-schedule + party_cue σ +
+    # ELITE_DRIFT (rate + asymmetric). Default values preserved
+    # bit-identically when flag is off.
+    party_assignment_k_active = (
+        PARTY_ASSIGNMENT_K_ANES if anes_knobs_active else PARTY_ASSIGNMENT_K
+    )
+    party_cue_sigma_active = (
+        PARTY_CUE_SIGMA_HISTORICAL_ANES if anes_knobs_active
+        else PARTY_CUE_SIGMA_HISTORICAL
+    )
+    elite_drift_schedule_active = (
+        ELITE_DRIFT_SCHEDULE_ANES if anes_knobs_active
+        else ELITE_DRIFT_SCHEDULE
+    )
+    elite_drift_asymmetric_active = (
+        ELITE_DRIFT_ASYMMETRIC_ANES if anes_knobs_active
+        else ELITE_DRIFT_ASYMMETRIC
+    )
 
     # Phase 8d: pre-sample which agent ids will be Independents.
     # `n_indep == 0` early-exit preserves bit-identity to Phase 8b
@@ -528,7 +633,7 @@ def build_engine(
         # tight coupling, per the round-1 polarization-expert
         # diagnosis). K rises across decades to 8.0 at modern era.
         # Cohort replacement uses cohort-aware K.
-        k_1980 = PARTY_ASSIGNMENT_K["1980-90"]
+        k_1980 = party_assignment_k_active["1980-90"]
         if tier_d_axis_balance and not tier_d_lever1_off:
             # Lever 1: party assignment reads both axes with mild
             # x-tilt α=0.55, β=0.45 (Mason 2018 app. B; Levendusky
@@ -575,7 +680,7 @@ def build_engine(
         )
 
         # Per-party party_cue σ (M4 asymmetric).
-        sigma_pc = PARTY_CUE_SIGMA_HISTORICAL[party]
+        sigma_pc = party_cue_sigma_active[party]
         # Phase 9 §11.4 — anisotropic σ_pc when tier_d_axis_balance is
         # on AND the y-multiplier ≠ 1.0. Variance-preserving:
         # σ_x = σ_pc · sqrt(2/(1+r²)), σ_y = r · σ_x, so
@@ -723,7 +828,13 @@ def build_engine(
         # `cohort_for_tick(tick)` gives the active cohort label;
         # CohortReplacement reads this dict to pick the K for new
         # arrivals.
-        "party_assignment_k_schedule": dict(PARTY_ASSIGNMENT_K),
+        "party_assignment_k_schedule": dict(party_assignment_k_active),
+        # Phase 9 §11.7-B — schedule helpers read these out of env.attrs
+        # so the decade-boundary functions don't need to know about the
+        # ANES vs default split. Default values preserve bit-identity.
+        "elite_drift_schedule_active": dict(elite_drift_schedule_active),
+        "elite_drift_asymmetric_active": dict(elite_drift_asymmetric_active),
+        "tier_d_anes_knobs": bool(anes_knobs_active),
         # M3 hooks for cohort replacement at runtime.
         "party_cue_sigma_replacement": 0.25,   # symmetric for replacements
         "cohort_diet_factory": (lambda pty, rng_: diet_for_party(
@@ -843,8 +954,8 @@ def build_engine(
         # Citizens United 2010 is the discrete bump, not the
         # onset.
         EliteDrift(
-            rate=ELITE_DRIFT_SCHEDULE["1980-90"],
-            asymmetric=ELITE_DRIFT_ASYMMETRIC,
+            rate=elite_drift_schedule_active["1980-90"],
+            asymmetric=elite_drift_asymmetric_active,
         ),
         TieRewiring(
             rewire_rate=0.02,
@@ -940,12 +1051,16 @@ def _event_2010_social_media_ramp_mid(engine):
 
 def _event_2010_citizens_united(engine):
     """Citizens United — discrete bump in elite-divergence rate
-    (asymmetric, R-heavy). This is the *transition*, not the onset
-    — EliteDrift was already active from 1980 at lower rate
-    (McCarty-Poole-Rosenthal continuous divergence)."""
+    (asymmetric, R-heavy in 8f schedule; D-heavy under ANES knobs).
+    This is the *transition*, not the onset — EliteDrift was already
+    active from 1980 at lower rate (McCarty-Poole-Rosenthal continuous
+    divergence)."""
+    sched = engine.env.attrs.get(
+        "elite_drift_schedule_active", ELITE_DRIFT_SCHEDULE,
+    )
     for r in engine.env_rules:
         if type(r).__name__ == "EliteDrift":
-            r.rate = ELITE_DRIFT_SCHEDULE["2010-20"]
+            r.rate = sched["2010-20"]
 
 
 def _event_2012_social_media_ramp_end(engine):
@@ -1210,8 +1325,11 @@ def _set_elite_drift_rate(engine, rate):
 
 
 def _decade_boundary_1990(engine):
+    sched = engine.env.attrs.get(
+        "elite_drift_schedule_active", ELITE_DRIFT_SCHEDULE,
+    )
     _set_identity_sorting(engine, IDENTITY_SORTING_SCHEDULE["1990-00"])
-    _set_elite_drift_rate(engine, ELITE_DRIFT_SCHEDULE["1990-00"])
+    _set_elite_drift_rate(engine, sched["1990-00"])
     # Phase 8e §2: party-issue coupling rises with the great sort.
     # Phase 8e §4: under phase8e_baseline=True, coupling stays at 1.0.
     if not engine.env.attrs.get("phase8e_baseline"):
@@ -1219,8 +1337,11 @@ def _decade_boundary_1990(engine):
 
 
 def _decade_boundary_2000(engine):
+    sched = engine.env.attrs.get(
+        "elite_drift_schedule_active", ELITE_DRIFT_SCHEDULE,
+    )
     _set_identity_sorting(engine, IDENTITY_SORTING_SCHEDULE["2000-10"])
-    _set_elite_drift_rate(engine, ELITE_DRIFT_SCHEDULE["2000-10"])
+    _set_elite_drift_rate(engine, sched["2000-10"])
     if not engine.env.attrs.get("phase8e_baseline"):
         engine.env.attrs["party_issue_coupling"] = PARTY_ISSUE_COUPLING_SCHEDULE["2000-10"]
 
@@ -1233,8 +1354,11 @@ def _decade_boundary_2010(engine):
 
 
 def _decade_boundary_2020(engine):
+    sched = engine.env.attrs.get(
+        "elite_drift_schedule_active", ELITE_DRIFT_SCHEDULE,
+    )
     _set_identity_sorting(engine, IDENTITY_SORTING_SCHEDULE["2020-25"])
-    _set_elite_drift_rate(engine, ELITE_DRIFT_SCHEDULE["2020-25"])
+    _set_elite_drift_rate(engine, sched["2020-25"])
     if not engine.env.attrs.get("phase8e_baseline"):
         engine.env.attrs["party_issue_coupling"] = PARTY_ISSUE_COUPLING_SCHEDULE["2020-25"]
 

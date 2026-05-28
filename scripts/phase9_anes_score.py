@@ -114,6 +114,23 @@ PRESETS = {
         "tier_d_aniso_noise_sigma_x": 0.12,
         "tier_d_aniso_noise_sigma_y": 0.12,
     },
+    "anes_knobs": {
+        # Phase 9 §11.7-B — ANES-derived knob set on top of Tier D
+        # axis-balance. Replaces party centers, K-schedule, party_cue σ,
+        # ElitDrift rates/asymmetric with empirical-ANES values.
+        # No anisotropic noise (let σ_pc do the work) and no
+        # tier_d_party_center_y override (ANES centers are asymmetric).
+        "n_agents": N,
+        "independent_fraction": INDEPENDENT_FRACTION,
+        "factional_seeding": False,
+        "faction_anchor_strength": 0.04,
+        "faction_anchor_events": True,
+        "event_stubbornness_bump_multiplier": 1.0,
+        "tier_d_axis_balance": True,
+        "tier_d_lever1_off": True,             # softer party sort
+        "tier_d_cohort_y_signs_fix": True,     # §11.6 bug fix
+        "tier_d_anes_knobs": True,             # the new Phase B switch
+    },
 }
 
 
