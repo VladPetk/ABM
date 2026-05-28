@@ -469,6 +469,14 @@ def build_engine(
     # Default None preserves current 0.07 (bit-identical to head); when
     # set, overrides the rule's strength.
     tier_c_party_pull_strength: float | None = None,
+    # Phase 9 §11.7-C — historical BoundedConfidenceInfluence strength.
+    # The current value (0.08) jointly with ε=0.30 sets an asymptotic
+    # wp_sd floor near ~0.22 that no σ_pc or PartyPull setting could
+    # break (empirically verified). BC strength is in historical_arc,
+    # not the pillar's calm_to_camps.BC_TEMPERATURE — so it's
+    # legitimately tunable under Vlad's bit-identity policy. Default
+    # None preserves 0.08 (bit-identical to head).
+    tier_c_bc_strength: float | None = None,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -920,7 +928,12 @@ def build_engine(
     # turns it on with asymmetric drift (M4).
     rules = [
         BoundedConfidenceInfluence(
-            epsilon=0.30, strength=0.08,   # ON from 1980
+            epsilon=0.30,
+            strength=(
+                float(tier_c_bc_strength)
+                if tier_c_bc_strength is not None
+                else 0.08
+            ),
             temperature=BC_TEMPERATURE, affect_weight=0.0,
         ),
         # Phase 8f §1.1 (combo_JJ): historical-only PartyPull strength
