@@ -36,12 +36,13 @@ import numpy as np
 import pandas as pd
 from scipy.stats import gaussian_kde
 
+# Phase 9 §11.7-E — snapshot ticks aligned to ANES bucket centroids.
 DECADE_TICKS = [
-    (1980, 0),
-    (1990, 30),
-    (2000, 60),
-    (2010, 90),
-    (2020, 120),
+    (1980, 21),    # 1987 (ANES 1986+1988 bucket centre)
+    (1990, 42),    # 1994 (ANES 1990-1998 bucket centre)
+    (2000, 72),    # 2004 (ANES 2000-2008 bucket centre)
+    (2010, 102),   # 2014 (ANES 2012+2016 bucket centre)
+    (2020, 126),   # 2022 (ANES 2020+2024 bucket centre)
 ]
 ANES_DECADE_WAVES = {
     1980: [1986, 1988],
@@ -72,14 +73,9 @@ def _worker(seed: int) -> dict:
 
     eng = build_engine(seed=seed, **_build_kwargs())
     sched = build_schedule(factional_seeding=False, faction_anchor_events=True)
+    # Phase 9 §11.7-E — every snapshot runs to its bucket-centroid tick.
     snapshots = {}
-    snapshots[1980] = {
-        "pos": np.array([a.state.ideology for a in eng.agents], dtype=float),
-        "party": np.array(
-            [a.state.attrs.get("party", -1) for a in eng.agents], dtype=int
-        ),
-    }
-    for year, tick in DECADE_TICKS[1:]:
+    for year, tick in DECADE_TICKS:
         run_to(eng, sched, tick)
         snapshots[year] = {
             "pos": np.array([a.state.ideology for a in eng.agents], dtype=float),

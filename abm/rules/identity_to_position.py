@@ -62,6 +62,15 @@ class IdentityToIdeologyPull:
         identities = agent.state.attrs.get("identities")
         if identities is None or len(identities) == 0:
             return StateDelta()
+        # Phase 9 §11.7-E — scale the pull by the env's party-issue
+        # coupling (which already runs a per-decade schedule 0.40 at
+        # 1980 → 1.10 at 2020 per Mason 2018's "gradual great sort").
+        # Mason 2018 places identity → ideology coupling mostly
+        # post-1990; multiplying by party_issue_coupling makes IDPP
+        # weak pre-1990 and strong post-2000, matching the literature.
+        # Default 1.0 preserves the prior constant-strength behaviour
+        # for any caller that doesn't set party_issue_coupling.
+        coupling = float(env.attrs.get("party_issue_coupling", 1.0))
         # Per-agent identity signal: mean across identity dims.
         # In historical_arc the 3 dims share a party-aligned center
         # (Dems ~ -0.20, Reps ~ +0.20 in 1980, drifting via
@@ -69,8 +78,8 @@ class IdentityToIdeologyPull:
         # party-aligned component and per-agent deviation.
         signal = float(np.mean(identities))
         d = np.array([
-            self.strength_x * signal,
-            self.strength_y * signal,
+            coupling * self.strength_x * signal,
+            coupling * self.strength_y * signal,
         ])
         # Friedkin-Johnsen anchoring: stubborn agents resist the pull,
         # matching the rest of the historical-arc pipeline.

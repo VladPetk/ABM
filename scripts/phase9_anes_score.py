@@ -45,15 +45,21 @@ import numpy as np
 N = 250
 INDEPENDENT_FRACTION = 0.12
 
+# Phase 9 §11.7-E — temporal-bucket alignment. ANES buckets are
+# centred at 1987, 1994, 2004, 2014, 2022 (year-midpoint of the waves
+# pooled into each bucket). Engine snapshots taken at the
+# corresponding ticks (3 ticks/year, tick 0 = 1980-01).
 DECADE_TICKS = [
-    (1980, 0),
-    (1990, 30),
-    (2000, 60),
-    (2010, 90),
-    (2020, 120),
+    (1980, 21),    # ANES bucket 1986+1988, centre 1987
+    (1990, 42),    # ANES bucket 1990-1998, centre 1994
+    (2000, 72),    # ANES bucket 2000-2008, centre 2004
+    (2010, 102),   # ANES bucket 2012+2016, centre 2014
+    (2020, 126),   # ANES bucket 2020+2024, centre 2022
 ]
-SECTION11_TICKS = [(1990, 30), (2000, 60), (2010, 90),
-                   (2020, 120), (2025, 135)]
+SECTION11_TICKS = [
+    (1980, 21),    # IC cells now measured at the ANES bucket centroid too
+    (1990, 42), (2000, 72), (2010, 102), (2020, 126), (2025, 135),
+]
 
 
 # ---------------------------------------------------------------------
@@ -178,20 +184,18 @@ def _worker(args: tuple) -> dict:
         faction_anchor_events=kwargs.get("faction_anchor_events", True),
     )
 
+    # Phase 9 §11.7-E — every snapshot runs to its ANES-bucket-centroid
+    # tick before sampling (no special-case for the 1980 panel).
     snapshots: dict[int, np.ndarray] = {}
-    trajectory: dict[int, dict] = {1980: measure_all(eng)}
-    snapshots[1980] = np.array(
-        [a.state.ideology for a in eng.agents], dtype=float
-    )
+    trajectory: dict[int, dict] = {}
     year_at_tick: dict[int, list] = {}
     for y, t in DECADE_TICKS:
         year_at_tick.setdefault(t, []).append(("w2", y))
     for y, t in SECTION11_TICKS:
         year_at_tick.setdefault(t, []).append(("s11", y))
     for tick in sorted(year_at_tick):
-        if tick == 0:
-            continue
-        run_to(eng, sched, tick)
+        if tick > 0:
+            run_to(eng, sched, tick)
         for kind, year in year_at_tick[tick]:
             if kind == "w2":
                 snapshots[year] = np.array(
