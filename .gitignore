@@ -80,3 +80,9 @@ data/phase9_empirical/derived/densities/
 *.bak
 *.bak.py
 *.py.tmp
+
+# web_demo published data — 199 MB of regenerable per-tick trajectories
+# (scripts/publish_web_data.py). The demo itself loads web_demo/cc-data.js
+# (a small repacked bundle, committed). Regenerate with:
+#   python scripts/publish_web_data.py && python scripts/repack_web_demo.py
+/web/data/

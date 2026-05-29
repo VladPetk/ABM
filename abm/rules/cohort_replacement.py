@@ -112,8 +112,25 @@ class CohortReplacement:
             for p, v in by_party_affect.items()
         }
 
+        # Step 1/2 (web_demo jumpiness): optional per-run replacement log.
+        # The historical arc seeds env.attrs["replacement_events"] = [];
+        # other scenarios leave it unset → this stays a no-op append-guard
+        # and behaviour is bit-identical. Each entry is [tick, agent_id]
+        # so the viz can ghost-fade on EVERY replacement (not just the
+        # party-flipping subset a step-size threshold would catch).
+        replacement_log = env.attrs.get("replacement_events")
+
         for a in agents:
             if rng.random() > self.replacement_rate:
+                continue
+            # Step 2 (web_demo jumpiness): spotlighted characters carry
+            # `do_not_replace` so each is one continuous life rather than
+            # a slot reused by 2-3 different people stitched together by
+            # id. The rng.random() draw above is consumed first so the
+            # stream is unaffected up to this point; skipping the actual
+            # replacement does diverge the run from the unprotected one
+            # (intended — protection is opt-in, not bit-identical).
+            if a.state.attrs.get("do_not_replace"):
                 continue
             # Phase 8d: preserve party=2 (Independent) status across
             # cohort replacement. Empirically, people don't switch
@@ -125,6 +142,8 @@ class CohortReplacement:
                 _replace_agent_inplace(
                     a, cohort, env, rng, by_party_affect_mean
                 )
+            if replacement_log is not None:
+                replacement_log.append([int(tick), int(a.id)])
 
 
 def _replace_agent_inplace(
@@ -283,7 +302,10 @@ def _replace_agent_inplace(
     # correlation with identity_strength (Phase 8b M1 magnitudes).
     hetero_term = 2.0 * (new_id_strength - 0.5)  # [-1, +1]
     new_epsilon = 0.30 * (1.0 - 0.40 * hetero_term)
-    new_fj_alpha = 0.05 * (1.0 + 0.60 * hetero_term)
+    # Step 4 (web_demo): scale the anchor-pull base consistently with the
+    # build-time fj_alpha_scale (default 1.0 → bit-identical).
+    _fj_scale = float(env.attrs.get("fj_alpha_scale", 1.0))
+    new_fj_alpha = 0.05 * _fj_scale * (1.0 + 0.60 * hetero_term)
     new_affect_lr = 0.01 * (1.0 + 0.80 * hetero_term)
 
     # Media diet inherits the same generator the historical builder
@@ -313,6 +335,12 @@ def _replace_agent_inplace(
     agent.state.attrs["fj_alpha"] = new_fj_alpha
     agent.state.attrs["affect_lr"] = new_affect_lr
     agent.state.attrs["media_diet"] = new_diet
+    # Step 5 (momentum): a reused slot is a new person — drop the prior
+    # occupant's velocity so momentum doesn't carry across the splice.
+    # Only touch the attr when it already exists (momentum runs only),
+    # so non-momentum runs stay free of it.
+    if "prev_delta" in agent.state.attrs:
+        agent.state.attrs["prev_delta"] = np.zeros(2)
 
 
 def _replace_independent_inplace(
@@ -367,4 +395,7 @@ def _replace_independent_inplace(
         "epsilon", "fj_alpha", "affect_lr",
     ):
         agent.state.attrs.pop(stale_key, None)
+    # Step 5 (momentum): reset velocity on slot reuse (see partisan path).
+    if "prev_delta" in agent.state.attrs:
+        agent.state.attrs["prev_delta"] = np.zeros(2)
     

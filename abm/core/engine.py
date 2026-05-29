@@ -53,10 +53,31 @@ class Engine:
         deltas: dict[int, StateDelta] = {}
         for agent in self.agents:
             deltas[agent.id] = self.rules.apply(agent, self.space, self.env, self.rng)
+        # Step 5 (web_demo jumpiness): optional opinion-momentum. Real
+        # opinion change has inertia; the engine otherwise recomputes
+        # each tick's delta from scratch, so consecutive deltas point in
+        # opposite directions ~half the time and the dots oscillate. With
+        # momentum > 0 we carry a fraction of the previous applied step
+        # into this one, cancelling most of that reversal. Gated on the
+        # env attr so every other scenario (momentum absent / 0.0) is
+        # bit-identical to before. We store the *applied* (post-clip)
+        # step as prev_delta so momentum can't accumulate past the
+        # compass boundary.
+        momentum = float(self.env.attrs.get("momentum", 0.0))
         for agent in self.agents:
             d = deltas[agent.id]
-            new_ideology = agent.state.ideology + d.d_ideology
-            agent.state.ideology = self.space.clip(new_ideology)
+            if momentum:
+                prev = agent.state.attrs.get("prev_delta")
+                step = d.d_ideology
+                if prev is not None:
+                    step = step + momentum * prev
+                before = agent.state.ideology
+                new_ideology = self.space.clip(before + step)
+                agent.state.attrs["prev_delta"] = new_ideology - before
+                agent.state.ideology = new_ideology
+            else:
+                new_ideology = agent.state.ideology + d.d_ideology
+                agent.state.ideology = self.space.clip(new_ideology)
             for k, v in d.d_attrs.items():
                 agent.state.attrs[k] = merge_attr(agent.state.attrs.get(k), v)
         self.space.rebuild(self.agents)

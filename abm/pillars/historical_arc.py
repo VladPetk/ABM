@@ -52,6 +52,7 @@ from ..rules.influence import BoundedConfidenceInfluence
 from ..rules.media_consumption import MediaConsumption
 from ..rules.noise import GaussianNoise
 from ..rules.party_pull import PartyPull
+from ..rules.party_realignment import ProtectedPartyRealignment
 from ..rules.perception_update import PerceptionUpdate
 from ..rules.repulsion import BacklashRepulsion
 from ..rules.residential_migration import ResidentialMigration
@@ -400,17 +401,23 @@ FACTION_SIGMA_WITHIN_DEFAULT = 0.05  # within-faction Gaussian σ at IC
 FACTION_EVENT_RNG_SEED_OFFSET = 4242
 
 
-def _per_agent_heterogeneity(identity_strength: float, rng: np.random.Generator):
+def _per_agent_heterogeneity(
+    identity_strength: float, rng: np.random.Generator,
+    fj_alpha_scale: float = 1.0,
+):
     """Compute per-agent (epsilon, fj_alpha, affect_lr) given
     identity_strength + a small Beta(2, 5)-shaped jitter. Phase 8b
-    M1 §3.2 default magnitudes (40 / 60 / 80%)."""
+    M1 §3.2 default magnitudes (40 / 60 / 80%).
+
+    `fj_alpha_scale` (web_demo Step 4) multiplies the anchor-pull base;
+    1.0 → bit-identical."""
     hetero_term = 2.0 * (identity_strength - 0.5)  # [-1, +1]
     jitter = 2.0 * (rng.beta(2.0, 5.0) - 0.286)  # mean ~0
     epsilon = 0.30 * (
         1.0 - EPSILON_HETERO_FACTOR * hetero_term
         + HETERO_JITTER_FACTOR * jitter
     )
-    fj_alpha = 0.05 * (
+    fj_alpha = 0.05 * fj_alpha_scale * (
         1.0 + FJ_HETERO_FACTOR * hetero_term
         + HETERO_JITTER_FACTOR * jitter
     )
@@ -547,6 +554,39 @@ def build_engine(
     # cue distributions into the NE-SW diagonal ANES shows.
     # Only consulted when tier_d_anes_knobs=True.
     tier_d_cue_correlation: float = 0.0,
+    # web_demo jumpiness fixes (docs/demo_jumpiness.md). All default to
+    # the no-op value → bit-identical to head for pillars + Phase 8/9.
+    #
+    # Step 5 — opinion momentum. When > 0, the engine carries
+    # `momentum` × previous applied step into each tick's delta (see
+    # Engine.step). 0.0 → off. The demo preset uses 0.4.
+    momentum: float = 0.0,
+    # Step 2 — character immunity. Agent ids in this set get
+    # `do_not_replace=True` so CohortReplacement skips them and each
+    # spotlighted character is one continuous life rather than a relay
+    # of slot-reused people. None / empty → no agent flagged. When set,
+    # ProtectedPartyRealignment also lets these agents convert party by
+    # sustained ideological drift (party otherwise only changes via
+    # replacement, which they're now immune to).
+    protected_agent_ids=None,
+    # Step 4 — tighten the free-mover tail. Scales the Friedkin-Johnsen
+    # anchor pull (per-agent fj_alpha base 0.05 and the env default) so
+    # low-stubbornness agents decay toward their innate position instead
+    # of random-walking across the whole compass. 1.0 → bit-identical;
+    # the demo preset uses 1.6 (≈ the memo's 0.05 → 0.08).
+    fj_alpha_scale: float = 1.0,
+    # web_demo realism — cap how far a partisan's *initial* economic
+    # draw may reach into the opposite half. Under the ANES IC path the
+    # two party clouds heavily overlap (centroids ~0.36 apart, σ≈0.35),
+    # so the Gaussian tails put a few Democrats in the far laissez-faire
+    # corner (and vice-versa) — calibrated mean overlap, but an
+    # implausible tail shape. When set, the economic IC draw is a
+    # *truncated* normal: a Democrat's pos_x is resampled to stay
+    # ≤ +cap, a Republican's to stay ≥ −cap. The cultural axis is left
+    # untouched (1980 cultural overlap is historically real). Only
+    # consulted on the ANES IC path; None → no truncation → bit-
+    # identical to head. The demo preset uses 0.45.
+    tier_d_ic_partisan_x_cap: float | None = None,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -753,14 +793,38 @@ def build_engine(
             # carries the diagonal tilt (in addition to the cue/per-tick
             # noise correlation from D-5).
             _cue_rho_ic = float(tier_d_cue_correlation)
-            _u, _v = rng.normal(0.0, 1.0), rng.normal(0.0, 1.0)
+            # Truncate the economic tail so a partisan can't initialize
+            # deep in the opposite half. Resample the (u, v) pair — not a
+            # hard clamp — so the result is a properly truncated bivariate
+            # normal (no pile-up on the cap line) that preserves the x-y
+            # correlation. Cap is one-sided per party; the other tail and
+            # the whole cultural axis are unaffected. Bounded retry with a
+            # clamp fallback keeps the RNG stream finite.
+            _x_cap = (
+                None if tier_d_ic_partisan_x_cap is None
+                else float(tier_d_ic_partisan_x_cap)
+            )
+            for _try in range(64):
+                _u, _v = rng.normal(0.0, 1.0), rng.normal(0.0, 1.0)
+                _cand_x = float(_ic_cent[0]) + _ic_sigma * _u
+                if _x_cap is None:
+                    break
+                if _ic_party_pre == 0 and _cand_x > _x_cap:
+                    continue  # Democrat reaching too far right — redraw
+                if _ic_party_pre == 1 and _cand_x < -_x_cap:
+                    continue  # Republican reaching too far left — redraw
+                break
             _ic_noise_y = (
                 _cue_rho_ic * _u
                 + float(np.sqrt(max(0.0, 1.0 - _cue_rho_ic ** 2))) * _v
             )
-            pos_x = float(np.clip(
-                float(_ic_cent[0]) + _ic_sigma * _u, -1.0, 1.0
-            ))
+            pos_x = float(np.clip(_cand_x, -1.0, 1.0))
+            if _x_cap is not None:
+                # clamp fallback in case all 64 retries failed (≈0 prob)
+                pos_x = (
+                    min(pos_x, _x_cap) if _ic_party_pre == 0
+                    else max(pos_x, -_x_cap)
+                )
             pos_y = float(np.clip(
                 float(_ic_cent[1]) + _ic_sigma * _ic_noise_y, -1.0, 1.0
             ))
@@ -834,7 +898,7 @@ def build_engine(
 
         # Per-agent heterogeneity (M1).
         agent_eps, agent_alpha, agent_lr = _per_agent_heterogeneity(
-            identity_strength, rng
+            identity_strength, rng, fj_alpha_scale
         )
 
         # Per-party party_cue σ (M4 asymmetric).
@@ -982,6 +1046,14 @@ def build_engine(
             -1.0, 1.0,
         ))
 
+    # Step 2 (web_demo jumpiness): flag spotlighted characters as immune
+    # to cohort replacement. Empty / None → no flag set → bit-identical.
+    if protected_agent_ids:
+        _protected = {int(i) for i in protected_agent_ids}
+        for a in agents:
+            if a.id in _protected:
+                a.state.attrs["do_not_replace"] = True
+
     network = Network.homophilous(
         agents,
         net_rng,
@@ -1003,7 +1075,10 @@ def build_engine(
         "party_identity_centers": {
             pid: c.copy() for pid, c in party_identity_centers.items()
         },
-        "fj_alpha": FJ_ALPHA,
+        "fj_alpha": FJ_ALPHA * float(fj_alpha_scale),
+        # Step 4 — read by CohortReplacement so new arrivals get the
+        # same scaled anchor pull. 1.0 → bit-identical.
+        "fj_alpha_scale": float(fj_alpha_scale),
         # Phase 8e §2: party-issue coupling at 1980 baseline.
         # Updated at each decade-boundary event. When
         # phase8e_baseline=True the coupling is fixed at 1.0 (the
@@ -1088,6 +1163,14 @@ def build_engine(
         "tier_d_cohort_y_signs_fix": bool(
             tier_d_axis_balance and tier_d_cohort_y_signs_fix
         ),
+        # Step 5 (web_demo jumpiness): opinion-momentum coefficient read
+        # by Engine.step. 0.0 → off (bit-identical). Demo preset: 0.4.
+        "momentum": float(momentum),
+        # Step 1 (web_demo jumpiness): per-run replacement log. Present
+        # (empty list) so CohortReplacement appends [tick, agent_id] on
+        # every firing; the export then emits it for ghost-fade. Other
+        # scenarios never read this attr, so its presence is inert there.
+        "replacement_events": [],
         "viz": {
             "title": TITLE,
             "group_names": PARTY_NAMES,
@@ -1223,6 +1306,12 @@ def build_engine(
             migration_rate=RESIDENTIAL_MIGRATION_RATE_DEFAULT,
         ),
         CohortReplacement(replacement_rate=COHORT_REPLACEMENT_RATE),
+        # web_demo Step 2 companion: lets immune (do_not_replace)
+        # characters convert party by sustained ideological drift. Strict
+        # no-op when no agent is protected → bit-identical for pillars +
+        # Phase 8/9. Runs after CohortReplacement so a just-replaced slot
+        # (never protected) is never realigned the same tick.
+        ProtectedPartyRealignment(),
         # Phase 8c §4 I4: clears X4 shared-identity-prime overrides
         # at the configured expiry tick. Inert until X4 fires.
         IdentityPrimeExpiry(),
