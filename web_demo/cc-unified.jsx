@@ -559,6 +559,8 @@ function Unified() {
   const [showLandmarks, setShowLandmarks] = React.useState(false);
   const [entered, setEntered] = React.useState(false);
   const [morphing, setMorphing] = React.useState(false);   // the lead payoff morph
+  const [settling, setSettling] = React.useState(false);   // morph → story crossfade
+  const [settleIn, setSettleIn] = React.useState(false);   // flips on the next frame to fire the fade
   const [unlocked, setUnlocked] = React.useState(false);   // story finished → free explore on the SAME canvas
   const [showIvIntro, setShowIvIntro] = React.useState(false);
   const [ivIntroSeen, setIvIntroSeen] = React.useState(false);
@@ -582,6 +584,15 @@ function Unified() {
   // keep paused state honest: any manual play clears the "parked at a beat" flag
   React.useEffect(() => {if (playing && paused) setPaused(false);}, [playing, paused]);
 
+  // settle crossfade: hold the morph's final frame for one frame, then fade it
+  // out (revealing the assembled story underneath) and tear it down when done.
+  React.useEffect(() => {
+    if (!settling) return;
+    const raf = requestAnimationFrame(() => setSettleIn(true));
+    const to = setTimeout(() => {setSettling(false);setSettleIn(false);}, 1050);
+    return () => {cancelAnimationFrame(raf);clearTimeout(to);};
+  }, [settling]);
+
   const continueStory = () => {setStarted(true);setPaused(false);setEnded(false);setPlaying(true);};
   const backStory = () => {
     const i = Math.max(0, beatI - 1);
@@ -604,7 +615,7 @@ function Unified() {
   };
   // landing → a ~3s "1980 → 2025" payoff morph → the staged orientation
   const enterFromLanding = () => {setMorphing(true);};
-  const finishMorph = () => {setMorphing(false);setEntered(true);setOrientStep(0);setOrientSeen(false);continueStory();};
+  const finishMorph = () => {setMorphing(false);setSettling(true);setSettleIn(false);setEntered(true);setOrientStep(0);setOrientSeen(false);continueStory();};
   const orientNext = () => setOrientStep((s) => Math.min(ORIENT_LAYERS.length - 1, s + 1));
   const orientPrev = () => setOrientStep((s) => Math.max(0, s - 1));
   const finishOrient = () => {setOrientSeen(true);setOrientStep(ORIENT_LAYERS.length - 1);continueStory();};
@@ -628,6 +639,9 @@ function Unified() {
   const stagedOrient = isWatch && phase === 'beat' && beat && beat.orient && !orientSeen;
   const watchReveal = stagedOrient ? ORIENT_LAYERS.slice(0, orientStep + 1) : null;
   const dimField = isWatch && (paused || ended) && !stagedOrient ? 0.24 : 0;
+  // morph → story crossfade: `settleFrom` holds the morph frame at full opacity
+  // for a single frame; once `settleIn` flips, it fades out over 1s.
+  const settleFrom = settling && !settleIn;
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}>
@@ -692,6 +706,21 @@ function Unified() {
 
       <TimelineBar tick={tick} setTick={setTick} playing={playing} toggle={toggle} speed={speed} setSpeed={setSpeed}
       layer={layer} mode={isWatch ? 'watch' : 'explore'} beatI={beatI} onPickBeat={pickBeat} ended={ended} />
+      }
+
+      {/* settle crossfade — the morph's final frame held on top, fading out over
+          1s to dissolve into the assembled story underneath. No movement. */}
+      {settling &&
+      <div style={{ position: 'fixed', inset: 0, zIndex: 46, pointerEvents: 'none', background: CC.bg, overflow: 'hidden',
+        opacity: settleFrom ? 1 : 0, transition: 'opacity 1s ease' }}>
+          <Field run={D.runs.baseline} tick={LAST} layer="position" view="density" showGap />
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: '11%', textAlign: 'center' }}>
+            <div style={{ fontFamily: MONO, fontSize: 13, color: CC.ink3, ...TNUM }}>{Math.floor(tickToYear(LAST))}</div>
+            <h2 style={{ margin: '8px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(24px, 3.6vw, 42px)', letterSpacing: '-.02em', color: CC.ink }}>
+              One crowd becomes two camps.
+            </h2>
+          </div>
+        </div>
       }
 
       {!entered && !morphing && <HeroOverlay variant="landing" onDismiss={enterFromLanding} />}
