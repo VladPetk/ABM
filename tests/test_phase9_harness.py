@@ -32,8 +32,10 @@ def test_load_empirical_targets():
         assert rec["grid_x"].shape == (50,)
         assert rec["grid_y"].shape == (50,)
         # KDE integrates to ~1 on the grid (trapezoid; within 5%).
+        # NumPy 2.4 removed `np.trapz` (renamed `np.trapezoid`); shim for both.
         gx, gy = rec["grid_x"], rec["grid_y"]
-        integral = float(np.trapz(np.trapz(rec["kde"], gx, axis=1), gy))
+        _trapz = getattr(np, "trapezoid", None) or np.trapz
+        integral = float(_trapz(_trapz(rec["kde"], gx, axis=1), gy))
         assert abs(integral - 1.0) < 0.05, (
             f"{decade} KDE integral {integral:.4f} not within 5% of 1.0"
         )

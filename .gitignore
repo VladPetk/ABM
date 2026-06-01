@@ -90,3 +90,5 @@ data/phase9_empirical/derived/densities/
 
 # Temporary files:
 docs/_*
+web_demo/OLD_VERSION/
+docs/web_demo_audit_screenshots/

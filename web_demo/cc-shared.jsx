@@ -8,7 +8,8 @@
 // Light mode only for this round. Party colours: navy = Democrat,
 // oxblood = Republican, warm-grey = Independent.
 const CC = {
-  bg:      '#f3f3f0',   // warm paper
+  bg:      '#f9f8f4',   // near-white canvas
+  chrome:  '#f3f3f0',   // warm paper — top header only
   bg2:     '#ebe8df',
   surface: '#ffffff',
   ink:     '#1a1d23',
@@ -158,22 +159,11 @@ const EVENTS = [
   { id: 'jan6',    year: 2021.05, label: 'January 6',           short: 'Jan 6' },
 ];
 
-// Interventions (lay names + bucket outcome). Two structural ones work.
-const INTERVENTIONS = [
-  { id: 'X1', name: 'Show people the other side', bucket: 'backfire' },
-  { id: 'X2', name: 'Fix the algorithm',          bucket: 'partial' },
-  { id: 'X3', name: 'Quit cable news',            bucket: 'partial' },
-  { id: 'X4', name: 'Bipartisan dialogue programs', bucket: 'null' },
-  { id: 'X5', name: 'Ranked-choice voting',       bucket: 'real' },
-  { id: 'X6', name: 'Shared neighborhoods & workplaces', bucket: 'real' },
-  { id: 'X7', name: 'Correct the perception gap', bucket: 'partial' },
-];
-const BUCKET_META = {
-  null:     { label: 'No effect',  color: '#74797f' },
-  partial:  { label: 'Partial',    color: '#c47a2c' },
-  real:     { label: 'Real effect',color: '#3f7d54' },
-  backfire: { label: 'Backfire',   color: '#8b2530' },
-};
+// NOTE (Step 4): the legacy hardcoded intervention table (INTERVENTIONS,
+// BUCKET_META) and the synthetic macroCounterfactual() lived here and were one
+// of the "three conflicting intervention tables" flagged in the audit. They are
+// deleted — the interventions screen now derives everything live from
+// D.interventions + D.counterfactuals (the engine's own re-measured output).
 
 // ── Macro metric series (Iyengar) — sampled paths over 1980..2025 ─────────
 // Returns array of {year, sep, aff} in 0..1. Both rise, accelerating.
@@ -188,17 +178,6 @@ function macroSeries() {
   }
   return pts;
 }
-// Counterfactual: a "real effect" intervention bends affect down after release.
-function macroCounterfactual(releaseYear, strength = 0.42) {
-  const base = macroSeries();
-  return base.map((p) => {
-    if (p.year < releaseYear) return { ...p };
-    const t = (p.year - releaseYear) / (YEAR1 - releaseYear);
-    const damp = strength * (1 - Math.exp(-t * 2.2));
-    return { year: p.year, sep: Math.max(0, p.sep - damp * 0.7), aff: Math.max(0, p.aff - damp) };
-  });
-}
-
 // Build an SVG polyline path string from series + accessor, mapped into a box.
 function seriesPath(series, key, x0, y0, w, h) {
   const n = series.length;
@@ -265,6 +244,6 @@ Object.assign(window, {
   CC, SANS, MONO, SERIF, TNUM, ccRng,
   YEAR0, YEAR1, yearToFrac, separationAt,
   genAgents, lindaAt, lindaNetwork, POLE_D, POLE_R,
-  EVENTS, INTERVENTIONS, BUCKET_META, macroSeries, macroCounterfactual, seriesPath,
+  EVENTS, macroSeries, seriesPath,
   Logo, InfoDot, Eyebrow, FloatCard, PartySwatch,
 });

@@ -112,6 +112,34 @@ class CohortReplacement:
             for p, v in by_party_affect.items()
         }
 
+        # Step 2 (web_demo, flag-1 fix): under `evidence_regrade`, new
+        # arrivals' identities are anchored to the CONTEMPORARY same-party
+        # identity mean rather than to a static ~0 cohort base. This is the
+        # identity-side twin of the Phase-9 §11.7-D position fix: without
+        # it, ~1/3 of agents get reseeded to identity_alignment≈0 over the
+        # run, structurally dragging the aggregate alignment DOWN even
+        # while surviving agents sort UP — the diagnosed "alignment not
+        # rising" defect (docs flag 1). The mean itself rises as
+        # IdentitySorting differentiates survivors, so replacement injects
+        # at the period-contemporary level (Mason 2018: mega-identity is a
+        # rising period effect; recent young cohorts enter MORE sorted, not
+        # less). Gated on the flag → no attr read, bit-identical default
+        # path. None when off.
+        by_party_identity_mean = None
+        if env.attrs.get("evidence_regrade"):
+            _ids_by_party: dict[int, list] = {0: [], 1: []}
+            for other in agents:
+                op = other.state.attrs.get("party")
+                if op not in (0, 1):
+                    continue
+                oids = other.state.attrs.get("identities")
+                if oids is not None and len(oids) > 0:
+                    _ids_by_party[op].append(np.asarray(oids, dtype=float))
+            by_party_identity_mean = {
+                p: (np.mean(np.vstack(v), axis=0) if v else None)
+                for p, v in _ids_by_party.items()
+            }
+
         # Step 1/2 (web_demo jumpiness): optional per-run replacement log.
         # The historical arc seeds env.attrs["replacement_events"] = [];
         # other scenarios leave it unset → this stays a no-op append-guard
@@ -140,7 +168,8 @@ class CohortReplacement:
                 _replace_independent_inplace(a, cohort, env, rng)
             else:
                 _replace_agent_inplace(
-                    a, cohort, env, rng, by_party_affect_mean
+                    a, cohort, env, rng, by_party_affect_mean,
+                    by_party_identity_mean,
                 )
             if replacement_log is not None:
                 replacement_log.append([int(tick), int(a.id)])
@@ -152,6 +181,7 @@ def _replace_agent_inplace(
     env: Environment,
     rng: np.random.Generator,
     by_party_affect_mean: dict = None,
+    by_party_identity_mean: dict = None,
 ) -> None:
     """Wipe and re-seed an agent's state from the cohort distribution.
     Inherits the agent's id (network ties stay structurally intact).
@@ -244,15 +274,33 @@ def _replace_agent_inplace(
     # (Republican) identity territory because party_identity_centers
     # uses +0.20 for party 1. Empirically younger cohorts are
     # Dem-aligned, so the shift should be negative.
-    _id_shift = (
-        -cohort["identities_mean_shift"]
-        if _fix_y else cohort["identities_mean_shift"]
-    )
-    new_identities = np.clip(
-        np.array([0.0, 0.0, _id_shift])
-        + rng.normal(0, 0.3, size=3),
-        -1.0, 1.0,
-    )
+    # Draw the identity noise once, unconditionally, so RNG consumption
+    # is identical to the pre-Step-2 default path (bit-identity).
+    _id_noise = rng.normal(0, 0.3, size=3)
+    _regrade = bool(env.attrs.get("evidence_regrade"))
+    if (
+        _regrade
+        and by_party_identity_mean is not None
+        and by_party_identity_mean.get(new_party) is not None
+        and len(by_party_identity_mean[new_party]) == 3
+    ):
+        # Step 2 flag-1 fix: anchor the new person's identities to the
+        # CONTEMPORARY same-party identity mean (which rises as survivors
+        # sort) instead of the static ~0 cohort base. Stops cohort
+        # replacement from dragging aggregate identity_alignment toward 0.
+        _id_base = np.asarray(by_party_identity_mean[new_party], dtype=float)
+        new_identities = np.clip(_id_base + _id_noise, -1.0, 1.0)
+    else:
+        # Original (default) path — bit-identical to head.
+        # §11.6 fix: also flip identities_mean_shift sign.
+        _id_shift = (
+            -cohort["identities_mean_shift"]
+            if _fix_y else cohort["identities_mean_shift"]
+        )
+        new_identities = np.clip(
+            np.array([0.0, 0.0, _id_shift]) + _id_noise,
+            -1.0, 1.0,
+        )
 
     # Phase 8b post-review fix: new arrivals inherit the same-party
     # current mean affect (Phillips 2022 cohort theory), not zero. The
@@ -327,6 +375,21 @@ def _replace_agent_inplace(
     agent.state.attrs["identity_strength"] = new_id_strength
     agent.state.attrs["stubbornness"] = new_stubbornness
     agent.state.attrs["identities"] = new_identities
+    # Step 2 flag-1 fix: a reused slot is a NEW person — derive a fresh
+    # identity_alignment from their (contemporary-anchored) identities so
+    # the explicit stacking state starts at the period level rather than
+    # inheriting the prior occupant's value. Regrade-only (the attr does
+    # not exist on the default path → bit-identical).
+    if _regrade:
+        _centers = env.attrs.get("party_identity_centers") or {}
+        _c = _centers.get(new_party)
+        if _c is None:
+            _sign = 1.0 if new_party == 1 else -1.0
+        else:
+            _sign = 1.0 if float(np.mean(np.asarray(_c))) >= 0.0 else -1.0
+        agent.state.attrs["identity_alignment"] = float(
+            np.clip(np.mean(new_identities * _sign), 0.0, 1.0)
+        )
     agent.state.attrs["affect"] = new_affect
     agent.state.attrs["anchor"] = new_anchor
     agent.state.attrs["origin"] = new_pos.copy()

@@ -138,7 +138,9 @@ def kde_from_positions(
     Z = kde(pts).reshape(XX.shape)
 
     # Normalize via trapezoid (same convention as empirical build).
-    integral = float(np.trapz(np.trapz(Z, grid_x, axis=1), grid_y))
+    # NumPy 2.4 removed `np.trapz` (renamed `np.trapezoid`); shim for both.
+    _trapz = getattr(np, "trapezoid", None) or np.trapz
+    integral = float(_trapz(_trapz(Z, grid_x, axis=1), grid_y))
     if integral > 0:
         Z = Z / integral
     return Z

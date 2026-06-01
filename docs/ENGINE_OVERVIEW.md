@@ -296,6 +296,21 @@ honestly.
 
 ## 5. The intervention findings
 
+> **⚠ Superseded numbers — see the authoritative sources.** The table
+> below is the **original six-intervention pillar** library, measured at
+> the end of S4 on the *pre-Phase-8c* engine. It is stale on two counts:
+> (a) X3 was later re-blessed backfire→**null** and X6 affect
+> backfire→**real** (Phase 8c cooperative-share mute — see
+> [`methods.md §4`](methods.md) for the current **pillar** buckets), and
+> (b) the **shipped / web-facing** interventions are the *seven*-lever
+> **historical-arc** library measured on the ANES substrate, not the
+> pillar — those are the ground truth for anything user-facing and live
+> in [`results/phase10_results.md`](results/phase10_results.md)
+> (Step-2 re-measure, 2026-06-01: X1 backfire +0.28…+0.40, X5 partial
+> on cross-release average, X6 affect **real** +0.19…+0.24, the rest
+> null). Use phase10 for the web build; the table below is retained only
+> as the historical pillar-engine record.
+
 | ID | Lay name | Δsep | **Issue sorting** | Δaff | **Affect** | Literature anchor |
 |---|---|---|---|---|---|---|
 | X1 | Show people the other side | +0.50 | **backfire** | −0.01 | null | Bail et al. 2018 |

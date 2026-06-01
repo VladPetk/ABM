@@ -296,6 +296,40 @@ no-op for paths that don't seed the relevant attrs.
 | `ThreatDecay` | `decay_rate` | 0.05 | [0, 0.5] | After 2016 status-threat spike |
 | `IdentityPrimeExpiry` | n/a | n/a | n/a | Reverts `identity_weight_override` after X4 |
 
+### 3.15 `IdentityAlignment` (`identity_alignment.py`) — Step 1 (web_demo re-grade)
+Maintains an explicit per-agent `identity_alignment ∈ [0,1]` (Mason 2018
+mega-identity stacking): how strongly an agent's `identities` point in its
+own party's canonical direction. Relaxes toward the identity-derived target
+each tick so the state accretes. `AffectiveUpdate` reads it to amplify
+out-party animus for stacked agents. **Self-gates on
+`env.attrs["evidence_regrade"]` — returns an empty delta WITHOUT drawing
+rng when off, so the default path is bit-identical** (rule present but
+inert). In the historical-arc pipeline only.
+
+| Rule | Key knob | Default | Range | Used by |
+|---|---|---|---|---|
+| `IdentityAlignment` | `rate` | 0.10 | [0, 1] | Historical-arc when `evidence_regrade=True` |
+
+**Step-2 flag-1 fix (alignment must RISE per Mason).** As shipped in
+Step 1, aggregate `identity_alignment` came out flat-to-declining
+(~0.21→0.16) because (a) `IdentitySorting` was far too slow to stack
+identities and (b) `CohortReplacement` reseeded new arrivals' identities
+to a static ~0 base, dragging the mean down. Step 2 fixes both,
+**regrade-gated** (default path bit-identical):
+
+| Constant (`historical_arc.py`) | Default | Regrade | Effect |
+|---|---|---|---|
+| `IDENTITY_SORTING_REGRADE_MULTIPLIER` | 1.0 | **5.0** | scales `IdentitySorting.sort_rate` (frequency) |
+| `IDENTITY_SORTING_REGRADE_STEP` | 0.05 | **0.15** | per-update identity step (the real rate-limiter) |
+
+Plus `cohort_replacement.py` anchors new arrivals' identities to the
+**contemporary same-party identity mean** (rises with the sort) instead
+of the static ~0 cohort base — the identity-side twin of the Phase-9
+§11.7-D position fix. Net: alignment now rises ~0.22→0.42 (monotone,
+≈doubling) while affect stays in the ANES envelope and party_sep moves
+*toward* the ANES 1.04+ target. Landed values from a joint-constraint
+sweep; see [`results/phase10_results.md`](results/phase10_results.md).
+
 ---
 
 ## 4. Historical-arc parameter constants
@@ -436,6 +470,11 @@ preset is `phase9_anes_score.PRESETS["anes_full"]`.
 | `tier_d_ic_sigma` | None | 0.35 | IC position σ (overrides hardcoded 0.45) |
 | `tier_d_cue_correlation` | 0.0 | 0.40 | Cue draw (party_cue + media_cue) x-y correlation |
 
+### 5.8 Step-1 evidence re-grade master gate
+| Kwarg | Default | anes_full | Notes |
+|---|---|---|---|
+| `evidence_regrade` | False | **True** | Master gate for the Step-1 truth-pass (Gingrich/CU re-attribution, social-media demotion, identity-alignment → affect). `False` is a strict no-op → default path bit-identical. Pair with `build_schedule(evidence_regrade=...)`. See §7.1. |
+
 ---
 
 ## 6. Interventions library (X1–X7)
@@ -470,18 +509,48 @@ engine is the next phase of work.
 |---|---|---|---|
 | 21 | 1987 | Fairness Doctrine repealed | Outlets get partisan-cable weight; reduces broadcast pull |
 | 30 | 1990 | Decade boundary | `IdentitySorting.sort_rate` 0.02 → 0.025 |
+| **42** | **1994** | **Gingrich elite-drift inflection** *(regrade only)* | **`EliteDrift.rate` step up, R-heavy `{0:0.5, 1:1.5}` — the elite-divergence inflection (Theriault; Hacker-Pierson). Added only when `evidence_regrade=True`.** |
 | 48 | 1996 | Fox News launches | Add Fox outlet to diet pool |
 | 60 | 2000 | Decade boundary | `sort_rate` 0.025 → 0.03 |
-| 84 | 2008 | Obama warmth bump + social media ramp start | Affect bump for D-leaners; outlet shift |
+| 84 | 2008 | Obama warmth bump + social media ramp start | Affect bump for D-leaners; `affect_weight` ramp[0] (regrade: 0.02 vs default 0.10) |
 | 87 | 2009 | Tea Party emergence | Tag 10% of Mainstream_Reps with sub-centroid (+0.58, +0.32) |
-| 90 | 2010 | Decade boundary + Citizens United + ramp mid | `sort_rate` 0.03 → 0.04; outlet shift |
-| 96 | 2012 | Social media ramp end | Outlet weight shifts toward partisan |
+| 90 | 2010 | Decade boundary + Citizens United + ramp mid | `sort_rate` 0.03 → 0.04; `affect_weight` ramp[1]. **Regrade: CU sets NO drift (non-causal marker); the 2010-20 drift transition moves into the decade boundary.** |
+| 96 | 2012 | Social media ramp end | `affect_weight` ramp[2] terminal (regrade: 0.05 vs default 0.30) |
 | 105 | 2015 | MAGA emergence | Tag 13% Mainstream_Reps + 50% New_Right_Religious with (+0.60, +0.40) |
 | 108 | 2016 | Trump election + status threat | Centroid nudge; `threat` set to 0.6 for ~60% of party=1; +stubbornness |
 | 108 | 2016 | Bernie surge | Tag 8% of Mainstream_Dems with (-0.60, -0.40) |
 | 114 | 2018 | Trump bump revert + DSA emergence | `sort_rate` reverts to 0.04; tag 5% of New_Left with (-0.75, -0.65) |
 | 120 | 2020 | COVID + Jan 6 + decade boundary | One-shot affect spike; `sort_rate` 0.04 → 0.045 |
 | 123 | 2021 | Affect revert | Affect spike decays |
+
+### 7.1 Step-1 evidence re-grade (`evidence_regrade`)
+
+The web/ANES presets (`scripts/anes_preset.ANES_FULL_KWARGS`) set
+`evidence_regrade=True`, which re-grades the period shocks to the
+literature (`docs/polarization_causal_model.md` §4.3). **Default `False`
+is a strict no-op — the default-path schedule above is unchanged and
+bit-identical.** When on:
+
+- **Elite drift → Gingrich/1994 (D1a).** A discrete R-heavy
+  `gingrich_1994` event (tick 42) is added; **Citizens United (tick 90)
+  no longer sets the drift rate** (non-causal marker), and the 2010-20
+  drift transition moves into `_decade_boundary_2010`. Net late-period
+  divergence preserved; attribution corrected.
+- **Social media demoted (D2a).** The `affect_weight` ramp the 2008/2010/
+  2012 events apply is read from
+  `env.attrs["social_media_affect_weight_schedule"]` — `[0.02, 0.04, 0.05]`
+  under regrade (terminal ≈0.05, a small contested accelerant) vs the
+  default `[0.10, 0.20, 0.30]`.
+- **Identity stacking → affect (D3b).** An explicit per-agent
+  `identity_alignment` state (rule `IdentityAlignment`, seeded at build)
+  drives out-party animus: `AffectiveUpdate` amplifies negative valence by
+  `1 + identity_alignment_affect_weight · alignment`
+  (`identity_alignment_affect_weight = 0.5` under regrade, `0.0` default).
+- **2016 status-threat** kept, graded contested (no mechanism change).
+- **Step-2 flag-1 fix (alignment rises).** The cohort identity-reseed +
+  faster identity sort (regrade-gated; see §3.15) make aggregate
+  `identity_alignment` rise ~0.22→0.42 instead of flat-declining, so the
+  D3b stacking→animus channel actually grows over the period per Mason.
 
 ---
 

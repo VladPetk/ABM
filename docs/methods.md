@@ -340,6 +340,16 @@ finding it grounds in. Values measured at **N=250, 20 seeds**
 Close-call interventions (within 1 SE of a bucket boundary) carry
 a 95% CI for transparency.
 
+> **Substrate note.** This is the **pillar** (end-of-S4) scoreboard and
+> is unchanged by the Step-1/Step-2 web re-grade (those changes are
+> gated behind `evidence_regrade`, off on the pillar → bit-identical).
+> The **shipped / web-facing** buckets are measured on the **historical
+> arc** (ANES substrate, 9-seed release-decade sweep) and are the ground
+> truth for anything user-facing — see
+> [`results/phase10_results.md`](results/phase10_results.md). The two
+> substrates agree on direction for every lever; they differ in
+> magnitude (e.g. pillar X1 +0.49 vs arc X1 +0.28…+0.40).
+
 | ID | Lay name | Δsep ± SE | issue_sorting | Δaff ± SE | affect | Anchor |
 |---|---|---|---|---|---|---|
 | X1 | Show people the other side (asymmetric) | +0.490 ± 0.006 | **backfire** | −0.014 ± 0.001 | null | Bail et al. 2018 [Phase 8c §6: asymmetric backfire — party=1 push ×1.3, party=0 push ×0.7 (1.86× ratio); macro bucket unchanged but per-party drift now asymmetric per Bail's R-user finding]. |
@@ -510,6 +520,26 @@ inverts that emphasis under the implemented mechanism.
 
 A short, honest list. Each item is also a Phase 8+ follow-up
 candidate.
+
+### 5.0 Step-1 evidence re-grade (web/ANES path; `evidence_regrade=True`)
+
+The web/ANES build (`scripts/anes_preset.ANES_FULL_KWARGS`) re-grades the
+period shocks to the literature
+([`polarization_causal_model.md`](polarization_causal_model.md) §4.3):
+elite divergence is attributed to a discrete **Gingrich/1994** inflection
+(R-heavy) rather than **Citizens United** (demoted to a non-causal era
+marker, with late-period drift preserved via the decade boundary); the
+**social-media** affect coupling is demoted to a small contested
+accelerant (`affect_weight` terminal ≈0.05 vs 0.30); and an explicit
+**identity-alignment** state (Mason mega-identity) now drives out-party
+animus. The default path (pillar + Phase 4–9) is bit-identical — every
+re-grade consumer reads its no-op value when `evidence_regrade=False`.
+These edits are **bit-changing for the shipped trajectory and owe a
+Phase-10 re-measure + re-bless** (Step 2 of `docs/execution_roadmap.md`);
+the realism preset already sits *within* the ANES envelope but below the
+bare `party_sep` anchors (a documented trade for reduced jumpiness), and
+"within envelope, contested knobs flagged" — not point-perfect — is the
+bar. See `ENGINE_KNOBS.md` §5.8/§7.1.
 
 ### 5.1 X3 cable-set sensitivity (Phase 8c §3)
 

@@ -213,6 +213,25 @@ class AffectiveUpdate:
         # Pillar bit-identity preserved at the default 1.0.
         coupling = float(env.attrs.get("party_issue_coupling", 1.0))
 
+        # Step 1 (web_demo evidence re-grade, D3b): explicit
+        # identity-alignment → affect channel (Mason 2018 mega-identity).
+        # Stacked agents (high `identity_alignment`, maintained by the
+        # IdentityAlignment rule) feel *more* out-party animus. Gated by
+        # `identity_alignment_affect_weight` in env.attrs — default 0.0
+        # → align_factor 1.0 → bit-identical for every default-path
+        # scenario. Amplifies negative-going valence only (identity is
+        # an animus driver, not a warmth driver), parallel to the threat
+        # amplifier. Computed once per agent (it reads the agent's own
+        # alignment state, not the neighbour's).
+        align_w = float(env.attrs.get("identity_alignment_affect_weight", 0.0))
+        if align_w > 0.0:
+            a_align = float(
+                np.clip(agent.state.attrs.get("identity_alignment", 0.0), 0.0, 1.0)
+            )
+            align_factor = 1.0 + align_w * a_align
+        else:
+            align_factor = 1.0
+
         # Phase 8c §2 E2: cooperative-positive path. The network is
         # consulted only for the positive-path trigger now; pre-Phase-8c
         # `cooperative_mute != 1.0` short-circuit is replaced by a
@@ -310,7 +329,10 @@ class AffectiveUpdate:
                 # valence (identity-defensive — Mutz 2018). Positive
                 # valence in the cooperative-edge branch above is NOT
                 # amplified.
-                valence = -(disagreement + self.baseline) * neg_mute * threat_factor
+                valence = (
+                    -(disagreement + self.baseline)
+                    * neg_mute * threat_factor * align_factor
+                )
 
             # Phase 9 §11.7-G — soft saturation: per-encounter delta
             # is dampened as the agent's warmth approaches ±1. Without
