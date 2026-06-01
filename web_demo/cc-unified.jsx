@@ -11,6 +11,16 @@ const RAILW = 452;
 const TRAYW = 344;
 const BARH = 138;
 const BEATS = window.STORY_BEATS;
+// wheel scrubbing: ticks advanced per unit of wheel deltaY (tune for feel).
+const WHEEL_SENS = 0.0175;
+// after the wheel goes idle this long (ms), ease onto the nearest chapter —
+// but only if you stopped within SNAP_RANGE ticks of one (a gentle magnet, not
+// a forced snap). Stop farther away and you stay exactly where you left off.
+const SNAP_IDLE_MS = 170;
+const SNAP_RANGE = 2.25;
+// the active chapter is derived purely from the tick — the single source of truth
+// the wheel, the ▶ autoplay, and the timeline drag all write to.
+const beatIndexAt = (t) => {let k = 0;for (let i = 0; i < BEATS.length; i++) if (t + 1e-6 >= BEATS[i].tick) k = i;return k;};
 
 // ── Tier 1 — site header (E1/E2). Pages, not pills. ────────────────────────
 function SiteHeader({ page, setPage }) {
@@ -342,7 +352,7 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
   // beat
   return (
     <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
-      <div style={scrollWrap}>
+      <div key={beatI} style={{ ...scrollWrap, animation: 'ccFadeUp .42s ease' }}>
         <Eyebrow>Chapter {beatI + 1} of {total} · {Math.floor(tickToYear(beat.tick))}</Eyebrow>
         <h2 style={{ margin: '14px 0 24px', fontFamily: SERIF, fontWeight: 600, fontSize: 50, lineHeight: 1.02, letterSpacing: '-.022em' }}>{beat.title}</h2>
         <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink }}>{beat.lead}</p>
@@ -363,7 +373,7 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
           padding: '12px 16px', borderRadius: DS.rad.pill, border: `1px solid ${CC.border}`, background: CC.surface,
           color: beatI === 0 ? CC.ink4 : CC.ink2, cursor: beatI === 0 ? 'default' : 'pointer', fontFamily: SANS, fontSize: DS.type.small
         }}>← Back</button>
-        <button onClick={onContinue} style={{ ...primaryBtn, width: 'auto', padding: '13px 26px' }}>{beatI === total - 1 ? 'See where it ends →' : 'Continue →'}</button>
+        <button onClick={onContinue} style={{ ...primaryBtn, width: 'auto', padding: '13px 26px' }}>{beatI === total - 1 ? 'Jump to the end →' : 'Jump to next →'}</button>
       </div>
     </div>);
 
@@ -564,25 +574,69 @@ function Unified() {
   const [unlocked, setUnlocked] = React.useState(false);   // story finished → free explore on the SAME canvas
   const [showIvIntro, setShowIvIntro] = React.useState(false);
   const [ivIntroSeen, setIvIntroSeen] = React.useState(false);
-  const seen = React.useRef(new Set());
+  const [hintSeen, setHintSeen] = React.useState(false);   // first-run "scroll or play" helper
+  const wheelActiveRef = React.useRef(false);              // gates wheel-scrubbing to the story canvas
+  const snapActiveRef = React.useRef(false);               // gates snap-to-chapter to the guided story
+  const tickRef = React.useRef(0);                         // latest tick for the snap reader
+  const snapRaf = React.useRef(0);                         // in-flight snap animation frame
+  const wheelIdle = React.useRef(0);                       // idle timer that triggers the snap
   const iv = useInterventions();
 
-  // Watch: auto-pause on first crossing of each beat; flip layer per beat; end card at the finish.
-  // Once unlocked (free explore) the auto-pause stops — the user drives.
+  // Story end: reaching the last tick (by ▶ or by wheel) reveals the end card;
+  // scrubbing back below it restores the story. No per-beat auto-pause — the
+  // reader drives with the wheel, or ▶ plays it straight through.
   React.useEffect(() => {
-    if (mode !== 'watch' || ended || !entered || unlocked) return;
-    for (let i = 0; i < BEATS.length; i++) {
-      if (tick >= BEATS[i].tick && !seen.current.has(i)) {
-        seen.current.add(i);setBeatI(i);setPaused(true);setPlaying(false);
-        if (BEATS[i].layer) setLayer(BEATS[i].layer);
-        return;
-      }
-    }
-    if (tick >= LAST) {setEnded(true);setPlaying(false);}
-  }, [tick, mode, ended, entered, setPlaying]);
+    if (mode !== 'watch' || unlocked || !started || !orientSeen) return;
+    if (tick >= LAST - 1e-6) {if (!ended) {setEnded(true);setPlaying(false);}}
+    else if (ended) setEnded(false);
+  }, [tick, mode, unlocked, started, orientSeen, ended, setPlaying]);
 
-  // keep paused state honest: any manual play clears the "parked at a beat" flag
-  React.useEffect(() => {if (playing && paused) setPaused(false);}, [playing, paused]);
+  // layer follows the active chapter (position → affect at the 2016 beat).
+  React.useEffect(() => {
+    if (mode !== 'watch' || unlocked || !started || !orientSeen || ended) return;
+    const want = BEATS[beatIndexAt(tick)].layer;
+    if (want && want !== layer) setLayer(want);
+  }, [tick, mode, unlocked, started, orientSeen, ended, layer]);
+
+  // dismiss the first-run hint as soon as the reader plays.
+  React.useEffect(() => {if (playing) setHintSeen(true);}, [playing]);
+
+  // wheel scrubbing — roll to move the needle through time, then ease onto the
+  // nearest chapter when the wheel goes idle so it always lands on a beat. One
+  // global, non-passive listener gated by `wheelActiveRef` (story canvas only).
+  React.useEffect(() => {
+    const TARGETS = [...BEATS.map((b) => b.tick), LAST]; // chapters + the end
+    const cancelSnap = () => {if (snapRaf.current) cancelAnimationFrame(snapRaf.current);snapRaf.current = 0;};
+    const snapToNearest = () => {
+      if (!snapActiveRef.current) return;
+      const from = tickRef.current;
+      let target = TARGETS[0];
+      for (const t of TARGETS) if (Math.abs(t - from) < Math.abs(target - from)) target = t;
+      const dist = Math.abs(target - from);
+      if (dist < 0.02 || dist > SNAP_RANGE) return;  // already there, or too far → stay put
+      let t0 = null;const dur = 320;
+      cancelSnap();
+      const step = (ts) => {
+        if (t0 == null) t0 = ts;
+        const k = Math.min(1, (ts - t0) / dur);
+        const e = 1 - Math.pow(1 - k, 3); // easeOutCubic
+        setTick(from + (target - from) * e);
+        snapRaf.current = k < 1 ? requestAnimationFrame(step) : 0;
+      };
+      snapRaf.current = requestAnimationFrame(step);
+    };
+    const onWheel = (e) => {
+      if (!wheelActiveRef.current) return;
+      e.preventDefault();
+      cancelSnap();
+      setHintSeen(true);setPlaying(false);
+      setTick((t) => Math.max(0, Math.min(LAST, t + e.deltaY * WHEEL_SENS)));
+      if (wheelIdle.current) clearTimeout(wheelIdle.current);
+      wheelIdle.current = setTimeout(snapToNearest, SNAP_IDLE_MS);
+    };
+    window.addEventListener('wheel', onWheel, { passive: false });
+    return () => {window.removeEventListener('wheel', onWheel);cancelSnap();if (wheelIdle.current) clearTimeout(wheelIdle.current);};
+  }, [setTick, setPlaying]);
 
   // settle crossfade: hold the morph's final frame for one frame, then fade it
   // out (revealing the assembled story underneath) and tear it down when done.
@@ -593,32 +647,37 @@ function Unified() {
     return () => {cancelAnimationFrame(raf);clearTimeout(to);};
   }, [settling]);
 
-  const continueStory = () => {setStarted(true);setPaused(false);setEnded(false);setPlaying(true);};
-  const backStory = () => {
-    const i = Math.max(0, beatI - 1);
-    seen.current.delete(beatI);setBeatI(i);setTick(BEATS[i].tick + 0.001);setStarted(true);setPaused(true);setPlaying(false);setEnded(false);
-    if (BEATS[i].layer) setLayer(BEATS[i].layer);
+  // entering the story drops the reader at orientation (the staged map-build),
+  // paused at 1980 — they then scroll, or press ▶, to move through time.
+  const enterOrientation = () => {
+    setStarted(true);setOrientStep(0);setOrientSeen(false);setBeatI(0);
+    setLayer('position');setTick(0);setPaused(true);setPlaying(false);setEnded(false);setHintSeen(false);
   };
-  const pickBeat = (k) => {
-    seen.current = new Set(BEATS.map((_, j) => j).filter((j) => BEATS[j].tick <= BEATS[k].tick));
-    setBeatI(k);setTick(BEATS[k].tick + 0.001);setStarted(true);setPaused(true);setPlaying(false);setEnded(false);
-    if (BEATS[k].layer) setLayer(BEATS[k].layer);
+  // Back / Continue step discretely between chapters (for readers who'd rather
+  // click than scroll); the wheel and ▶ remain the primary ways through.
+  const stepBeat = (dir) => {
+    setHintSeen(true);setPlaying(false);setEnded(false);
+    const k = beatIndexAt(tick) + dir;
+    if (dir > 0 && k >= BEATS.length) {setTick(LAST);return;}
+    setTick(BEATS[Math.max(0, Math.min(BEATS.length - 1, k))].tick + 0.001);
   };
+  const railContinue = () => {phase === 'intro' ? enterOrientation() : stepBeat(1);};
+  const pickBeat = (k) => {setHintSeen(true);setPlaying(false);setEnded(false);setTick(BEATS[k].tick + 0.001);};
   // finishing the guided story hands the controls over ON THE SAME canvas
   // (no separate Explore tab) — free scrub, layer toggle, parties, scissors.
   const goExplore = () => {setUnlocked(true);setEnded(false);setPaused(false);setPlaying(false);};
   const switchMode = (m) => {
-    if (m === 'watch') {seen.current = new Set();setUnlocked(false);setEnded(false);setStarted(false);setBeatI(0);setLayer('position');setTick(0);setPaused(false);setPlaying(false);setOrientStep(0);setOrientSeen(false);} else
+    if (m === 'watch') {setUnlocked(false);setEnded(false);setStarted(false);setBeatI(0);setLayer('position');setTick(0);setPaused(false);setPlaying(false);setOrientStep(0);setOrientSeen(false);setHintSeen(false);} else
     {setPlaying(false);}
     if (m === 'interventions' && !ivIntroSeen) setShowIvIntro(true);
     setMode(m);
   };
   // landing → a ~3s "1980 → 2025" payoff morph → the staged orientation
   const enterFromLanding = () => {setMorphing(true);};
-  const finishMorph = () => {setMorphing(false);setSettling(true);setSettleIn(false);setEntered(true);setOrientStep(0);setOrientSeen(false);continueStory();};
+  const finishMorph = () => {setMorphing(false);setSettling(true);setSettleIn(false);setEntered(true);enterOrientation();};
   const orientNext = () => setOrientStep((s) => Math.min(ORIENT_LAYERS.length - 1, s + 1));
   const orientPrev = () => setOrientStep((s) => Math.max(0, s - 1));
-  const finishOrient = () => {setOrientSeen(true);setOrientStep(ORIENT_LAYERS.length - 1);continueStory();};
+  const finishOrient = () => {setOrientSeen(true);setOrientStep(ORIENT_LAYERS.length - 1);setPaused(false);setPlaying(false);};
 
   // ── static pages ──
   if (page !== 'model') {
@@ -634,11 +693,21 @@ function Unified() {
   const isIv = mode === 'interventions';
   const isWatch = mode === 'watch' && !unlocked;   // guided story
   const isExplore = mode === 'watch' && unlocked;  // unlocked free-explore (same canvas)
-  const beat = BEATS[beatI];
-  const phase = ended ? 'ended' : paused ? 'beat' : started || seen.current.size > 0 ? 'playing' : 'intro';
-  const stagedOrient = isWatch && phase === 'beat' && beat && beat.orient && !orientSeen;
+  // chapter derived from the tick once the story is running; orientation and the
+  // intro keep using beat 0.
+  const inStory = isWatch && started && orientSeen && !ended;
+  const dispBeatI = inStory ? beatIndexAt(tick) : beatI;
+  const beat = BEATS[dispBeatI];
+  const phase = ended ? 'ended' : started ? 'beat' : 'intro';
+  const stagedOrient = isWatch && started && beat && beat.orient && !orientSeen;
   const watchReveal = stagedOrient ? ORIENT_LAYERS.slice(0, orientStep + 1) : null;
-  const dimField = isWatch && (paused || ended) && !stagedOrient ? 0.24 : 0;
+  const dimField = isWatch && ended && !stagedOrient ? 0.24 : 0;
+  // wheel-scrub only over the running story (or unlocked explore) — never during
+  // orientation, the morph/settle, interventions, or the static pages.
+  wheelActiveRef.current = isWatch && entered && orientSeen && !stagedOrient && !settling && !morphing || isExplore;
+  snapActiveRef.current = isWatch && started && orientSeen && !ended;  // free-scrub in explore stays un-snapped
+  tickRef.current = tick;
+  const showHint = isWatch && entered && started && orientSeen && !stagedOrient && !ended && !playing && !hintSeen && tick < 1.5;
   // morph → story crossfade: `settleFrom` holds the morph frame at full opacity
   // for a single frame; once `settleIn` flips, it fades out over 1s.
   const settleFrom = settling && !settleIn;
@@ -691,7 +760,7 @@ function Unified() {
           <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(54%, 820px)', display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3 }}>
             {isWatch && (stagedOrient ?
               <OrientRail step={orientStep} onPrev={orientPrev} onNext={orientNext} onContinue={finishOrient} /> :
-              <WatchRail phase={phase} beat={beat} beatI={beatI} total={BEATS.length} nextBeat={BEATS.find((b) => b.tick > tick) || null} tick={tick} onBack={backStory} onContinue={continueStory} onExplore={goExplore} />)}
+              <WatchRail phase={phase} beat={beat} beatI={dispBeatI} total={BEATS.length} nextBeat={BEATS.find((b) => b.tick > tick) || null} tick={tick} onBack={() => stepBeat(-1)} onContinue={railContinue} onExplore={goExplore} />)}
             {isExplore && <ExploreRail layer={layer} tick={tick} />}
           </div>
         </div>
@@ -705,7 +774,23 @@ function Unified() {
         </div> :
 
       <TimelineBar tick={tick} setTick={setTick} playing={playing} toggle={toggle} speed={speed} setSpeed={setSpeed}
-      layer={layer} mode={isWatch ? 'watch' : 'explore'} beatI={beatI} onPickBeat={pickBeat} ended={ended} />
+      layer={layer} mode={isWatch ? 'watch' : 'explore'} beatI={dispBeatI} onPickBeat={pickBeat} ended={ended} />
+      }
+
+      {/* first-run helper — black, gently bobbing, dismissed on the first scroll
+          or play. Tells the reader the two ways through the story. */}
+      {showHint &&
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: BARH + 20, zIndex: 8, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, animation: 'ccFadeUp .55s ease both' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 18px', background: CC.ink, color: '#fff', borderRadius: DS.rad.pill, boxShadow: '0 8px 26px rgba(26,29,35,.22)', fontFamily: SANS, fontSize: 14, fontWeight: 500, letterSpacing: '-.005em' }}>
+              <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 0.62, animation: 'ccHintBob 1.5s ease-in-out infinite' }}>
+                <span style={{ fontSize: 10 }}>⌃</span><span style={{ fontSize: 10 }}>⌄</span>
+              </span>
+              Scroll to move through time
+            </div>
+            <span style={{ fontSize: 13, color: CC.ink3, fontFamily: SANS }}>or press <span style={{ color: CC.ink2, fontWeight: 600 }}>▶</span> to play it for you</span>
+          </div>
+        </div>
       }
 
       {/* settle crossfade — the morph's final frame held on top, fading out over

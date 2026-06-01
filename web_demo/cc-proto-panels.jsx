@@ -131,6 +131,15 @@ const LABELLED = {
   covid_jan6_2020: 'COVID · Jan 6',
 };
 
+// Short names for the non-causal era markers (hairline glyph). These are NOT in
+// LABELLED — they ride a faint dashed tick to read as "present, but not a cause."
+// (The renderer used to hardcode "Citizens United" here, which mislabeled
+// Obergefell; keyed by event label now so each reads correctly.)
+const MARKER_NAME = {
+  decade_2010_and_citizens_united: 'Citizens United',
+  obergefell_2015: 'Obergefell',
+};
+
 // one-sentence "why this moment mattered to polarization" — surfaced on hover so
 // scrubbing the timeline becomes discovering, not just replaying. Keyed to the
 // engine's event labels; not a history lesson, just the mechanism. Reconciled to
@@ -230,6 +239,38 @@ function ProtoTimeline({ tick, setTick, width = 820, releaseTick = null, showRel
 
   const tipX = hovEvt ? tx(hovEvt.tick) : 0;
   const tipBottom = (H - trackY) + 16;
+
+  // Watch-mode label placement: pack every text label (causal landmarks +
+  // era markers) into stacked lanes so none overlap, however crowded the
+  // 2008–2020 stretch gets. Glyphs stay on the track; only the text + its
+  // connector line move into a lane. Innermost lanes fill first, alternating
+  // below/above, so labels only stack outward where they'd actually collide.
+  const labelLayout = React.useMemo(() => {
+    if (!altLabels) return null;
+    const textW = (s, fs) => s.length * fs * 0.54 + 6; // rough width + breathing room
+    const items = [];
+    D.events.filter((e) => LABELLED[e.label]).forEach((e) =>
+      items.push({ key: e.label, ex: tx(e.tick), text: LABELLED[e.label], italic: false, fs: 10, w: textW(LABELLED[e.label], 10) }));
+    D.events.filter((e) => { const g = gradeOf(e); return g && g.glyph === 'hairline'; }).forEach((e) => {
+      const text = MARKER_NAME[e.label] || e.label;
+      items.push({ key: e.label, ex: tx(e.tick), text, italic: true, fs: 8.5, w: textW(text, 8.5) });
+    });
+    items.sort((a, b) => a.ex - b.ex);
+    const lanes = [
+      { side: 'below', row: 0 }, { side: 'above', row: 0 },
+      { side: 'below', row: 1 }, { side: 'above', row: 1 },
+      { side: 'below', row: 2 }, { side: 'above', row: 2 },
+    ].map((l) => ({ ...l, right: -Infinity }));
+    const GAP = 7;
+    for (const it of items) {
+      const left = it.ex - it.w / 2;
+      const lane = lanes.find((l) => left >= l.right + GAP) || lanes[lanes.length - 1];
+      it.side = lane.side; it.row = lane.row;
+      lane.right = it.ex + it.w / 2;
+    }
+    return items;
+  }, [w, altLabels]);
+
   return (
     <div style={{ position: 'relative' }} onMouseLeave={() => setHovEvt(null)}>
     <TimelineTip evt={hovEvt} x={tipX} above={tipBottom} />
@@ -263,7 +304,8 @@ function ProtoTimeline({ tick, setTick, width = 820, releaseTick = null, showRel
           return (
             <g key={e.label}>
               <line x1={ex} y1={trackY - 7} x2={ex} y2={trackY + 7} stroke={on ? CC.ink2 : CC.ink4} strokeWidth="1" strokeDasharray="1.5 2.5" />
-              <text x={ex} y={trackY - 11} textAnchor="middle" style={{ fontFamily: SANS, fontSize: 8.5, fontStyle: 'italic', fill: on ? CC.ink2 : CC.ink4 }}>Citizens United</text>
+              {!altLabels &&
+              <text x={ex} y={trackY - 11} textAnchor="middle" style={{ fontFamily: SANS, fontSize: 8.5, fontStyle: 'italic', fill: on ? CC.ink2 : CC.ink4 }}>{MARKER_NAME[e.label] || e.label}</text>}
             </g>
           );
         }
@@ -275,16 +317,9 @@ function ProtoTimeline({ tick, setTick, width = 820, releaseTick = null, showRel
         const ex = tx(e.tick);
         const on = hovEvt && hovEvt.label === e.label;
         if (altLabels) {
-          const below = i % 2 === 0;                 // bottom-top-bottom
-          const ty = below ? trackY + 20 : trackY - 13;
-          const ly = below ? trackY + 11 : trackY - 11;
-          return (
-            <g key={e.label}>
-              <line x1={ex} y1={trackY} x2={ex} y2={ly} stroke={on ? CC.ink2 : CC.ink4} strokeWidth="1" strokeDasharray="1.5 2" />
-              <GradeMarker ex={ex} y={trackY} on={on} g={gradeOf(e)} />
-              <text x={ex} y={ty} textAnchor="middle" dominantBaseline={below ? 'hanging' : 'auto'} style={{ fontFamily: SANS, fontSize: 10, fill: on ? CC.ink : CC.ink2, fontWeight: on ? 600 : 500 }}>{LABELLED[e.label]}</text>
-            </g>
-          );
+          // text + connector come from the collision-free layout pass below;
+          // here we only place the on-track grade marker.
+          return <GradeMarker key={e.label} ex={ex} y={trackY} on={on} g={gradeOf(e)} />;
         }
         const up = trackY - 13 - (i % 2) * 16;
         return (
@@ -292,6 +327,21 @@ function ProtoTimeline({ tick, setTick, width = 820, releaseTick = null, showRel
             <line x1={ex} y1={trackY} x2={ex} y2={up + 6} stroke={on ? CC.ink2 : CC.ink4} strokeWidth="1" strokeDasharray="1.5 2" />
             <GradeMarker ex={ex} y={trackY} on={on} g={gradeOf(e)} />
             <text x={ex} y={up} textAnchor="middle" style={{ fontFamily: SANS, fontSize: 10, fill: on ? CC.ink : CC.ink3, fontWeight: on ? 600 : 500 }}>{LABELLED[e.label]}</text>
+          </g>
+        );
+      })}
+      {/* altLabels: every text label drawn from the packed, collision-free
+          layout — innermost lane first, stacking outward only where needed. */}
+      {altLabels && labelLayout && labelLayout.map((it) => {
+        const on = hovEvt && hovEvt.label === it.key;
+        const ty = it.side === 'below' ? trackY + 19 + it.row * 13 : trackY - 12 - it.row * 13;
+        const ly = it.side === 'below' ? ty - 9 : ty + 3;
+        return (
+          <g key={'lbl-' + it.key}>
+            <line x1={it.ex} y1={trackY} x2={it.ex} y2={ly} stroke={on ? CC.ink2 : CC.ink4} strokeWidth="1" strokeDasharray="1.5 2" />
+            <text x={it.ex} y={ty} textAnchor="middle" dominantBaseline={it.side === 'below' ? 'hanging' : 'auto'}
+              style={{ fontFamily: SANS, fontSize: it.fs, fontStyle: it.italic ? 'italic' : 'normal',
+                fill: on ? CC.ink : (it.italic ? CC.ink4 : CC.ink2), fontWeight: it.italic ? 400 : (on ? 600 : 500) }}>{it.text}</text>
           </g>
         );
       })}
