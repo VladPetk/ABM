@@ -770,7 +770,14 @@ X6_SHARED_INSTITUTIONS = Intervention(
         "Phase 7 volume-backfire."
     ),
     label_kind="intervention",
-    effect_buckets={"issue_sorting": "null", "affect": "real"},
+    # Affect re-grade re-bless (2026-06): measured Δaff +0.217 -> +0.149 (9-seed
+    # cross-release mean) — just under the 0.15 "real" floor, so the measured
+    # bucket is now "partial". This is measurement-driven (move the tag, not the
+    # threshold): with affect re-grounded to the real ANES thermometer the 1980-
+    # 2025 baseline is less polarized, so a contact-based lever has less animus
+    # to undo. X6 remains the strongest affect lever; it sits right at the
+    # real/partial boundary. See docs/affect_bands_investigation.md.
+    effect_buckets={"issue_sorting": "null", "affect": "partial"},
     citation=(
         "Allport 1954 (The Nature of Prejudice); Pettigrew & Tropp "
         "2006 (JPSP 90:751, meta-analysis r ≈ −0.21 / 515 studies); "

@@ -38,6 +38,7 @@ from ..core.rules import RulePipeline
 from ..core.space import ContinuousSpace2D
 from ..core.state import AgentState
 from ..rules.affective_update import AffectiveUpdate
+from ..rules.mediated_animus import MediatedAnimus
 from ..rules.cohort_replacement import CohortReplacement
 from ..rules.elite_drift import EliteDrift
 from ..rules.faction_anchor import FactionAnchor
@@ -243,6 +244,27 @@ GINGRICH_1994_ASYMMETRIC = {0: 0.5, 1: 1.5}  # R-heavy (Hacker-Pierson 2020)
 # still tunable rather than deleted.
 SOCIAL_MEDIA_AFFECT_WEIGHT_RAMP_DEFAULT = [0.10, 0.20, 0.30]
 SOCIAL_MEDIA_AFFECT_WEIGHT_RAMP_REGRADE = [0.02, 0.04, 0.05]
+
+# --- Affect re-grade (affect-bands-investigation; gated behind evidence_regrade) ---
+# The 1980 affect seed, the contact-channel learning rate, and AffectiveUpdate
+# saturation were originally calibrated to the OLD hand-scaled (too-cold) affect
+# bands. Re-grounded against the raw ANES out-party thermometer via the principled
+# midpoint map (docs/affect_bands_investigation.md), the engine over-produced
+# animus and was CONCAVE (front-loaded) where reality is CONVEX (flat-warm early,
+# collapse late). The driver diagnostic showed the cause: animus was contact-gated,
+# so homophilous sorting starved it exactly as the real drivers accelerated. These
+# constants warm the seed to the real 1980 thermometer, soften the contact channel,
+# retire the saturation decelerator, and add the contact-independent MediatedAnimus
+# channel (parasocial animus via aligned identity x a dated media-exposure ramp) so
+# the convex shape EMERGES from endogenous state rather than a calendar-time rate.
+# Validated 9-seed against the grounded bands; magnitudes are N, mechanism L.
+AFFECT_SEED_MEAN_REGRADE = -0.09     # real 1986-88 out-party therm 45.3deg via midpoint map
+AFFECT_SEED_MEAN_DEFAULT = -0.25     # pre-regrade seed (bit-identical when off)
+AFFECT_LR_BASE_REGRADE = 0.003       # contact channel x0.30
+AFFECT_LR_BASE_DEFAULT = 0.01
+MEDIATED_ANIMUS_LR = 0.014           # contact-independent channel magnitude
+# env mediated_animus_weight at the 2008 / 2010 / 2012 social-media events.
+MEDIATED_ANIMUS_WEIGHT_RAMP = [0.50, 0.80, 1.00]
 
 # Step 1 (D3b): strength of the explicit identity-alignment → out-party
 # animus channel (read by AffectiveUpdate). 0.0 default = bit-identical;
@@ -460,13 +482,15 @@ FACTION_EVENT_RNG_SEED_OFFSET = 4242
 def _per_agent_heterogeneity(
     identity_strength: float, rng: np.random.Generator,
     fj_alpha_scale: float = 1.0,
+    affect_lr_base: float = AFFECT_LR_BASE_DEFAULT,
 ):
     """Compute per-agent (epsilon, fj_alpha, affect_lr) given
     identity_strength + a small Beta(2, 5)-shaped jitter. Phase 8b
     M1 §3.2 default magnitudes (40 / 60 / 80%).
 
     `fj_alpha_scale` (web_demo Step 4) multiplies the anchor-pull base;
-    1.0 → bit-identical."""
+    1.0 → bit-identical. `affect_lr_base` (affect re-grade) is the
+    contact-channel learning-rate base; 0.01 default → bit-identical."""
     hetero_term = 2.0 * (identity_strength - 0.5)  # [-1, +1]
     jitter = 2.0 * (rng.beta(2.0, 5.0) - 0.286)  # mean ~0
     epsilon = 0.30 * (
@@ -477,7 +501,7 @@ def _per_agent_heterogeneity(
         1.0 + FJ_HETERO_FACTOR * hetero_term
         + HETERO_JITTER_FACTOR * jitter
     )
-    affect_lr = 0.01 * (
+    affect_lr = affect_lr_base * (
         1.0 + LR_HETERO_FACTOR * hetero_term
         + HETERO_JITTER_FACTOR * jitter
     )
@@ -979,7 +1003,11 @@ def build_engine(
 
         # Per-agent heterogeneity (M1).
         agent_eps, agent_alpha, agent_lr = _per_agent_heterogeneity(
-            identity_strength, rng, fj_alpha_scale
+            identity_strength, rng, fj_alpha_scale,
+            affect_lr_base=(
+                AFFECT_LR_BASE_REGRADE if evidence_regrade
+                else AFFECT_LR_BASE_DEFAULT
+            ),
         )
 
         # Per-party party_cue σ (M4 asymmetric).
@@ -1042,12 +1070,17 @@ def build_engine(
                 stubbornness + faction_stubbornness_boost * extremity,
             ))
 
-        # 1980 affect — ANES out-party therm ~40° = mild-moderate
-        # coolness ≈ -0.20 normalised to [-1, 1]. Seed at build with
-        # noise so the cold-build measurement lands inside the target
-        # band rather than at zero.
+        # 1980 affect seed. Default -0.25 (pre-regrade). Under the affect
+        # re-grade (evidence_regrade), -0.09 — the real 1986-88 ANES
+        # out-party PARTY thermometer (45.3 deg) under the principled
+        # midpoint map aff=(deg-50)/50. The old -0.25 (~37.5 deg) was ~8 deg
+        # too cold and front-loaded animus. See docs/affect_bands_investigation.md.
+        _affect_seed_mean = (
+            AFFECT_SEED_MEAN_REGRADE if evidence_regrade
+            else AFFECT_SEED_MEAN_DEFAULT
+        )
         initial_affect = float(np.clip(
-            rng.normal(-0.25, 0.10), -1.0, 1.0
+            rng.normal(_affect_seed_mean, 0.10), -1.0, 1.0
         ))
         # Phase 8c §4 E4.1: perceived out-party centroid, biased
         # outward on the dominant (x) axis. The bias direction is
@@ -1314,6 +1347,10 @@ def build_engine(
         # Step 5 (web_demo jumpiness): opinion-momentum coefficient read
         # by Engine.step. 0.0 → off (bit-identical). Demo preset: 0.4.
         "momentum": float(momentum),
+        # Affect re-grade: dated media-exposure level driving the
+        # contact-independent MediatedAnimus channel. 0.0 at build; ramped on
+        # at the 2008/2010/2012 social-media events (only under evidence_regrade).
+        "mediated_animus_weight": 0.0,
         # Step 1 (web_demo jumpiness): per-run replacement log. Present
         # (empty list) so CohortReplacement appends [tick, agent_id] on
         # every firing; the export then emits it for ghost-fade. Other
@@ -1386,7 +1423,21 @@ def build_engine(
             # knobs use saturation=1.0 (per-encounter delta dampened
             # by 1 − w² as warmth approaches ±1). Default 0.0 keeps
             # the pillar bit-identical.
-            saturation=1.0 if anes_knobs_active else 0.0,
+            # Affect re-grade: retire saturation under evidence_regrade — it
+            # was a late-decelerator fit to the OLD cold bands and fights the
+            # convex collapse the grounded bands want. Off-regrade unchanged.
+            saturation=(
+                0.0 if evidence_regrade
+                else (1.0 if anes_knobs_active else 0.0)
+            ),
+        ),
+        # Affect re-grade: contact-independent (parasocial) animus channel.
+        # No-op unless evidence_regrade (lr>0) AND mediated_animus_weight>0
+        # (ramped on at the 2008/2010/2012 social-media events). Supplies the
+        # late steepening the contact channel can't, because homophilous
+        # sorting starves out-party contact. See docs/affect_bands_investigation.md.
+        MediatedAnimus(
+            learning_rate=MEDIATED_ANIMUS_LR if evidence_regrade else 0.0,
         ),
         IdentitySorting(
             # Step 2 (flag-1 fix): scale the initial sort rate by the
@@ -1578,6 +1629,10 @@ def _event_2008_social_media_ramp_start(engine):
         engine.rules.rules, "BoundedConfidenceInfluence",
         "affect_weight", ramp[0],
     )
+    # Affect re-grade: turn on the contact-independent MediatedAnimus channel
+    # as social media adoption begins (the dated driver of parasocial animus).
+    if engine.env.attrs.get("evidence_regrade"):
+        engine.env.attrs["mediated_animus_weight"] = MEDIATED_ANIMUS_WEIGHT_RAMP[0]
 
 
 def _event_2008_obama_warmth(engine):
@@ -1607,6 +1662,8 @@ def _event_2010_social_media_ramp_mid(engine):
         engine.rules.rules, "BoundedConfidenceInfluence",
         "affect_weight", ramp[1],
     )
+    if engine.env.attrs.get("evidence_regrade"):
+        engine.env.attrs["mediated_animus_weight"] = MEDIATED_ANIMUS_WEIGHT_RAMP[1]
 
 
 def _event_1994_gingrich(engine):
@@ -1665,6 +1722,8 @@ def _event_2012_social_media_ramp_end(engine):
         engine.rules.rules, "BoundedConfidenceInfluence",
         "affect_weight", ramp[2],
     )
+    if engine.env.attrs.get("evidence_regrade"):
+        engine.env.attrs["mediated_animus_weight"] = MEDIATED_ANIMUS_WEIGHT_RAMP[2]
 
 
 def _event_2016_trump_election(engine):

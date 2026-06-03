@@ -166,7 +166,28 @@ in-party encounters warm modestly (baseline).
 | `threat_amplification` | 1.0 | float | [1, 5] | Mutz 2018 threat multiplier on negative valence. |
 | `saturation` | 0.0 | float | [0, 5] | **Phase 9 G.** Soft cap: per-step scaled by `max(0, 1 − sat·w²)`. 1.0 ≈ Iyengar saturation curve. |
 
-**Historical-arc with ANES knobs:** saturation = 1.0.
+**Historical-arc with ANES knobs:** saturation = 1.0 — **but under the
+affect re-grade (`evidence_regrade`, 2026-06) saturation = 0.0** (it was
+fit to the pre-re-grade too-cold bands; it decelerated the late collapse
+the grounded bands want). The arc also drops `learning_rate` base 0.01 →
+0.003 and seeds 1980 affect at −0.09 (was −0.25) under `evidence_regrade`.
+
+### 3.4b `MediatedAnimus` (`mediated_animus.py`)
+Contact-INDEPENDENT (parasocial) out-party animus — the affect re-grade
+channel. Each tick a partisan agent cools its out-party warmth by
+`-lr · mediated_animus_weight · identity_alignment`, with no network
+neighbour required (Mason 2018 mega-identity + partisan media). Supplies
+the convex late steepening that the contact-gated `AffectiveUpdate` can't,
+because homophilous sorting starves out-party contact.
+
+| Knob | Default | Type | Range | Notes |
+|---|---|---|---|---|
+| `learning_rate` | 0.0 | float | [0, 0.1] | Channel magnitude. 0 → exact no-op (pillar/non-arc bit-identical). Arc: 0.014 under `evidence_regrade`. |
+
+Env-driven: `env.attrs["mediated_animus_weight"]` (default 0.0; ramped
+0.50/0.80/1.00 at the 2008/2010/2012 social-media events under
+`evidence_regrade`). Reads `agent.attrs["identity_alignment"]`. No
+saturation by design — it must keep biting once contact has starved.
 
 ### 3.5 `GaussianNoise` (`noise.py`)
 Per-tick i.i.d. position jitter + Friedkin-Johnsen anchor damping.

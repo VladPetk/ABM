@@ -50,7 +50,7 @@ not refactors.
 | **X3** | Quit cable news | null / null | Disengage from partisan media |
 | **X4** | Bipartisan dialogue programs | null / null* | Civic dialogue + shared-identity priming |
 | **X5** | Ranked-choice voting | **partial** / null | Electoral reform (RCV + open primaries) |
-| **X6** | Shared neighborhoods and workplaces | null / **real** | Structural shared-life contact |
+| **X6** | Shared neighborhoods and workplaces | null / **partial** | Structural shared-life contact (real at 2020, partial earlier) |
 | **X7** | Correct the perception gap | null / null | Sustained civic perception-correction campaign |
 
 *X4 affect is null at the bucket cutoff but trends helpful at
@@ -257,9 +257,15 @@ cricket, +2 ties); Paluck et al. 2021; Enos 2014 (contact
 under status-threat can backfire); Scacco & Warren 2018; Mutz
 2006.
 
-**Engine reading.** **Real helpful on affect** (Δaff +0.19 to
-+0.27) across all release decades — within the Pettigrew-Tropp
-envelope. Null on issue sorting: Mason 2018 / Gidron et al. 2020
+**Engine reading.** **Partial-to-real helpful on affect** — on the
+2026-06 affect-re-graded substrate, Δaff is +0.092/+0.140/+0.146 at
+1990–2010 (**partial**) and +0.218 at 2020 (**real**); cross-release
+mean +0.149, right on the real/partial boundary, so the declared public
+bucket is now **partial** (was real). Still within the Pettigrew-Tropp
+envelope; X6 remains the strongest affect lever. The decade-dependence
+is honest: the re-grounded baseline is less polarized early (so contact
+has less to undo) and most polarized in 2020 (so contact recovers most).
+Null on issue sorting: Mason 2018 / Gidron et al. 2020
 predict contact moves prejudice / affect more than issue
 positions, and the model confirms. The lay framing: *the
 contact hypothesis works in the model, at the magnitude the

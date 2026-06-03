@@ -278,7 +278,24 @@ bands) 11 → 14/24; the remaining fails are the pre-existing **constraint (hot)
 So the convexity **emerges** from endogenous identity-alignment × a dated media driver —
 no calendar-time `affect_lr` ramp. This is the honest engine improvement.
 
-### Baking plan (the implementation step — needs the go-ahead)
+### BAKED (2026-06) — the arc now uses the mechanism
+
+All four changes are wired into `historical_arc.py`, gated behind
+`evidence_regrade` (default-path / pillar bit-identical; only the web/ANES path
+changes): seed `AFFECT_SEED_MEAN_REGRADE=-0.09`, `AFFECT_LR_BASE_REGRADE=0.003`,
+`AffectiveUpdate.saturation=0`, `MediatedAnimus(lr=0.014)` + the
+`mediated_animus_weight` ramp on the 2008/2010/2012 social-media events. Grounded
+affect bands wired into `phase8f_lib` (ANES band set). `MediatedAnimus` isolation
+test added (`tests/test_mediated_animus.py`).
+
+**Official 9-seed scorer (baked engine vs grounded bands):** all 5 affect decades
+in band — 1990 −0.209 / 2000 −0.290 / 2010 −0.438 / 2020 −0.620 / 2025 −0.683 — plus
+the 1980 IC affect (−0.089). Scoreboard 14 → **15/24**; affect is now *honestly*
+grounded (was passing against too-cold bands). Remaining fails are the pre-existing
+constraint(hot)/within-SD(low) cells — a separate workstream. Provenance: mechanism
+**L**, magnitudes **N**.
+
+### Original baking plan (for reference)
 
 The validated params are proven via post-build patching; baking into `historical_arc`
 changes EVERY arc run, so the affect-pinned tests (`test_phase8c_affect`, phase8e/9

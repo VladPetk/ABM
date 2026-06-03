@@ -847,19 +847,46 @@ gated:
 6. **Affect saturation** — `AffectiveUpdate(saturation=1.0)`
    adds a soft cap `max(0, 1 − w²)` on per-encounter step size,
    replacing the hard-clip at ±1 with the Iyengar et al. 2019
-   ch. 4 saturation curve.
+   ch. 4 saturation curve. **(Superseded by the affect re-grade
+   below: under `evidence_regrade` saturation is retired — it was
+   fit to the pre-re-grade, too-cold affect bands.)**
 
-**Result.** At 9 seeds, the blessed `anes_full` preset scores
-W₂ sum = 0.876 over five decades (sub-sample noise floor ≈ 0.71;
-achievable Gaussian floor ≈ 1.0) and passes the ANES-band §11
-gate at 18/24. Final scorecard:
-`docs/results/phase9_anes_score_anes_full.json`.
+**Affect re-grade (2026-06, `affect-bands-investigation`; gated behind
+`evidence_regrade`).** The affect bands were originally hand-scaled off
+Iyengar/Finkel figures; re-derived from the raw ANES out-party PARTY
+thermometer (VCF0218/0224, partisans, weighted) via the principled
+midpoint map `aff=(deg−50)/50` (`scripts/affect_band_builder.py`), the
+old bands ran ~0.2 too cold. The engine had been calibrated to those
+cold bands and over-produced animus — concave (front-loaded) where the
+real thermometer is convex (flat-warm early, collapse late). Diagnosis:
+animus was *contact-gated*, so homophilous sorting starved it as the real
+drivers accelerated. Fix: warm the 1980 seed to the real thermometer,
+soften the contact `affect_lr`, retire saturation, and add a new
+contact-independent **`MediatedAnimus`** channel — parasocial animus via
+the agent's own identity-alignment × a dated media-exposure ramp
+(Mason 2018; Iyengar et al. 2019). The convex shape now *emerges* from
+endogenous state rather than a calendar-time rate.
+- Mechanism (`MediatedAnimus`, identity+media-driven out-party animus):
+  **L** (literature-supported — Mason mega-identity, parasocial/mediated
+  animus).
+- Magnitudes (seed −0.09, `affect_lr` base 0.003, `MediatedAnimus.lr`
+  0.014, media ramp): **N** (the model's calibration, validated 9-seed
+  against the grounded bands).
 
-**Boundary on what Phase 9 changed.** No intervention semantics
-(X1–X7) were re-blessed in Phase 9. The intervention library and
-its bucket labels are unchanged. The next phase will re-run the
-intervention sweeps on the recalibrated engine and re-score the
-buckets.
+**Result.** At 9 seeds the `anes_full` preset places all five affect
+decades + the 1980 IC in the data-grounded affect bands; the ANES-band
+§11 gate is **15/24** (the remaining fails are the pre-existing
+constraint/within-SD cells, not affect or network). Scorecard:
+`docs/results/phase9_anes_score_anes_full.json`. (The earlier "18/24"
+figure scored a stale preset that predated the Step-1/affect re-grade —
+see `docs/affect_bands_investigation.md`.)
+
+**Intervention re-bless.** The X1–X7 sweeps were re-run on the
+re-graded engine (`phase10_measure`, 9 seeds). One public bucket moved:
+**X6 affect `real` → `partial`** (Δaff +0.218 → +0.149, decade-dependent:
+real at 2020, partial earlier) — the less-polarized re-grounded baseline
+leaves a contact lever less animus to undo. All other buckets hold;
+`test_phase6` green. See `docs/results/phase10_results.md`.
 
 ---
 
