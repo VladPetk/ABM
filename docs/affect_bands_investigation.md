@@ -171,18 +171,53 @@ reality is **flat-and-warm early** (1980 out-therm 45° ≈ −0.09; barely cold
 **collapses late** (most of the fall is 2008→2020). The current bands (and the
 engine) ramp animus too early.
 
-### Step 3 (next) — match engine output to reality
+### Step 3 — root cause found + fix direction validated
 
-Engine `affect` runs −0.25 (1980) → −0.74 (2025): colder than the grounded bands
-at every decade, gap largest early (1980 −0.25 vs grounded −0.09). So the engine
-**over-produces out-party animus, too early**. Reconciling means engine-dynamics
-work (NOT a band edit), candidate levers:
-- `AffectiveUpdate` learning rate / negative-drift magnitude (and its schedule) —
-  damp early animus, preserve the late collapse so the *shape* matches.
-- The **isolated-agent dilution** in `affective_polarization` currently biases the
-  mean *warm* (toward 0), so it's masking even more animus among connected agents —
-  fixing dilution alone makes the gap worse, so it must be paired with lower drift.
-- Re-bless the affect cells against the grounded bands once the engine lands.
+Engine `affect` (canonical config, measured at the ANES bucket-centre ticks):
+
+| panel | engine baseline | grounded band |
+|---|---|---|
+| 1980 (t21) | −0.39 | [−0.14,−0.04] |
+| 1990 | −0.49 | [−0.21,−0.10] |
+| 2000 | −0.58 | [−0.31,−0.18] |
+| 2010 | −0.65 | [−0.51,−0.41] |
+| 2020 | −0.72 | [−0.66,−0.56] |
+| 2025 | −0.74 | [−0.71,−0.51] |
+
+Two root causes (NOT a band edit — engine dynamics):
+
+1. **The 1980 affect seed is too cold.** `historical_arc.py:1049` seeds
+   `initial_affect = normal(−0.25, 0.10)`; the comment assumes "~40°", but the real
+   1986–88 out-party thermometer is **45.3° → −0.09** under the principled map. The
+   seed corresponds to ~37.5° — ~8–10° too cold. `affect_lr` scaling (uniform OR
+   ramped) **cannot** warm the 1980 panel below ~−0.29 — it's a seed floor, not a
+   dynamics effect.
+2. **The engine front-loads animus (concave); reality back-loads it (convex).**
+   Real out-party warmth is flat-and-warm through 2000 (45°→38°) then collapses
+   (38°→20° by 2020). The engine drops fastest early and tapers. So a *uniform*
+   `affect_lr` cut can't work: it warms late into the band but leaves early too cold,
+   or (at strong cuts) overshoots late warm while early stays cold.
+
+**Validated fix direction (5-seed sweep, `scripts/_affect_recal_sweep.py`, since
+removed):** warm the seed to ~−0.09 **and** time-ramp `affect_lr` (floor ~0.35–0.5
+→ 1.0 by 2020, so early animus is suppressed and the late collapse preserved). This
+flips the shape to convex and lands the 2010/2020/2025 panels in the grounded bands
+with 1980 moving −0.39 → −0.18 (e.g. warm+ramp0.5: −0.18/−0.28/−0.39/−0.51/−0.61/−0.65,
+3/6 panels in-band, rest close). A lower early floor + seed ~−0.07 should close
+1990/2000.
+
+Remaining for the implementation pass (needs sign-off — it changes the shipped web
+build and the affect "scissors" narrative):
+- Pick the seed mean + the `affect_lr` ramp schedule; wire as arc constants/schedule
+  (pillar untouched).
+- Re-run the **full 9-seed scoreboard** — affect feeds back into ideology via the BC
+  affect modulator, the affect-gated `BacklashRepulsion`, and affect-weighted
+  `TieRewiring`, so party_sep / modularity / xc must be re-checked, not just affect.
+- Note the **isolated-agent dilution** in `affective_polarization` biases the mean
+  *warm*; it currently helps, but if the seed/ramp fix is tuned against the diluted
+  mean, decide whether to keep or fix the dilution explicitly.
+- Wire the grounded bands into `phase8f_lib` and re-bless the affect cells by
+  measurement.
 
 ---
 
