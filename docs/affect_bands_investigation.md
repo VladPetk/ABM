@@ -198,26 +198,62 @@ Two root causes (NOT a band edit — engine dynamics):
    `affect_lr` cut can't work: it warms late into the band but leaves early too cold,
    or (at strong cuts) overshoots late warm while early stays cold.
 
-**Validated fix direction (5-seed sweep, `scripts/_affect_recal_sweep.py`, since
-removed):** warm the seed to ~−0.09 **and** time-ramp `affect_lr` (floor ~0.35–0.5
-→ 1.0 by 2020, so early animus is suppressed and the late collapse preserved). This
-flips the shape to convex and lands the 2010/2020/2025 panels in the grounded bands
-with 1980 moving −0.39 → −0.18 (e.g. warm+ramp0.5: −0.18/−0.28/−0.39/−0.51/−0.61/−0.65,
-3/6 panels in-band, rest close). A lower early floor + seed ~−0.07 should close
-1990/2000.
+**A time-ramped `affect_lr` was rejected as curve-fitting** — `affect_lr` is a
+fixed cognitive trait; ramping it in calendar time has no real-world referent. A
+5-seed probe confirmed a warm seed + lr-ramp *can* produce a convex shape, but that
+just paints the target on. The honest question is whether convexity emerges from the
+endogenous drivers — which led to the driver diagnostic below.
 
-Remaining for the implementation pass (needs sign-off — it changes the shipped web
-build and the affect "scissors" narrative):
-- Pick the seed mean + the `affect_lr` ramp schedule; wire as arc constants/schedule
-  (pillar untouched).
-- Re-run the **full 9-seed scoreboard** — affect feeds back into ideology via the BC
-  affect modulator, the affect-gated `BacklashRepulsion`, and affect-weighted
-  `TieRewiring`, so party_sep / modularity / xc must be re-checked, not just affect.
-- Note the **isolated-agent dilution** in `affective_polarization` biases the mean
-  *warm*; it currently helps, but if the seed/ramp fix is tuned against the diluted
-  mean, decide whether to keep or fix the dilution explicitly.
-- Wire the grounded bands into `phase8f_lib` and re-bless the affect cells by
-  measurement.
+### Driver-trajectory diagnostic — `scripts/affect_driver_diag.py`
+
+Tracing the shipped arc (seed 0) shows the **drivers accelerate correctly**, but
+affect is concave anyway:
+
+| | 1980 | 2000 | 2025 | shape |
+|---|---|---|---|---|
+| identity_alignment | 0.21 | 0.24 | 0.41 | **convex / accelerating** ✓ |
+| perceived_threat | 0 | 0 | 0.04 (spike 0.14 @2016) | late spike |
+| coupling | 0.40 | 0.80 | 1.10 | ramps ✓ |
+| out-party neighbours (count) | 3.47 | 2.65 | 1.85 | **~halves** ✗ |
+| affect Δ per yr | −0.063 | −0.031 | −0.023 | **decelerating → concave** ✗ |
+
+**Two structural impediments strangle the (correct) accelerating drivers:**
+
+1. **Contact starvation.** `AffectiveUpdate` fires only on a direct out-party
+   network encounter. Homophilous sorting halves out-party exposure over the arc, so
+   the cooling mechanism *starves exactly when the drivers accelerate*. The
+   accelerating identity-alignment stock gets multiplied by a *shrinking* contact
+   count.
+2. **Saturation.** The `(1 − w²)` term (Phase 9 §11.7-G, added to stop overshoot vs
+   the OLD too-cold bands) damps each step by >half once affect is cold — an explicit
+   late-decelerator, engineered to flatten the very collapse we now want.
+
+**The named mechanistic gap:** the engine's animus is *contact-mediated*, but modern
+out-party animus is increasingly **mediated/parasocial** — Mason 2018 / Iyengar et al.
+2019: aligned identity + partisan media breed animus toward out-partisans one never
+meets. The engine has no contact-independent animus channel, so when sorting removes
+the contacts, animus can't keep growing. Fixing this is a *documented real mechanism*,
+not curve-fitting.
+
+### Revised step-3 plan (endorsed direction — honest engine improvement)
+
+1. Warm the 1980 seed to the real thermometer (`historical_arc.py:1049`, −0.25 → ~−0.09).
+2. Lower the *base* per-encounter magnitude so early/low-alignment encounters barely cool.
+3. Source the late steepening from the endogenous **identity-alignment stock** (it
+   already accelerates): add a **contact-independent animus channel** keyed to the
+   agent's own `identity_alignment` (and/or media diet) that fires per tick regardless
+   of out-party neighbours — the parasocial/media-mediated animus the literature
+   describes. Likely also dial back/retire `saturation` (it was fit to the old bands).
+4. Bring in dated **exogenous drivers** (social-media adoption ramp) as the legitimate
+   accelerant of the contact-independent channel — calendar-time is OK here because it
+   maps to a real dated change in the information environment (unlike `affect_lr`).
+5. If convexity still won't emerge, scan further for impediments and document the
+   structural tension (contact-gating + saturation vs accelerating drivers) honestly.
+
+Implementation needs sign-off (changes the shipped web build + the "scissors" narrative);
+must re-run the **full 9-seed scoreboard** (affect feeds back via the BC modulator, the
+affect-gated `BacklashRepulsion`, and affect-weighted `TieRewiring`), wire the grounded
+bands into `phase8f_lib`, and re-bless by measurement.
 
 ---
 
