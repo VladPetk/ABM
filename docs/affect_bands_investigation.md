@@ -255,6 +255,42 @@ must re-run the **full 9-seed scoreboard** (affect feeds back via the BC modulat
 affect-gated `BacklashRepulsion`, and affect-weighted `TieRewiring`), wire the grounded
 bands into `phase8f_lib`, and re-bless by measurement.
 
+### Step 3 RESULT — the mechanism works (validated, 9 seeds)
+
+New rule `abm/rules/mediated_animus.py` (`MediatedAnimus`): a contact-independent
+animus channel, `Δ = −lr · mediated_animus_weight · identity_alignment`, off by
+default. Tuned by measurement (`scripts/affect_recal_tune.py`) on the canonical
+config. **Validated parameter set:**
+
+- 1980 affect seed −0.25 → **−0.09** (real 1986–88 thermometer under the midpoint map).
+- contact `affect_lr` base 0.01 → **0.003** (×0.30; early/low-alignment encounters barely cool).
+- `AffectiveUpdate.saturation` 1.0 → **0.0** (retire the late-decelerator fit to the old bands).
+- `MediatedAnimus.lr` = **0.014**, env `mediated_animus_weight` ramp **0 (pre-2008) → 0.5
+  (2008) → 0.8 (2010) → 1.0 (2012+)** — keyed to the dated social-media era.
+
+**Result (9 seeds, vs grounded bands):** affect is now **convex** and lands the bands —
+−0.14/−0.20/−0.28/−0.44/−0.62/−0.68 (2000/2010/2020/2025 in; 1990 on the edge; 1980 in).
+Crucially the **rewire/structural metrics are preserved**: 2025 modularity 0.199, xc 0.416,
+party_sep 1.128 — affect feedback did not damage them. Full scoreboard (grounded affect
+bands) 11 → 14/24; the remaining fails are the pre-existing **constraint (hot) / within-SD
+(low)** cells — a separate workstream, not affect or rewire.
+
+So the convexity **emerges** from endogenous identity-alignment × a dated media driver —
+no calendar-time `affect_lr` ramp. This is the honest engine improvement.
+
+### Baking plan (the implementation step — needs the go-ahead)
+
+The validated params are proven via post-build patching; baking into `historical_arc`
+changes EVERY arc run, so the affect-pinned tests (`test_phase8c_affect`, phase8e/9
+goldens) WILL change and need honest re-blessing. To keep the default/test path
+bit-identical, gate the four changes behind the existing **`evidence_regrade`** master
+flag (which `ANES_FULL_KWARGS` already sets True and the default-path tests leave False):
+1. seed mean, 2. `affect_lr` base, 3. `AffectiveUpdate.saturation`, 4. add `MediatedAnimus`
++ schedule `mediated_animus_weight` (reuse the 2008/2010/2012 social-media events).
+Then: isolation test for `MediatedAnimus`; wire grounded bands into `phase8f_lib`
+(`ANES_PRIMARY_TARGETS`/IC); full `pytest`; 9-seed re-score; re-bless affect cells;
+regenerate `cc-data.js`. Tag: mechanism **L**, magnitudes **N**.
+
 ---
 
 ## What's on this branch
