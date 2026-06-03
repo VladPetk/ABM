@@ -134,27 +134,66 @@ as the rest of the calibration:
    lists 1980 out = 52.8 (Iyengar POQ), but the raw-file weighted partisan value is
    45.9 — another argument to rebuild from raw, not figures.
 
-### Recommended path (one decision required)
+### Decision (resolved): use the principled midpoint map; fix the engine, not the transform
 
-- **Decide the affect→thermometer mapping** (the only thing that needs a human
-  call). Recommendation: keep `(deg−62)/50` but document its justification (the
-  engine `affect` is a negative-going animus construct anchored to reality at 1980,
-  not a literal thermometer) — it's what the shipped viz already uses and it makes
-  the sim line track reality (50→24 vs real 53→20). The neutral=50 alternative is
-  cleaner in theory but reveals both bands and engine as far too cold.
-- **Build a reproducible affect-band builder** (parallel to the
-  `respondent_coordinates` pipeline) that derives bands from the in-repo ANES
-  thermometer + the chosen mapping, so affect stops being eyeballed figures. Width
-  labeled as mapping/instrument allowance, not sampling.
-- **Scope the isolated-agent dilution fix** separately — needed if we ground bands
-  to the colder modern thermometer.
+The display mapping is a free affine transform — the web demo can remap engine
+`aff` onto degrees however it likes to make the overlay line up. *Because it's
+free, using it to set scoring bands is circular* (you can pick the transform that
+"passes"). So scoring uses the principled midpoint map `aff = (deg − 50)/50`
+(50° = ANES-defined neutral; the engine's `affect` is seeded at 0 = neutral, so
+this is the natural bijection). The demo keeps whatever display map it wants —
+that's independent. What the midpoint map reveals (engine + old bands too cold)
+is a real finding to fix in the engine (step 3), not stash in the offset.
+
+### Step 1 + 2 DONE — `scripts/affect_band_builder.py`
+
+Reproducible builder (companion to `phase9_anes_target_builder.py`): reads the
+raw ANES cumulative file, extracts the out-party party thermometer
+(VCF0218/0224, partisans only, weighted VCF0009z), buckets by the same
+`DECADE_WAVES`, maps via the midpoint map, and emits
+`data/phase9_empirical/derived/{outparty_thermometer.csv, affect_bands.json}`.
+Band half-width = max(across-wave half-range, 0.05 floor), labelled an
+instrument/temporal allowance (sampling SE is ~0.005, negligible).
+
+**Grounded affect bands (vs the current hand-scaled ones):**
+
+| Panel | out-therm° | grounded band | current (hand-scaled) |
+|---|---|---|---|
+| 1980 | 45.3 | [−0.14, −0.04] | [−0.35, −0.20] |
+| 1990 | 42.4 | [−0.21, −0.10] | [−0.45, −0.30] |
+| 2000 | 37.7 | [−0.31, −0.18] | [−0.55, −0.40] |
+| 2010 | 26.9 | [−0.51, −0.41] | [−0.65, −0.50] |
+| 2020 | 19.6 | [−0.66, −0.56] | [−0.78, −0.60] |
+| 2025 | (19.6) | [−0.71, −0.51] *extrapolated, no ANES past 2024* | [−0.85, −0.65] |
+
+The old bands run ~0.2 too cold at every decade. The shape is also different:
+reality is **flat-and-warm early** (1980 out-therm 45° ≈ −0.09; barely cold) and
+**collapses late** (most of the fall is 2008→2020). The current bands (and the
+engine) ramp animus too early.
+
+### Step 3 (next) — match engine output to reality
+
+Engine `affect` runs −0.25 (1980) → −0.74 (2025): colder than the grounded bands
+at every decade, gap largest early (1980 −0.25 vs grounded −0.09). So the engine
+**over-produces out-party animus, too early**. Reconciling means engine-dynamics
+work (NOT a band edit), candidate levers:
+- `AffectiveUpdate` learning rate / negative-drift magnitude (and its schedule) —
+  damp early animus, preserve the late collapse so the *shape* matches.
+- The **isolated-agent dilution** in `affective_polarization` currently biases the
+  mean *warm* (toward 0), so it's masking even more animus among connected agents —
+  fixing dilution alone makes the gap worse, so it must be paired with lower drift.
+- Re-bless the affect cells against the grounded bands once the engine lands.
 
 ---
 
 ## What's on this branch
 
-- `scripts/phase9_anes_score.py` — preset reconciliation (the only code change).
+- `scripts/phase9_anes_score.py` — preset reconciliation.
+- `scripts/affect_band_builder.py` — the affect-band builder (step 1).
+- `data/phase9_empirical/derived/affect_bands.json`, `outparty_thermometer.csv`
+  — the grounded bands + thermometer series (step 2 output).
 - `docs/affect_bands_investigation.md` — this writeup.
 
-Nothing here changes engine behaviour or any band. The `rewire_rate` change and
-the affect-viz deliverable live on `web-redesign-ideas`.
+The builder writes derived data and prints the bands; it does NOT wire them into
+`phase8f_lib` or change engine behaviour. The `rewire_rate` change and the
+affect-viz deliverable live on `web-redesign-ideas`.
