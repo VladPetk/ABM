@@ -1469,7 +1469,24 @@ def build_engine(
             ),
         ),
         TieRewiring(
-            rewire_rate=0.02,
+            # Cross-cutting recalibration (2026-06). 0.02 left the
+            # 1980->2025 cross-cutting decline too compressed at the
+            # modern end and left party modularity undershooting its
+            # empirical target by ~0.05-0.10 from 2010 on (see
+            # docs/BACKLOG.md "Modularity undershoot"). Raising to 0.03
+            # steepens the *partisan* cross-cutting tie fraction to
+            # ~0.357 -> ~0.21 over the arc (a ~42% relative drop, in line
+            # with the co-partisan-marriage series: cross-party married
+            # fell 46% (1973) -> 26% (~2013); Iyengar, Konitzer & Tedin
+            # 2018), lifts 2025 modularity 0.165 -> ~0.20 (toward the
+            # 0.21-0.26 empirical band), and -- because affect-weighted
+            # rewiring sheds cold out-party ties slightly faster -- nudges
+            # the 2025 out-party affect from -0.767 BACK ONTO the blessed
+            # Phase 9 reference (-0.725; the affect spine is preserved,
+            # not degraded). The pillar's S4 rewire_rate is set
+            # independently in calm_to_camps.py and is intentionally NOT
+            # changed, so the pillar drift-guard stays bit-identical.
+            rewire_rate=0.03,
             affect_weight_rewire=TR_AFFECT_WEIGHT_REWIRE,
         ),
         ResidentialMigration(
