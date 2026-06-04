@@ -1,7 +1,7 @@
 // Calm to Camps — unified shell (post-QA rebuild).
 // ONE page, three postures, two static pages. The frame never moves:
 //   • Tier-1 site header (brand + Model / Methods / About)            — constant
-//   • Tier-2 mode bar (Watch / Explore / Interventions + Pos/Affect)  — constant across postures
+//   • Tier-2 mode bar (Story / Interventions)  — constant across postures
 //   • body: [tray (slides in for Interventions)] · field · right rail(452)
 //   • bottom bar (fixed height): unified timeline+transport, or hope-bar
 // Watch and Explore share the SAME draggable timeline + transport. Interventions
@@ -53,14 +53,12 @@ function SiteHeader({ page, setPage }) {
 
 }
 
-// ── Tier 2 — mode bar (posture switch + Pos/Affect). Constant height. ───────
-function ModeBar({ mode, setMode, layer, setLayer }) {
+// ── Tier 2 — mode bar (Story / Interventions posture switch). Constant height. ──
+function ModeBar({ mode, setMode }) {
   return (
     <div style={{ height: 50, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '0 clamp(24px, 4vw, 56px)', background: CC.bg, position: 'relative', zIndex: 20 }}>
       <div style={{ position: 'absolute', bottom: 0, left: 'clamp(24px, 4vw, 56px)', right: 'clamp(24px, 4vw, 56px)', height: 1, background: CC.border }} />
       <Segmented value={mode} onChange={setMode} options={[['watch', 'Story'], ['interventions', 'Interventions']]} />
-      <span style={{ flex: 1 }} />
-      <Segmented value={layer} onChange={setLayer} options={[['position', 'Position'], ['affect', 'Affect · animus']]} accent={layer === 'affect' ? CC.ink : CC.ink} />
     </div>);
 
 }
@@ -341,7 +339,7 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
           <Eyebrow>The story · 1980 → 2025</Eyebrow>
           <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, lineHeight: 1.05, letterSpacing: '-.015em' }}>That’s how the camps formed.</h2>
           <p style={{ margin: '18px 0 0', fontSize: DS.type.body, lineHeight: 1.6, color: CC.ink2 }}>Forty-five years, two hardening camps, a middle that thinned to almost nothing — and an out-party warmth that fell from the high-40s to the mid-20s.</p>
-          <p style={{ margin: '14px 0 0', fontSize: DS.type.body, lineHeight: 1.6, color: CC.ink2 }}>Now the obvious question: <em>could anything have pulled them back together?</em> Take the wheel — scrub any year, flip position against animus, and try the interventions for yourself.</p>
+          <p style={{ margin: '14px 0 0', fontSize: DS.type.body, lineHeight: 1.6, color: CC.ink2 }}>Now the obvious question: <em>could anything have pulled them back together?</em> Take the wheel — scrub any year and try the interventions for yourself.</p>
         </div>
         <div style={footer}>
           <button onClick={onExplore} style={primaryBtn}>Explore it yourself &nbsp;→</button>
@@ -395,7 +393,7 @@ const EXPLORE_NOTES = [
 { tick: 84, year: 2008, event: 'Social media reaches everyone; Obama elected.', viz: 'Often blamed, rarely convicted — the split was already underway, and rose fastest among the least-online.' },
 { tick: 90, year: 2010, event: 'The base hardens; Citizens United lands.', viz: 'Primary challenges pull the right outward. Citizens United is an era marker here, not the cause.' },
 { tick: 105, year: 2015, event: 'MAGA emerges.', viz: 'A dense knot forms in the populist-right corner.' },
-{ tick: 108, year: 2016, event: 'Trump wins — a status-threat shock.', viz: 'Switch to Affect · animus: the camps cool sharply.' },
+{ tick: 108, year: 2016, event: 'Trump wins — a status-threat shock.', viz: 'The camps harden into opposite corners; the contested middle keeps thinning.' },
 { tick: 120, year: 2020, event: 'COVID and January 6th.', viz: 'Two separate masses, with almost nothing left between them.' }];
 
 function ExploreAnnotation({ tick }) {
@@ -442,32 +440,23 @@ function CalibrationAnchor({ tick }) {
 
 }
 
-function ExploreRail({ layer, tick }) {
-  const isAffect = layer === 'affect';
+function ExploreRail({ tick }) {
   return (
     <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%', justifyContent: 'safe center', overflow: 'auto' }}>
       <div style={{ flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px clamp(28px,4.5vh,52px) clamp(64px,14vw,248px)`, display: 'flex', flexDirection: 'column', gap: 22 }}>
         <div>
-          <Eyebrow>{isAffect ? 'Affective polarization' : 'Positional polarization'}</Eyebrow>
+          <Eyebrow>Affective polarization</Eyebrow>
           <h3 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 46, lineHeight: 1.02, letterSpacing: '-.022em' }}>
-            {isAffect ? 'Do they hate each other?' : 'Are they far apart?'}
+            Do they hate each other?
           </h3>
           <p style={{ margin: '18px 0 0', fontSize: DS.type.body, lineHeight: 1.62, color: CC.ink2, maxWidth: 460 }}>
-            {isAffect ?
-            <>Issue positions barely moved — but the feelings curdled. The clearest picture is the <strong>thermometer "scissors"</strong>: warmth toward your <em>own</em> side held roughly flat while warmth toward the <em>other</em> side fell off a cliff. On the map, both camps keep their colour but <strong>deepen as they cool</strong>, and the tether between them is the felt distance. <strong>Distance and animus are different axes.</strong></> :
-            <>A smoothed density of where {D.meta.n_agents} Americans sit, drawn as <strong>two party-coloured fields</strong>. One shared lump in 1980; two camps by 2025. Where they overlap is the contested middle — thinning, but never quite gone.</>}
+            Issue positions barely moved — but the feelings curdled. The map shows where people <em>stand</em>; this shows how they <em>feel</em>. The clearest picture is the <strong>thermometer "scissors"</strong>: warmth toward your <em>own</em> side held roughly flat while warmth toward the <em>other</em> side fell off a cliff. <strong>Distance and animus are different axes.</strong>
           </p>
         </div>
-        {isAffect ?
         <div>
-            <ScissorsChart tick={tick} />
-            <div style={{ marginTop: 10 }}><ScissorsLegend tick={tick} /></div>
-          </div> :
-        <div>
-            <Eyebrow style={{ color: CC.ink3 }}>One lump → two camps</Eyebrow>
-            <div style={{ marginTop: 10 }}><SmallMultiples /></div>
-          </div>
-        }
+          <ScissorsChart tick={tick} />
+          <div style={{ marginTop: 10 }}><ScissorsLegend tick={tick} /></div>
+        </div>
         <CalibrationAnchor tick={tick} />
         <div style={{ height: 1, background: CC.border }} />
         <div>
@@ -505,7 +494,7 @@ function BarTransport({ playing, toggle, setTick, speed, setSpeed }) {
 
 }
 
-function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, layer, mode, beatI, onPickBeat, ended }) {
+function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, beatI, onPickBeat, ended }) {
   const year = Math.floor(tickToYear(tick));
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const monthLabel = `${months[Math.min(11, Math.floor((tickToYear(tick) - year) * 12))]} ${year}`;
@@ -559,7 +548,7 @@ function Unified() {
   const { tick, setTick, playing, setPlaying, toggle, speed, setSpeed } = ph;
   const [page, setPage] = React.useState('model');
   const [mode, setMode] = React.useState('watch');
-  const [layer, setLayer] = React.useState('position');
+  const layer = 'position';   // affect compass removed — position is the only field
   const [beatI, setBeatI] = React.useState(0);
   const [orientStep, setOrientStep] = React.useState(0);
   const [orientSeen, setOrientSeen] = React.useState(false);
@@ -590,13 +579,6 @@ function Unified() {
     if (tick >= LAST - 1e-6) {if (!ended) {setEnded(true);setPlaying(false);}}
     else if (ended) setEnded(false);
   }, [tick, mode, unlocked, started, orientSeen, ended, setPlaying]);
-
-  // layer follows the active chapter (position → affect at the 2016 beat).
-  React.useEffect(() => {
-    if (mode !== 'watch' || unlocked || !started || !orientSeen || ended) return;
-    const want = BEATS[beatIndexAt(tick)].layer;
-    if (want && want !== layer) setLayer(want);
-  }, [tick, mode, unlocked, started, orientSeen, ended, layer]);
 
   // dismiss the first-run hint as soon as the reader plays.
   React.useEffect(() => {if (playing) setHintSeen(true);}, [playing]);
@@ -651,7 +633,7 @@ function Unified() {
   // paused at 1980 — they then scroll, or press ▶, to move through time.
   const enterOrientation = () => {
     setStarted(true);setOrientStep(0);setOrientSeen(false);setBeatI(0);
-    setLayer('position');setTick(0);setPaused(true);setPlaying(false);setEnded(false);setHintSeen(false);
+    setTick(0);setPaused(true);setPlaying(false);setEnded(false);setHintSeen(false);
   };
   // Back / Continue step discretely between chapters (for readers who'd rather
   // click than scroll); the wheel and ▶ remain the primary ways through.
@@ -664,10 +646,10 @@ function Unified() {
   const railContinue = () => {phase === 'intro' ? enterOrientation() : stepBeat(1);};
   const pickBeat = (k) => {setHintSeen(true);setPlaying(false);setEnded(false);setTick(BEATS[k].tick + 0.001);};
   // finishing the guided story hands the controls over ON THE SAME canvas
-  // (no separate Explore tab) — free scrub, layer toggle, parties, scissors.
+  // (no separate Explore tab) — free scrub on the position field, parties toggle.
   const goExplore = () => {setUnlocked(true);setEnded(false);setPaused(false);setPlaying(false);};
   const switchMode = (m) => {
-    if (m === 'watch') {setUnlocked(false);setEnded(false);setStarted(false);setBeatI(0);setLayer('position');setTick(0);setPaused(false);setPlaying(false);setOrientStep(0);setOrientSeen(false);setHintSeen(false);} else
+    if (m === 'watch') {setUnlocked(false);setEnded(false);setStarted(false);setBeatI(0);setTick(0);setPaused(false);setPlaying(false);setOrientStep(0);setOrientSeen(false);setHintSeen(false);} else
     {setPlaying(false);}
     if (m === 'interventions' && !ivIntroSeen) setShowIvIntro(true);
     setMode(m);
@@ -715,7 +697,7 @@ function Unified() {
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}>
       <SiteHeader page={page} setPage={setPage} />
-      <ModeBar mode={mode} setMode={switchMode} layer={layer} setLayer={setLayer} />
+      <ModeBar mode={mode} setMode={switchMode} />
 
       {/* body — Interventions is a borderless workbench; Watch/Explore is a full-bleed editorial collage */}
       {isIv ?
@@ -724,7 +706,7 @@ function Unified() {
       <div style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden', background: CC.bg }}>
           {/* the compass — a fully contained square anchored right (no bleed; all axes & labels visible) */}
           <div style={{ position: 'absolute', top: '-6%', bottom: '-6%', right: '2%', aspectRatio: '1' }}>
-            <Field run={D.runs.baseline} tick={tick} layer={layer} view="density" showGap dim={dimField} reveal={watchReveal} landmarks={layer === 'position' ? isExplore && showLandmarks ? 'all' : 'fixed' : false} />
+            <Field run={D.runs.baseline} tick={tick} layer="position" view="density" showGap dim={dimField} reveal={watchReveal} landmarks={isExplore && showLandmarks ? 'all' : 'fixed'} />
           </div>
 
           {/* paper scrim — keeps the floating prose legible, feathers out before the map */}
@@ -733,7 +715,7 @@ function Unified() {
           {/* chips + annotations, anchored to the visible map region */}
           <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', right: 0, pointerEvents: 'none', zIndex: 2 }}>
             {isExplore && <ExploreAnnotation tick={tick} />}
-            {isExplore && layer === 'position' &&
+            {isExplore &&
           <button onClick={() => setShowLandmarks((v) => !v)} style={{
             position: 'absolute', right: 24, top: 20, pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8,
             fontFamily: SANS, fontSize: DS.type.micro, fontWeight: 500, cursor: 'pointer',
@@ -752,7 +734,7 @@ function Unified() {
             {isWatch && (stagedOrient ?
               <OrientRail step={orientStep} onPrev={orientPrev} onNext={orientNext} onContinue={finishOrient} /> :
               <WatchRail phase={phase} beat={beat} beatI={dispBeatI} total={BEATS.length} nextBeat={BEATS.find((b) => b.tick > tick) || null} tick={tick} onBack={() => stepBeat(-1)} onContinue={railContinue} onExplore={goExplore} />)}
-            {isExplore && <ExploreRail layer={layer} tick={tick} />}
+            {isExplore && <ExploreRail tick={tick} />}
           </div>
         </div>
       }
@@ -762,7 +744,7 @@ function Unified() {
       {isIv ? null :
 
       <TimelineBar tick={tick} setTick={setTick} playing={playing} toggle={toggle} speed={speed} setSpeed={setSpeed}
-      layer={layer} mode={isWatch ? 'watch' : 'explore'} beatI={dispBeatI} onPickBeat={pickBeat} ended={ended} />
+      mode={isWatch ? 'watch' : 'explore'} beatI={dispBeatI} onPickBeat={pickBeat} ended={ended} />
       }
 
       {/* first-run helper — black, gently bobbing, dismissed on the first scroll
