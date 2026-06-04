@@ -254,7 +254,10 @@ function useInterventions() {
   const guess = activeId ? guesses[activeId] : null;
   const correct = guess && eff ? bucketToBet(eff.bucket) === guess : null;
 
-  const pick = (id) => { setSbMode(false); setSbId(null); setActiveId(id); };
+  // Reset to the canonical fixed decade on each pick. For interventions whose
+  // result is steady across decades the selector is hidden, so this is the one
+  // release they run; the decade-dependent ones (X5/X6) re-expose the picker.
+  const pick = (id) => { setSbMode(false); setSbId(null); setActiveId(id); setReleaseYear(DEFAULT_RELEASE); };
   const submitGuess = (g) => {
     if (!activeId) return;
     setGuesses((p) => ({ ...p, [activeId]: g }));

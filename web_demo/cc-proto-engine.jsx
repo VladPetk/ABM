@@ -50,6 +50,35 @@ function macroAt(run, f, key) {
   return run.macro[t0][key] + (run.macro[t1][key] - run.macro[t0][key]) * a;
 }
 
+// ── lazy counterfactual BRANCH loader ───────────────────────────────────────
+// The bundle ships counterfactuals LEAN (macro + 2025 endpoint). The per-tick
+// agent positions needed to PLAY a branch forward live in small static files
+// (web_demo/cf/<id>_<year>.json, see scripts/build_branch_data.py), fetched only
+// when a lever+year is actually opened. Promise-cached so each branch loads once.
+const _branchCache = {};
+// Stitch baseline frames 0..release_tick-1 in front of the branch's
+// release->end frames → a full-length run <Field> can play from 1980 to 2025
+// that is identical to baseline until the release year, then diverges.
+function stitchBranch(branch) {
+  const rt = branch.release_tick;
+  const base = D.runs.baseline;
+  return {
+    release_tick: rt,
+    pos: base.pos.slice(0, rt).concat(branch.pos),
+    party: base.party.slice(0, rt).concat(branch.party),
+    macro: base.macro,
+  };
+}
+function loadBranch(id, year) {
+  const k = id + '_' + year;
+  if (!_branchCache[k]) {
+    _branchCache[k] = fetch('cf/' + k + '.json')
+      .then((r) => { if (!r.ok) throw new Error('branch fetch failed: ' + r.status); return r.json(); })
+      .then((b) => stitchBranch(b));
+  }
+  return _branchCache[k];
+}
+
 // network snapshot at-or-before fractional tick f (event-cadence)
 function netSnapshotKey(run, f) {
   const keys = Object.keys(run.net).map(Number).sort((x, y) => x - y);
@@ -122,4 +151,5 @@ Object.assign(window, {
   D, NT, TPY, Y0, LAST, tickToYear, yearToTick, PARTY_CH, partyColor, partyName,
   posAt, agentPosAt, partyAt, factionAt, affectAt, macroAt,
   netSnapshotKey, egoEdges, METRICS, usePlayhead,
+  loadBranch, stitchBranch,
 });
