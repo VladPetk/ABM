@@ -719,16 +719,7 @@ function Unified() {
 
       {/* body — Interventions is a borderless workbench; Watch/Explore is a full-bleed editorial collage */}
       {isIv ?
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: `${TRAYW}px minmax(0,1fr) ${RAILW}px`, background: CC.bg }}>
-          <div style={{ overflow: 'hidden', minHeight: 0 }}>
-            <div style={{ width: TRAYW, height: '100%' }}><IvTray iv={iv} /></div>
-          </div>
-          <div style={{ position: 'relative', minWidth: 0, minHeight: 0 }}>
-            <Field run={D.runs.baseline} tick={LAST} layer={layer} view="density" showGap={false} dim={0} transform={iv.transform} landmarks={layer === 'position' ? 'fixed' : false} />
-            <FieldChip tone="paused">{iv.isSandbox ? 'sandbox · illustrative' : iv.showResult ? `modeled at 2025 · released ${iv.releaseYear}` : iv.predicting ? 'today · 2025 — your call pending' : 'today · 2025'}</FieldChip>
-          </div>
-          <div style={{ minWidth: 0, minHeight: 0 }}><IvRail iv={iv} /></div>
-        </div> :
+      <IvWorkbench iv={iv} layer={layer} /> :
 
       <div style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden', background: CC.bg }}>
           {/* the compass — a fully contained square anchored right (no bleed; all axes & labels visible) */}
@@ -766,12 +757,9 @@ function Unified() {
         </div>
       }
 
-      {/* bottom bar — fixed height across all postures */}
-      {isIv ?
-      <div style={{ height: BARH, flexShrink: 0, background: CC.bg, position: 'relative', display: 'flex', alignItems: 'center', padding: '0 clamp(28px, 4vw, 56px)' }}>
-          <div style={{ position: 'absolute', top: 0, left: 'clamp(28px, 4vw, 56px)', right: 'clamp(28px, 4vw, 56px)', height: 1, background: CC.border }} />
-          <IvBottom iv={iv} />
-        </div> :
+      {/* bottom bar — fixed height across all postures. Interventions mode has
+          no footer (the "Hope vs. what happened" bar was removed per Vlad). */}
+      {isIv ? null :
 
       <TimelineBar tick={tick} setTick={setTick} playing={playing} toggle={toggle} speed={speed} setSpeed={setSpeed}
       layer={layer} mode={isWatch ? 'watch' : 'explore'} beatI={dispBeatI} onPickBeat={pickBeat} ended={ended} />

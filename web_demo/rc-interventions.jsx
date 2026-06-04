@@ -262,6 +262,8 @@ function useInterventions() {
   };
   const openSandbox = () => { setActiveId(null); setSbMode(true); setSbId('W1'); };
   const closeSandbox = () => { setSbMode(false); setSbId(null); };
+  // return to the intervention picker from a specific lever OR the sandbox
+  const back = () => { setSbMode(false); setSbId(null); setActiveId(null); };
   const pickScenario = (id) => { setSbId(id); };
   const setKnob = (key, k) => { setSbId('tinker'); setTv((p) => ({ ...p, [key]: k })); };
 
@@ -271,7 +273,7 @@ function useInterventions() {
     activeId, active, eff, o, releaseYear, setReleaseYear, transform, baseGap, nowGap,
     predicting, showResult, guess, correct,
     sbMode, sbId, sbEff, tv, isSandbox: sbMode,
-    pick, submitGuess, openSandbox, closeSandbox, pickScenario, setKnob,
+    pick, submitGuess, openSandbox, closeSandbox, pickScenario, setKnob, back,
     revealed, revealedCount, total: IV_ORDER.length,
   };
 }
@@ -786,4 +788,8 @@ function IvBottom({ iv }) {
   );
 }
 
-Object.assign(window, { useInterventions, IvTray, IvRail, IvBottom });
+Object.assign(window, { useInterventions, IvTray, IvRail, IvBottom,
+  // exported for the alternate interventions layouts (rc-iv-layouts.jsx)
+  IV_ORDER, IVMETA, OUTCOME, bucketAt, RELEASE_YEARS,
+  BetButton, DeltaStat, ProvBadge, ReleaseSelector, DecadeSparkline,
+  GUESS, VERB, bucketToBet, improvementAt, _bucketCol, _clampN });
