@@ -692,6 +692,18 @@ def build_engine(
     # build_schedule(exogenous_shocks=...). Independent of evidence_regrade so
     # the shock layer can be validated in isolation.
     exogenous_shocks: bool = False,
+    # ── Sandbox dials (web_demo interactive sandbox) ──────────────────────────
+    # Pure MULTIPLIERS on existing rule magnitudes so the *illustrative* sandbox
+    # can crank distinct channels past calibration. All default 1.0 → strict
+    # no-op (bit-identical to head; pillar + Phase 4–9 paths never set them).
+    # These are NOT findings — they change the model, never re-blessed as
+    # measured. Each targets a different channel the knob-screen found distinct:
+    #   animus   → affect learning rates (contact + parasocial)  → out-party warmth
+    #   identity → IdentitySorting rate/step + sort multiplier    → mega-identity stacking
+    #   rewire   → TieRewiring rewire_rate                        → echo-chamber modularity
+    sandbox_animus_mult: float = 1.0,
+    sandbox_identity_mult: float = 1.0,
+    sandbox_rewire_mult: float = 1.0,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -1007,7 +1019,7 @@ def build_engine(
             affect_lr_base=(
                 AFFECT_LR_BASE_REGRADE if evidence_regrade
                 else AFFECT_LR_BASE_DEFAULT
-            ),
+            ) * sandbox_animus_mult,   # sandbox dial (1.0 = no-op)
         )
 
         # Per-party party_cue σ (M4 asymmetric).
@@ -1244,7 +1256,7 @@ def build_engine(
         # default path → bit-identical.
         "identity_sorting_multiplier": (
             IDENTITY_SORTING_REGRADE_MULTIPLIER if evidence_regrade else 1.0
-        ),
+        ) * sandbox_identity_mult,   # sandbox dial (1.0 = no-op); survives decade resets
         "gingrich_drift_rate": gingrich_drift_rate,
         "gingrich_drift_rate_y": gingrich_drift_rate_y,
         "gingrich_drift_asymmetric": gingrich_drift_asymmetric,
@@ -1437,7 +1449,7 @@ def build_engine(
         # late steepening the contact channel can't, because homophilous
         # sorting starves out-party contact. See docs/affect_bands_investigation.md.
         MediatedAnimus(
-            learning_rate=MEDIATED_ANIMUS_LR if evidence_regrade else 0.0,
+            learning_rate=(MEDIATED_ANIMUS_LR if evidence_regrade else 0.0) * sandbox_animus_mult,
         ),
         IdentitySorting(
             # Step 2 (flag-1 fix): scale the initial sort rate by the
@@ -1445,10 +1457,10 @@ def build_engine(
             # boundaries re-scale via _set_identity_sorting.
             sort_rate=IDENTITY_SORTING_SCHEDULE["1980-90"] * (
                 IDENTITY_SORTING_REGRADE_MULTIPLIER if evidence_regrade else 1.0
-            ),
+            ) * sandbox_identity_mult,   # sandbox dial (1.0 = no-op)
             step=(
                 IDENTITY_SORTING_REGRADE_STEP if evidence_regrade else 0.05
-            ),
+            ) * sandbox_identity_mult,
             differentiation=0.5,
         ),
         # Step 1 (web_demo evidence re-grade, D3b): explicit
@@ -1458,7 +1470,7 @@ def build_engine(
         # (the rule is present but inert). When on, it maintains the
         # per-agent `identity_alignment` scalar that AffectiveUpdate
         # reads to amplify out-party animus for stacked agents.
-        IdentityAlignment(rate=0.10),
+        IdentityAlignment(rate=0.10 * sandbox_identity_mult),   # sandbox dial (1.0 = no-op)
         BacklashRepulsion(
             epsilon=0.30, max_range=1.5, strength=0.0,
             affect_threshold=BACKLASH_AFFECT_THRESHOLD,
@@ -1537,7 +1549,7 @@ def build_engine(
             # not degraded). The pillar's S4 rewire_rate is set
             # independently in calm_to_camps.py and is intentionally NOT
             # changed, so the pillar drift-guard stays bit-identical.
-            rewire_rate=0.03,
+            rewire_rate=0.03 * sandbox_rewire_mult,   # sandbox dial (1.0 = no-op)
             affect_weight_rewire=TR_AFFECT_WEIGHT_REWIRE,
         ),
         ResidentialMigration(

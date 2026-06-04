@@ -53,14 +53,14 @@ const STORY_BEATS = [
     data: { label: 'Party separation', valueAt: _sepAt, fmt: (v) => v.toFixed(2), note: 'edges harden', color: 'd' },
   },
   {
-    tick: 108, title: 'It stops being about policy', short: 'Animus', layer: 'affect',
+    tick: 108, title: 'It stops being about policy', short: 'Animus', layer: 'position',
     lead: 'A status-threat shock lands, and the middle stops feeling safe to stand in.',
     body: 'Americans still haven’t moved far apart on the issues — but now they dislike each other, and that matters more than the issues do. The trigger is a contested one: Mutz reads 2016 as status threat; Morgan argues economics mattered too. Either way, the feeling curdles.',
     metric: (t) => `out-party warmth down to ${warmthDegAt(t)}° — coldest yet`,
     data: { label: 'Out-party warmth', valueAt: (t) => warmthDegAt(t), fmt: (v) => `${Math.round(v)}°`, note: 'coldest yet' },
   },
   {
-    tick: 120, title: 'Two Americas', short: 'Two Americas', layer: 'affect',
+    tick: 120, title: 'Two Americas', short: 'Two Americas', layer: 'position',
     lead: 'By the pandemic, the two camps no longer share a map — or a set of facts.',
     body: 'COVID and January 6th harden the sort into two separate masses. Out-party warmth has fallen from the high-40s to the mid-20s and is near its floor — there isn’t much colder left to go. Forty years earlier they were one crowd; now they can barely speak.',
     metric: (t) => `out-party warmth bottoms near ${warmthDegAt(t)}°`,

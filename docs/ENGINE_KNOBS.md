@@ -496,6 +496,26 @@ preset is `phase9_anes_score.PRESETS["anes_full"]`.
 |---|---|---|---|
 | `evidence_regrade` | False | **True** | Master gate for the Step-1 truth-pass (Gingrich/CU re-attribution, social-media demotion, identity-alignment → affect). `False` is a strict no-op → default path bit-identical. Pair with `build_schedule(evidence_regrade=...)`. See §7.1. |
 
+### 5.9 Web-demo sandbox dials (illustrative — not a finding)
+Three multiplier hooks added for the web demo's interactive sandbox
+(`scripts/build_sandbox_data.py`). Each scales one already-present mechanism;
+all default to `1.0`, and `×1.0` is exact in IEEE-754, so the default/pillar/
+test path stays **bit-identical**. The sandbox cranks these *past* the
+calibration envelope, so its outputs are illustrative only — not measured, not
+re-blessed (provenance **E**/**N**). See methods.md §5.11.
+
+| Kwarg | Default | Scales | Sandbox label / outcome axis |
+|---|---|---|---|
+| `sandbox_animus_mult` | 1.0 | per-agent `affect_lr` seed + `MediatedAnimus.learning_rate` | **animus** → out-party warmth |
+| `sandbox_identity_mult` | 1.0 | `IdentitySorting` (sort_rate + step), `identity_sorting_multiplier`, `IdentityAlignment.rate` | **identity** → mega-identity stacking |
+| `sandbox_rewire_mult` | 1.0 | `TieRewiring.rewire_rate` | **echo** → network modularity |
+
+The other two sandbox dials reuse existing kwargs:
+`tier_d_anes_drift_multiplier` (**elite** → party separation, §5.5) and
+`tier_c_bc_strength` (**openness** → within-party tightness, §5.6). The five
+dials were chosen by a metric-span screen (`scripts/sandbox_knob_screen.py`) so
+each owns a distinct outcome axis.
+
 ---
 
 ## 6. Interventions library (X1–X7)

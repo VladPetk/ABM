@@ -137,7 +137,7 @@ mapped to one engine mechanism and labelled by **measurement** on two
 independent axes (issue sorting / affect) into buckets
 (`null` / `partial` / `real` / `backfire`).
 
-Three honesty rules run through the whole engine and matter when reading or
+Four honesty rules run through the whole engine and matter when reading or
 presenting results:
 - **Measure-then-bless.** Bucket tags are set by measurement, not authored.
   Change the engine and the consolidated tests fail loudly — re-bless honestly;
@@ -151,6 +151,12 @@ presenting results:
   MARKER grades — present them honestly (e.g. Citizens United is a non-causal
   **MARKER**, not a cause; elite drift is attributed to **Gingrich/1994**,
   HIGH). See `docs/polarization_causal_model.md`.
+- **Log every source.** Whenever a new method/mechanism is introduced, a paper
+  is cited, or a dataset/survey is shown, record it where appropriate **in the
+  same change** — the calibration detail + provenance tag in
+  [`docs/methods.md`](docs/methods.md), and the annotated entry (what it anchors,
+  where it's used) in [`docs/literature.md`](docs/literature.md). Don't let
+  citations accumulate only in code comments, commit messages, or one-off briefs.
 
 ### Time & status
 Time maps via `ticks_per_year = 3` (1 tick ≈ 4 months), anchored to the ANES
@@ -245,6 +251,9 @@ engine (Python)
   why each rule exists (high altitude).
 - [`docs/methods.md`](docs/methods.md) — citation-pinned methods (every number
   anchored to a paper) + the full provenance and limitations tables.
+- [`docs/literature.md`](docs/literature.md) — annotated index of every dataset
+  and paper: what each anchors and where in the repo it's used (the "where does
+  this number come from?" reference).
 - [`docs/ENGINE_KNOBS.md`](docs/ENGINE_KNOBS.md) — operator's manual: every
   rule, knob, scenario, and `build_engine` kwarg.
 - [`docs/INTERVENTIONS_OVERVIEW.md`](docs/INTERVENTIONS_OVERVIEW.md) — the 7
