@@ -161,16 +161,44 @@ function sandboxFromTinker(v) {
   };
 }
 
+// ── sandbox: the 5-knob pre-rendered grid (build_sandbox_data.py) ─────────────
+// Each knob has 5 detents; the values MUST match GRID in build_sandbox_data.py.
+// Data-driven (scripts/sandbox_knob_screen.py): each owns a distinct axis.
+const SANDBOX_KNOBS = [
+  { key: 'elite',    name: 'Elite extremism', stops: ['0×', '1.5×', '3×', '5×', '8×'],   owns: 'how far apart the parties pull' },
+  { key: 'animus',   name: 'Partisan animus', stops: ['0.5×', '1×', '2×', '4×', '8×'],   owns: 'how cold they get toward each other' },
+  { key: 'identity', name: 'Mega-identity',   stops: ['0×', '0.5×', '1×', '2×', '3×'],   owns: 'how stacked identity is with party' },
+  { key: 'echo',     name: 'Echo chambers',   stops: ['0×', '1×', '3×', '6×', '10×'],    owns: 'how walled-off the networks are' },
+  { key: 'openness', name: 'Open-mindedness', stops: ['closed', 'low', 'mid', 'high', 'max'], owns: 'how much people hear the other side' },
+];
+const SANDBOX_CENTER = [2, 1, 2, 1, 1];   // the shipped arc (center cell of the grid)
+// Presets = named knob-vectors (indices into each knob's stops).
+// Each preset emulates a recognizable real-world / scholarly scenario; `note`
+// says WHAT it's modelling so the user knows what they're looking at.
+const SANDBOX_PRESETS = [
+  { name: 'The shipped arc', vec: [2, 1, 2, 1, 1],
+    note: 'What actually happened — the calibrated 1980→2025 baseline. The center of the grid.' },
+  { name: 'Great Sorting', vec: [4, 3, 4, 4, 0],
+    note: 'Every force maxed: a maximally polarized society, the two camps slammed into opposite corners.' },
+  { name: 'Depolarized', vec: [0, 0, 0, 0, 4],
+    note: 'Every force dialed down: the low-conflict, overlapping politics of the mid-century — one warm cloud.' },
+  { name: 'Cold Peace', vec: [1, 4, 1, 1, 2],
+    note: 'Close on the issues, yet they despise each other — pure team loyalty (affective polarization without issue sorting).' },
+  { name: 'Leaders vs People', vec: [4, 1, 0, 1, 2],
+    note: 'Elites fly to the extremes while the public stays moderate — the elite-driven polarization thesis.' },
+  { name: 'Mega-identity', vec: [2, 1, 4, 1, 1],
+    note: 'Race, religion and lifestyle all line up with party — Mason’s mega-identity end-state (the diagonal collapse).' },
+];
+
 // ── shared state ─────────────────────────────────────────────────────────────
 function useInterventions() {
   const [activeId, setActiveId] = React.useState(null);       // full engine id, or null
   const [releaseYear, setReleaseYear] = React.useState(DEFAULT_RELEASE);
   const [revealed, setRevealed] = React.useState(() => new Set());
   const [guesses, setGuesses] = React.useState({});
-  // sandbox is a SEPARATE surface — its own active state, never in the engine list
+  // sandbox is a SEPARATE surface — the 5-knob pre-rendered alternate-history grid
   const [sbMode, setSbMode] = React.useState(false);          // sandbox surface open?
-  const [sbId, setSbId] = React.useState(null);               // active what-if id, or 'tinker'
-  const [tv, setTv] = React.useState({ elite: 0, open: 2, media: 1 });
+  const [sbKnobs, setSbKnobs] = React.useState(SANDBOX_CENTER); // 5 detent indices
 
   const active = activeId ? IVMETA[activeId] : null;
   const predicting = !!active && !revealed.has(activeId);
@@ -191,11 +219,6 @@ function useInterventions() {
   }
   const o = eff ? OUTCOME[eff.bucket] : null;
 
-  // sandbox effect (illustrative)
-  const sbEff = sbMode ? (sbId && sbId !== 'tinker'
-    ? sandboxFromScenario(SB_SCENARIOS.find((s) => s.id === sbId))
-    : sandboxFromTinker(tv)) : null;
-
   // ── compass morph: real per-agent baseline-2025 → counterfactual endpoint ──
   // (positions only; coloured by baseline party, which cf.endpos omits.)
   const animRef = React.useRef(0); // 0 = baseline 2025, 1 = counterfactual 2025
@@ -215,29 +238,10 @@ function useInterventions() {
   }, [morphTarget, activeId, releaseYear]);
   const m = animRef.current;
 
-  // sandbox cosmetic spread animation (its own multiplier)
-  const sbAnimRef = React.useRef(1);
-  const sbTarget = sbEff ? sbEff.mult : 1;
-  React.useEffect(() => {
-    let raf; const from = sbAnimRef.current, to = sbTarget, t0 = performance.now();
-    const dur = Math.abs(to - from) < 0.001 ? 0 : 620;
-    const step = (now) => {
-      const k = dur ? Math.min(1, (now - t0) / dur) : 1;
-      const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
-      sbAnimRef.current = from + (to - from) * e; force((x) => x + 1);
-      if (k < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [sbTarget]);
-
-  // the transform handed to <Field>. Engine path morphs to cf.endpos;
-  // sandbox path uses the cosmetic scalar spread; idle is identity.
+  // the transform handed to <Field>: the engine-result path morphs the 2025
+  // cloud to the counterfactual endpoint. The sandbox no longer uses a cosmetic
+  // transform — it plays a REAL pre-rendered run (useIvPlayback / loadSandbox).
   const transform = React.useCallback((ps) => {
-    if (sbMode && sbEff) {
-      const mu = sbAnimRef.current;
-      return ps.map(([x, y]) => [_clampN(-1.25, 1.25, x * mu), _clampN(-1.25, 1.25, y * mu)]);
-    }
     if (eff && eff.endpos && m > 0.0001) {
       const ep = eff.endpos;
       return ps.map((p, i) => {
@@ -246,7 +250,7 @@ function useInterventions() {
       });
     }
     return ps;
-  }, [sbMode, sbEff, eff, m]);
+  }, [eff, m]);
 
   const baseGap = centroids(BASE_POS_LAST, BASE_PARTY_LAST).gap;
   const nowGap = centroids(transform(BASE_POS_LAST.map((p) => [p[0], p[1]])), BASE_PARTY_LAST).gap;
@@ -257,26 +261,28 @@ function useInterventions() {
   // Reset to the canonical fixed decade on each pick. For interventions whose
   // result is steady across decades the selector is hidden, so this is the one
   // release they run; the decade-dependent ones (X5/X6) re-expose the picker.
-  const pick = (id) => { setSbMode(false); setSbId(null); setActiveId(id); setReleaseYear(DEFAULT_RELEASE); };
+  const pick = (id) => { setSbMode(false); setActiveId(id); setReleaseYear(DEFAULT_RELEASE); };
   const submitGuess = (g) => {
     if (!activeId) return;
     setGuesses((p) => ({ ...p, [activeId]: g }));
     setRevealed((p) => { const n = new Set(p); n.add(activeId); return n; });
   };
-  const openSandbox = () => { setActiveId(null); setSbMode(true); setSbId('W1'); };
-  const closeSandbox = () => { setSbMode(false); setSbId(null); };
+  const openSandbox = () => { setActiveId(null); setSbMode(true); };
+  const closeSandbox = () => { setSbMode(false); };
   // return to the intervention picker from a specific lever OR the sandbox
-  const back = () => { setSbMode(false); setSbId(null); setActiveId(null); };
-  const pickScenario = (id) => { setSbId(id); };
-  const setKnob = (key, k) => { setSbId('tinker'); setTv((p) => ({ ...p, [key]: k })); };
+  const back = () => { setSbMode(false); setActiveId(null); };
+  // sandbox knob controls
+  const setSbKnob = (i, idx) => setSbKnobs((p) => { const n = p.slice(); n[i] = idx; return n; });
+  const applyPreset = (vec) => setSbKnobs(vec.slice());
+  const sbKey = sbKnobs.join('');
 
   const revealedCount = revealed.size;
 
   return {
     activeId, active, eff, o, releaseYear, setReleaseYear, transform, baseGap, nowGap,
     predicting, showResult, guess, correct,
-    sbMode, sbId, sbEff, tv, isSandbox: sbMode,
-    pick, submitGuess, openSandbox, closeSandbox, pickScenario, setKnob, back,
+    sbMode, sbKnobs, sbKey, isSandbox: sbMode,
+    pick, submitGuess, openSandbox, closeSandbox, setSbKnob, applyPreset, back,
     revealed, revealedCount, total: IV_ORDER.length,
   };
 }
@@ -795,4 +801,5 @@ Object.assign(window, { useInterventions, IvTray, IvRail, IvBottom,
   // exported for the alternate interventions layouts (rc-iv-layouts.jsx)
   IV_ORDER, IVMETA, OUTCOME, bucketAt, RELEASE_YEARS,
   BetButton, DeltaStat, ProvBadge, ReleaseSelector, DecadeSparkline,
-  GUESS, VERB, bucketToBet, improvementAt, _bucketCol, _clampN });
+  GUESS, VERB, bucketToBet, improvementAt, _bucketCol, _clampN,
+  SANDBOX_KNOBS, SANDBOX_PRESETS, SANDBOX_CENTER });

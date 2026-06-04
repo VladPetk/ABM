@@ -350,8 +350,8 @@ function NarrativeLeft({ iv }) {
   const wrap = { height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'safe center', overflow: 'auto', minHeight: 0 };
   const pad = { flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px clamp(24px,4vh,40px) ${LX}` };
 
-  // sandbox reuses the existing self-contained panel
-  if (iv.isSandbox) return <div style={{ height: '100%', overflow: 'auto' }}><div style={pad}><BackToList onClick={iv.back} /><IvRail iv={iv} /></div></div>;
+  // sandbox: the 5-knob alternate-history panel
+  if (iv.isSandbox) return <div style={wrap}><div style={pad}><BackToList onClick={iv.back} /><SandboxPanel iv={iv} /></div></div>;
 
   return (
     <div style={wrap}>
@@ -392,7 +392,9 @@ function NarrativeLeft({ iv }) {
 function useIvPlayback(iv) {
   const wantBranch = iv.showResult && !iv.isSandbox && iv.eff ? iv.eff.id : null;
   const year = iv.releaseYear;
+  const sbKey = iv.isSandbox ? iv.sbKey : null;
   const [branch, setBranch] = React.useState(null);   // stitched branch run, or null
+  const [sbRun, setSbRun] = React.useState(null);      // expanded sandbox run, or null
   const [tick, setTickRaw] = React.useState(window.LAST);
   const [playing, setPlaying] = React.useState(false);
   const [speed, setSpeed] = React.useState(1);
@@ -418,6 +420,17 @@ function useIvPlayback(iv) {
     }).catch(() => { if (alive) setBranch(null); });
     return () => { alive = false; };
   }, [wantBranch, year, setTick]);
+
+  // load the sandbox run for the current knob-vector. Do NOT clear the old run
+  // first (so dragging a knob swaps the cloud at the current year without a
+  // flash) and do NOT reset the playhead (you compare alternate worlds in place).
+  React.useEffect(() => {
+    if (!sbKey) { setSbRun(null); return; }
+    let alive = true;
+    window.loadSandbox(sbKey).then((r) => { if (alive) setSbRun(r); })
+      .catch(() => { if (alive) setSbRun(null); });
+    return () => { alive = false; };
+  }, [sbKey]);
 
   // advance the playhead (paused headlessly; scrub still works)
   React.useEffect(() => {
@@ -449,18 +462,27 @@ function useIvPlayback(iv) {
     return () => window.removeEventListener('wheel', onWheel);
   }, [setTick]);
 
-  const rt = branch ? branch.release_tick : 0;
-  activeRef.current = !iv.isSandbox;                    // gate the wheel listener
+  const branchMode = !!(wantBranch && branch);
+  const rt = branchMode ? branch.release_tick : 0;
   rtRef.current = rt;
-
-  if (iv.isSandbox) return null;                       // no transport in the sandbox
-  const run = branch || window.D.runs.baseline;        // baseline until a branch loads
   const toggle = () => {
     if (tickRef.current >= window.LAST) { setTick(rt); setPlaying(true); }
     else setPlaying((p) => !p);
   };
   const pause = () => setPlaying(false);
-  return { run, tick, rt, playing, toggle, setTick, pause, speed, setSpeed, isBranch: !!branch };
+
+  // ── sandbox: play the pre-rendered alternate-history run for the knob-vector
+  if (iv.isSandbox) {
+    activeRef.current = !!sbRun;                        // wheel active once loaded
+    if (!sbRun) return null;                            // still fetching the grid cell
+    return { run: sbRun, tick, rt: 0, playing, toggle, setTick, pause, speed, setSpeed,
+      isBranch: false, isSandbox: true, macro: sbRun.macro };
+  }
+  // ── baseline / engine-branch
+  activeRef.current = true;
+  const run = branch || window.D.runs.baseline;        // baseline until a branch loads
+  return { run, tick, rt, playing, toggle, setTick, pause, speed, setSpeed,
+    isBranch: branchMode, macro: run.macro };
 }
 
 // Play / speed / year transport for the interventions bottom band — inherits
@@ -502,6 +524,151 @@ function IvTransport({ play }) {
   );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+//  SANDBOX — 5 dials + presets driving a pre-rendered alternate history
+// ═══════════════════════════════════════════════════════════════════════════
+// the left rail when the sandbox is open: presets + the five sliders
+function SandboxPanel({ iv }) {
+  const K = window.SANDBOX_KNOBS, P = window.SANDBOX_PRESETS;
+  return (
+    <React.Fragment>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <Eyebrow style={{ color: '#8a6d1f' }}>Sandbox · not a finding</Eyebrow>
+        <SandboxPill iv={iv} />
+      </div>
+      <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.display, lineHeight: 1.04, letterSpacing: '-.02em', color: CC.ink }}>Build your own America</h2>
+      <p style={{ margin: '14px 0 0', fontSize: DS.type.body, lineHeight: 1.6, color: CC.ink2, maxWidth: 460 }}>
+        Five forces, dialed past anything real. Pick a preset or drag the dials and watch that alternate 1980→2025 play out on the map. This changes the <em>model</em>, not a policy — <strong>illustrative, not a finding.</strong>
+      </p>
+
+      <Eyebrow style={{ color: CC.ink3, display: 'block', marginTop: DS.sp.lg }}>Presets</Eyebrow>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 9, maxWidth: 470 }}>
+        {P.map((p) => {
+          const on = iv.sbKey === p.vec.join('');
+          return (
+            <button key={p.name} onClick={() => iv.applyPreset(p.vec)} title={p.note} style={{
+              fontFamily: SANS, fontSize: DS.type.small, fontWeight: on ? 600 : 450, cursor: 'pointer',
+              color: on ? '#fff' : CC.ink2, background: on ? CC.ink : CC.surface,
+              border: `1px solid ${on ? CC.ink : CC.border}`, borderRadius: DS.rad.pill, padding: '6px 12px',
+            }}>{p.name}</button>
+          );
+        })}
+      </div>
+
+      {/* what the current setting emulates — the matched preset's blurb, or "Custom" */}
+      {(() => {
+        const active = P.find((p) => p.vec.join('') === iv.sbKey);
+        return (
+          <div style={{ marginTop: 12, padding: '11px 14px', background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: DS.rad.inset, maxWidth: 470 }}>
+            <div style={{ fontFamily: SANS, fontSize: DS.type.small, fontWeight: 600, color: CC.ink }}>{active ? active.name : 'Custom mix'}</div>
+            <div style={{ marginTop: 4, fontSize: DS.type.micro, lineHeight: 1.5, color: CC.ink2 }}>
+              {active ? active.note : 'Your own blend of the five forces — drag the dials below, or pick a preset above.'}
+            </div>
+          </div>
+        );
+      })()}
+
+      <div style={{ marginTop: DS.sp.lg, display: 'flex', flexDirection: 'column', gap: 15, maxWidth: 470 }}>
+        {K.map((k, i) => (
+          <div key={k.key}>
+            <Detent s={{ name: k.name, stops: k.stops }} value={iv.sbKnobs[i]} onChange={(idx) => iv.setSbKnob(i, idx)} />
+            <div style={{ fontSize: DS.type.micro, color: CC.ink4, marginTop: 3 }}>{k.owns}</div>
+          </div>
+        ))}
+      </div>
+    </React.Fragment>
+  );
+}
+
+// one live outcome metric in the sandbox bottom band — a clean number readout
+// (no magnitude bar; the timeline below is the only horizontal line).
+function SandboxMetric({ label, value, color }) {
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ fontSize: DS.type.micro, color: CC.ink3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+      <div style={{ marginTop: 4 }}>
+        <MonoVal size={24} color={color} weight={600}>{value == null ? '—' : value.toFixed(2)}</MonoVal>
+      </div>
+    </div>
+  );
+}
+
+// 1980→2025 scrubber for the sandbox — matches the Story page's ProtoTimeline
+// look (1.5px track, MONO 4-digit decade labels with ticks, hollow playhead),
+// but WITHOUT the real-history event markers (this is an alternate history).
+function SandboxTimeline({ play }) {
+  const ref = React.useRef(null);
+  const [w, setW] = React.useState(820);
+  React.useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const upd = () => setW(Math.max(320, el.clientWidth || 820));
+    upd(); const ro = new ResizeObserver(upd); ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const LAST = window.LAST, H = 40, padL = 8, padR = 8, trackY = 13;
+  const x0 = padL, x1 = w - padR;
+  const tx = (t) => x0 + (t / LAST) * (x1 - x0);
+  const playX = tx(play.tick);
+  const decades = [1980, 1990, 2000, 2010, 2020, 2025];
+  const scrub = (cx) => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    play.pause();
+    play.setTick(Math.max(0, Math.min(LAST, ((cx - r.left) / r.width) * LAST)));
+  };
+  const onDown = (e) => {
+    scrub(e.clientX);
+    const mv = (ev) => scrub(ev.clientX);
+    const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+  };
+  return (
+    <div ref={ref}>
+      <svg viewBox={`0 0 ${w} ${H}`} width="100%" height={H} preserveAspectRatio="xMidYMid meet"
+        onPointerDown={onDown} style={{ display: 'block', cursor: 'pointer', touchAction: 'none' }}>
+        <line x1={x0} y1={trackY} x2={x1} y2={trackY} stroke={CC.borderS} strokeWidth="1.5" />
+        <line x1={x0} y1={trackY} x2={playX} y2={trackY} stroke={CC.ink} strokeWidth="1.5" />
+        {decades.map((y) => {
+          const X = tx(window.yearToTick(y));
+          return (
+            <g key={y}>
+              <line x1={X} y1={H - 16} x2={X} y2={H - 12} stroke={CC.ink4} strokeWidth="1" />
+              <text x={X} y={H - 3} textAnchor="middle" style={{ fontFamily: MONO, fontSize: 10.5, fill: CC.ink4, ...TNUM }}>{y}</text>
+            </g>
+          );
+        })}
+        <line x1={playX} y1={trackY - 5} x2={playX} y2={trackY + 5} stroke={CC.ink} strokeWidth="2" />
+        <circle cx={playX} cy={trackY} r="6.5" fill={CC.surface} stroke={CC.ink} strokeWidth="2" />
+      </svg>
+    </div>
+  );
+}
+
+// bottom band for the sandbox: transport in the gutter + the four live outcome
+// metrics at the playhead (so Animus and Echo-chambers — invisible on the
+// position cloud — stay readable) ABOVE a slim 1980→2025 timeline scrubber.
+function SandboxBand({ iv, play }) {
+  const t = play ? play.tick : window.LAST;
+  const m = play && play.macro ? play.macro[Math.max(0, Math.min(window.LAST, Math.round(t)))] : null;
+  return (
+    <div style={{ display: 'flex', alignItems: 'stretch', height: '100%', width: '100%' }}>
+      <div style={{ width: 224, flexShrink: 0, padding: '14px 0 14px 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 9, borderRight: `1px solid ${CC.border}` }}>
+        {play ? <IvTransport play={play} /> : <Eyebrow style={{ color: CC.ink3 }}>Sandbox</Eyebrow>}
+        <div style={{ fontSize: DS.type.micro, color: CC.ink4 }}>Alternate 1980 → 2025 · illustrative</div>
+      </div>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 12, padding: '0 8px 0 28px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'clamp(14px,2.4vw,38px)' }}>
+          <SandboxMetric label="Party separation" value={m ? m.sep : null} color={CC.ink} />
+          <SandboxMetric label="Out-party animus" value={m ? -m.aff : null} color={CC.r} />
+          <SandboxMetric label="Echo chambers" value={m ? m.mod : null} color={CC.ink2} />
+          <SandboxMetric label="Mega-identity" value={m ? m.align : null} color={CC.ink2} />
+        </div>
+        {play && <SandboxTimeline play={play} />}
+      </div>
+    </div>
+  );
+}
+
 function IvNarrative({ iv, layer }) {
   const play = useIvPlayback(iv);
   const hasPlay = !!play;
@@ -524,7 +691,7 @@ function IvNarrative({ iv, layer }) {
         </div>
       </div>
       <div style={{ flexShrink: 0, height: 152, borderTop: `1px solid ${CC.border}`, background: CC.bg, padding: '0 clamp(20px, 3vw, 44px)' }}>
-        <TwoFutures iv={iv} play={play} />
+        {iv.isSandbox ? <SandboxBand iv={iv} play={play} /> : <TwoFutures iv={iv} play={play} />}
       </div>
     </div>
   );
