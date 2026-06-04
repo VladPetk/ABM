@@ -22,6 +22,8 @@ The model is documented at three altitudes. Read top-down:
   anchors, and measured buckets.
 - **[`docs/methods.md`](docs/methods.md)** — citation-pinned methods. Every
   number, every knob, every choice anchored to a published paper.
+- **[`docs/literature.md`](docs/literature.md)** — annotated index of every
+  dataset and paper the model leans on: what each anchors and where it's used.
 - **[`docs/ENGINE_KNOBS.md`](docs/ENGINE_KNOBS.md)** — the runtime knob
   registry.
 

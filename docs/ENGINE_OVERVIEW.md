@@ -302,6 +302,75 @@ if a future change shifts an intervention out of its declared
 bucket, the consolidated test fails and the tag is re-blessed
 honestly.
 
+### 4.7 Three kinds of force — emergent, exogenous, tuned
+
+A natural question on reading the rule list: which of these are
+*mechanisms* (the outcome emerges from interaction) and which are just
+*pressures* applied on a schedule to everyone? There are three kinds,
+and the distinction governs how much weight to put on any one result.
+
+1. **Emergent / endogenous** — the per-agent change depends on the
+   agent's own evolving state and/or its network neighbours. The
+   outcome isn't written in; it falls out of interaction.
+   `BoundedConfidenceInfluence`, `AffectiveUpdate` (cools *on contact*),
+   `TieRewiring` (drops cold/distant ties → echo chambers),
+   `IdentitySorting`, `BacklashRepulsion`, `PerceptionUpdate`. These
+   behave the way an ABM is supposed to.
+
+2. **Exogenous drivers on a calendar clock** — the same pressure
+   applied to everyone (or a fixed group) at dated times. This is **not
+   a flaw**: polarlab models the **mass public**, so elite behaviour,
+   the media environment, and dated shocks are genuinely *outside* the
+   250 agents and enter as boundary conditions. `EliteDrift` (a discrete
+   R-heavy step at the Gingrich/1994 Republican Revolution);
+   `MediaConsumption` switching on at the Fairness-Doctrine repeal
+   (1987) and Fox News (1996); the social-media affect ramp
+   (2008/2010/2012); the `MediatedAnimus` media-exposure ramp; the 2016
+   status-threat shock (`THREAT_2016_MAGNITUDE = 0.5` for 60% of
+   Republican agents, then decaying). You would not want a mass-public
+   model to "emergently produce Newt Gingrich."
+
+3. **Tuned constants** — fixed scalars (and a couple of calendar
+   curves) applied uniformly, calibrated so the arc tracks ANES. The
+   most load-bearing is the **party-issue coupling schedule (0.40 in
+   1980 → 1.10 in 2025)**, which scales both `PartyPull` and the
+   issue term in `AffectiveUpdate`. Others: learning rates, affect
+   thresholds, step sizes, noise σ, `cooperative_mute = 0.5`. These are
+   unavoidable — you cannot read a learning rate off a paper — and they
+   are exactly what §6's provenance tags mark **N**: the *mechanism* can
+   be **L** (literature-supported) while the *magnitude* is still the
+   model's.
+
+**The dated-referent test.** A calendar schedule is admissible only if
+it maps to a real dated external change. A uniform curve tuned *only* to
+reproduce the target trajectory is curve-fitting — "painting the target
+on." The project enforces this: in the 2026-06 affect re-grade a
+time-ramped `affect_lr` was **rejected** for having "no real-world
+referent," and the late steepening of out-party animus was instead
+sourced from *endogenous* identity-alignment × a *dated* media driver
+(which does have a referent). The principle is stated in methods.md.
+
+**Emergent vs scripted — why the pillar exists.** Because the historical
+arc carries all of kind 2 and kind 3, a fair worry is that its
+trajectory is *driven* to the empirics rather than *generated*. The
+pillar is the answer: it runs the same mechanisms with **no dated events
+at all**, so it tests whether the dynamics compound on their own. If the
+arc looked right only because the schedules drag it there, the pillar
+would expose it. That separation — eventless composition control vs
+empirically-driven build — is the structural reason the two scenarios
+are kept distinct.
+
+Two honest tensions worth naming: (a) the coupling curve straddles kinds
+2 and 3 — it maps to Mason's "great sort" timeline (a real referent) but
+its *shape* is tuned; and (b) "applied uniformly" erases exposure
+heterogeneity (not everyone watched Fox or is online).
+
+> This force-type axis (emergent / exogenous / tuned) is **a different
+> question** from §6's L/N/E axis. L/N/E asks *how well-evidenced* a
+> choice is; this asks *where the force comes from*. They are orthogonal
+> — a constant can be well-evidenced in direction (**L**) yet
+> imposed-and-tuned in magnitude (**N**). See methods.md.
+
 ---
 
 ## 5. The intervention findings

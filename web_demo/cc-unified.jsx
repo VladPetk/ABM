@@ -46,6 +46,7 @@ function SiteHeader({ page, setPage }) {
       <span style={{ flex: 1 }} />
       <nav style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
         <NavLink id="model">Model</NavLink>
+        <NavLink id="agents">Agents</NavLink>
         <NavLink id="methods">Methods</NavLink>
         <NavLink id="about">About</NavLink>
       </nav>
@@ -667,7 +668,7 @@ function Unified() {
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0 }}
       onClick={(e) => {const g = e.target.closest('[data-goto]');if (g) {e.preventDefault();setPage(g.getAttribute('data-goto'));}}}>
         <SiteHeader page={page} setPage={setPage} />
-        {page === 'about' ? <AboutPage /> : <MethodsPage />}
+        {page === 'about' ? <AboutPage /> : page === 'agents' ? <Agents3DPage /> : <MethodsPage />}
       </div>);
 
   }

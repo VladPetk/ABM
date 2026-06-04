@@ -2,8 +2,14 @@
 
 *The artifact that backs the project's "intellectually rigorous"
 claim. Every calibration choice, every honesty-label, every limitation
-recorded here is the one the model actually carries. Last updated at
-the close of Phase 9 (ANES recalibration).*
+recorded here is the one the model actually carries. Last updated 2026-06
+(Phase 10 intervention re-measure + the 2026-06 affect re-grade; web-demo
+sandbox dials noted in §5.11).*
+
+> **Source index.** For an annotated map of every dataset and paper the model
+> uses — what each one anchors and where in the repo — see
+> [`literature.md`](literature.md). The flat bibliography is in §"Citations" at
+> the foot of this file.
 
 ---
 
@@ -75,6 +81,48 @@ L / N / E throughout:
 
 When this distinction matters for a section's calibration, the tag
 is stated inline.
+
+**A second, orthogonal axis: where the force comes from.** L/N/E grades
+*how well-evidenced* a choice is. A separate question is *what kind of
+force* a rule represents — and the two are independent. The engine's
+forces fall into three kinds (full taxonomy + the per-rule classification
+in [`ENGINE_OVERVIEW.md`](ENGINE_OVERVIEW.md) §4.7):
+
+1. **Emergent / endogenous** — the per-agent delta depends on the
+   agent's own evolving state and/or its network neighbours (bounded
+   confidence, contact-gated affect, tie rewiring, identity sorting).
+2. **Exogenous drivers on a calendar clock** — the same pressure applied
+   to everyone (or a fixed group) at dated times. Legitimate *because
+   the model is of the mass public*: elite divergence (`EliteDrift` /
+   Gingrich-1994), the media environment (Fairness-Doctrine 1987, Fox
+   News 1996, the social-media ramp), and dated shocks (2016 status
+   threat) are genuinely exogenous to the 250 agents and enter as
+   boundary conditions.
+3. **Tuned constants applied uniformly** — calibrated scalars and curves
+   (learning rates, thresholds, the party-issue coupling schedule
+   0.40→1.10, `cooperative_mute = 0.5`). These are unavoidable in any
+   calibrated model; they are precisely what gets tagged **N** on the
+   magnitude even when the mechanism is **L**.
+
+A constant can therefore be **L** in *direction* (Pettigrew & Tropp:
+contact halves prejudice) yet an imposed, uniformly-applied, tuned
+scalar in *magnitude* — the two axes say different things, and both are
+recorded.
+
+**The dated-referent test (methodological principle).** A calendar-time
+schedule is admissible **only if it maps to a real dated exogenous
+change** (a media launch, an adoption ramp, a campaign shock). A uniform
+calendar curve tuned *only* to reproduce the target trajectory is
+**curve-fitting** — "painting the target on" — and is not admissible,
+because the model would merely be replaying the trajectory it was fed. A
+worked enforcement of this rule is the 2026-06 affect re-grade (§5.10):
+a time-ramped `affect_lr` was rejected for having no real-world referent,
+and the late steepening of out-party animus was instead sourced from
+*endogenous* identity-alignment × a *dated* media-exposure driver — a
+schedule that does map to a real change. The corollary check that the
+arc is not *only* its schedules is the **pillar**: the same mechanisms
+run with no dated events, so it isolates what the dynamics generate on
+their own (the composition layer; see CLAUDE.md's three test layers).
 
 **Friedkin-Johnsen realization (Phase 8c D5 clarification).**
 polarlab implements the Friedkin-Johnsen anchoring via two separate
@@ -888,6 +936,36 @@ real at 2020, partial earlier) — the less-polarized re-grounded baseline
 leaves a contact lever less animus to undo. All other buckets hold;
 `test_phase6` green. See `docs/results/phase10_results.md`.
 
+### 5.11 Web-demo sandbox dials — illustrative, not a finding (2026-06)
+
+The web demo's interactive **sandbox** lets a visitor dial five knobs (five
+positions each) and watch the resulting alternate 1980→2025 play out on the
+compass. Rather than run the engine in the browser, all 5⁵ = 3,125 combinations
+are pre-rendered (`scripts/build_sandbox_data.py`, whole-alternate-history: each
+knob-vector is applied as `build_engine` kwargs *from the start*, seed 0) and
+served as small static files. The grid's centre cell reproduces the shipped arc
+to within decimation noise (sep 1.12 vs 1.13, animus 0.69 vs 0.68, mod 0.20 vs
+0.20, align 0.41 vs 0.39 — the sandbox stores 160 of 250 agents at every other
+tick).
+
+The five dials were chosen **data-driven** by a metric-span screen
+(`scripts/sandbox_knob_screen.py`) so each owns a distinct outcome axis:
+`elite` (`tier_d_anes_drift_multiplier` → party separation), `animus`
+(`sandbox_animus_mult` → out-party warmth), `identity` (`sandbox_identity_mult`
+→ mega-identity stacking), `echo` (`sandbox_rewire_mult` → network modularity),
+`openness` (`tier_c_bc_strength` → within-party tightness). The three
+`sandbox_*_mult` kwargs are **new multiplier hooks** added to `build_engine`
+(see ENGINE_KNOBS §5.9), gated so the default (`×1.0`) path is bit-identical —
+the pillar and all Phase 4–10 tests are unaffected.
+
+**Honesty status.** The sandbox is **illustrative only**: its ranges crank the
+model *past* its calibration envelope (animus ×8, drift ×8, etc.), so its cells
+are **not measured, not re-blessed, and not a finding** — provenance **E**
+(mechanisms) / **N** (the chosen ranges). The UI labels it as such. It exists to
+let visitors build intuition about which channels move which outcome, not to
+predict counterfactual histories. The measured, blessed results remain the
+Phase 10 intervention buckets (§4.3, `docs/results/phase10_results.md`).
+
 ---
 
 ## 6. What the model is for
@@ -975,3 +1053,73 @@ policy should read §5 first.
 - Ross Arguedas, A., Robertson, C. T., Fletcher, R., & Nielsen, R. K.
   (2022). *Echo Chambers, Filter Bubbles, and Polarisation: A
   Literature Review*. Reuters Institute.
+
+### Additional anchors (Phase 9–10 + causal model)
+
+*Added to the canonical list during the 2026-06 bookkeeping pass. These were
+already in use across the engine, the Phase 9 data spec, the Phase 10
+intervention briefs, and `polarization_causal_model.md`, but had not yet been
+folded into the alphabetical list above. Full annotation (what each anchors) is
+in [`literature.md`](literature.md); a few post-2020 intervention citations
+still need venue/year verification — see literature.md §5.*
+
+- Abramowitz, A. I., & Webster, S. (2016). The rise of negative
+  partisanship. *Electoral Studies* 41:12.
+- Ahler, D. J., & Sood, G. (2018). The parties in our heads:
+  Misperceptions about party composition. *Journal of Politics* 80:964.
+- Ansolabehere, S., & Schaffner, B. F. (2022). *2020 CCES/CES Common
+  Content Codebook*. Harvard Dataverse (CES dataset).
+- Baldassarri, D., & Gelman, A. (2008). Partisans without constraint:
+  Political polarization and trends in American public opinion. *AJS*
+  114(2):408.
+- Boxell, L., Gentzkow, M., & Shapiro, J. M. (2017/2021). Cross-cohort
+  and cross-national evidence on affective polarization (by-age; period
+  effect).
+- Carmines, E. G., & Stimson, J. A. (1989). *Issue Evolution: Race and
+  the Transformation of American Politics*. Princeton University Press.
+- DellaVigna, S., & Kaplan, E. (2007). The Fox News effect. *QJE*
+  122:1187.
+- Drutman, L. (2020). *Breaking the Two-Party Doom Loop*. Oxford
+  University Press.
+- Ghitza, Y., Gelman, A., & Auerbach, J. (2023). The great society,
+  Reagan's revolution, and generations of presidential voting. *AJPS*
+  67:520 (formative-years imprinting).
+- Green, D., Palmquist, B., & Schickler, E. (2002). *Partisan Hearts and
+  Minds*. Yale University Press (party-ID continuity r ≈ .97).
+- Hare, C., Liu, T.-P., & Lupton, R. N. (2018). What ordinary Americans
+  (sometimes) think about ideological labels. *Research & Politics* 5(2).
+- Iyengar, S., & Westwood, S. J. (2015). Fear and loathing across party
+  lines. *AJPS* 59:690.
+- Klar, S., & Krupnikov, Y. (2016). *Independent Politics: How American
+  Disdain for Parties Leads to Political Inaction*. Cambridge University
+  Press.
+- Kuziemko, I., & Washington, E. (2018). Why did the Democrats lose the
+  South? *AER* 108:2830 (race-driven realignment).
+- Levendusky, M. (2009). *The Partisan Sort*. University of Chicago Press.
+- Levendusky, M. (2018). Americans, not partisans: Can priming American
+  national identity reduce affective polarization? *Journal of Politics*
+  80:59.
+- Martin, G. J., & Yurukoglu, A. (2017). Bias in cable news. *AER*
+  107:2565.
+- Mousa, S. (2020). Building social cohesion between Christians and
+  Muslims through soccer in post-ISIS Iraq. *Science* 369:866.
+- Mutz, D. C. (2018). Status threat, not economic hardship, explains the
+  2016 presidential vote. *PNAS* 115:E4330.
+- Phillips, J. (2022). Affective polarization: Over time, through the
+  generations, and during the lifespan. *Political Behavior* (APC).
+- Stoker, L. (2020). Reflections on the APC analysis of affective
+  polarization.
+- Treier, S., & Hillygus, D. S. (2009). The nature of political ideology
+  in the contemporary electorate. *POQ* 73(4):679.
+- Voelkel, J. G. et al. (2023/2024). Megastudy / Strengthening Democracy
+  Challenge findings (affect ≠ anti-democratic attitudes; dialogue-prime
+  ~0.04–0.05 SD on affect). *Venue pending verification.*
+- Zaller, J. R. (1992). *The Nature and Origins of Mass Opinion*.
+  Cambridge University Press (receive-accept-sample).
+
+**Datasets (calibration anchors):** ANES Time Series Cumulative Data File
+(electionstudies.org); ANES out-party feeling thermometer (VCF0218/0224);
+DW-NOMINATE / Voteview (voteview.com); GSS Cumulative File (gss.norc.org);
+CCES/CES 2020 Common Content (Harvard Dataverse); Democracy Fund Voter Study
+Group VOTER Survey; PRRI American Values Atlas. See [`literature.md`](literature.md)
+§1 for what each calibrates.
