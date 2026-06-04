@@ -88,6 +88,49 @@ per-decade adjustment" is the consistency-check version. The
 forward-prediction version is stronger; it's also harder to pass.
 Worth attempting once the Phase 8c mechanism additions stabilize.
 
+### Per-rule isolation test layer (close the drift-guard gap)
+
+A coverage audit (2026-06-02) found that rule drift-guarding is
+**phase-organized and integration-style**, not systematic: tests
+build a full pillar or arc and assert on the composed result. The
+only true *single-rule isolation* test is `compass_basic` +
+`test_canonical.py` (the Hegselmann–Krause / bounded-confidence
+reduction). There is no per-rule isolation layer, so a few **active**
+rules execute inside integration runs but have **no test asserting
+their specific behavior** — silent magnitude/trajectory drift would
+pass unnoticed:
+
+- **`IdentityAlignment`** — highest priority. It runs in the **shipped
+  web build** (`evidence_regrade=True`) and emits the
+  `identity_alignment` macro metric (the Step-2 "doubling" fix), yet no
+  test references it by class name or metric. A headline series with no
+  pin.
+- **`IdentityToIdeologyPull`** — historical-arc only, active, unasserted.
+- **`ProtectedPartyRealignment`** — historical-arc only, active,
+  unasserted.
+- **`MediaShock`** — fired via event handlers (not the static pipeline);
+  confirm it's wired in the arc schedule, then guard it.
+- (`PerceptionBoostExpiry` — minor; companion expiry to the tested
+  `PerceptionUpdate`.)
+- (`ArgumentExchange` and `X1ExposureExpiry` are *not* gaps: the former
+  is in no pipeline; the latter is intervention-triggered and covered
+  indirectly via X1's phase10 measurement.)
+
+**The fix is a per-rule isolation suite (the `compass_basic` pattern)
+— NOT adding these to the pillar.** The pillar is the *eventless
+composition* layer (it tests how rules compound, with no exogenous
+events, so an arc regression can be bisected into rule-interaction vs
+event-handler); piling single mechanisms into it would break that
+control and still wouldn't isolation-test them. Build a minimal
+scenario per rule that exercises it alone on a clean substrate and
+asserts its effect, starting with `IdentityAlignment`. See the
+three-layer model (Isolation / Composition / Empirical) documented in
+`CLAUDE.md` → "How rules are drift-guarded."
+
+**Rough effort.** Small-to-moderate and incremental — one isolation
+test per rule, ~3–4 to clear the active gaps. No engine change, just
+new tests.
+
 ---
 
 ## Smaller items flagged but not picked up

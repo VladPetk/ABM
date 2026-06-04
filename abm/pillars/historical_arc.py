@@ -38,6 +38,7 @@ from ..core.rules import RulePipeline
 from ..core.space import ContinuousSpace2D
 from ..core.state import AgentState
 from ..rules.affective_update import AffectiveUpdate
+from ..rules.mediated_animus import MediatedAnimus
 from ..rules.cohort_replacement import CohortReplacement
 from ..rules.elite_drift import EliteDrift
 from ..rules.faction_anchor import FactionAnchor
@@ -46,6 +47,7 @@ from ..rules.intervention_expiry import (
     PerceptionBoostExpiry,
     X1ExposureExpiry,
 )
+from ..rules.identity_alignment import IdentityAlignment
 from ..rules.identity_sorting import IdentitySorting
 from ..rules.identity_to_position import IdentityToIdeologyPull
 from ..rules.influence import BoundedConfidenceInfluence
@@ -56,6 +58,7 @@ from ..rules.party_realignment import ProtectedPartyRealignment
 from ..rules.perception_update import PerceptionUpdate
 from ..rules.repulsion import BacklashRepulsion
 from ..rules.residential_migration import ResidentialMigration
+from ..rules.shock_relaxation import ShockRelaxation
 from ..rules.threat_dynamics import ThreatDecay
 from ..rules.tie_rewiring import TieRewiring
 from .calm_to_camps import (
@@ -168,6 +171,28 @@ IDENTITY_SORTING_SCHEDULE = {
     "2020-25": 0.030,
 }
 
+# Step 2 (web_demo, flag-1 fix — secondary lever). The default
+# sort-rate schedule yields only ~3 identity updates per agent over the
+# whole 45-year run — far too slow for mega-identity stacking to
+# accumulate (Mason 2018: the "great sort" is gradual but real, 1990s
+# onward). Under `evidence_regrade` the per-tick sort probability is
+# scaled by this multiplier so survivors actually differentiate and the
+# aggregate identity_alignment can rise (paired with the cohort-reseed
+# fix in cohort_replacement.py, which removes the replacement drag).
+# Gated → 1.0 on the default path → bit-identical. Tunable.
+#
+# Landed values (5.0 / 0.15) were chosen by the Step-2 joint-constraint
+# sweep (scripts/_step2_flag1_diag.py): they lift aggregate
+# identity_alignment ~0.23 → ~0.41 (roughly doubling, monotone, in the
+# 0.35-0.45 band) while keeping affect inside the ANES envelope
+# (affect@2020 ≈ -0.728 vs the ~-0.71 baseline) and party_sep at ~1.10
+# @2025 (toward the ANES 1.04+ target). The frequency multiplier alone
+# was insufficient — the per-update `step` (diluted across 3 identity
+# dims) is the real rate-limiter, so both are raised under regrade.
+IDENTITY_SORTING_REGRADE_MULTIPLIER = 5.0
+# Per-update identity step under regrade (default rule value 0.05).
+IDENTITY_SORTING_REGRADE_STEP = 0.15
+
 # Mechanism scheduled rates (per-decade tunable per spec §10.2).
 # Defaults are literature-anchored starting values; the calibration
 # harness adjusts within bounded scope.
@@ -193,6 +218,59 @@ ELITE_DRIFT_SCHEDULE = {
     "2020-25": 0.006,
 }
 ELITE_DRIFT_ASYMMETRIC = {0: 0.5, 1: 1.5}
+
+# Step 1 (web_demo evidence re-grade, decision D1a). The literature
+# (`docs/polarization_causal_model.md` §2.1, L1; Theriault *The Gingrich
+# Senators*; Hacker & Pierson 2020) places the elite-divergence
+# *inflection* at the Gingrich era (Republican Revolution, Nov 1994),
+# asymmetrically GOP-led — NOT at Citizens United (2010), whose causal
+# effect on polarization is null/contested. Under `evidence_regrade`,
+# a discrete 1994 event steps elite drift up (R-heavy), and the 2010
+# Citizens-United handler is demoted to a non-causal era marker (the
+# 2010-20 drift rate moves into the decade-2010 boundary so late-period
+# divergence is preserved). These are PRE-multiplier x/y rates; the
+# build applies `tier_d_anes_drift_multiplier` like the ANES schedule.
+ELITE_DRIFT_GINGRICH_1994 = 0.010      # x-axis inflection (vs 1990-00 = 0.006)
+ELITE_DRIFT_GINGRICH_1994_Y = 0.013    # ~1.3× x, per ANES y/x velocity ratio
+GINGRICH_1994_ASYMMETRIC = {0: 0.5, 1: 1.5}  # R-heavy (Hacker-Pierson 2020)
+
+# Step 1: re-graded social-media affect coupling (decision D2a). The
+# 2008/2010/2012 events ramp `BoundedConfidenceInfluence.affect_weight`
+# (a homophilic position-echo amplifier, not a direct affect shock).
+# The default ramp (kept for bit-identity on the default path) treats
+# social media as a strong driver; the evidence (BGS by-age; Allcott
+# 2024 Meta-2020 ~null) says weak. Under `evidence_regrade` the ramp is
+# demoted to a small, contested/LOW-evidence accelerant (terminal ≈0.05),
+# still tunable rather than deleted.
+SOCIAL_MEDIA_AFFECT_WEIGHT_RAMP_DEFAULT = [0.10, 0.20, 0.30]
+SOCIAL_MEDIA_AFFECT_WEIGHT_RAMP_REGRADE = [0.02, 0.04, 0.05]
+
+# --- Affect re-grade (affect-bands-investigation; gated behind evidence_regrade) ---
+# The 1980 affect seed, the contact-channel learning rate, and AffectiveUpdate
+# saturation were originally calibrated to the OLD hand-scaled (too-cold) affect
+# bands. Re-grounded against the raw ANES out-party thermometer via the principled
+# midpoint map (docs/affect_bands_investigation.md), the engine over-produced
+# animus and was CONCAVE (front-loaded) where reality is CONVEX (flat-warm early,
+# collapse late). The driver diagnostic showed the cause: animus was contact-gated,
+# so homophilous sorting starved it exactly as the real drivers accelerated. These
+# constants warm the seed to the real 1980 thermometer, soften the contact channel,
+# retire the saturation decelerator, and add the contact-independent MediatedAnimus
+# channel (parasocial animus via aligned identity x a dated media-exposure ramp) so
+# the convex shape EMERGES from endogenous state rather than a calendar-time rate.
+# Validated 9-seed against the grounded bands; magnitudes are N, mechanism L.
+AFFECT_SEED_MEAN_REGRADE = -0.09     # real 1986-88 out-party therm 45.3deg via midpoint map
+AFFECT_SEED_MEAN_DEFAULT = -0.25     # pre-regrade seed (bit-identical when off)
+AFFECT_LR_BASE_REGRADE = 0.003       # contact channel x0.30
+AFFECT_LR_BASE_DEFAULT = 0.01
+MEDIATED_ANIMUS_LR = 0.014           # contact-independent channel magnitude
+# env mediated_animus_weight at the 2008 / 2010 / 2012 social-media events.
+MEDIATED_ANIMUS_WEIGHT_RAMP = [0.50, 0.80, 1.00]
+
+# Step 1 (D3b): strength of the explicit identity-alignment → out-party
+# animus channel (read by AffectiveUpdate). 0.0 default = bit-identical;
+# under `evidence_regrade`, stacked agents (alignment→1) feel up to
+# (1 + this) × the animus of an unaligned agent.
+IDENTITY_ALIGNMENT_AFFECT_WEIGHT_REGRADE = 0.5
 
 # Phase 9 §11.7-B — ANES-derived ElitDrift schedule.
 # Engine baseline currently produces party_sep growth ≈ 0.0017/tick
@@ -404,13 +482,15 @@ FACTION_EVENT_RNG_SEED_OFFSET = 4242
 def _per_agent_heterogeneity(
     identity_strength: float, rng: np.random.Generator,
     fj_alpha_scale: float = 1.0,
+    affect_lr_base: float = AFFECT_LR_BASE_DEFAULT,
 ):
     """Compute per-agent (epsilon, fj_alpha, affect_lr) given
     identity_strength + a small Beta(2, 5)-shaped jitter. Phase 8b
     M1 §3.2 default magnitudes (40 / 60 / 80%).
 
     `fj_alpha_scale` (web_demo Step 4) multiplies the anchor-pull base;
-    1.0 → bit-identical."""
+    1.0 → bit-identical. `affect_lr_base` (affect re-grade) is the
+    contact-channel learning-rate base; 0.01 default → bit-identical."""
     hetero_term = 2.0 * (identity_strength - 0.5)  # [-1, +1]
     jitter = 2.0 * (rng.beta(2.0, 5.0) - 0.286)  # mean ~0
     epsilon = 0.30 * (
@@ -421,7 +501,7 @@ def _per_agent_heterogeneity(
         1.0 + FJ_HETERO_FACTOR * hetero_term
         + HETERO_JITTER_FACTOR * jitter
     )
-    affect_lr = 0.01 * (
+    affect_lr = affect_lr_base * (
         1.0 + LR_HETERO_FACTOR * hetero_term
         + HETERO_JITTER_FACTOR * jitter
     )
@@ -587,6 +667,31 @@ def build_engine(
     # consulted on the ANES IC path; None → no truncation → bit-
     # identical to head. The demo preset uses 0.45.
     tier_d_ic_partisan_x_cap: float | None = None,
+    # Step 1 (web_demo evidence re-grade). Master gate for the engine
+    # truth-pass changes (decisions D1a/D2a/D3b). Default False → a
+    # strict no-op: every re-grade consumer reads its no-op value, so
+    # the default path (pillar + Phase 4–9 historical default) is
+    # bit-identical to head. Set True only on the web/ANES presets
+    # (publish + phase10), where the shipped trajectory is *meant* to
+    # change. When True the build:
+    #   - demotes the social-media affect_weight ramp to a small
+    #     contested accelerant (SOCIAL_MEDIA_AFFECT_WEIGHT_RAMP_REGRADE),
+    #   - turns on the explicit identity-alignment → animus channel
+    #     (IDENTITY_ALIGNMENT_AFFECT_WEIGHT_REGRADE) + seeds the state,
+    #   - exposes Gingrich-1994 drift params (consumed by the 1994 event
+    #     that build_schedule adds, and the CU-demotion / decade-2010
+    #     relocation in the event handlers).
+    evidence_regrade: bool = False,
+    # web_demo exogenous-shocks workstream. NEW, independent master gate for
+    # the general external-shock mechanism (`abm/pillars/shocks.py`). Default
+    # False → a strict no-op: no shock events are scheduled (see
+    # build_schedule), `ShockRelaxation` is NOT added to the pipeline, so the
+    # default path (pillar + Phase 4–9 historical default) is byte-for-byte
+    # identical to head. Turned on only in the canonical web/ANES preset
+    # AFTER the re-validate → re-measure Phase 10 → re-bless cycle. Pair with
+    # build_schedule(exogenous_shocks=...). Independent of evidence_regrade so
+    # the shock layer can be validated in isolation.
+    exogenous_shocks: bool = False,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -898,7 +1003,11 @@ def build_engine(
 
         # Per-agent heterogeneity (M1).
         agent_eps, agent_alpha, agent_lr = _per_agent_heterogeneity(
-            identity_strength, rng, fj_alpha_scale
+            identity_strength, rng, fj_alpha_scale,
+            affect_lr_base=(
+                AFFECT_LR_BASE_REGRADE if evidence_regrade
+                else AFFECT_LR_BASE_DEFAULT
+            ),
         )
 
         # Per-party party_cue σ (M4 asymmetric).
@@ -961,12 +1070,17 @@ def build_engine(
                 stubbornness + faction_stubbornness_boost * extremity,
             ))
 
-        # 1980 affect — ANES out-party therm ~40° = mild-moderate
-        # coolness ≈ -0.20 normalised to [-1, 1]. Seed at build with
-        # noise so the cold-build measurement lands inside the target
-        # band rather than at zero.
+        # 1980 affect seed. Default -0.25 (pre-regrade). Under the affect
+        # re-grade (evidence_regrade), -0.09 — the real 1986-88 ANES
+        # out-party PARTY thermometer (45.3 deg) under the principled
+        # midpoint map aff=(deg-50)/50. The old -0.25 (~37.5 deg) was ~8 deg
+        # too cold and front-loaded animus. See docs/affect_bands_investigation.md.
+        _affect_seed_mean = (
+            AFFECT_SEED_MEAN_REGRADE if evidence_regrade
+            else AFFECT_SEED_MEAN_DEFAULT
+        )
         initial_affect = float(np.clip(
-            rng.normal(-0.25, 0.10), -1.0, 1.0
+            rng.normal(_affect_seed_mean, 0.10), -1.0, 1.0
         ))
         # Phase 8c §4 E4.1: perceived out-party centroid, biased
         # outward on the dominant (x) axis. The bias direction is
@@ -1054,6 +1168,27 @@ def build_engine(
             if a.id in _protected:
                 a.state.attrs["do_not_replace"] = True
 
+    # Step 1 (web_demo evidence re-grade, D3b): seed the explicit
+    # identity-alignment state from the 1980 identities so it exists at
+    # tick 0 (the IdentityAlignment rule then relaxes it each tick).
+    # Gated → no attr added on the default path → bit-identical.
+    if evidence_regrade:
+        for a in agents:
+            party = a.state.attrs.get("party")
+            if party is None or party == 2:
+                continue
+            ids = a.state.attrs.get("identities")
+            if ids is None or len(ids) == 0:
+                continue
+            c = party_identity_centers.get(party)
+            if c is None:
+                sign = 1.0 if party == 1 else -1.0
+            else:
+                sign = 1.0 if float(np.mean(np.asarray(c))) >= 0.0 else -1.0
+            a.state.attrs["identity_alignment"] = float(
+                np.clip(np.mean(np.asarray(ids, dtype=float) * sign), 0.0, 1.0)
+            )
+
     network = Network.homophilous(
         agents,
         net_rng,
@@ -1065,8 +1200,54 @@ def build_engine(
         network, agents, net_rng, per_agent=INVOLUNTARY_PER_AGENT
     )
 
+    # Step 1 (web_demo evidence re-grade) — derive the re-graded params.
+    # All take their no-op value when evidence_regrade is False, so the
+    # default path stays bit-identical.
+    if evidence_regrade:
+        social_media_affect_weight_ramp = list(
+            SOCIAL_MEDIA_AFFECT_WEIGHT_RAMP_REGRADE
+        )
+        identity_alignment_affect_weight = IDENTITY_ALIGNMENT_AFFECT_WEIGHT_REGRADE
+        # Apply the ANES drift multiplier to the Gingrich rates exactly
+        # as the ANES per-decade schedule is multiplied above.
+        _gdm = float(tier_d_anes_drift_multiplier) if anes_knobs_active else 1.0
+        gingrich_drift_rate = ELITE_DRIFT_GINGRICH_1994 * _gdm
+        gingrich_drift_rate_y = (
+            ELITE_DRIFT_GINGRICH_1994_Y * _gdm
+            if elite_drift_schedule_y_active is not None else None
+        )
+        gingrich_drift_asymmetric = dict(GINGRICH_1994_ASYMMETRIC)
+    else:
+        social_media_affect_weight_ramp = list(
+            SOCIAL_MEDIA_AFFECT_WEIGHT_RAMP_DEFAULT
+        )
+        identity_alignment_affect_weight = 0.0
+        gingrich_drift_rate = None
+        gingrich_drift_rate_y = None
+        gingrich_drift_asymmetric = None
+
     party_centers = {pid: c.copy() for pid, c in party_centers_active.items()}
     env = Environment(attrs={
+        # Step 1 (web_demo evidence re-grade) — master gate + derived
+        # params. Read by the social-media events, the Gingrich-1994 /
+        # CU-demotion event handlers, the IdentityAlignment rule, and
+        # AffectiveUpdate's alignment amplifier. No-op-valued when off.
+        "evidence_regrade": bool(evidence_regrade),
+        "social_media_affect_weight_schedule": list(
+            social_media_affect_weight_ramp
+        ),
+        "identity_alignment_affect_weight": float(
+            identity_alignment_affect_weight
+        ),
+        # Step 2 (flag-1 fix): IdentitySorting rate multiplier. Read by
+        # _set_identity_sorting + the Trump-bump event. 1.0 on the
+        # default path → bit-identical.
+        "identity_sorting_multiplier": (
+            IDENTITY_SORTING_REGRADE_MULTIPLIER if evidence_regrade else 1.0
+        ),
+        "gingrich_drift_rate": gingrich_drift_rate,
+        "gingrich_drift_rate_y": gingrich_drift_rate_y,
+        "gingrich_drift_asymmetric": gingrich_drift_asymmetric,
         "parties": party_centers,
         "outlets": outlets_by_id,
         "network": network,
@@ -1166,11 +1347,21 @@ def build_engine(
         # Step 5 (web_demo jumpiness): opinion-momentum coefficient read
         # by Engine.step. 0.0 → off (bit-identical). Demo preset: 0.4.
         "momentum": float(momentum),
+        # Affect re-grade: dated media-exposure level driving the
+        # contact-independent MediatedAnimus channel. 0.0 at build; ramped on
+        # at the 2008/2010/2012 social-media events (only under evidence_regrade).
+        "mediated_animus_weight": 0.0,
         # Step 1 (web_demo jumpiness): per-run replacement log. Present
         # (empty list) so CohortReplacement appends [tick, agent_id] on
         # every firing; the export then emits it for ghost-fade. Other
         # scenarios never read this attr, so its presence is inert there.
         "replacement_events": [],
+        # web_demo exogenous-shocks workstream — master gate + the per-run
+        # ledger ShockRelaxation walks. `exogenous_shocks` False on the
+        # default path; `active_shocks` stays an empty unread list there
+        # (ShockRelaxation isn't in the pipeline), so bit-identity holds.
+        "exogenous_shocks": bool(exogenous_shocks),
+        "active_shocks": [],
         "viz": {
             "title": TITLE,
             "group_names": PARTY_NAMES,
@@ -1232,12 +1423,42 @@ def build_engine(
             # knobs use saturation=1.0 (per-encounter delta dampened
             # by 1 − w² as warmth approaches ±1). Default 0.0 keeps
             # the pillar bit-identical.
-            saturation=1.0 if anes_knobs_active else 0.0,
+            # Affect re-grade: retire saturation under evidence_regrade — it
+            # was a late-decelerator fit to the OLD cold bands and fights the
+            # convex collapse the grounded bands want. Off-regrade unchanged.
+            saturation=(
+                0.0 if evidence_regrade
+                else (1.0 if anes_knobs_active else 0.0)
+            ),
+        ),
+        # Affect re-grade: contact-independent (parasocial) animus channel.
+        # No-op unless evidence_regrade (lr>0) AND mediated_animus_weight>0
+        # (ramped on at the 2008/2010/2012 social-media events). Supplies the
+        # late steepening the contact channel can't, because homophilous
+        # sorting starves out-party contact. See docs/affect_bands_investigation.md.
+        MediatedAnimus(
+            learning_rate=MEDIATED_ANIMUS_LR if evidence_regrade else 0.0,
         ),
         IdentitySorting(
-            sort_rate=IDENTITY_SORTING_SCHEDULE["1980-90"],
-            step=0.05, differentiation=0.5,
+            # Step 2 (flag-1 fix): scale the initial sort rate by the
+            # regrade multiplier (1.0 off → bit-identical). Decade
+            # boundaries re-scale via _set_identity_sorting.
+            sort_rate=IDENTITY_SORTING_SCHEDULE["1980-90"] * (
+                IDENTITY_SORTING_REGRADE_MULTIPLIER if evidence_regrade else 1.0
+            ),
+            step=(
+                IDENTITY_SORTING_REGRADE_STEP if evidence_regrade else 0.05
+            ),
+            differentiation=0.5,
         ),
+        # Step 1 (web_demo evidence re-grade, D3b): explicit
+        # identity-alignment state (Mason mega-identity). Self-gates on
+        # env.attrs["evidence_regrade"] — returns an empty delta WITHOUT
+        # drawing rng when off, so the default path is bit-identical
+        # (the rule is present but inert). When on, it maintains the
+        # per-agent `identity_alignment` scalar that AffectiveUpdate
+        # reads to amplify out-party animus for stacked agents.
+        IdentityAlignment(rate=0.10),
         BacklashRepulsion(
             epsilon=0.30, max_range=1.5, strength=0.0,
             affect_threshold=BACKLASH_AFFECT_THRESHOLD,
@@ -1299,7 +1520,24 @@ def build_engine(
             ),
         ),
         TieRewiring(
-            rewire_rate=0.02,
+            # Cross-cutting recalibration (2026-06). 0.02 left the
+            # 1980->2025 cross-cutting decline too compressed at the
+            # modern end and left party modularity undershooting its
+            # empirical target by ~0.05-0.10 from 2010 on (see
+            # docs/BACKLOG.md "Modularity undershoot"). Raising to 0.03
+            # steepens the *partisan* cross-cutting tie fraction to
+            # ~0.357 -> ~0.21 over the arc (a ~42% relative drop, in line
+            # with the co-partisan-marriage series: cross-party married
+            # fell 46% (1973) -> 26% (~2013); Iyengar, Konitzer & Tedin
+            # 2018), lifts 2025 modularity 0.165 -> ~0.20 (toward the
+            # 0.21-0.26 empirical band), and -- because affect-weighted
+            # rewiring sheds cold out-party ties slightly faster -- nudges
+            # the 2025 out-party affect from -0.767 BACK ONTO the blessed
+            # Phase 9 reference (-0.725; the affect spine is preserved,
+            # not degraded). The pillar's S4 rewire_rate is set
+            # independently in calm_to_camps.py and is intentionally NOT
+            # changed, so the pillar drift-guard stays bit-identical.
+            rewire_rate=0.03,
             affect_weight_rewire=TR_AFFECT_WEIGHT_REWIRE,
         ),
         ResidentialMigration(
@@ -1329,6 +1567,14 @@ def build_engine(
             decay_rate=0.0 if phase8e_baseline else THREAT_DECAY_RATE
         ),
     ]
+
+    # web_demo exogenous-shocks workstream: ShockRelaxation walks the
+    # `active_shocks` ledger to decay/revert transient/windowed/ramped
+    # shocks. Added ONLY when the flag is on — kept entirely out of the
+    # default-path pipeline so the historical-arc default + pillar stay
+    # bit-identical. It self-gates on an empty ledger regardless.
+    if exogenous_shocks:
+        env_rules.append(ShockRelaxation())
 
     # Sanity: at most one instance per class.
     seen: set[str] = set()
@@ -1370,11 +1616,23 @@ def _event_1996_fox_news(engine):
 
 
 def _event_2008_social_media_ramp_start(engine):
-    """Social media mass adoption begins — BC affect_weight ramp."""
+    """Social media mass adoption begins — BC affect_weight ramp.
+
+    Step 1 (D2a): the ramp values come from env.attrs (re-graded down
+    to a small contested accelerant under `evidence_regrade`; default
+    [0.10, 0.20, 0.30] preserves the pre-re-grade trajectory)."""
+    ramp = engine.env.attrs.get(
+        "social_media_affect_weight_schedule",
+        SOCIAL_MEDIA_AFFECT_WEIGHT_RAMP_DEFAULT,
+    )
     _set_rule(
         engine.rules.rules, "BoundedConfidenceInfluence",
-        "affect_weight", 0.10,
+        "affect_weight", ramp[0],
     )
+    # Affect re-grade: turn on the contact-independent MediatedAnimus channel
+    # as social media adoption begins (the dated driver of parasocial animus).
+    if engine.env.attrs.get("evidence_regrade"):
+        engine.env.attrs["mediated_animus_weight"] = MEDIATED_ANIMUS_WEIGHT_RAMP[0]
 
 
 def _event_2008_obama_warmth(engine):
@@ -1395,10 +1653,34 @@ def _event_2008_obama_warmth(engine):
 
 
 def _event_2010_social_media_ramp_mid(engine):
-    """Social media mass adoption mid-ramp."""
+    """Social media mass adoption mid-ramp (Step 1 D2a: env-driven ramp)."""
+    ramp = engine.env.attrs.get(
+        "social_media_affect_weight_schedule",
+        SOCIAL_MEDIA_AFFECT_WEIGHT_RAMP_DEFAULT,
+    )
     _set_rule(
         engine.rules.rules, "BoundedConfidenceInfluence",
-        "affect_weight", 0.20,
+        "affect_weight", ramp[1],
+    )
+    if engine.env.attrs.get("evidence_regrade"):
+        engine.env.attrs["mediated_animus_weight"] = MEDIATED_ANIMUS_WEIGHT_RAMP[1]
+
+
+def _event_1994_gingrich(engine):
+    """Step 1 (D1a): Gingrich-era asymmetric elite-drift inflection
+    (Republican Revolution, Nov 1994). Under `evidence_regrade` this is
+    the discrete elite-divergence step-up — R-heavy (Hacker-Pierson
+    2020; Theriault *The Gingrich Senators*) — moving the inflection off
+    Citizens United (2010), whose polarization effect is null/contested.
+    No-op when evidence_regrade is off (the event isn't even scheduled
+    on the default path; this guard is defence-in-depth)."""
+    if not engine.env.attrs.get("evidence_regrade"):
+        return
+    _set_elite_drift_rate(
+        engine,
+        engine.env.attrs.get("gingrich_drift_rate"),
+        rate_y=engine.env.attrs.get("gingrich_drift_rate_y"),
+        asymmetric=engine.env.attrs.get("gingrich_drift_asymmetric"),
     )
 
 
@@ -1407,7 +1689,15 @@ def _event_2010_citizens_united(engine):
     (asymmetric, R-heavy in 8f schedule; D-heavy under ANES knobs).
     This is the *transition*, not the onset — EliteDrift was already
     active from 1980 at lower rate (McCarty-Poole-Rosenthal continuous
-    divergence)."""
+    divergence).
+
+    Step 1 (D1a): under `evidence_regrade` this handler is a NO-OP — CU
+    is demoted to a non-causal era marker (best-identified studies find
+    no polarization effect). The 2010-20 elite-drift transition is
+    relocated into `_decade_boundary_2010` so late-period divergence is
+    preserved without attributing it to CU."""
+    if engine.env.attrs.get("evidence_regrade"):
+        return
     sched = engine.env.attrs.get(
         "elite_drift_schedule_active", ELITE_DRIFT_SCHEDULE,
     )
@@ -1423,11 +1713,17 @@ def _event_2010_citizens_united(engine):
 
 
 def _event_2012_social_media_ramp_end(engine):
-    """Social media mass adoption peak."""
+    """Social media mass adoption peak (Step 1 D2a: env-driven ramp)."""
+    ramp = engine.env.attrs.get(
+        "social_media_affect_weight_schedule",
+        SOCIAL_MEDIA_AFFECT_WEIGHT_RAMP_DEFAULT,
+    )
     _set_rule(
         engine.rules.rules, "BoundedConfidenceInfluence",
-        "affect_weight", 0.30,
+        "affect_weight", ramp[2],
     )
+    if engine.env.attrs.get("evidence_regrade"):
+        engine.env.attrs["mediated_animus_weight"] = MEDIATED_ANIMUS_WEIGHT_RAMP[2]
 
 
 def _event_2016_trump_election(engine):
@@ -1444,10 +1740,14 @@ def _event_2016_trump_election(engine):
         parties[1] = parties[1] + np.array([0.02, 0.10])
     else:
         parties[1] = parties[1] + np.array([0.05, 0.0])
-    # Bump identity sorting for the next 2 years (6 ticks).
+    # Bump identity sorting for the next 2 years (6 ticks). Step 2
+    # (flag-1 fix): the +0.005 increment and the 0.040 cap scale with
+    # the regrade multiplier so the bump rides on top of the (scaled)
+    # 2010-20 rate instead of being clamped back down by a static cap.
+    mult = float(engine.env.attrs.get("identity_sorting_multiplier", 1.0))
     for r in engine.rules.rules:
         if type(r).__name__ == "IdentitySorting":
-            r.sort_rate = min(0.040, r.sort_rate + 0.005)
+            r.sort_rate = min(0.040 * mult, r.sort_rate + 0.005 * mult)
 
 
 def _event_2016_status_threat(engine):
@@ -1669,9 +1969,10 @@ def _event_2018_dsa(engine):
 def _event_2018_trump_bump_revert(engine):
     """The Trump-era identity-sorting bump reverts to the decade's
     scheduled rate after 2 years."""
-    for r in engine.rules.rules:
-        if type(r).__name__ == "IdentitySorting":
-            r.sort_rate = IDENTITY_SORTING_SCHEDULE["2010-20"]
+    # Step 2 (flag-1 fix): route through _set_identity_sorting so the
+    # revert restores the *scaled* 2010-20 rate (not the raw schedule
+    # value), keeping the regrade multiplier consistent.
+    _set_identity_sorting(engine, IDENTITY_SORTING_SCHEDULE["2010-20"])
 
 
 def _event_2020_covid_jan6(engine):
@@ -1695,9 +1996,14 @@ def _event_2021_affect_revert(engine):
 
 # Decade-boundary IdentitySorting transitions (Phase 8b M5).
 def _set_identity_sorting(engine, rate):
+    # Step 2 (flag-1 fix): scale by the regrade multiplier (1.0 on the
+    # default path → bit-identical). All decade-boundary + revert
+    # transitions route through here, so the scaling is applied once,
+    # consistently.
+    mult = float(engine.env.attrs.get("identity_sorting_multiplier", 1.0))
     for r in engine.rules.rules:
         if type(r).__name__ == "IdentitySorting":
-            r.sort_rate = rate
+            r.sort_rate = rate * mult
 
 
 def _set_elite_drift_rate(engine, rate, rate_y=None, asymmetric=None):
@@ -1746,7 +2052,21 @@ def _decade_boundary_2000(engine):
 
 def _decade_boundary_2010(engine):
     _set_identity_sorting(engine, IDENTITY_SORTING_SCHEDULE["2010-20"])
-    # EliteDrift rate is set by Citizens United event at the same tick.
+    # EliteDrift rate is set by the Citizens United event at the same
+    # tick on the default path. Step 1 (D1a): under `evidence_regrade`
+    # CU is demoted to a marker, so the 2010-20 drift transition is set
+    # HERE instead (continuous divergence, not CU-caused).
+    if engine.env.attrs.get("evidence_regrade"):
+        sched = engine.env.attrs.get(
+            "elite_drift_schedule_active", ELITE_DRIFT_SCHEDULE,
+        )
+        sched_y = engine.env.attrs.get("elite_drift_schedule_y_active")
+        asym_sched = engine.env.attrs.get("elite_drift_asymmetric_schedule_active")
+        _set_elite_drift_rate(
+            engine, sched["2010-20"],
+            rate_y=(sched_y["2010-20"] if sched_y is not None else None),
+            asymmetric=(asym_sched["2010-20"] if asym_sched is not None else None),
+        )
     if not engine.env.attrs.get("phase8e_baseline"):
         engine.env.attrs["party_issue_coupling"] = PARTY_ISSUE_COUPLING_SCHEDULE["2010-20"]
 
@@ -1770,6 +2090,8 @@ def _decade_boundary_2020(engine):
 def build_schedule(
     factional_seeding: bool = False,
     faction_anchor_events: bool = False,
+    evidence_regrade: bool = False,
+    exogenous_shocks: bool = False,
 ) -> Schedule:
     """Build the historical event schedule.
 
@@ -1830,6 +2152,17 @@ def build_schedule(
                        "Affect spike reverts after 2020-21",
                        _event_2021_affect_revert),
     ]
+    # Step 1 (web_demo evidence re-grade, D1a): the Gingrich-1994 elite-
+    # drift inflection (tick 42 = 1994). Gated behind `evidence_regrade`
+    # so the default-path schedule is unchanged (bit-identical). Schedule
+    # sorts by tick, so append order is irrelevant.
+    if evidence_regrade:
+        events.append(
+            ScheduledEvent(42, "gingrich_1994",
+                           "Gingrich-era asymmetric elite-drift inflection "
+                           "(1994 Republican Revolution)",
+                           _event_1994_gingrich)
+        )
     # Phase 9 Tier A — faction-emergence events (spec §4). Gated behind
     # factional_seeding=True; the handlers themselves also no-op when the
     # env flag is off, so this gate is defence-in-depth.
@@ -1857,6 +2190,15 @@ def build_schedule(
                            "re-labeled DSA",
                            _event_2018_dsa),
         ])
+    # web_demo exogenous-shocks workstream: compile the empirical shock
+    # catalogue (S-911 rally, S-Obergefell) into ScheduledEvents. Gated
+    # behind `exogenous_shocks=True`; the compiled event_fns ALSO self-gate
+    # on env.attrs["exogenous_shocks"], so this is defence-in-depth. Schedule
+    # sorts by tick, so append order is irrelevant. Default path: not added →
+    # bit-identical.
+    if exogenous_shocks:
+        from .shocks import SHOCK_CATALOGUE, shock_scheduled_events
+        events.extend(shock_scheduled_events(SHOCK_CATALOGUE))
     return Schedule(events)
 
 

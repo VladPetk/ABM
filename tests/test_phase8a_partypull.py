@@ -193,20 +193,14 @@ def test_within_party_sd_at_s2_lands_in_legislator_band():
     bound is at Phase 7's baseline so any future regression below
     that level fails loudly.
     """
-    from .conftest import N, STAGE_SEEDS, TICKS
+    from .conftest import STAGE_SEEDS
+    from abm.calibration_parallel import run_seeds_parallel
+    from ._parallel_workers import s2_within_party_sd_worker
 
-    sds_by_party = {0: [], 1: []}
-    for seed in STAGE_SEEDS:
-        eng = build_engine(seed=seed, n_agents=N)
-        apply_intervention(eng, PILLAR.interventions[2])  # S2
-        eng.run(TICKS)
-        parties = np.array([a.state.attrs["party"] for a in eng.agents])
-        pos = eng.positions()
-        for p in (0, 1):
-            mask = parties == p
-            sds_by_party[p].append(float(pos[mask, 0].std()))
-    mean_sd_0 = float(np.mean(sds_by_party[0]))
-    mean_sd_1 = float(np.mean(sds_by_party[1]))
+    # Parallel over seeds — bit-identical to the serial build/run loop.
+    results = run_seeds_parallel(s2_within_party_sd_worker, list(STAGE_SEEDS))
+    mean_sd_0 = float(np.mean([r[0] for r in results]))
+    mean_sd_1 = float(np.mean([r[1] for r in results]))
     for p, sd in ((0, mean_sd_0), (1, mean_sd_1)):
         assert 0.14 <= sd <= 0.30, (
             f"party {p} within-party SD_x at S2-end = {sd:.3f}; "

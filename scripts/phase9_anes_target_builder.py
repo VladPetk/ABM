@@ -88,8 +88,10 @@ def main():
         XX, YY = np.meshgrid(grid, grid)
         pts = np.vstack([XX.ravel(), YY.ravel()])
         Z = kde(pts).reshape(XX.shape)
-        # Normalize integral to 1
-        integral = float(np.trapz(np.trapz(Z, grid, axis=1), grid))
+        # Normalize integral to 1. NumPy 2.4 removed `np.trapz` (renamed
+        # `np.trapezoid`); shim for both.
+        _trapz = getattr(np, "trapezoid", None) or np.trapz
+        integral = float(_trapz(_trapz(Z, grid, axis=1), grid))
         if integral > 0:
             Z = Z / integral
 

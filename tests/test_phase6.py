@@ -265,14 +265,21 @@ def _classify_aff(daff: float) -> str:
     return "unclassified"
 
 
-def test_intervention_library_directions_hold(intervention_buckets):
+def test_intervention_library_directions_hold(intervention_buckets_arc):
     """Phase 7: each intervention's measured per-axis Δ matches its
     declared ``effect_buckets`` entry on both 'issue_sorting' (Δsep)
     and 'affect' (Δaff). If a future change moves an intervention out
     of its declared bucket on either axis, this test fails and the
-    spec calls for re-blessing — move the tag, not the threshold."""
+    spec calls for re-blessing — move the tag, not the threshold.
+
+    Step 2 (web_demo): measured on the ANES historical arc — the
+    substrate the public buckets were blessed against (phase10) — not
+    the pillar. The pillar lands X1 in the affect-threshold
+    non-linearity (Δsep ≈ null), which mismatched the declared
+    'backfire'; the arc is where the public bucket lives. See
+    `intervention_buckets_arc` in conftest."""
     for iv in INTERVENTIONS_PHASE6:
-        d = intervention_buckets[iv.id]
+        d = intervention_buckets_arc[iv.id]
         measured_sep = _classify_sep(d["sep"])
         measured_aff = _classify_aff(d["aff"])
         declared_sep = iv.effect_buckets["issue_sorting"]

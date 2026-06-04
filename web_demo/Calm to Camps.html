@@ -3,15 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Calm to Camps — Pedagogical Demo Mockups</title>
+<title>Calm to Camps</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet" />
 <style>
-  html, body { margin: 0; padding: 0; height: 100%; background: #f0eee9; }
+  html, body { margin: 0; padding: 0; height: 100%; background: #f9f8f4; overflow: hidden; }
   body { font-family: 'Geist', -apple-system, system-ui, sans-serif; color: #1a1d23; font-feature-settings: 'ss01', 'cv11', 'tnum'; }
   * { box-sizing: border-box; }
+  button { font-family: inherit; }
   #root { width: 100%; height: 100%; }
+  /* borderless editorial look — scroll without visible scrollbars */
+  * { scrollbar-width: none; -ms-overflow-style: none; }
+  *::-webkit-scrollbar { width: 0; height: 0; display: none; }
+  /* chapter text crossfade + first-run hint animation */
+  @keyframes ccFadeUp { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+  @keyframes ccHintBob { 0%, 100% { transform: translateY(-1px); } 50% { transform: translateY(2px); } }
 </style>
 </head>
 <body>
@@ -21,16 +28,16 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-<script type="text/babel" src="design-canvas.jsx"></script>
-<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script src="cc-data.js"></script>
 <script type="text/babel" src="cc-shared.jsx"></script>
-<script type="text/babel" src="cc-compass.jsx"></script>
-<script type="text/babel" src="cc-character.jsx"></script>
-<script type="text/babel" src="cc-timeline.jsx"></script>
-<script type="text/babel" src="cc-intro.jsx"></script>
-<script type="text/babel" src="cc-player.jsx"></script>
-<script type="text/babel" src="cc-counterfactual.jsx"></script>
-<script type="text/babel" src="cc-app.jsx"></script>
+<script type="text/babel" src="cc-proto-engine.jsx"></script>
+<script type="text/babel" src="cc-proto-panels.jsx"></script>
+<script type="text/babel" src="rc-shared.jsx"></script>
+<script type="text/babel" src="cc-system.jsx"></script>
+<script type="text/babel" src="rc-interventions.jsx"></script>
+<script type="text/babel" src="rc-story.jsx"></script>
+<script type="text/babel" src="cc-pages.jsx"></script>
+<script type="text/babel" src="cc-unified.jsx"></script>
 
 </body>
 </html>

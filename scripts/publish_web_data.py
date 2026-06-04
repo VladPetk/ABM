@@ -65,54 +65,11 @@ import numpy as np
 
 # --- Configuration -----------------------------------------------------
 
-# anes_full preset (copied from scripts/phase10_measure.py so this
-# script is self-contained against future preset edits).
-ANES_FULL_KWARGS = {
-    "n_agents": 250,
-    "independent_fraction": 0.12,
-    "factional_seeding": False,
-    "faction_anchor_strength": 0.10,
-    "faction_anchor_events": True,
-    "event_stubbornness_bump_multiplier": 1.0,
-    "tier_d_axis_balance": True,
-    "tier_d_lever1_off": True,
-    "tier_d_cohort_y_signs_fix": True,
-    "tier_d_anes_knobs": True,
-    "tier_d_anes_drift_multiplier": 3.0,
-    "tier_d_anes_sigma_pc_multiplier": 1.6,
-    "tier_c_identity_pull_x": 0.020,
-    "tier_c_identity_pull_y": 0.040,
-    # web_demo jumpiness Step 3: halved from 0.08. The per-tick Gaussian
-    # noise is the dominant jitter source in the demo (with mean
-    # stubbornness ~0.29, (1-s)*0.08*sqrt(pi/2) ~ 0.07/tick, matching the
-    # observed median step of 0.065). Halving it ~halves crowd jitter.
-    "tier_d_aniso_noise_sigma_x": 0.04,
-    "tier_d_aniso_noise_sigma_y": 0.04,
-    "tier_c_party_pull_strength": 0.04,
-    "tier_c_bc_strength": 0.015,
-    "tier_d_coupling_rho": 0.30,
-    "tier_d_cue_correlation": 0.40,
-    "tier_d_ic_sigma": 0.35,
-    # web_demo jumpiness Step 5: opinion momentum. Carries 0.4 of the
-    # previous applied step into each tick so consecutive deltas stop
-    # cancelling — kills the tick-to-tick reversals (median 68 sharp
-    # turns/agent in the baseline). See Engine.step.
-    "momentum": 0.4,
-    # web_demo jumpiness Step 4: tighten the free-mover tail. Stronger
-    # anchor pull so low-stubbornness agents drift instead of random-
-    # walking. 2.8 (≈ 0.05 → 0.14) thins the tail of continuous agents
-    # making implausibly large lifetime journeys: frac drifting >1 unit
-    # over 45 yr falls 4.2%→2.4% (~the 1-2% target), while polarization
-    # holds (party_sep 0.907→0.917) and within-party SD improves toward
-    # the ANES band (0.242→0.259). See historical_arc.build_engine.
-    "fj_alpha_scale": 2.8,
-    # web_demo realism: truncate the 1980 economic IC tail so a partisan
-    # can't initialize deep in the opposite half (a Democrat past x>+0.45
-    # in the laissez-faire corner, or vice-versa). Keeps the calibrated
-    # mean party overlap and the (historically real) cultural overlap;
-    # removes only the implausible diagonal-corner outliers.
-    "tier_d_ic_partisan_x_cap": 0.45,
-}
+# anes_full preset — single source of truth shared with
+# scripts/phase10_measure.py (Step 1 / D4 reconciliation). See
+# scripts/anes_preset.py for why the two copies were unified (the
+# intervention scoreboard must be measured against the shipped baseline).
+from scripts.anes_preset import ANES_FULL_KWARGS
 
 CANONICAL_SEED = 0
 TICKS_PER_YEAR = 3.0
@@ -135,6 +92,7 @@ DEFAULT_NETWORK_SNAPSHOT_TICKS = [
 EVENT_ACTUAL_DATES = {
     "fairness_doctrine_1987": "1987-08",
     "decade_1990": "1990-01",
+    "gingrich_1994": "1994-11",
     "fox_news_1996": "1996-10",
     "decade_2000": "2000-01",
     "social_media_ramp_start_and_obama_2008": "2008-11",
@@ -153,6 +111,7 @@ EVENT_ACTUAL_DATES = {
 EVENT_KIND = {
     "fairness_doctrine_1987": "media",
     "decade_1990": "decade_boundary",
+    "gingrich_1994": "elite_drift",
     "fox_news_1996": "media",
     "decade_2000": "decade_boundary",
     "social_media_ramp_start_and_obama_2008": "election",
@@ -167,6 +126,77 @@ EVENT_KIND = {
     "covid_jan6_2020": "crisis",
     "affect_revert_2021": "decade_boundary",
 }
+
+# Step 1 (web_demo evidence re-grade): per-event evidence grade +
+# a one-line provenance note, so the timeline can honestly badge which
+# mechanisms are well-evidenced vs contested (web_demo_audit §3.2/§3.8;
+# causal model §2.1/§3). `grade ∈ {HIGH, MED, LOW, CONTESTED, MARKER}`.
+# Reflects the Step-1 re-grade: elite drift attributed to Gingrich/1994
+# (HIGH), Citizens United demoted to a non-causal era MARKER, social
+# media demoted to a LOW/contested accelerant.
+EVENT_EVIDENCE = {
+    "fairness_doctrine_1987": {
+        "grade": "HIGH",
+        "note": "Partisan-broadcast supply shock (DellaVigna-Kaplan; "
+                "Martin-Yurukoglu).",
+    },
+    "decade_1990": {"grade": "HIGH", "note": "Identity-sorting / coupling step (Mason)."},
+    "gingrich_1994": {
+        "grade": "HIGH",
+        "note": "Asymmetric (GOP-led) elite-divergence inflection "
+                "(Theriault; Hacker-Pierson 2020). The elite-drift "
+                "emphasis now sits here, not at Citizens United.",
+    },
+    "fox_news_1996": {
+        "grade": "HIGH",
+        "note": "Cable/Fox partisan-media amplifier — strong causal "
+                "(Martin-Yurukoglu 2017).",
+    },
+    "decade_2000": {"grade": "HIGH", "note": "Great-sort identity/coupling step (Mason)."},
+    "social_media_ramp_start_and_obama_2008": {
+        "grade": "LOW",
+        "note": "Social-media affect coupling DEMOTED to a small, "
+                "contested accelerant (BGS by-age; Allcott 2024 "
+                "Meta-2020 ~null). Obama warmth bump retained.",
+    },
+    "decade_2010_and_citizens_united": {
+        "grade": "MARKER",
+        "note": "Citizens United is a non-causal era marker — "
+                "best-identified studies find no polarization effect. "
+                "Late-period elite drift continues via the decade "
+                "boundary, not via CU.",
+    },
+    "social_media_ramp_end_2012": {
+        "grade": "LOW",
+        "note": "Social-media accelerant terminal value (contested/LOW).",
+    },
+    "trump_2016_and_status_threat": {
+        "grade": "CONTESTED",
+        "note": "Status-threat shock (Mutz 2018) — magnitude contested "
+                "(Morgan 2018: economics also matters). Kept, flagged.",
+    },
+    "covid_jan6_2020": {
+        "grade": "MED",
+        "note": "Affect-spike window (COVID + 2020 + Jan 6).",
+    },
+}
+
+# web_demo exogenous-shocks workstream: auto-derive the timeline metadata
+# for the general-mechanism shocks (S-911 rally, S-Obergefell) from their
+# ShockSpecs, so we don't hand-maintain a fourth copy that can drift. These
+# events only fire when ANES_FULL_KWARGS["exogenous_shocks"] is True.
+def _merge_shock_event_metadata() -> None:
+    from abm.pillars.shocks import SHOCK_CATALOGUE
+    for spec in SHOCK_CATALOGUE:
+        EVENT_ACTUAL_DATES.setdefault(spec.label, spec.actual_date)
+        EVENT_KIND.setdefault(spec.label, spec.kind)
+        EVENT_EVIDENCE.setdefault(spec.label, {
+            "grade": spec.evidence_grade,
+            "note": spec.evidence_note,
+        })
+
+
+_merge_shock_event_metadata()
 
 
 # --- Capture helpers ---------------------------------------------------
@@ -239,6 +269,19 @@ def capture_macro_metrics(eng) -> dict:
         return [float(v[0]), float(v[1])]
     out["party_centroid_0"] = _pt(parties.get(0))
     out["party_centroid_1"] = _pt(parties.get(1))
+    # Step 1 (web_demo evidence re-grade, D3b): mean mega-identity
+    # alignment across partisans — the explicit "stacking" state that
+    # now drives out-party animus. 0.0 when evidence_regrade is off
+    # (no agent carries the attr). Lets the affect view narrate the
+    # scissors as alignment-driven.
+    aligns = [
+        float(a.state.attrs.get("identity_alignment", 0.0))
+        for a in eng.agents
+        if a.state.attrs.get("party") in (0, 1)
+    ]
+    out["identity_alignment"] = (
+        float(np.mean(aligns)) if aligns else 0.0
+    )
     return out
 
 
@@ -347,6 +390,8 @@ def run_trajectory(
     sched = build_schedule(
         factional_seeding=kwargs.get("factional_seeding", False),
         faction_anchor_events=kwargs.get("faction_anchor_events", True),
+        evidence_regrade=kwargs.get("evidence_regrade", False),
+        exogenous_shocks=kwargs.get("exogenous_shocks", False),
     )
 
     iv_by_id = {iv.id: iv for iv in INTERVENTIONS_PHASE6}
@@ -746,16 +791,97 @@ def build_events_json(events_fired_in_baseline: list[dict]) -> dict:
         label = evt["label"]
         if label in seen:
             continue
+        ev = EVENT_EVIDENCE.get(label, {})
         seen[label] = {
             "tick": int(evt["tick"]),
             "label": label,
             "description": evt["description"],
             "actual_date": EVENT_ACTUAL_DATES.get(label),
             "kind": EVENT_KIND.get(label, "other"),
+            # Step 1: evidence grade + provenance note (HIGH / MED / LOW /
+            # CONTESTED / MARKER). Lets the timeline badge mechanisms by
+            # how well the literature supports them.
+            "evidence": ev.get("grade", "OTHER"),
+            "evidence_note": ev.get("note"),
         }
     return {
         "version": 1,
         "events": list(seen.values()),
+    }
+
+
+def build_entities_json() -> dict:
+    """Engine-derived entity layer for the web demo (contract v1, §4).
+
+    Three entity classes, all sourced from engine constants so the
+    front-end draws the *actual* forces in the sim rather than
+    hand-eyeballed placements (web_demo_audit §3.9):
+
+      factions_1980     : the 8 founding ideological blocs at 1980, from
+                          ``HISTORICAL_FACTIONS_1980``.
+      factions_emergent : the 4 factions that emerge mid-run (Tea Party,
+                          MAGA, Bernie, DSA) with their emergence tick/year
+                          and Voteview-anchored sub-centroids. Hardcoded
+                          here to mirror the event handlers in
+                          ``abm/pillars/historical_arc.py`` (under ANES
+                          knobs): ``_event_2009_tea_party`` (tick 87),
+                          ``_event_2015_maga`` (tick 105),
+                          ``_event_2016_bernie`` (tick 108),
+                          ``_event_2018_dsa`` (tick 114).
+      outlets           : the 5 calibrated media outlets, from
+                          ``US_MEDIA_OUTLETS_2024_ANES`` (AllSides/Ad Fontes).
+    """
+    from abm.pillars.historical_arc import HISTORICAL_FACTIONS_1980
+    from abm.core.outlets import US_MEDIA_OUTLETS_2024_ANES
+
+    factions_1980 = []
+    for name, f in HISTORICAL_FACTIONS_1980.items():
+        c = f["center"]
+        factions_1980.append({
+            "name": name,
+            "center": [round(float(c[0]), 3), round(float(c[1]), 3)],
+            "weight": round(float(f["weight"]), 3),
+            "party": f["party"],  # 0=Dem, 1=Rep, None=Centrist (party drawn)
+        })
+
+    # Hardcoded to match the ANES-knob branches of the emergence-event
+    # handlers in abm/pillars/historical_arc.py — see those functions for
+    # the sub-centroid sourcing (Voteview / DW-NOMINATE House Freedom
+    # Caucus etc.). emergence_year = TICK_0_YEAR + tick / TICKS_PER_YEAR.
+    factions_emergent = [
+        {
+            "name": "Tea_Party", "emergence_tick": 87, "emergence_year": 2009,
+            "sub_centroid": [0.58, 0.32], "source_faction": "Mainstream_Reps",
+        },
+        {
+            "name": "MAGA", "emergence_tick": 105, "emergence_year": 2015,
+            "sub_centroid": [0.60, 0.40],
+            "source_faction": "Mainstream_Reps + New_Right_Religious",
+        },
+        {
+            "name": "Bernie_Progressives", "emergence_tick": 108, "emergence_year": 2016,
+            "sub_centroid": [-0.60, -0.40], "source_faction": "Mainstream_Dems",
+        },
+        {
+            "name": "DSA", "emergence_tick": 114, "emergence_year": 2018,
+            "sub_centroid": [-0.75, -0.65], "source_faction": "New_Left",
+        },
+    ]
+
+    outlets = []
+    for o in US_MEDIA_OUTLETS_2024_ANES:
+        outlets.append({
+            "id": int(o.id),
+            "name": o.name,
+            "pos": [round(float(o.position[0]), 3), round(float(o.position[1]), 3)],
+            "color": o.color,
+        })
+
+    return {
+        "version": 1,
+        "factions_1980": factions_1980,
+        "factions_emergent": factions_emergent,
+        "outlets": outlets,
     }
 
 
@@ -834,6 +960,7 @@ def build_manifest(
         "paths": {
             "events": "events.json",
             "intervention_metadata": "intervention_metadata.json",
+            "entities": "entities.json",
             "baseline": "baseline/seed_{seed}.json",
             "intervention": "interventions/{intervention_id}_at_{year}.json",
             "character": "characters/{character_id}.json",
@@ -1205,6 +1332,9 @@ def main():
 
     iv_metadata = build_intervention_metadata()
     write_json(out_dir / "intervention_metadata.json", iv_metadata, indent=2)
+
+    entities_json = build_entities_json()
+    write_json(out_dir / "entities.json", entities_json, indent=2)
 
     manifest = build_manifest(
         n_agents=baseline["n_agents"],

@@ -87,31 +87,13 @@ INTERVENTION_IDS = (
     "X7_perception_correction",
 )
 
-# anes_full preset — copied from ``phase9_anes_score.py``. Pinned
-# here so this script is self-contained against future preset edits.
-ANES_FULL_KWARGS = {
-    "n_agents": 250,
-    "independent_fraction": 0.12,
-    "factional_seeding": False,
-    "faction_anchor_strength": 0.10,
-    "faction_anchor_events": True,
-    "event_stubbornness_bump_multiplier": 1.0,
-    "tier_d_axis_balance": True,
-    "tier_d_lever1_off": True,
-    "tier_d_cohort_y_signs_fix": True,
-    "tier_d_anes_knobs": True,
-    "tier_d_anes_drift_multiplier": 3.0,
-    "tier_d_anes_sigma_pc_multiplier": 1.6,
-    "tier_c_identity_pull_x": 0.020,
-    "tier_c_identity_pull_y": 0.040,
-    "tier_d_aniso_noise_sigma_x": 0.08,
-    "tier_d_aniso_noise_sigma_y": 0.08,
-    "tier_c_party_pull_strength": 0.04,
-    "tier_c_bc_strength": 0.015,
-    "tier_d_coupling_rho": 0.30,
-    "tier_d_cue_correlation": 0.40,
-    "tier_d_ic_sigma": 0.35,
-}
+# anes_full preset — single source of truth shared with
+# scripts/publish_web_data.py (Step 1 / D4 reconciliation). Previously a
+# *divergent* copy lived here (noise 0.08, no momentum/fj/x-cap); it now
+# imports the canonical shipped-baseline config so the intervention
+# scoreboard is measured on exactly the engine the demo ships. See
+# scripts/anes_preset.py.
+from scripts.anes_preset import ANES_FULL_KWARGS
 
 
 # --- Bucket classification (matches ``tests/test_phase6.py``) ----------
@@ -168,6 +150,8 @@ def _worker(args: tuple) -> dict:
     sched = build_schedule(
         factional_seeding=ANES_FULL_KWARGS.get("factional_seeding", False),
         faction_anchor_events=ANES_FULL_KWARGS.get("faction_anchor_events", True),
+        evidence_regrade=ANES_FULL_KWARGS.get("evidence_regrade", False),
+        exogenous_shocks=ANES_FULL_KWARGS.get("exogenous_shocks", False),
     )
 
     # 1. Run to release_tick (this is the "pre-intervention" state).

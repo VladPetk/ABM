@@ -200,7 +200,17 @@ rule mutates state directly. Rules in the pillar:
 - **`AffectiveUpdate`** (Phase 5 rewrite): per out-party network
   neighbour, valence = `-(identity_distance + issue_distance +
   baseline)`. Negative-going. Phase 7: muted by `cooperative_mute`
-  on cooperative edges (Allport conditions).
+  on cooperative edges (Allport conditions). *Contact-mediated* —
+  fires only on a direct out-party tie.
+- **`MediatedAnimus`** (affect re-grade, 2026-06; arc only, gated
+  behind `evidence_regrade`): the *contact-independent* (parasocial)
+  animus channel. Each tick, a partisan agent's out-party warmth cools
+  by `-lr · mediated_animus_weight · identity_alignment`, with NO
+  network neighbour required — modelling animus bred by aligned
+  identity + partisan media toward out-partisans one never meets
+  (Mason 2018; Iyengar et al. 2019). Supplies the late steepening the
+  contact channel can't, because homophilous sorting starves out-party
+  contact. Off by default (`lr=0` / `weight=0`) → pillar bit-identical.
 - **`IdentitySorting`** (Mason mega-identity): with low probability
   per tick, an agent updates one identity-axis toward the in-party
   modal value.
@@ -295,6 +305,21 @@ honestly.
 ---
 
 ## 5. The intervention findings
+
+> **⚠ Superseded numbers — see the authoritative sources.** The table
+> below is the **original six-intervention pillar** library, measured at
+> the end of S4 on the *pre-Phase-8c* engine. It is stale on two counts:
+> (a) X3 was later re-blessed backfire→**null** and X6 affect
+> backfire→**real** (Phase 8c cooperative-share mute — see
+> [`methods.md §4`](methods.md) for the current **pillar** buckets), and
+> (b) the **shipped / web-facing** interventions are the *seven*-lever
+> **historical-arc** library measured on the ANES substrate, not the
+> pillar — those are the ground truth for anything user-facing and live
+> in [`results/phase10_results.md`](results/phase10_results.md)
+> (Step-2 re-measure, 2026-06-01: X1 backfire +0.28…+0.40, X5 partial
+> on cross-release average, X6 affect **real** +0.19…+0.24, the rest
+> null). Use phase10 for the web build; the table below is retained only
+> as the historical pillar-engine record.
 
 | ID | Lay name | Δsep | **Issue sorting** | Δaff | **Affect** | Literature anchor |
 |---|---|---|---|---|---|---|

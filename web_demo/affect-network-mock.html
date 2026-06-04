@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Affect as Network — concept mock</title>
+<style>
+  :root{
+    --paper:#efe9db; --ink:#23252b; --muted:#6f6a5c;
+    --navy:#1f3565; --ox:#8b2530;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Georgia","Iowan Old Style",serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  #wrap{position:fixed;inset:0;display:flex;flex-direction:column}
+  #stage{position:relative;flex:1;min-height:0}
+  canvas{display:block;width:100%;height:100%}
+  #hud{
+    position:absolute;left:24px;top:20px;pointer-events:none;
+    text-shadow:0 1px 0 rgba(255,255,255,.4);
+  }
+  #year{font-size:46px;font-weight:700;letter-spacing:.5px;line-height:1}
+  #subtitle{font-size:13px;color:var(--muted);margin-top:2px;font-style:italic}
+  #stats{margin-top:14px;font-size:13px;line-height:1.7;font-family:"Iosevka",ui-monospace,monospace}
+  #stats b{font-weight:700}
+  .swatch{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  #legend{
+    position:absolute;right:22px;top:20px;text-align:right;
+    font-size:12px;color:var(--muted);line-height:1.6;pointer-events:none;
+    text-shadow:0 1px 0 rgba(255,255,255,.4);max-width:240px;
+  }
+  #bar{
+    display:flex;align-items:center;gap:14px;
+    padding:12px 22px;border-top:1px solid rgba(0,0,0,.08);
+    background:rgba(255,255,255,.25);backdrop-filter:blur(4px);
+  }
+  button{
+    font:inherit;font-size:14px;border:1px solid rgba(0,0,0,.2);
+    background:rgba(255,255,255,.5);border-radius:7px;padding:6px 16px;cursor:pointer;
+    min-width:78px;
+  }
+  button:hover{background:rgba(255,255,255,.85)}
+  input[type=range]{flex:1;accent-color:var(--ox)}
+  #building{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:15px;color:var(--muted);font-style:italic;
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="stage">
+    <canvas id="cv"></canvas>
+    <div id="hud">
+      <div id="year">1980</div>
+      <div id="subtitle">the same society, drawn as its network</div>
+      <div id="stats"></div>
+    </div>
+    <div id="legend">
+      <div>node colour = how cold this person runs toward the<br/>other party (real per-agent affect)</div>
+      <div style="margin-top:8px">thin lines = social ties · cross-camp ties<br/>fray and rewire inward as warmth drains</div>
+    </div>
+    <div id="building">building layouts from the real network…</div>
+  </div>
+  <div id="bar">
+    <button id="play">Pause</button>
+    <input id="scrub" type="range" min="0" max="135" step="0.1" value="0" />
+    <button id="reset">Restart</button>
+  </div>
+</div>
+
+<script src="mock_affnet_data.js"></script>
+<script>
+const D = window.AFFNET;
+const N = D.N, T = D.T, SNAPS = D.snapTicks;
+
+// ── palette ──────────────────────────────────────────────────────────────
+const NAVY=[31,53,101], OX=[139,37,48], GREY=[150,150,153],
+      WARM=[221,206,170], INK=[22,24,30], PAPER=[239,233,219];
+const clamp01=v=>v<0?0:v>1?1:v;
+const mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+const rgb=(c,a)=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a})`;
+const partyBase=p=>p===0?NAVY:p===1?OX:GREY;
+// keep party hue, deepen as the person cools (affect rebuild §3.5)
+function coolParty(base,lc){
+  const pale=mix(base,WARM,0.5), deep=mix(base,INK,0.34);
+  return mix(pale,deep,clamp01(lc));
+}
+
+// ── snapshot index helpers ────────────────────────────────────────────────
+// nearest snapshot at-or-before a tick (for party / degree lookups)
+function snapIdxBefore(tick){
+  let k=0; for(let i=0;i<SNAPS.length;i++){ if(SNAPS[i]<=tick) k=i; } return k;
+}
+
+// ── deterministic force layout, one per snapshot tick ─────────────────────
+// Seeded from the REAL ideology positions at that tick (so left/right camps
+// are preserved and the whole thing is reproducible under scrubbing — no RNG,
+// no live sim state). Springs along real edges + charge repulsion bloom the
+// raw scatter into an organic network; a coldness-scaled horizontal push pulls
+// the two camps apart as the society cools.
+function meanCold(tick){ // mean out-party coldness at a tick, in [0,1]
+  const a=D.aff[tick]; let s=0; for(let i=0;i<N;i++) s+=Math.max(0,-a[i]); return s/N;
+}
+function buildLayout(snapTick){
+  const ideo=D.pos[snapTick], party=D.party[snapTick];
+  const edges=D.edges[String(snapTick)];
+  const cold=meanCold(snapTick);
+  // working positions (start at real ideology) + velocities (damped Verlet)
+  const x=new Float64Array(N), y=new Float64Array(N);
+  const vx=new Float64Array(N), vy=new Float64Array(N);
+  for(let i=0;i<N;i++){ x[i]=ideo[i][0]; y[i]=ideo[i][1]; }
+  const REST=0.085, KSPRING=0.09, KREP=0.0008, KANCHOR=0.055,
+        MIND2=0.012, DAMP=0.86, VMAX=0.08;
+  const SEP=0.09*cold; // camp-separation push, grows with coldness
+  // degree-aware anchor: sparsely-tied nodes have too few springs to hold
+  // their place, so trust their real ideology more (keeps fringe nodes from
+  // being flung out by repulsion)
+  const deg0=new Int32Array(N);
+  for(let e=0;e<edges.length;e++){ deg0[edges[e][0]]++; deg0[edges[e][1]]++; }
+  const anchorK=new Float64Array(N);
+  for(let i=0;i<N;i++) anchorK[i]=KANCHOR*(1+6/(1+deg0[i]));
+  const ITERS=240;
+  let alpha=1;
+  for(let it=0;it<ITERS;it++){
+    alpha*=0.991;
+    const fx=new Float64Array(N), fy=new Float64Array(N);
+    // charge repulsion (all pairs), distance floored so coincident nodes
+    // can't produce an exploding force
+    for(let i=0;i<N;i++){
+      for(let j=i+1;j<N;j++){
+        let dx=x[i]-x[j], dy=y[i]-y[j];
+        let d2=dx*dx+dy*dy; if(d2<MIND2) d2=MIND2;
+        const inv=KREP/d2/Math.sqrt(d2);
+        dx*=inv; dy*=inv; fx[i]+=dx; fy[i]+=dy; fx[j]-=dx; fy[j]-=dy;
+      }
+    }
+    // springs along ties
+    for(let e=0;e<edges.length;e++){
+      const i=edges[e][0], j=edges[e][1];
+      let dx=x[j]-x[i], dy=y[j]-y[i]; let d=Math.hypot(dx,dy)+1e-6;
+      const f=KSPRING*(d-REST)/d; dx*=f; dy*=f;
+      fx[i]+=dx; fy[i]+=dy; fx[j]-=dx; fy[j]-=dy;
+    }
+    // anchor to real ideology + camp separation along x
+    for(let i=0;i<N;i++){
+      fx[i]+=(ideo[i][0]-x[i])*anchorK[i];
+      fy[i]+=(ideo[i][1]-y[i])*anchorK[i];
+      if(party[i]===0) fx[i]-=SEP;
+      else if(party[i]===1) fx[i]+=SEP;
+    }
+    for(let i=0;i<N;i++){
+      vx[i]=(vx[i]+fx[i])*DAMP; vy[i]=(vy[i]+fy[i])*DAMP;
+      const sp=Math.hypot(vx[i],vy[i]);
+      if(sp>VMAX){ vx[i]*=VMAX/sp; vy[i]*=VMAX/sp; }
+      x[i]+=vx[i]*alpha; y[i]+=vy[i]*alpha;
+    }
+  }
+  // radial clamp: tuck in only the few extreme stragglers (beyond the 97th
+  // percentile radius) so no lonely node sits in a corner; bulk untouched
+  let cx=0,cy=0; for(let i=0;i<N;i++){cx+=x[i];cy+=y[i];} cx/=N; cy/=N;
+  const rad=new Float64Array(N);
+  for(let i=0;i<N;i++) rad[i]=Math.hypot(x[i]-cx,y[i]-cy);
+  const cap=[...rad].sort((a,b)=>a-b)[Math.floor(N*0.97)]*1.04;
+  for(let i=0;i<N;i++){ if(rad[i]>cap){ const k=cap/rad[i];
+    x[i]=cx+(x[i]-cx)*k; y[i]=cy+(y[i]-cy)*k; } }
+  return {x,y,deg:deg0}; // deg0 (computed above) doubles as node-size source
+}
+
+let LAYOUTS=null, BOUNDS=null;
+function buildAll(){
+  LAYOUTS={};
+  let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
+  for(const st of SNAPS){
+    const L=buildLayout(st); LAYOUTS[st]=L;
+    for(let i=0;i<N;i++){
+      if(L.x[i]<minx)minx=L.x[i]; if(L.x[i]>maxx)maxx=L.x[i];
+      if(L.y[i]<miny)miny=L.y[i]; if(L.y[i]>maxy)maxy=L.y[i];
+    }
+  }
+  BOUNDS={minx,maxx,miny,maxy};
+}
+
+// ── interpolation across snapshots ────────────────────────────────────────
+function bracket(tick){
+  let a=SNAPS[0], b=SNAPS[SNAPS.length-1];
+  for(let i=0;i<SNAPS.length-1;i++){
+    if(tick>=SNAPS[i] && tick<=SNAPS[i+1]){ a=SNAPS[i]; b=SNAPS[i+1]; break; }
+    if(tick<=SNAPS[0]){ a=b=SNAPS[0]; break; }
+    if(tick>=SNAPS[SNAPS.length-1]){ a=b=SNAPS[SNAPS.length-1]; break; }
+  }
+  const w = b===a?0:(tick-a)/(b-a);
+  return {a,b,w};
+}
+// per-agent affect at a fractional tick (real series, all 136 ticks)
+function affAt(tick,i){
+  const t0=Math.max(0,Math.min(T-1,Math.floor(tick))), t1=Math.min(T-1,t0+1), f=tick-t0;
+  return D.aff[t0][i]+(D.aff[t1][i]-D.aff[t0][i])*f;
+}
+
+// ── canvas / render ───────────────────────────────────────────────────────
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1, MAP=null;
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  const r=cv.parentElement.getBoundingClientRect();
+  W=r.width; H=r.height; cv.width=W*DPR; cv.height=H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  // fit BOUNDS into canvas with padding, preserve aspect
+  if(BOUNDS){
+    const pad=70, bw=BOUNDS.maxx-BOUNDS.minx, bh=BOUNDS.maxy-BOUNDS.miny;
+    const s=Math.min((W-2*pad)/bw,(H-2*pad)/bh);
+    const ox=(W-s*bw)/2 - s*BOUNDS.minx, oy=(H-s*bh)/2 - s*BOUNDS.miny;
+    MAP={s,ox,oy};
+  }
+}
+function px(x,y){ return [MAP.ox+MAP.s*x, MAP.oy+MAP.s*(-y)]; } // flip y (cultural up)
+
+// node screen positions at a fractional tick
+function nodePos(tick){
+  const {a,b,w}=bracket(tick);
+  const La=LAYOUTS[a], Lb=LAYOUTS[b];
+  const out=new Array(N);
+  for(let i=0;i<N;i++){
+    const wx=La.x[i]+(Lb.x[i]-La.x[i])*w, wy=La.y[i]+(Lb.y[i]-La.y[i])*w;
+    out[i]=px(wx,wy);
+  }
+  return out;
+}
+
+function drawEdges(P,tick){
+  const {a,b,w}=bracket(tick);
+  const pa=D.party[a], pb=D.party[b];
+  // draw the two bracketing edge sets, cross-faded by w → ties dissolve / form
+  const sets=[[D.edges[String(a)],pa,1-w],[D.edges[String(b)],pb,w]];
+  ctx.lineCap='round';
+  for(const [edges,party,wt] of sets){
+    if(wt<=0.001) continue;
+    for(let e=0;e<edges.length;e++){
+      const i=edges[e][0], j=edges[e][1];
+      const cross = (party[i]===0&&party[j]===1)||(party[i]===1&&party[j]===0);
+      const ci=clamp01(-affAt(tick,i)), cj=clamp01(-affAt(tick,j));
+      const cold=(ci+cj)/2;
+      let col, al, lw;
+      if(cross){
+        // cross-camp bridge: warm/grey, and it FADES as the pair cools (erosion)
+        col=mix(GREY,PAPER,0.2);
+        al=0.22*(1-cold*0.85)*wt; lw=0.65;
+      }else{
+        const base=partyBase(party[i]);
+        col=mix(base,PAPER,0.4);
+        al=0.13*wt; lw=0.55;
+      }
+      if(al<0.004) continue;
+      const A=P[i], B=P[j];
+      // gentle curve for an organic, bundled look
+      const mx=(A[0]+B[0])/2, my=(A[1]+B[1])/2;
+      const nx=-(B[1]-A[1]), ny=(B[0]-A[0]);
+      const nl=Math.hypot(nx,ny)+1e-6, bend=Math.min(14,nl*0.06);
+      ctx.beginPath();
+      ctx.moveTo(A[0],A[1]);
+      ctx.quadraticCurveTo(mx+nx/nl*bend, my+ny/nl*bend, B[0],B[1]);
+      ctx.strokeStyle=rgb(col,al); ctx.lineWidth=lw; ctx.stroke();
+    }
+  }
+}
+
+function drawNodes(P,tick){
+  const k=snapIdxBefore(tick), st=SNAPS[k], party=D.party[st], deg=LAYOUTS[st].deg;
+  for(let i=0;i<N;i++){
+    const cold=clamp01(-affAt(tick,i));
+    const col=coolParty(partyBase(party[i]),cold);
+    const r=2.4+Math.min(3.4,deg[i]*0.16);
+    const [xx,yy]=P[i];
+    // soft halo so nodes never disappear under the edges
+    ctx.beginPath(); ctx.arc(xx,yy,r+1.6,0,7);
+    ctx.fillStyle=rgb(PAPER,0.9); ctx.fill();
+    ctx.beginPath(); ctx.arc(xx,yy,r,0,7);
+    ctx.fillStyle=rgb(col,0.96); ctx.fill();
+    // a touch of inner deepening for cold extremists
+    if(cold>0.6){
+      ctx.beginPath(); ctx.arc(xx,yy,r*0.5,0,7);
+      ctx.fillStyle=rgb(mix(col,INK,0.4),0.5); ctx.fill();
+    }
+  }
+}
+
+// ── stats readout ─────────────────────────────────────────────────────────
+function crossFrac(tick){
+  const k=snapIdxBefore(tick), st=SNAPS[k];
+  const edges=D.edges[String(st)], party=D.party[st];
+  let x=0; for(let e=0;e<edges.length;e++){const i=edges[e][0],j=edges[e][1];
+    if((party[i]===0&&party[j]===1)||(party[i]===1&&party[j]===0))x++;}
+  return {frac:x/edges.length, n:edges.length, cross:x};
+}
+function meanOut(tick){ let s=0; for(let i=0;i<N;i++) s+=affAt(tick,i); return s/N; }
+// out-party warmth → ANES-ish thermometer degrees (display only, mock mapping)
+function deg(aff){ return Math.round(50 + aff*35); }
+
+const $year=document.getElementById('year'), $stats=document.getElementById('stats');
+function hud(tick){
+  const yr=Math.floor(D.y0+tick/D.tpy);
+  $year.textContent=yr;
+  const mo=meanOut(tick), cf=crossFrac(tick);
+  $stats.innerHTML=
+    `<span class="swatch" style="background:rgb(31,53,101)"></span>`+
+    `<span class="swatch" style="background:rgb(139,37,48)"></span>`+
+    `out-party warmth &nbsp;<b>${deg(mo)}°</b> <span style="color:var(--muted)">(cooling)</span><br>`+
+    `cross-camp ties &nbsp;<b>${(cf.frac*100).toFixed(0)}%</b> `+
+    `<span style="color:var(--muted)">(${cf.cross} of ${cf.n})</span>`;
+}
+
+// ── animation loop ────────────────────────────────────────────────────────
+let tick=0, playing=true, last=null;
+const DURATION=26000; // ms for full 0→135 sweep
+const $scrub=document.getElementById('scrub'),
+      $play=document.getElementById('play'),
+      $reset=document.getElementById('reset');
+
+function frame(ts){
+  if(last==null) last=ts;
+  const dt=ts-last; last=ts;
+  if(playing){
+    tick += (135/DURATION)*dt;
+    if(tick>=135){ tick=135; playing=false; $play.textContent='Replay'; }
+    $scrub.value=tick;
+  }
+  render();
+  requestAnimationFrame(frame);
+}
+function render(){
+  ctx.clearRect(0,0,W,H);
+  if(!MAP) return;
+  const P=nodePos(tick);
+  drawEdges(P,tick);
+  drawNodes(P,tick);
+  hud(tick);
+}
+
+$play.onclick=()=>{
+  if(tick>=135){ tick=0; }
+  playing=!playing; $play.textContent=playing?'Pause':'Play';
+};
+$reset.onclick=()=>{ tick=0; playing=true; $play.textContent='Pause'; };
+$scrub.oninput=e=>{ tick=parseFloat(e.target.value); playing=false; $play.textContent='Play'; };
+window.addEventListener('resize',()=>{ resize(); render(); });
+
+// ── boot ──────────────────────────────────────────────────────────────────
+// build layouts off the main paint, then start
+setTimeout(()=>{
+  buildAll();
+  document.getElementById('building').style.display='none';
+  resize();
+  render();                       // paint one static frame immediately (RAF-independent)
+  requestAnimationFrame(frame);
+}, 30);
+</script>
+</body>
+</html>

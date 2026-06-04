@@ -56,27 +56,34 @@ INITIAL_TARGETS_1980 = {
 #     (real ANES shows no compression with sorting). Old bands had
 #     it declining 0.32 -> 0.22.
 #   * constraint band roughly matches (0.34-0.74 trajectory).
-#   * affect band kept identical -- ANES respondent_coordinates does
-#     not measure affect directly; preserve Iyengar/Finkel anchors.
+#   * affect band RE-GROUNDED (2026-06, affect-bands-investigation). Was
+#     hand-scaled off Iyengar/Finkel figures; now derived from the raw ANES
+#     out-party PARTY thermometer (VCF0218/0224, partisans, weighted) via the
+#     principled midpoint map aff=(deg-50)/50, same source family as the rest.
+#     See scripts/affect_band_builder.py / docs/affect_bands_investigation.md.
+#     The old bands ran ~0.2 too cold; the engine's affect channel was
+#     re-calibrated to these (warm seed + MediatedAnimus), gated behind
+#     evidence_regrade. Out-party therm: 45.3(1980) 42.4(1990) 37.7(2000)
+#     26.9(2010) 19.6(2020) deg.
 #
 # Opt-in by using `get_primary_targets(use_anes_bands=True)`. Default
 # False preserves original bands bit-identically.
 
 ANES_PRIMARY_TARGETS = {
     1990: {"constraint": (0.37, 0.51), "party_sep": (0.42, 0.58),
-           "affect": (-0.45, -0.30), "within_party_sd": (0.27, 0.41)},
+           "affect": (-0.21, -0.10), "within_party_sd": (0.27, 0.41)},
     2000: {"constraint": (0.46, 0.60), "party_sep": (0.59, 0.74),
-           "affect": (-0.55, -0.40), "within_party_sd": (0.28, 0.41)},
+           "affect": (-0.31, -0.18), "within_party_sd": (0.28, 0.41)},
     2010: {"constraint": (0.58, 0.72), "party_sep": (0.79, 0.93),
-           "affect": (-0.65, -0.50), "within_party_sd": (0.26, 0.40)},
+           "affect": (-0.51, -0.41), "within_party_sd": (0.26, 0.40)},
     2020: {"constraint": (0.67, 0.80), "party_sep": (1.04, 1.18),
-           "affect": (-0.78, -0.60), "within_party_sd": (0.28, 0.41)},
+           "affect": (-0.66, -0.56), "within_party_sd": (0.28, 0.41)},
     2025: {"constraint": (0.69, 0.82), "party_sep": (1.08, 1.22),
-           "affect": (-0.85, -0.65), "within_party_sd": (0.28, 0.41)},
+           "affect": (-0.71, -0.51), "within_party_sd": (0.28, 0.41)},
 }
 ANES_INITIAL_TARGETS_1980 = {
     "variance": (0.22, 0.36), "constraint": (0.27, 0.41),
-    "party_sep": (0.33, 0.47), "affect": (-0.35, -0.20),
+    "party_sep": (0.33, 0.47), "affect": (-0.14, -0.04),
     "within_party_sd": (0.27, 0.41), "xc_fraction": (0.30, 0.40),
 }
 

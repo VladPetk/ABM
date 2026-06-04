@@ -86,3 +86,9 @@ data/phase9_empirical/derived/densities/
 # (a small repacked bundle, committed). Regenerate with:
 #   python scripts/publish_web_data.py && python scripts/repack_web_demo.py
 /web/data/
+
+
+# Temporary files:
+docs/_*
+web_demo/OLD_VERSION/
+docs/web_demo_audit_screenshots/

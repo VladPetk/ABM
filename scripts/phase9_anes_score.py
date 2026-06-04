@@ -42,6 +42,10 @@ except AttributeError:
 
 import numpy as np
 
+# The canonical shipped ANES config (realism knobs, evidence_regrade,
+# exogenous_shocks). Single source of truth — see scripts/anes_preset.py.
+from scripts.anes_preset import ANES_FULL_KWARGS
+
 N = 250
 INDEPENDENT_FRACTION = 0.12
 
@@ -137,36 +141,16 @@ PRESETS = {
         "tier_d_cohort_y_signs_fix": True,     # §11.6 bug fix
         "tier_d_anes_knobs": True,             # the new Phase B switch
     },
-    "anes_full": {
-        # Phase 9 §11.7-F — full ANES pipeline:
-        # B (ANES knobs) + C (identity pull + BC softening + noise) +
-        # D-1 (cohort centroid anchor) + D-2 (widened outlets) +
-        # D-3 (per-axis EliteDrift) + D-5 (ρ-correlated cue/noise) +
-        # D-6 (centroid-anchored IC) + E (temporal alignment) +
-        # F (activist sub-populations + ρ dial-back to 0.40).
-        "n_agents": N,
-        "independent_fraction": INDEPENDENT_FRACTION,
-        "factional_seeding": False,            # broad IC; activists from events
-        "faction_anchor_strength": 0.10,       # F: stronger activist anchor
-        "faction_anchor_events": True,         # F: emergence events fire
-        "event_stubbornness_bump_multiplier": 1.0,
-        "tier_d_axis_balance": True,
-        "tier_d_lever1_off": True,
-        "tier_d_cohort_y_signs_fix": True,
-        "tier_d_anes_knobs": True,
-        "tier_d_anes_drift_multiplier": 3.0,
-        "tier_d_anes_sigma_pc_multiplier": 1.6,
-        "tier_c_identity_pull_x": 0.020,
-        "tier_c_identity_pull_y": 0.040,
-        "tier_d_aniso_noise_sigma_x": 0.08,
-        "tier_d_aniso_noise_sigma_y": 0.08,
-        "tier_c_party_pull_strength": 0.04,
-        "tier_c_bc_strength": 0.015,
-        "tier_d_coupling_rho": 0.30,           # mild IC x-y coupling
-        "tier_d_cue_correlation": 0.40,        # F: dial back 0.60 → 0.40
-        "tier_d_ic_sigma": 0.35,
-    },
+    # "anes_full" is injected below from the canonical shipped preset
+    # (scripts/anes_preset.py) so this scorer measures EXACTLY the config
+    # the web demo serves. The pre-Step-1 literal that used to live here
+    # (no evidence_regrade / exogenous_shocks / momentum / fj_alpha_scale /
+    # ic_partisan_x_cap, noise 0.08) measured an engine that no longer
+    # ships; it drifted from the canonical dict and is intentionally gone.
 }
+
+# Reconcile to the single source of truth (Step-2 preset reconciliation).
+PRESETS["anes_full"] = dict(ANES_FULL_KWARGS)
 
 
 def _worker(args: tuple) -> dict:
@@ -184,6 +168,10 @@ def _worker(args: tuple) -> dict:
     sched = build_schedule(
         factional_seeding=kwargs.get("factional_seeding", False),
         faction_anchor_events=kwargs.get("faction_anchor_events", True),
+        # Canonical config gates these on; the schedule must fire the
+        # matching events or the scored trajectory diverges from what ships.
+        evidence_regrade=kwargs.get("evidence_regrade", False),
+        exogenous_shocks=kwargs.get("exogenous_shocks", False),
     )
 
     # Phase 9 §11.7-E — every snapshot runs to its ANES-bucket-centroid

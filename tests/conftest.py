@@ -277,6 +277,67 @@ def intervention_buckets_with_independents() -> dict[str, dict[str, float]]:
     return out
 
 
+# --- Step 2 (web_demo): intervention buckets on the ANES historical arc -----
+# The public X1–X7 buckets were blessed against the historical-arc / ANES
+# substrate (phase10), NOT the pillar. The pillar's S4 end-state lands X1
+# in the affect-threshold non-linearity (Δsep ≈ null) — which is why the
+# pillar-based directions test reported X1 "null" against the declared
+# "backfire". This fixture measures Δ on the arc (the blessed substrate),
+# reusing scripts/phase10_measure._worker so it is byte-for-byte the
+# phase10 substrate (ANES_FULL_KWARGS, evidence_regrade=True). Δ vs the
+# no-intervention control, averaged across ALL (release_tick, seed) cells
+# → the cross-release representative the single declared bucket stands for
+# (X5 in particular is decade-dependent: null at 1990/2010, partial at
+# 2000/2020; the cross-release mean is the honest single bucket).
+
+
+@pytest.fixture(scope="session")
+def intervention_buckets_arc() -> dict[str, dict[str, float]]:
+    """`{intervention.id: {"sep": mean Δparty_sep, "aff": mean Δaffect}}`
+    vs control on the ANES arc, cross-release + cross-seed mean.
+
+    Sign conventions match `intervention_buckets`:
+      - Δsep: negative = helpful (camps closer), positive = backfire.
+      - Δaff: positive = helpful (warmer), negative = backfire.
+    """
+    from scripts.phase10_measure import (
+        _worker, RELEASE_TICKS, INTERVENTION_IDS, DEFAULT_SEEDS,
+    )
+    seeds = tuple(range(DEFAULT_SEEDS))
+    release_ticks = list(RELEASE_TICKS.values())
+    work = [
+        (s, t, iv)
+        for s in seeds for t in release_ticks for iv in INTERVENTION_IDS
+    ]
+    flat = run_seeds_parallel(_worker, work)
+    by_key = {
+        (r["release_tick"], r["intervention_id"], r["seed"]): r for r in flat
+    }
+    out: dict[str, dict[str, float]] = {}
+    for iv_id in INTERVENTION_IDS:
+        if iv_id == "control":
+            continue
+        dseps: list[float] = []
+        daffs: list[float] = []
+        for t in release_ticks:
+            for s in seeds:
+                ctrl = by_key.get((t, "control", s))
+                exp = by_key.get((t, iv_id, s))
+                if ctrl is None or exp is None:
+                    continue
+                dseps.append(
+                    exp["post"]["party_sep"] - ctrl["post"]["party_sep"]
+                )
+                daffs.append(
+                    exp["post"]["affect"] - ctrl["post"]["affect"]
+                )
+        out[iv_id] = {
+            "sep": float(np.mean(dseps)),
+            "aff": float(np.mean(daffs)),
+        }
+    return out
+
+
 @pytest.fixture(scope="session")
 def s1_affect_engines() -> list:
     return _run_affect_engines(1)
@@ -310,25 +371,36 @@ def _hk_final_var(epsilon: float, seed: int) -> float:
     return variance(eng.positions())
 
 
-@pytest.fixture(scope="session")
-def hk_loose_finals() -> list[float]:
-    """Phase 8c §1.5: parallel-seed execution; bit-identical to serial."""
-    return run_seeds_parallel(
-        hk_final_var_worker, [(2.0, s) for s in HK_SEEDS],
-    )
+_HK_EPSILONS = (2.0, 0.30, 0.15)  # loose / mid / tight
 
 
 @pytest.fixture(scope="session")
-def hk_mid_finals() -> list[float]:
-    """Phase 8c §1.5: parallel-seed execution; bit-identical to serial."""
-    return run_seeds_parallel(
-        hk_final_var_worker, [(0.30, s) for s in HK_SEEDS],
-    )
+def _hk_all_finals() -> dict[float, list[float]]:
+    """All three HK epsilon sweeps in ONE parallel batch.
+
+    Previously the loose/mid/tight fixtures each spawned their own Pool over
+    just `HK_SEEDS` (6 seeds → only 6 cores used, three sequential spawns).
+    Computing all `len(_HK_EPSILONS) * len(HK_SEEDS)` runs together uses more
+    cores per wave and pays the spawn cost once. Bit-identical to the per-
+    epsilon fixtures (same worker, same args, order preserved per epsilon)."""
+    args = [(eps, s) for eps in _HK_EPSILONS for s in HK_SEEDS]
+    flat = run_seeds_parallel(hk_final_var_worker, args)
+    out: dict[float, list[float]] = {eps: [] for eps in _HK_EPSILONS}
+    for (eps, _s), v in zip(args, flat):
+        out[eps].append(v)
+    return out
 
 
 @pytest.fixture(scope="session")
-def hk_tight_finals() -> list[float]:
-    """Phase 8c §1.5: parallel-seed execution; bit-identical to serial."""
-    return run_seeds_parallel(
-        hk_final_var_worker, [(0.15, s) for s in HK_SEEDS],
-    )
+def hk_loose_finals(_hk_all_finals) -> list[float]:
+    return _hk_all_finals[2.0]
+
+
+@pytest.fixture(scope="session")
+def hk_mid_finals(_hk_all_finals) -> list[float]:
+    return _hk_all_finals[0.30]
+
+
+@pytest.fixture(scope="session")
+def hk_tight_finals(_hk_all_finals) -> list[float]:
+    return _hk_all_finals[0.15]

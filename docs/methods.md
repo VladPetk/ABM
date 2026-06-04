@@ -340,6 +340,16 @@ finding it grounds in. Values measured at **N=250, 20 seeds**
 Close-call interventions (within 1 SE of a bucket boundary) carry
 a 95% CI for transparency.
 
+> **Substrate note.** This is the **pillar** (end-of-S4) scoreboard and
+> is unchanged by the Step-1/Step-2 web re-grade (those changes are
+> gated behind `evidence_regrade`, off on the pillar → bit-identical).
+> The **shipped / web-facing** buckets are measured on the **historical
+> arc** (ANES substrate, 9-seed release-decade sweep) and are the ground
+> truth for anything user-facing — see
+> [`results/phase10_results.md`](results/phase10_results.md). The two
+> substrates agree on direction for every lever; they differ in
+> magnitude (e.g. pillar X1 +0.49 vs arc X1 +0.28…+0.40).
+
 | ID | Lay name | Δsep ± SE | issue_sorting | Δaff ± SE | affect | Anchor |
 |---|---|---|---|---|---|---|
 | X1 | Show people the other side (asymmetric) | +0.490 ± 0.006 | **backfire** | −0.014 ± 0.001 | null | Bail et al. 2018 [Phase 8c §6: asymmetric backfire — party=1 push ×1.3, party=0 push ×0.7 (1.86× ratio); macro bucket unchanged but per-party drift now asymmetric per Bail's R-user finding]. |
@@ -510,6 +520,26 @@ inverts that emphasis under the implemented mechanism.
 
 A short, honest list. Each item is also a Phase 8+ follow-up
 candidate.
+
+### 5.0 Step-1 evidence re-grade (web/ANES path; `evidence_regrade=True`)
+
+The web/ANES build (`scripts/anes_preset.ANES_FULL_KWARGS`) re-grades the
+period shocks to the literature
+([`polarization_causal_model.md`](polarization_causal_model.md) §4.3):
+elite divergence is attributed to a discrete **Gingrich/1994** inflection
+(R-heavy) rather than **Citizens United** (demoted to a non-causal era
+marker, with late-period drift preserved via the decade boundary); the
+**social-media** affect coupling is demoted to a small contested
+accelerant (`affect_weight` terminal ≈0.05 vs 0.30); and an explicit
+**identity-alignment** state (Mason mega-identity) now drives out-party
+animus. The default path (pillar + Phase 4–9) is bit-identical — every
+re-grade consumer reads its no-op value when `evidence_regrade=False`.
+These edits are **bit-changing for the shipped trajectory and owe a
+Phase-10 re-measure + re-bless** (Step 2 of `docs/execution_roadmap.md`);
+the realism preset already sits *within* the ANES envelope but below the
+bare `party_sep` anchors (a documented trade for reduced jumpiness), and
+"within envelope, contested knobs flagged" — not point-perfect — is the
+bar. See `ENGINE_KNOBS.md` §5.8/§7.1.
 
 ### 5.1 X3 cable-set sensitivity (Phase 8c §3)
 
@@ -817,19 +847,46 @@ gated:
 6. **Affect saturation** — `AffectiveUpdate(saturation=1.0)`
    adds a soft cap `max(0, 1 − w²)` on per-encounter step size,
    replacing the hard-clip at ±1 with the Iyengar et al. 2019
-   ch. 4 saturation curve.
+   ch. 4 saturation curve. **(Superseded by the affect re-grade
+   below: under `evidence_regrade` saturation is retired — it was
+   fit to the pre-re-grade, too-cold affect bands.)**
 
-**Result.** At 9 seeds, the blessed `anes_full` preset scores
-W₂ sum = 0.876 over five decades (sub-sample noise floor ≈ 0.71;
-achievable Gaussian floor ≈ 1.0) and passes the ANES-band §11
-gate at 18/24. Final scorecard:
-`docs/results/phase9_anes_score_anes_full.json`.
+**Affect re-grade (2026-06, `affect-bands-investigation`; gated behind
+`evidence_regrade`).** The affect bands were originally hand-scaled off
+Iyengar/Finkel figures; re-derived from the raw ANES out-party PARTY
+thermometer (VCF0218/0224, partisans, weighted) via the principled
+midpoint map `aff=(deg−50)/50` (`scripts/affect_band_builder.py`), the
+old bands ran ~0.2 too cold. The engine had been calibrated to those
+cold bands and over-produced animus — concave (front-loaded) where the
+real thermometer is convex (flat-warm early, collapse late). Diagnosis:
+animus was *contact-gated*, so homophilous sorting starved it as the real
+drivers accelerated. Fix: warm the 1980 seed to the real thermometer,
+soften the contact `affect_lr`, retire saturation, and add a new
+contact-independent **`MediatedAnimus`** channel — parasocial animus via
+the agent's own identity-alignment × a dated media-exposure ramp
+(Mason 2018; Iyengar et al. 2019). The convex shape now *emerges* from
+endogenous state rather than a calendar-time rate.
+- Mechanism (`MediatedAnimus`, identity+media-driven out-party animus):
+  **L** (literature-supported — Mason mega-identity, parasocial/mediated
+  animus).
+- Magnitudes (seed −0.09, `affect_lr` base 0.003, `MediatedAnimus.lr`
+  0.014, media ramp): **N** (the model's calibration, validated 9-seed
+  against the grounded bands).
 
-**Boundary on what Phase 9 changed.** No intervention semantics
-(X1–X7) were re-blessed in Phase 9. The intervention library and
-its bucket labels are unchanged. The next phase will re-run the
-intervention sweeps on the recalibrated engine and re-score the
-buckets.
+**Result.** At 9 seeds the `anes_full` preset places all five affect
+decades + the 1980 IC in the data-grounded affect bands; the ANES-band
+§11 gate is **15/24** (the remaining fails are the pre-existing
+constraint/within-SD cells, not affect or network). Scorecard:
+`docs/results/phase9_anes_score_anes_full.json`. (The earlier "18/24"
+figure scored a stale preset that predated the Step-1/affect re-grade —
+see `docs/affect_bands_investigation.md`.)
+
+**Intervention re-bless.** The X1–X7 sweeps were re-run on the
+re-graded engine (`phase10_measure`, 9 seeds). One public bucket moved:
+**X6 affect `real` → `partial`** (Δaff +0.218 → +0.149, decade-dependent:
+real at 2020, partial earlier) — the less-polarized re-grounded baseline
+leaves a contact lever less animus to undo. All other buckets hold;
+`test_phase6` green. See `docs/results/phase10_results.md`.
 
 ---
 

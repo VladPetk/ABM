@@ -1,7 +1,50 @@
 # Phase 10 — Landing Summary
 
 *Status: shipped. Intervention library (X1–X7) redesigned against
-the Phase 9 ANES-recalibrated engine. Last updated 2026-05-28.*
+the Phase 9 ANES-recalibrated engine. Last updated 2026-06-01
+(Step 2 re-measure).*
+
+> **Step 2 re-measure (web_demo evidence re-grade).** The numbers below
+> were re-measured on the **unified Step-1 substrate** — the single
+> canonical preset [`scripts/anes_preset.py`](../../scripts/anes_preset.py)
+> with `evidence_regrade=True` (Gingrich/CU re-attribution, social-media
+> demotion, explicit identity-alignment → animus) plus the web-demo
+> realism knobs (momentum 0.4, fj_alpha_scale 2.8, x_cap 0.45, noise
+> 0.04) and the Step-2 flag-1 fix (cohort identity-reseed + faster
+> identity sort, so aggregate `identity_alignment` rises ~0.22→0.42 per
+> Mason). Previously (pre-Step-1) the buckets were measured on a
+> *different* substrate than the demo shipped. **Net effect on the
+> public lanes: unchanged at the representative (cross-release) level —
+> X1 still backfires, X6 still real, X5 still partial-on-average, the
+> rest null.** What moved: X1 magnitude (now +0.28…+0.40, was
+> +0.32…+0.37) and, most notably, **X5 is now sharply decade-dependent**
+> — null at 1990/2010, partial at 2000/2020 (see §3.2).
+
+> **Exogenous-shocks re-measure (2026-06-01).** Re-measured again after the
+> general exogenous-shock mechanism (`abm/pillars/shocks.py`) was enabled in
+> the canonical preset (`exogenous_shocks=True`): the empirical catalogue
+> S-911 (transient out-party warming, Sept 2001 ≈ tick 65) and S-Obergefell
+> (slight cultural-axis divergence, June 2015 = tick 105). **All buckets are
+> unchanged** — X1 backfire (cross-release mean +0.351), X5 partial-on-average
+> (−0.0585), X6 real (+0.218 aff), the rest null; falsification 27/28 with the
+> same pre-existing (1990, X7) fail. This is structural, not luck: Δ is
+> `intervention.post − control.post` at the *same* (release, seed), and both
+> arms carry the same shocks, so shocks cancel in the difference. S-911 also
+> decays to <0.02 warmth by the 2010 window, and S-Obergefell only touches the
+> 2020 window. No tag re-bless required; the scoreboard below stands.
+
+> **Affect re-grade re-measure (2026-06, `affect-bands-investigation`).** The
+> affect bands were re-grounded against the raw ANES out-party thermometer (the
+> old bands were hand-scaled and ~0.2 too cold), and the engine's affect channel
+> was re-calibrated to match — warm 1980 seed, softer contact `affect_lr`, retired
+> saturation, plus a new contact-independent `MediatedAnimus` channel (parasocial
+> animus via aligned identity × a dated media ramp). Net effect on the public
+> lanes: **one tag moved — X6 affect `real` → `partial`** (Δaff +0.218 → **+0.149**,
+> a hair under the 0.15 "real" floor). Mechanistically honest: the re-grounded
+> baseline is *less* polarized, so a contact lever has less animus to undo. X6
+> remains the strongest affect lever, now sitting on the real/partial boundary.
+> X1 (backfire), X5 (partial-on-average), and the rest are unchanged
+> (`test_phase6` green). See [`affect_bands_investigation.md`](../affect_bands_investigation.md).
 
 Phase 10 re-validated the seven public-facing interventions (X1–X7)
 against the Phase 9 engine. Phase 6's library was blessed on the
@@ -18,8 +61,11 @@ this document records the landed measurement.
 Measurement script:
 [`scripts/phase10_measure.py`](../../scripts/phase10_measure.py).
 
-- **Preset:** `anes_full` (Phase 9 blessed; see
-  [`phase9_results.md §1`](phase9_results.md)).
+- **Preset:** the unified canonical
+  [`scripts/anes_preset.py`](../../scripts/anes_preset.py) `ANES_FULL_KWARGS`
+  (`evidence_regrade=True`; Phase-9 ANES knobs + web-demo realism knobs).
+  Shared byte-for-byte with `publish_web_data.py`, so the Δ a user sees
+  is measured on exactly the trajectory the demo ships.
 - **Release ticks:** 30 / 60 / 90 / 120 (= 1990 / 2000 / 2010 / 2020).
 - **Counterfactual horizon:** 30 ticks (~10 years) post-intervention.
 - **Ensemble:** 9 seeds; 288 total simulation runs.
@@ -39,25 +85,35 @@ Raw JSON at
 Buckets: |Δ| < 0.05 → null; 0.05–0.15 helpful → partial; ≥ 0.15
 helpful → real; > 0.05 opposite → backfire.
 
+_(Re-measured 2026-06 on the affect-re-graded engine; 9 seeds, anes_full.)_
+
 | release | X1 sep | X2 sep | X3 sep | X4 sep | X5 sep | X6 sep | X7 sep |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 1990 | **+0.329 BF** | 0.000 | +0.003 | -0.000 | **-0.099 P** | -0.001 | 0.000 |
-| 2000 | **+0.371 BF** | 0.000 | +0.006 | -0.001 | **-0.127 P** | -0.001 | 0.000 |
-| 2010 | **+0.351 BF** | 0.000 | +0.006 | -0.001 | **-0.056 P** | -0.003 | 0.000 |
-| 2020 | **+0.323 BF** | 0.000 | +0.007 | -0.000 | **-0.098 P** | +0.002 | 0.000 |
+| 1990 | **+0.134 BF** | +0.000 | +0.004 | -0.000 | -0.035 | -0.001 | -0.000 |
+| 2000 | **+0.194 BF** | +0.000 | +0.007 | -0.000 | **-0.114 P** | +0.001 | +0.000 |
+| 2010 | **+0.242 BF** | -0.000 | +0.011 | -0.000 | -0.027 | -0.001 | +0.000 |
+| 2020 | **+0.240 BF** | -0.000 | +0.011 | -0.000 | **-0.060 P** | -0.000 | +0.000 |
 
 | release | X1 aff | X2 aff | X3 aff | X4 aff | X5 aff | X6 aff | X7 aff |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 1990 | -0.011 | 0.000 | -0.000 | +0.006 | +0.003 | **+0.191 R** | -0.002 |
-| 2000 | -0.008 | 0.000 | -0.000 | +0.004 | +0.003 | **+0.238 R** | -0.008 |
-| 2010 | -0.003 | 0.000 | -0.000 | +0.004 | +0.003 | **+0.237 R** | -0.010 |
-| 2020 | -0.001 | 0.000 | -0.000 | +0.002 | +0.002 | **+0.269 R** | -0.006 |
+| 1990 | -0.005 | +0.000 | -0.000 | +0.005 | +0.002 | **+0.092 P** | -0.002 |
+| 2000 | -0.005 | +0.000 | -0.000 | +0.006 | +0.005 | **+0.140 P** | -0.009 |
+| 2010 | -0.003 | +0.000 | -0.000 | +0.004 | +0.003 | **+0.146 P** | -0.011 |
+| 2020 | -0.001 | +0.000 | +0.000 | +0.002 | +0.002 | **+0.218 R** | -0.005 |
 
-Legend: **BF** = backfire, **P** = partial, **R** = real.
+Legend: **BF** = backfire, **P** = partial, **R** = real. (Cells with no
+tag are null, |Δ| < 0.05.) Cross-release means: X1 +0.203 (backfire),
+X5 -0.059 (partial), **X6 aff +0.149 (partial** — was +0.217/real; now
+decade-dependent like X5: partial 1990-2010, real at 2020); X2/X3/X4/X7
+null. Vs the pre-affect-regrade table: X1 backfire magnitude shrank
+(+0.351 → +0.203; warmer baseline → weaker affect-gated cascade) and X6
+affect dropped a hair below the real floor — both honest consequences of
+the less-polarized re-grounded baseline.
 
 **Falsification (per brief §0.3):** 27/28 pass.
 Single fail at (1990, X7) on the "Δsep and Δaff both ≈ 0"
-sub-rule; X7 at other releases passes the looser ±0.10 envelope.
+sub-rule (pre-existing, unrelated to the re-grade); X7 at other
+releases passes the looser ±0.10 envelope.
 
 ---
 
@@ -79,27 +135,39 @@ society started in.
 ### 3.2 The empirically-supported workers — X5 and X6
 
 **X5 (ranked-choice voting + open primaries + multi-member
-districts)** produces durable partial-helpful Δsep at every
-release tick. Pre-Trump 2000 is the strongest (-0.127); peak
-Tea-Party / Citizens-United 2010 the weakest (-0.056). Drutman's
-*Breaking the Two-Party Doom Loop* mechanism — elite-incentive
-change → less primary-driven divergence — produces a stable
-mass-effect because the redesign halves `EliteDrift` rate AND
-`FactionAnchor.strength` AND centroids+cues. Direct RCV
-empirics (Donovan & Bowler 2023) are mostly null; the engine
-reports the *theoretical* mechanism's prediction, flagged
+districts)** produces helpful Δsep that is now **sharply
+decade-dependent** on the Step-2 substrate: **partial** at 2000
+(-0.106) and 2020 (-0.063), but **null** at 1990 (-0.036) and 2010
+(-0.029); the cross-release mean (-0.058) keeps the single public
+bucket at **partial**. Drutman's *Breaking the Two-Party Doom Loop*
+mechanism — elite-incentive change → less primary-driven divergence —
+lands as a contingent effect: the redesign halves `EliteDrift` rate
+AND `FactionAnchor.strength` AND centroids+cues, so it bites hardest
+when the drift it suppresses is itself large (the faster Step-1
+Gingrich/identity-alignment substrate makes the off-peak decades
+recover less). This decade-contingency is *itself* the honest
+finding — "structural reform helps, but only in some windows."
+Direct RCV empirics (Donovan & Bowler 2023) are mostly null; the
+engine reports the *theoretical* mechanism's prediction, flagged
 `[T]`-heavy in provenance.
 
 **X6 (shared neighborhoods / workplaces / institutions)** produces
-real-helpful Δaff (+0.19 to +0.27) across all release decades,
-within the Pettigrew-Tropp `r ≈ -0.21` envelope and Mousa 2020
-`~0.10 SD` in-context envelope. The mechanism: +1 cross-party
-involuntary cooperative tie per agent (Mousa / Lowe envelope) +
-`cooperative_share` boost for participants (Pettigrew 2009
-secondary-transfer) + threat reset for participants (Mutz 2006).
-Restricting the affect/threat reset to agents who actually
-received a new tie was the key calibration: the prior "reset
-everyone" mechanism overshot by 3-4×.
+helpful Δaff that, on the affect-re-graded substrate (2026-06), is now
+**decade-dependent**: **partial** at 1990–2010 (+0.092 / +0.140 / +0.146)
+and **real** at 2020 (+0.218); the cross-release mean (+0.149) sits right
+on the real/partial boundary, so the single public bucket is now
+**partial** (was real). This is an honest consequence of re-grounding
+affect to the real ANES thermometer: the baseline is less polarized
+(especially early), so a contact lever has less animus to undo — and the
+effect is largest in 2020 when animus is highest, exactly where contact
+has the most to recover. Still within the Pettigrew-Tropp `r ≈ -0.21` and
+Mousa 2020 `~0.10 SD` envelopes; X6 remains the strongest affect lever.
+The mechanism: +1 cross-party involuntary cooperative tie per agent
+(Mousa / Lowe envelope) + `cooperative_share` boost for participants
+(Pettigrew 2009 secondary-transfer) + threat reset for participants
+(Mutz 2006). Restricting the affect/threat reset to agents who actually
+received a new tie was the key calibration: the prior "reset everyone"
+mechanism overshot by 3-4×.
 
 ### 3.3 The popular-but-doesn't-work — X2, X3, X4, X7
 
