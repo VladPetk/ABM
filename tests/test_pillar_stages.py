@@ -277,7 +277,13 @@ def _random_graph_matched_degree(node_ids, mean_degree: int, rng) -> Network:
 
 
 def _release_run(seed: int, swap_network: bool) -> float:
-    """Paired ratchet helper: polarise through S4, then release the
+    """Serial reference for the paired ratchet experiment. The hot path
+    (`test_s4_is_a_ratchet`) runs the seeds in parallel via
+    `_parallel_workers.ratchet_release_worker`, which mirrors this function
+    line-for-line; this version is kept as the readable spec / serial
+    fallback (cf. `conftest._run_pillar_stage`).
+
+    Paired ratchet helper: polarise through S4, then release the
     polarising forces (PartyPull, MediaConsumption) and reopen
     bounded-confidence to a wide radius. The only thing that distinguishes
     worlds A and B is the *graph*: World A keeps its evolved homophilous
@@ -322,10 +328,19 @@ def test_s4_is_a_ratchet():
     *structural* ratchet, World A stays apart while World B re-merges —
     the camps survive only because the graph keeps them apart.
     """
-    sep_a, sep_b = [], []
-    for seed in STAGE_SEEDS:
-        sep_a.append(_release_run(seed, swap_network=False))
-        sep_b.append(_release_run(seed, swap_network=True))
+    # Run both worlds (swap=False, swap=True) for every seed in a single
+    # parallel batch — bit-identical to the serial `_release_run` loop, but
+    # the 40 release runs go across all cores instead of one at a time.
+    from abm.calibration_parallel import run_seeds_parallel
+    from ._parallel_workers import ratchet_release_worker
+
+    k = len(STAGE_SEEDS)
+    args = (
+        [(seed, False) for seed in STAGE_SEEDS]
+        + [(seed, True) for seed in STAGE_SEEDS]
+    )
+    results = run_seeds_parallel(ratchet_release_worker, args)
+    sep_a, sep_b = results[:k], results[k:]
     mean_a, mean_b = float(np.mean(sep_a)), float(np.mean(sep_b))
     assert mean_a > mean_b + RATCHET_MARGIN, (
         f"S4 failed to act as a structural ratchet: sepA={mean_a:.3f} "

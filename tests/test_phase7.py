@@ -132,14 +132,11 @@ def test_no_collapse_at_default_fj_alpha():
     """Phase 4 §12: the 'no two-tiny-blobs' property must hold at the
     default `FJ_ALPHA = 0.05`. Tests fraction of agents within
     [0.20, 0.50] from centre and fraction past 0.80 at end-of-S4."""
-    radii_all = []
-    for seed in STAGE_SEEDS:
-        eng = build_engine(seed=seed, n_agents=N)
-        apply_intervention(eng, PILLAR.interventions[4])
-        eng.run(TICKS)
-        radii_all.append(
-            np.array([np.linalg.norm(a.state.ideology) for a in eng.agents])
-        )
+    from abm.calibration_parallel import run_seeds_parallel
+    from ._parallel_workers import s4_radii_worker
+
+    # Parallel over seeds — bit-identical to the serial build/run loop.
+    radii_all = run_seeds_parallel(s4_radii_worker, list(STAGE_SEEDS))
     radii = np.concatenate(radii_all)
     mid_band = float(((radii >= 0.20) & (radii < 0.50)).mean())
     extreme = float((radii >= 0.80).mean())

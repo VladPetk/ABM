@@ -371,25 +371,36 @@ def _hk_final_var(epsilon: float, seed: int) -> float:
     return variance(eng.positions())
 
 
-@pytest.fixture(scope="session")
-def hk_loose_finals() -> list[float]:
-    """Phase 8c §1.5: parallel-seed execution; bit-identical to serial."""
-    return run_seeds_parallel(
-        hk_final_var_worker, [(2.0, s) for s in HK_SEEDS],
-    )
+_HK_EPSILONS = (2.0, 0.30, 0.15)  # loose / mid / tight
 
 
 @pytest.fixture(scope="session")
-def hk_mid_finals() -> list[float]:
-    """Phase 8c §1.5: parallel-seed execution; bit-identical to serial."""
-    return run_seeds_parallel(
-        hk_final_var_worker, [(0.30, s) for s in HK_SEEDS],
-    )
+def _hk_all_finals() -> dict[float, list[float]]:
+    """All three HK epsilon sweeps in ONE parallel batch.
+
+    Previously the loose/mid/tight fixtures each spawned their own Pool over
+    just `HK_SEEDS` (6 seeds → only 6 cores used, three sequential spawns).
+    Computing all `len(_HK_EPSILONS) * len(HK_SEEDS)` runs together uses more
+    cores per wave and pays the spawn cost once. Bit-identical to the per-
+    epsilon fixtures (same worker, same args, order preserved per epsilon)."""
+    args = [(eps, s) for eps in _HK_EPSILONS for s in HK_SEEDS]
+    flat = run_seeds_parallel(hk_final_var_worker, args)
+    out: dict[float, list[float]] = {eps: [] for eps in _HK_EPSILONS}
+    for (eps, _s), v in zip(args, flat):
+        out[eps].append(v)
+    return out
 
 
 @pytest.fixture(scope="session")
-def hk_tight_finals() -> list[float]:
-    """Phase 8c §1.5: parallel-seed execution; bit-identical to serial."""
-    return run_seeds_parallel(
-        hk_final_var_worker, [(0.15, s) for s in HK_SEEDS],
-    )
+def hk_loose_finals(_hk_all_finals) -> list[float]:
+    return _hk_all_finals[2.0]
+
+
+@pytest.fixture(scope="session")
+def hk_mid_finals(_hk_all_finals) -> list[float]:
+    return _hk_all_finals[0.30]
+
+
+@pytest.fixture(scope="session")
+def hk_tight_finals(_hk_all_finals) -> list[float]:
+    return _hk_all_finals[0.15]
