@@ -504,14 +504,14 @@ function IvTransport({ play }) {
         <button onClick={() => play.setTick(play.rt)} aria-label="Restart"
           style={{ ...round, background: 'transparent', color: CC.ink2, border: `1px solid ${CC.borderS}`, fontSize: 13 }}>↺</button>
         <span style={{ width: 1, height: 20, background: CC.border, margin: '0 1px', flexShrink: 0 }} />
-        <div style={{ display: 'inline-flex', gap: 2, padding: 3, background: CC.bg2, borderRadius: DS.rad.pill, border: `1px solid ${CC.border}` }}>
+        <div style={{ display: 'inline-flex', gap: 2, padding: 3, background: 'transparent', borderRadius: DS.rad.pill, border: `1px solid ${CC.borderS}` }}>
           {[[0.5, '½×'], [1, '1×'], [2, '2×'], [4, '4×']].map(([v, l]) => {
             const on = play.speed === v;
             return (
               <button key={v} onClick={() => play.setSpeed(v)} style={{
-                fontSize: 10.5, padding: '3px 6px', borderRadius: DS.rad.pill, fontFamily: MONO, cursor: 'pointer', border: 'none',
-                color: on ? CC.ink : CC.ink3, fontWeight: on ? 600 : 400, background: on ? CC.surface : 'transparent',
-                boxShadow: on ? '0 1px 3px rgba(26,29,35,.12)' : 'none', ...TNUM,
+                fontSize: 10.5, padding: '3px 6px', borderRadius: DS.rad.pill, fontFamily: MONO, cursor: 'pointer',
+                border: `1px solid ${on ? CC.borderS : 'transparent'}`,
+                color: on ? CC.ink : CC.ink3, fontWeight: on ? 600 : 400, background: 'transparent', ...TNUM,
               }}>{l}</button>);
           })}
         </div>

@@ -225,11 +225,10 @@ function FloatCard({ style, children }) {
   return (
     <div style={{
       position: 'absolute',
-      background: 'rgba(255,255,255,.9)',
-      backdropFilter: 'blur(18px) saturate(140%)',
-      WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+      background: 'rgba(249,248,244,.82)',
+      backdropFilter: 'blur(14px) saturate(120%)',
+      WebkitBackdropFilter: 'blur(14px) saturate(120%)',
       border: `1px solid ${CC.border}`, borderRadius: 12, padding: 13,
-      boxShadow: '0 6px 22px rgba(26,29,35,.07)',
       ...style,
     }}>{children}</div>
   );

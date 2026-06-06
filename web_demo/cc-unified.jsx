@@ -67,7 +67,7 @@ function ModeBar({ mode, setMode }) {
 function FieldChip({ tone, children }) {
   const dot = tone === 'ended' ? '#3f7d54' : tone === 'paused' ? CC.ink3 : '#3f7d54';
   return (
-    <div style={{ position: 'absolute', left: 24, top: 20, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: DS.type.micro, color: CC.ink3, background: 'rgba(255,255,255,.85)', padding: '5px 12px', borderRadius: DS.rad.pill, border: `1px solid ${CC.border}` }}>
+    <div style={{ position: 'absolute', left: 24, top: 20, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: DS.type.micro, color: CC.ink3, background: 'rgba(249,248,244,.72)', padding: '5px 12px', borderRadius: DS.rad.pill, border: `1px solid ${CC.border}` }}>
       <span style={{ width: 7, height: 7, borderRadius: DS.rad.pill, background: dot }} /> {children}
     </div>);
 
@@ -143,7 +143,7 @@ function PayoffMorph({ onDone }) {
       <Field run={D.runs.baseline} tick={t} layer="position" view="density" showGap />
       <button onClick={onDone} style={{
         position: 'absolute', right: 24, top: 20, zIndex: 2, fontFamily: SANS, fontSize: DS.type.micro, fontWeight: 500,
-        color: CC.ink3, background: 'rgba(255,255,255,.82)', border: `1px solid ${CC.border}`, borderRadius: DS.rad.pill,
+        color: CC.ink3, background: 'rgba(249,248,244,.72)', border: `1px solid ${CC.border}`, borderRadius: DS.rad.pill,
         padding: '6px 12px', cursor: 'pointer'
       }}>Skip →</button>
       <div style={{ position: 'absolute', left: 0, right: 0, bottom: '11%', textAlign: 'center', pointerEvents: 'none' }}>
@@ -214,7 +214,7 @@ function MapLegend() {
   const Diamond = ({ c }) => <span style={{ width: 9, height: 9, background: c, display: 'inline-block', transform: 'rotate(45deg)', border: '1.5px solid #fff', boxShadow: `0 0 0 1px ${c}` }} />;
   const Sq = ({ c }) => <span style={{ width: 8, height: 8, background: '#fff', border: `1.6px solid ${c}`, display: 'inline-block' }} />;
   return (
-    <div style={{ marginTop: 20, padding: '14px 16px', background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: DS.rad.inset }}>
+    <div style={{ marginTop: 22, paddingTop: 14, borderTop: `1px solid ${CC.border}` }}>
       <Eyebrow style={{ color: CC.ink4 }}>Reading the map</Eyebrow>
       <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <Item glyph={<Ring c={CC.r} />} label={<><strong style={{ color: CC.ink }}>Party centres</strong> — the live heart of each camp, moving with the simulation.</>} />
@@ -321,7 +321,7 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
           <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, letterSpacing: '-.015em' }}>{Math.floor(tickToYear(tick))}</h2>
           <p style={{ margin: '14px 0 0', fontSize: DS.type.body, lineHeight: 1.6, color: CC.ink2 }}>The country is sorting itself in real time. We’ll stop at the next moment that matters.</p>
           {nextBeat &&
-          <div style={{ marginTop: 20, padding: '14px 16px', background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: DS.rad.inset }}>
+          <div style={{ marginTop: 22, paddingTop: 14, borderTop: `1px solid ${CC.border}` }}>
               <Eyebrow style={{ color: CC.ink4 }}>Next stop · {Math.floor(tickToYear(nextBeat.tick))}</Eyebrow>
               <div style={{ fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.subhead, marginTop: 5, letterSpacing: '-.01em' }}>{nextBeat.title}</div>
             </div>
@@ -359,7 +359,7 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
         beat.data ?
         <BeatMetric data={beat.data} tick={beat.tick} /> :
 
-        <div style={{ marginTop: 20, padding: '12px 15px', background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: DS.rad.inset, display: 'flex', alignItems: 'center', gap: 11 }}>
+        <div style={{ marginTop: 22, paddingTop: 13, borderTop: `1px solid ${CC.border}`, display: 'flex', alignItems: 'center', gap: 11 }}>
               <Eyebrow style={{ color: CC.ink4, letterSpacing: '.1em' }}>data</Eyebrow>
               <MonoVal size={DS.type.small} color={CC.ink}>{beat.metric(beat.tick)}</MonoVal>
             </div>
@@ -403,8 +403,8 @@ function ExploreAnnotation({ tick }) {
   return (
     <div style={{
       position: 'absolute', left: 24, top: 20, width: 312, maxWidth: '42%', pointerEvents: 'none',
-      background: 'rgba(255,255,255,.94)', backdropFilter: 'blur(3px)', border: `1px solid ${CC.borderS}`,
-      borderRadius: DS.rad.inset, padding: '13px 15px', boxShadow: '0 6px 22px rgba(26,29,35,.1)',
+      background: 'rgba(249,248,244,.82)', backdropFilter: 'blur(4px)', border: `1px solid ${CC.border}`,
+      borderRadius: DS.rad.inset, padding: '13px 15px',
       opacity: op, transform: `translateY(${(1 - op) * 5}px)`, transition: 'opacity .25s, transform .25s'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -429,7 +429,7 @@ function CalibrationAnchor({ tick }) {
   if (warmth >= 30) line = <>By now, roughly <strong>a third</strong> say a cross-party marriage in the family would bother them.</>;else
   line = <>At this level, close to <strong>half</strong> of Americans say they'd be uncomfortable if their child married someone from the other party.</>;
   return (
-    <div style={{ padding: '13px 15px', background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: DS.rad.inset }}>
+    <div style={{ paddingTop: 14, borderTop: `1px solid ${CC.border}` }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
         <Eyebrow style={{ color: CC.ink4 }}>What that feels like · {Math.floor(tickToYear(tick))}</Eyebrow>
         <MonoVal size={DS.type.small} color={CC.ink}>{warmth}° warmth</MonoVal>
@@ -514,7 +514,6 @@ function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, be
         }
       </div>
       <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
-        <Eyebrow style={{ color: CC.ink3 }}>{mode === 'watch' ? 'Chapters · click a pin to jump' : '1980 → 2025 · drag to scrub'}</Eyebrow>
         <div style={{ marginTop: 4, position: 'relative' }}>
           {/* chapter rail for Watch — labeled, click-to-jump diamonds; the active
               chapter carries its name as the "you are here" marker */}
@@ -718,9 +717,8 @@ function Unified() {
           <button onClick={() => setShowLandmarks((v) => !v)} style={{
             position: 'absolute', right: 24, top: 20, pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8,
             fontFamily: SANS, fontSize: DS.type.micro, fontWeight: 500, cursor: 'pointer',
-            color: showLandmarks ? CC.ink : CC.ink3, background: showLandmarks ? CC.surface : 'rgba(255,255,255,.82)',
-            padding: '6px 12px', borderRadius: DS.rad.pill, border: `1px solid ${showLandmarks ? CC.ink : CC.border}`,
-            boxShadow: showLandmarks ? '0 1px 4px rgba(26,29,35,.12)' : 'none'
+            color: showLandmarks ? CC.ink : CC.ink3, background: showLandmarks ? 'transparent' : 'rgba(249,248,244,.72)',
+            padding: '6px 12px', borderRadius: DS.rad.pill, border: `1px solid ${showLandmarks ? CC.ink : CC.border}`
           }}>
                 <span style={{ width: 7, height: 7, borderRadius: 2, background: showLandmarks ? CC.ink : 'transparent', border: `1.5px solid ${showLandmarks ? CC.ink : CC.ink4}` }} />
                 {showLandmarks ? 'Parties on' : 'Show parties'}
