@@ -37,7 +37,7 @@ function SiteHeader({ page, setPage }) {
 
   };
   return (
-    <div style={{ height: 58, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '0 clamp(24px, 4vw, 56px)', borderBottom: `1px solid ${CC.border}`, background: CC.chrome, position: 'relative', zIndex: 30 }}>
+    <div style={{ height: 58, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '0 clamp(24px, 4vw, 56px)', background: CC.bg, position: 'relative', zIndex: 30 }}>
       <button onClick={() => setPage('model')} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
         <Logo />
         <span style={{ width: 1, height: 18, background: CC.border }} />
@@ -58,7 +58,6 @@ function SiteHeader({ page, setPage }) {
 function ModeBar({ mode, setMode }) {
   return (
     <div style={{ height: 50, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '0 clamp(24px, 4vw, 56px)', background: CC.bg, position: 'relative', zIndex: 20 }}>
-      <div style={{ position: 'absolute', bottom: 0, left: 'clamp(24px, 4vw, 56px)', right: 'clamp(24px, 4vw, 56px)', height: 1, background: CC.border }} />
       <Segmented value={mode} onChange={setMode} options={[['watch', 'Story'], ['interventions', 'Interventions']]} />
     </div>);
 
@@ -184,7 +183,7 @@ function BeatMetric({ data, tick }) {
   const cx = X(tick),cy = Y(cv);
   const ac = data.color === 'd' ? CC.d : CC.ink;
   return (
-    <div style={{ marginTop: 20, padding: '13px 15px 11px', background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: DS.rad.inset }}>
+    <div style={{ marginTop: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <Eyebrow style={{ color: CC.ink4 }}>{data.label} · {Math.floor(tickToYear(tick))}</Eyebrow>
         <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
@@ -194,10 +193,9 @@ function BeatMetric({ data, tick }) {
       </div>
       <div ref={ref} style={{ marginTop: 9 }}>
         <svg viewBox={`0 0 ${w} ${H}`} width="100%" height={H} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
-          <path d={full} fill="none" stroke={CC.ink4} strokeWidth="1.2" strokeDasharray="2 3" opacity="0.7" />
-          <line x1={cx} y1={top - 3} x2={cx} y2={H - bot + 5} stroke={CC.ink4} strokeWidth="1" strokeDasharray="1 3" />
+          <path d={full} fill="none" stroke={CC.borderS} strokeWidth="1.1" strokeDasharray="2 3" opacity="0.8" />
           <path d={pastPath} fill="none" stroke={ac} strokeWidth="1.9" strokeLinejoin="round" strokeLinecap="round" />
-          <circle cx={cx} cy={cy} r="3.6" fill={CC.surface} stroke={ac} strokeWidth="2" />
+          <circle cx={cx} cy={cy} r="3.6" fill={CC.bg} stroke={ac} strokeWidth="2" />
         </svg>
       </div>
     </div>);
@@ -479,14 +477,14 @@ function BarTransport({ playing, toggle, setTick, speed, setSpeed }) {
       <button onClick={toggle} aria-label={playing ? 'Pause' : 'Play'} style={{ ...round, background: CC.ink, color: '#fff', border: 'none', fontSize: 11 }}>{playing ? '❚❚' : '▶'}</button>
       <button onClick={() => setTick(0)} aria-label="Restart" style={{ ...round, background: 'transparent', color: CC.ink2, border: `1px solid ${CC.borderS}`, fontSize: 13 }}>↺</button>
       <span style={{ width: 1, height: 20, background: CC.border, margin: '0 3px', flexShrink: 0 }} />
-      <div style={{ display: 'inline-flex', gap: 2, padding: 3, background: CC.bg2, borderRadius: DS.rad.pill, border: `1px solid ${CC.border}` }}>
+      <div style={{ display: 'inline-flex', gap: 2, padding: 3, background: 'transparent', borderRadius: DS.rad.pill, border: `1px solid ${CC.borderS}` }}>
         {[[0.5, '½×'], [1, '1×'], [2, '2×'], [4, '4×']].map(([v, l]) => {
           const on = speed === v;
           return (
             <button key={v} onClick={() => setSpeed(v)} style={{
-              fontSize: 11, padding: '3px 7px', borderRadius: DS.rad.pill, fontFamily: MONO, cursor: 'pointer', border: 'none',
-              color: on ? CC.ink : CC.ink3, fontWeight: on ? 600 : 400, background: on ? CC.surface : 'transparent',
-              boxShadow: on ? '0 1px 3px rgba(26,29,35,.12)' : 'none', ...TNUM
+              fontSize: 11, padding: '3px 7px', borderRadius: DS.rad.pill, fontFamily: MONO, cursor: 'pointer',
+              border: `1px solid ${on ? CC.borderS : 'transparent'}`,
+              color: on ? CC.ink : CC.ink3, fontWeight: on ? 600 : 400, background: 'transparent', ...TNUM
             }}>{l}</button>);
 
         })}
@@ -706,7 +704,7 @@ function Unified() {
 
       <div style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden', background: CC.bg }}>
           {/* the compass — a fully contained square anchored right (no bleed; all axes & labels visible) */}
-          <div style={{ position: 'absolute', top: '-6%', bottom: '-6%', right: '2%', aspectRatio: '1' }}>
+          <div style={{ position: 'absolute', top: '-2%', bottom: '-2%', right: '2%', aspectRatio: '1' }}>
             <Field run={D.runs.baseline} tick={tick} layer="position" view="density" showGap dim={dimField} reveal={watchReveal} landmarks={isExplore && showLandmarks ? 'all' : 'fixed'} />
           </div>
 
