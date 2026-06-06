@@ -503,15 +503,7 @@ function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, be
       <div style={{ position: 'absolute', top: 0, left: 'clamp(28px, 4vw, 56px)', right: 'clamp(28px, 4vw, 56px)', height: 1, background: CC.border }} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0, width: 224 }}>
         <BarTransport playing={playing} toggle={toggle} setTick={setTick} speed={speed} setSpeed={setSpeed} />
-        {mode === 'watch' ?
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <MonoVal size={DS.type.micro} color={CC.ink}>{monthLabel}</MonoVal>
-            <span style={{ fontSize: DS.type.micro, color: CC.ink3 }}>
-              <span style={{ color: CC.ink4 }}>Chapter {Math.min(beatI + 1, BEATS.length)}/{BEATS.length} · </span>{BEATS[beatI] ? BEATS[beatI].short : ''}
-            </span>
-          </div> :
-        <MonoVal size={DS.type.micro} color={CC.ink}>{monthLabel} <span style={{ color: CC.ink4 }}>· tick {Math.round(tick)}/{LAST}</span></MonoVal>
-        }
+        <MonoVal size={DS.type.micro} color={CC.ink}>{monthLabel}</MonoVal>
       </div>
       <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
         <div style={{ marginTop: 4, position: 'relative' }}>
@@ -523,7 +515,7 @@ function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, be
             return (
               <React.Fragment key={k}>
                 {on &&
-                <span style={{ position: 'absolute', zIndex: 5, left, top: 20, transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontFamily: SANS, fontSize: 10, fontWeight: 600, color: CC.ink, background: 'rgba(249,248,244,.9)', padding: '0 3px' }}>{b.short}</span>
+                <span style={{ position: 'absolute', zIndex: 5, left, top: 54, transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontFamily: SANS, fontSize: 10, fontWeight: 600, color: CC.ink, background: 'rgba(249,248,244,.9)', padding: '0 3px' }}>{b.short}</span>
                 }
                 <button title={b.title} onClick={() => onPickBeat(k)} style={{
                   position: 'absolute', zIndex: 4, left,
