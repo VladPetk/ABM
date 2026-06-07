@@ -576,8 +576,8 @@ function IvRail({ iv }) {
         <div style={{ flex: 1, overflow: 'auto', padding: `${DS.sp.lg - 6}px ${DS.sp.lg - 2}px` }}>
           <Eyebrow>The experiment</Eyebrow>
           <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, lineHeight: 1.08, letterSpacing: '-.015em' }}>Could anything have stopped it?</h2>
-          <p style={{ margin: '16px 0 0', fontSize: DS.type.body, lineHeight: 1.6, color: CC.ink2 }}>Researchers have tried — exposure programs, media diets, voting reform, contact. Most do less than you’d think. One backfires. The one that works isn’t the obvious one.</p>
-          <p style={{ margin: '14px 0 0', fontSize: DS.type.body, lineHeight: 1.6, color: CC.ink2 }}>Pick an intervention on the left, <strong>call what it does before you run it</strong>, then watch the model answer — and try changing <em>when</em> it was tried.</p>
+          <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2 }}>Researchers have tried — exposure programs, media diets, voting reform, contact. Most do less than you’d think. One backfires. The one that works isn’t the obvious one.</p>
+          <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>Pick an intervention on the left, <strong>call what it does before you run it</strong>, then watch the model answer — and try changing <em>when</em> it was tried.</p>
           <div style={{ marginTop: 22, padding: '13px 15px', background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: DS.rad.inset }}>
             <Caption>Your hunches get scored. The interesting ones are where you’re wrong.</Caption>
           </div>
@@ -641,7 +641,7 @@ function IvRail({ iv }) {
         <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, lineHeight: 1.05, letterSpacing: '-.015em' }}>{eff.name}</h2>
         <div style={{ marginTop: 10 }}><ProvBadge prov={eff.prov} /></div>
 
-        <p style={{ margin: '16px 0 0', fontSize: DS.type.body, lineHeight: 1.6, color: CC.ink }}>{eff.take}</p>
+        <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink }}>{eff.take}</p>
         {eff.caveat && (
           <p style={{ margin: '10px 0 0', padding: '9px 11px', fontSize: DS.type.small, lineHeight: 1.5, color: CC.ink2, background: CC.bg2, borderRadius: DS.rad.inset, borderLeft: `2px solid ${CC.ink4}` }}>{eff.caveat}</p>
         )}

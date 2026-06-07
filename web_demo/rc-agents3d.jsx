@@ -298,10 +298,10 @@ function Agents3DPage() {
               <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: 440 }}>
                 No clouds, no chapters — just the 250 people the model actually moves, one dot each.
               </p>
-              <p style={{ margin: '16px 0 0', fontSize: DS.type.body, lineHeight: 1.62, color: CC.ink2, maxWidth: 460 }}>
+              <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
                 The flat plane is the political compass you already know — left–right is the economy, front–back is culture. Then each person lifts off it as they sour on the other side: <strong>Democrats rise, Republicans sink</strong>, so the vertical gap between blue and red <em>is</em> their mutual animus. Independents stay in the common middle.
               </p>
-              <p style={{ margin: '14px 0 0', fontSize: DS.type.body, lineHeight: 1.62, color: CC.ink2, maxWidth: 460 }}>
+              <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
                 Press play and watch the two camps fly apart.
               </p>
               <p style={{ margin: '18px 0 0', display: 'flex', alignItems: 'center', gap: 16, fontSize: DS.type.small, color: CC.ink3, flexWrap: 'wrap' }}>

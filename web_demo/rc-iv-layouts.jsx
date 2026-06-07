@@ -266,7 +266,7 @@ function NarrativeDetail({ iv }) {
         <SandboxPill iv={iv} />
       </div>
 
-      <p style={{ margin: '16px 0 0', fontSize: DS.type.body, lineHeight: 1.6, color: CC.ink }}>{eff.take}</p>
+      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink }}>{eff.take}</p>
       {eff.caveat && (
         <p style={{ margin: '14px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.small + 0.5, lineHeight: 1.62, color: CC.ink3, maxWidth: 520 }}>
           <span style={{ fontFamily: SANS, fontStyle: 'normal', fontSize: 10, fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: CC.ink4, marginRight: 9 }}>Note</span>
@@ -350,8 +350,10 @@ function NarrativeLeft({ iv }) {
   const wrap = { height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'safe center', overflow: 'auto', minHeight: 0 };
   const pad = { flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px clamp(24px,4vh,40px) ${LX}` };
 
-  // sandbox: the 5-knob alternate-history panel
-  if (iv.isSandbox) return <div style={wrap}><div style={pad}><BackToList onClick={iv.back} /><SandboxPanel iv={iv} /></div></div>;
+  // sandbox: the 5-knob alternate-history panel. No back-affordances here —
+  // the Playground's Tier-2 pill (Interventions | Sandbox) is the one way
+  // between the two modes.
+  if (iv.isSandbox) return <div style={wrap}><div style={pad}><SandboxPanel iv={iv} /></div></div>;
 
   return (
     <div style={wrap}>
@@ -361,7 +363,7 @@ function NarrativeLeft({ iv }) {
         : <React.Fragment>
             <Eyebrow>The experiment</Eyebrow>
             <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.display, lineHeight: 1.04, letterSpacing: '-.02em', color: CC.ink }}>Could anything have stopped it?</h2>
-            <p style={{ margin: '16px 0 0', fontSize: DS.type.body, lineHeight: 1.6, color: CC.ink2, maxWidth: 460 }}>
+            <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
               Seven things people have actually tried. Most do less than you’d think, one backfires, and the win isn’t the obvious one. Pick one and call it before you run it.
             </p>
             <div style={{ marginTop: DS.sp.lg, background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: DS.rad.card, overflow: 'hidden', maxWidth: 480 }}>
@@ -532,12 +534,9 @@ function SandboxPanel({ iv }) {
   const K = window.SANDBOX_KNOBS, P = window.SANDBOX_PRESETS;
   return (
     <React.Fragment>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-        <Eyebrow style={{ color: '#8a6d1f' }}>Sandbox · not a finding</Eyebrow>
-        <SandboxPill iv={iv} />
-      </div>
+      <Eyebrow style={{ color: '#8a6d1f' }}>Sandbox · not a finding</Eyebrow>
       <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.display, lineHeight: 1.04, letterSpacing: '-.02em', color: CC.ink }}>Build your own America</h2>
-      <p style={{ margin: '14px 0 0', fontSize: DS.type.body, lineHeight: 1.6, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
         Five forces, dialed past anything real. Pick a preset or drag the dials and watch that alternate 1980→2025 play out on the map. This changes the <em>model</em>, not a policy — <strong>illustrative, not a finding.</strong>
       </p>
 

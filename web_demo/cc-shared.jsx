@@ -30,6 +30,12 @@ const CC = {
 const SANS = "'Geist', system-ui, -apple-system, sans-serif";
 const MONO = "'Geist Mono', ui-monospace, monospace";
 const SERIF = "'Newsreader', Georgia, serif";
+// Reading prose (pairing F1): Literata at 14.5/1.62 — a low-contrast text
+// serif beside Newsreader's display cuts. Geist stays for UI furniture
+// (eyebrows, buttons, chips, timeline); MONO for data. Spread `PROSE` onto
+// reading paragraphs instead of hand-setting size/leading.
+const BODY_SERIF = "'Literata', Georgia, serif";
+const PROSE = { fontFamily: BODY_SERIF, fontSize: 14.5, lineHeight: 1.62 };
 const TNUM = { fontFeatureSettings: '"tnum", "ss01"' };
 
 // ── Seeded RNG (own name to avoid colliding with the old wireframes) ────
@@ -240,7 +246,7 @@ function PartySwatch({ party, size = 8 }) {
 }
 
 Object.assign(window, {
-  CC, SANS, MONO, SERIF, TNUM, ccRng,
+  CC, SANS, MONO, SERIF, BODY_SERIF, PROSE, TNUM, ccRng,
   YEAR0, YEAR1, yearToFrac, separationAt,
   genAgents, lindaAt, lindaNetwork, POLE_D, POLE_R,
   EVENTS, macroSeries, seriesPath,
