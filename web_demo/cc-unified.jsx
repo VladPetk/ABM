@@ -395,18 +395,15 @@ const EXPLORE_NOTES = [
 { tick: 108, year: 2016, event: 'Trump wins — a status-threat shock.', viz: 'The camps harden into opposite corners; the contested middle keeps thinning.' },
 { tick: 120, year: 2020, event: 'COVID and January 6th.', viz: 'Two separate masses, with almost nothing left between them.' }];
 
-function ExploreAnnotation({ tick }) {
-  let near = null,best = 1e9;
-  for (const n of EXPLORE_NOTES) {const d = Math.abs(tick - n.tick);if (d < best) {best = d;near = n;}}
-  const op = Math.max(0, Math.min(1, (7.5 - best) / 2.6));
-  if (!near || op <= 0.02) return null;
+// Live "on the map" block — folded out of the old floating card and into the
+// Explore rail. Reads the nearest annotation to the current tick and updates as
+// the reader scrubs, so the commentary stays in sync without cluttering the map.
+function ExploreNow({ tick }) {
+  let near = null, best = 1e9;
+  for (const n of EXPLORE_NOTES) { const d = Math.abs(tick - n.tick); if (d < best) { best = d; near = n; } }
+  if (!near) return null;
   return (
-    <div style={{
-      position: 'absolute', left: 24, top: 20, width: 312, maxWidth: '42%', pointerEvents: 'none',
-      background: 'rgba(249,248,244,.82)', backdropFilter: 'blur(4px)', border: `1px solid ${CC.border}`,
-      borderRadius: DS.rad.inset, padding: '13px 15px',
-      opacity: op, transform: `translateY(${(1 - op) * 5}px)`, transition: 'opacity .25s, transform .25s'
-    }}>
+    <div style={{ paddingTop: 14, borderTop: `1px solid ${CC.border}` }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ width: 6, height: 6, borderRadius: 999, background: CC.r }} />
         <Eyebrow style={{ color: CC.ink3 }}>{near.year} · on the map</Eyebrow>
@@ -449,19 +446,12 @@ function ExploreRail({ tick }) {
             Do they hate each other?
           </h3>
           <p style={{ margin: '18px 0 0', fontSize: DS.type.body, lineHeight: 1.62, color: CC.ink2, maxWidth: 460 }}>
-            Issue positions barely moved — but the feelings curdled. The map shows where people <em>stand</em>; this shows how they <em>feel</em>. The clearest picture is the <strong>thermometer "scissors"</strong>: warmth toward your <em>own</em> side held roughly flat while warmth toward the <em>other</em> side fell off a cliff. <strong>Distance and animus are different axes.</strong>
+            Issue positions barely moved — the feelings curdled. The map shows where people <em>stand</em>; this shows how they <em>feel</em>. Warmth toward your <em>own</em> side barely budged; toward the <em>other</em> it fell off a cliff. <strong>Distance and animus are different axes.</strong>
           </p>
         </div>
-        <div>
-          <ScissorsChart tick={tick} />
-          <div style={{ marginTop: 10 }}><ScissorsLegend tick={tick} /></div>
-        </div>
+        <ExploreNow tick={tick} />
+        <div><ProtoSparklines tick={tick} run={D.runs.baseline} rowH={56} gap={34} /></div>
         <CalibrationAnchor tick={tick} />
-        <div style={{ height: 1, background: CC.border }} />
-        <div>
-          <Eyebrow style={{ color: CC.ink3 }}>Where the country is</Eyebrow>
-          <div style={{ marginTop: 10 }}><ProtoSparklines tick={tick} run={D.runs.baseline} width={392} rowH={56} gap={34} /></div>
-        </div>
       </div>
     </div>);
 
@@ -704,7 +694,6 @@ function Unified() {
 
           {/* chips + annotations, anchored to the visible map region */}
           <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', right: 0, pointerEvents: 'none', zIndex: 2 }}>
-            {isExplore && <ExploreAnnotation tick={tick} />}
             {isExplore &&
           <button onClick={() => setShowLandmarks((v) => !v)} style={{
             position: 'absolute', right: 24, top: 20, pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8,

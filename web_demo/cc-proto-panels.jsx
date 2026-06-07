@@ -371,53 +371,52 @@ function ProtoTimeline({ tick, setTick, width = 820, releaseTick = null, showRel
 }
 
 // ── sparklines (real macro) ───────────────────────────────────────────────
-function ProtoSparklines({ tick, run, cfRun = null, color = CC.ink, width = 300, rowH = 30, gap = 30 }) {
-  const padL = 4, padR = 4, chartW = width - padL - padR;
+function ProtoSparklines({ tick, run, cfRun = null, color = CC.ink, rowH = 56, gap = 34 }) {
+  // full-width: measure the container so the viewBox is 1:1 with pixels (no
+  // letterboxing) — the charts fill the narrative column like BeatMetric.
+  const ref = React.useRef(null);
+  const [w, setW] = React.useState(420);
+  React.useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const u = () => setW(Math.max(240, el.clientWidth));
+    u(); const ro = new ResizeObserver(u); ro.observe(el); return () => ro.disconnect();
+  }, []);
+  const padL = 4, padR = 4, chartW = w - padL - padR;
   const labelH = 20, H = rowH * 2 + gap + labelH;
-  const tx = (t) => padL + (t / LAST) * chartW;
-  const playX = tx(tick);
-  const rawUid = React.useId();
-  const uid = rawUid.replace(/[^a-zA-Z0-9]/g, '');
+  const playX = padL + (tick / LAST) * chartW;
 
   const yOf = (m, v) => { const [lo, hi] = m.domain, span = (hi - lo) || 1; return rowH - ((v - lo) / span) * (rowH - 9); };
-  const linePts = (r, m) => r.macro.map((mm, i) => [padL + (i / LAST) * chartW, yOf(m, m.transform(mm[m.key]))]);
+  const ptsOf = (r, m) => r.macro.map((mm, i) => [padL + (i / LAST) * chartW, yOf(m, m.transform(mm[m.key]))]);
   const toPath = (pts) => pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
 
-  const Row = ({ y0, m, accent, gid }) => {
+  // minimal sparkline (matches BeatMetric): faint dashed full trajectory,
+  // solid accent up to the playhead, hollow dot on the page colour.
+  const Row = ({ y0, m, accent }) => {
     const valNow = m.transform(macroAt(cfRun || run, tick, m.key));
-    const pts = linePts(run, m);
-    const area = `${toPath(pts)} L${pts[pts.length - 1][0].toFixed(1)},${rowH} L${pts[0][0].toFixed(1)},${rowH} Z`;
+    const pts = ptsOf(run, m);
     const dotY = yOf(m, valNow);
+    const past = pts.filter((p) => p[0] <= playX + 0.01);
+    const pastPath = [...past.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`), `L${playX.toFixed(1)},${dotY.toFixed(1)}`].join(' ');
     return (
       <g transform={`translate(0,${y0})`}>
         <text x={padL} y={-7} style={{ fontFamily: SANS, fontSize: 11.5, fill: CC.ink2, fontWeight: 500 }}>{m.label}</text>
-        <text x={width - padR} y={-7} textAnchor="end" style={{ fontFamily: MONO, fontSize: 13, fontWeight: 600, fill: cfRun ? color : CC.ink, ...TNUM }}>{valNow.toFixed(2)}</text>
-        <line x1={padL} y1={9} x2={width - padR} y2={9} stroke={CC.border} strokeWidth="1" strokeDasharray="2 4" opacity="0.55" />
-        <line x1={padL} y1={rowH} x2={width - padR} y2={rowH} stroke={CC.border} strokeWidth="1" />
-        {!cfRun && <path d={area} fill={`url(#${gid})`} stroke="none" />}
-        <path d={toPath(linePts(run, m))} fill="none" stroke={cfRun ? CC.ink4 : accent} strokeWidth={cfRun ? 1.3 : 2} strokeDasharray={cfRun ? '3 3' : 'none'} strokeLinejoin="round" strokeLinecap="round" />
-        {cfRun && <path d={toPath(linePts(cfRun, m))} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />}
-        <line x1={playX} y1={-2} x2={playX} y2={rowH} stroke={CC.ink4} strokeDasharray="1 3" strokeWidth="1" />
-        {!cfRun && <circle cx={playX} cy={dotY} r="3.4" fill={CC.surface} stroke={accent} strokeWidth="2" />}
+        <text x={w - padR} y={-7} textAnchor="end" style={{ fontFamily: MONO, fontSize: 13, fontWeight: 600, fill: cfRun ? color : CC.ink, ...TNUM }}>{valNow.toFixed(2)}</text>
+        <path d={toPath(pts)} fill="none" stroke={CC.borderS} strokeWidth="1.1" strokeDasharray="2 3" opacity="0.8" />
+        {cfRun ?
+          <path d={toPath(ptsOf(cfRun, m))} fill="none" stroke={color} strokeWidth="1.9" strokeLinejoin="round" strokeLinecap="round" /> :
+          <path d={pastPath} fill="none" stroke={accent} strokeWidth="1.9" strokeLinejoin="round" strokeLinecap="round" />}
+        <circle cx={playX} cy={dotY} r="3.4" fill={CC.bg} stroke={cfRun ? color : accent} strokeWidth="2" />
       </g>
     );
   };
 
   return (
-    <svg viewBox={`0 0 ${width} ${H}`} width="100%" height={H} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
-      <defs>
-        <linearGradient id={`${uid}-sep`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="rgba(31,53,101,0.18)" />
-          <stop offset="1" stopColor="rgba(31,53,101,0)" />
-        </linearGradient>
-        <linearGradient id={`${uid}-aff`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="rgba(139,37,48,0.16)" />
-          <stop offset="1" stopColor="rgba(139,37,48,0)" />
-        </linearGradient>
-      </defs>
-      <Row y0={labelH} m={METRICS.sep} accent={CC.d} gid={`${uid}-sep`} />
-      <Row y0={labelH + rowH + gap} m={METRICS.aff} accent={CC.r} gid={`${uid}-aff`} />
-    </svg>
+    <div ref={ref}>
+      <svg viewBox={`0 0 ${w} ${H}`} width="100%" height={H} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
+        <Row y0={labelH} m={METRICS.sep} accent={CC.d} />
+        <Row y0={labelH + rowH + gap} m={METRICS.aff} accent={CC.r} />
+      </svg>
+    </div>
   );
 }
 
