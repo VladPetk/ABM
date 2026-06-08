@@ -497,24 +497,32 @@ preset is `phase9_anes_score.PRESETS["anes_full"]`.
 | `evidence_regrade` | False | **True** | Master gate for the Step-1 truth-pass (Gingrich/CU re-attribution, social-media demotion, identity-alignment → affect). `False` is a strict no-op → default path bit-identical. Pair with `build_schedule(evidence_regrade=...)`. See §7.1. |
 
 ### 5.9 Web-demo sandbox dials (illustrative — not a finding)
-Three multiplier hooks added for the web demo's interactive sandbox
-(`scripts/build_sandbox_data.py`). Each scales one already-present mechanism;
-all default to `1.0`, and `×1.0` is exact in IEEE-754, so the default/pillar/
-test path stays **bit-identical**. The sandbox cranks these *past* the
-calibration envelope, so its outputs are illustrative only — not measured, not
-re-blessed (provenance **E**/**N**). See methods.md §5.11.
+Hooks for the web demo's interactive sandbox (`scripts/build_sandbox_data.py`).
+All default to an exact no-op (`×1.0` / `0.0` / `None`, all exact in IEEE-754),
+so the default/pillar/test path stays **bit-identical** (verified to 10 dp). The
+sandbox cranks these *past* the calibration envelope — illustrative only, not
+measured, not re-blessed (provenance **E**/**N**).
 
-| Kwarg | Default | Scales | Sandbox label / outcome axis |
-|---|---|---|---|
-| `sandbox_animus_mult` | 1.0 | per-agent `affect_lr` seed + `MediatedAnimus.learning_rate` | **animus** → out-party warmth |
-| `sandbox_identity_mult` | 1.0 | `IdentitySorting` (sort_rate + step), `identity_sorting_multiplier`, `IdentityAlignment.rate` | **identity** → mega-identity stacking |
-| `sandbox_rewire_mult` | 1.0 | `TieRewiring.rewire_rate` | **echo** → network modularity |
+**v2 knob set (audit 2026-06; `docs/intervention_knob_audit.md`).** The five
+sandbox dials were rebuilt so every knob is a *cause* (a thing you set) and the
+polarization metrics are *readouts* (separation, out-party animus, within-party
+spread, mega-identity alignment). The old `animus`/`echo` dials were demoted to
+readouts — they were outcome metrics, and `echo` reliably moved warmth the wrong
+way. Each surviving knob is sign-stable at every position of the other four
+(12/12 in the audit's robustness screen).
 
-The other two sandbox dials reuse existing kwargs:
-`tier_d_anes_drift_multiplier` (**elite** → party separation, §5.5) and
-`tier_c_bc_strength` (**openness** → within-party tightness, §5.6). The five
-dials were chosen by a metric-span screen (`scripts/sandbox_knob_screen.py`) so
-each owns a distinct outcome axis.
+| Sandbox knob | build_engine kwarg(s) | Default | Drives | Readout it owns |
+|---|---|---|---|---|
+| **Mega-identity** | `sandbox_identity_mult` | 1.0 | `IdentitySorting` (sort_rate+step), `identity_sorting_multiplier`, `IdentityAlignment.rate` | mega-identity alignment |
+| **Elite extremism** | `tier_d_anes_drift_multiplier` (§5.5) | 1.0 (3.0 arc) | `EliteDrift` per-decade rate | party separation |
+| **Open-mindedness** | `tier_c_bc_epsilon` (+ `tier_c_bc_strength`, §5.6) | None | BC confidence radius ε (via `env.attrs["bc_epsilon_scale"]`, applied at apply-time in `BoundedConfidenceInfluence`) co-scaled with influence strength | separation ↓ / warmth ↑ |
+| **Contact & mixing** | `sandbox_contact` | 0.0 | population-wide cooperative-share floor (`env.attrs["sandbox_contact_share"]`, read by `AffectiveUpdate`; Pettigrew-Tropp) | out-party animus ↓ |
+| **Within-party diversity** | `sandbox_diversity` | None | `GaussianNoise` σ on both axes (overrides `tier_d_aniso_noise_sigma_x/y`) | within-party spread |
+
+New no-op-by-default kwargs added for v2: `tier_c_bc_epsilon` (None → ε scale
+1.0), `sandbox_contact` (0.0), `sandbox_diversity` (None). The old
+`sandbox_animus_mult` / `sandbox_rewire_mult` kwargs remain in the signature
+(still default-1.0 no-ops) but are no longer wired to a sandbox dial.
 
 ---
 

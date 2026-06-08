@@ -704,6 +704,19 @@ def build_engine(
     sandbox_animus_mult: float = 1.0,
     sandbox_identity_mult: float = 1.0,
     sandbox_rewire_mult: float = 1.0,
+    # Web-demo sandbox dials v2 (audit 2026-06; docs/intervention_knob_audit.md).
+    # The rebuilt all-causes knob set. All default to a strict no-op so the
+    # pillar / default / golden-test paths stay bit-identical:
+    #   openness  → tier_c_bc_epsilon: confidence radius ε (the REAL
+    #               open-mindedness; paired with tier_c_bc_strength). None →
+    #               ε scale 1.0 → unchanged.
+    #   contact   → sandbox_contact: a population-wide cooperative-contact
+    #               share floor (Pettigrew-Tropp). 0.0 → unchanged.
+    #   diversity → sandbox_diversity: within-party GaussianNoise σ
+    #               (free-thinking vs lockstep). None → unchanged.
+    tier_c_bc_epsilon: float | None = None,
+    sandbox_contact: float = 0.0,
+    sandbox_diversity: float | None = None,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -1263,6 +1276,16 @@ def build_engine(
         "parties": party_centers,
         "outlets": outlets_by_id,
         "network": network,
+        # Web-demo sandbox dials v2 (audit 2026-06). Defaults are exact
+        # no-ops so the pillar / default / test paths stay bit-identical:
+        #   bc_epsilon_scale = 1.0      → BoundedConfidenceInfluence ε unchanged
+        #   sandbox_contact_share = 0.0 → AffectiveUpdate coop-mute unchanged
+        # (read at apply-time in the rules so they survive cohort replacement).
+        "bc_epsilon_scale": (
+            float(tier_c_bc_epsilon) / 0.30
+            if tier_c_bc_epsilon is not None else 1.0
+        ),
+        "sandbox_contact_share": float(sandbox_contact),
         # Phase 9 §11.7-C — exposed so IdentityToIdeologyPull can read
         # the party-identity centroid and compute per-agent deviation.
         "party_identity_centers": {
@@ -1486,15 +1509,25 @@ def build_engine(
             correction_rate=0.0 if phase8e_baseline else PERCEPTION_CORRECTION_RATE
         ),
         GaussianNoise(
+            # sandbox "within-party diversity" dial overrides both axes when
+            # set (None → unchanged → bit-identical).
             sigma=(
-                float(tier_d_aniso_noise_sigma_x)
-                if (tier_d_axis_balance and tier_d_aniso_noise_sigma_x is not None)
-                else 0.01
+                float(sandbox_diversity)
+                if sandbox_diversity is not None
+                else (
+                    float(tier_d_aniso_noise_sigma_x)
+                    if (tier_d_axis_balance and tier_d_aniso_noise_sigma_x is not None)
+                    else 0.01
+                )
             ),
             sigma_y=(
-                float(tier_d_aniso_noise_sigma_y)
-                if (tier_d_axis_balance and tier_d_aniso_noise_sigma_y is not None)
-                else None
+                float(sandbox_diversity)
+                if sandbox_diversity is not None
+                else (
+                    float(tier_d_aniso_noise_sigma_y)
+                    if (tier_d_axis_balance and tier_d_aniso_noise_sigma_y is not None)
+                    else None
+                )
             ),
             rho=(
                 float(tier_d_cue_correlation)

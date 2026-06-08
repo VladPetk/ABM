@@ -12,14 +12,15 @@ seed 0 to 2025, and stores a DECIMATED per-frame cloud (for the compass) plus th
 four macro series (for the live metrics strip: separation, out-party warmth,
 modularity, identity alignment).
 
-The five dials (data-driven; see scripts/sandbox_knob_screen.py) — each owns a
-distinct outcome axis:
+The five dials (audit 2026-06; docs/intervention_knob_audit.md) — all are
+CAUSES (each sign-stable at any position of the other four, 12/12 in the
+robustness screen). The polarization metrics are READOUTS, not knobs:
 
-    elite     tier_d_anes_drift_multiplier   -> party separation
-    animus    sandbox_animus_mult            -> out-party warmth
-    identity  sandbox_identity_mult          -> mega-identity stacking
-    echo      sandbox_rewire_mult            -> network modularity
-    openness  tier_c_bc_strength             -> within-party tightness
+    identity   sandbox_identity_mult              -> Mason mega-identity
+    elite      tier_d_anes_drift_multiplier       -> elite divergence
+    openness   tier_c_bc_epsilon (+ _bc_strength) -> open-mindedness (ε; depolarizes)
+    contact    sandbox_contact                    -> cooperative mixing (warms)
+    diversity  sandbox_diversity                  -> within-party free-thinking
 
 ILLUSTRATIVE ONLY — these crank the model past calibration. Not a finding.
 
@@ -44,18 +45,41 @@ import numpy as np
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# ── the locked grid (label -> (build_engine kwarg, 5 values; bold center = arc)) ──
-KNOB_ORDER = ["elite", "animus", "identity", "echo", "openness"]
+# ── the locked grid v2 (audit 2026-06; docs/intervention_knob_audit.md) ──
+# Each knob = 5 detents; each detent is a dict of build_engine overrides. The
+# CENTER detent of every knob (CENTER_IDX) equals the shipped arc, so the center
+# cell is bit-identical to the calibrated 1980→2025 baseline.
+#
+# All five are CAUSES (things you set). The polarization metrics — separation,
+# out-party animus, within-party spread, mega-identity alignment — are the
+# READOUTS you watch (no knob is also a readout). Each knob is sign-stable
+# across every position of the other four (12/12 in the audit robustness screen).
+KNOB_ORDER = ["identity", "elite", "openness", "contact", "diversity"]
 GRID = {
-    "elite":    ("tier_d_anes_drift_multiplier", [0.0, 1.5, 3.0, 5.0, 8.0]),    # center idx 2
-    "animus":   ("sandbox_animus_mult",          [0.5, 1.0, 2.0, 4.0, 8.0]),    # center idx 1
-    "identity": ("sandbox_identity_mult",        [0.0, 0.5, 1.0, 2.0, 3.0]),    # center idx 2
-    "echo":     ("sandbox_rewire_mult",          [0.0, 1.0, 3.0, 6.0, 10.0]),   # center idx 1
-    "openness": ("tier_c_bc_strength",           [0.0, 0.015, 0.05, 0.1, 0.2]), # center idx 1
+    # identity stacking → Mason mega-identity (drives align, and via it sep+animus)
+    "identity":  [{"sandbox_identity_mult": v} for v in (0.0, 0.5, 1.0, 2.0, 3.0)],
+    # elite divergence → party separation (DW-NOMINATE)
+    "elite":     [{"tier_d_anes_drift_multiplier": v} for v in (0.0, 1.5, 3.0, 5.0, 8.0)],
+    # open-mindedness = confidence radius ε co-scaled with influence strength —
+    # the REAL Hegselmann-Krause open-mindedness (closed → open). Depolarizes.
+    "openness":  [
+        {"tier_c_bc_epsilon": 0.15, "tier_c_bc_strength": 0.0},
+        {"tier_c_bc_epsilon": 0.30, "tier_c_bc_strength": 0.015},   # arc
+        {"tier_c_bc_epsilon": 0.60, "tier_c_bc_strength": 0.06},
+        {"tier_c_bc_epsilon": 1.20, "tier_c_bc_strength": 0.13},
+        {"tier_c_bc_epsilon": 3.00, "tier_c_bc_strength": 0.20},
+    ],
+    # contact / mixing → cooperative-share floor (Pettigrew-Tropp). Warms affect.
+    "contact":   [{"sandbox_contact": v} for v in (0.0, 0.25, 0.5, 0.75, 1.0)],
+    # within-party diversity → GaussianNoise σ (lockstep → free-thinking)
+    "diversity": [{"sandbox_diversity": v} for v in (0.02, 0.04, 0.08, 0.15, 0.25)],
 }
+# center detent per knob = the shipped arc value (so the center cell == the arc)
+CENTER_IDX = {"identity": 2, "elite": 2, "openness": 1, "contact": 0, "diversity": 1}
 KNOB_LABELS = {
-    "elite": "Elite extremism", "animus": "Partisan animus",
-    "identity": "Mega-identity", "echo": "Echo chambers", "openness": "Open-mindedness",
+    "identity": "Mega-identity", "elite": "Elite extremism",
+    "openness": "Open-mindedness", "contact": "Contact & mixing",
+    "diversity": "Within-party diversity",
 }
 
 END = 135
@@ -73,7 +97,10 @@ _STORE_SET = set(_STORE_TICKS)
 
 
 def _overrides(idx_tuple):
-    return {GRID[k][0]: GRID[k][1][i] for k, i in zip(KNOB_ORDER, idx_tuple)}
+    ov = {}
+    for k, i in zip(KNOB_ORDER, idx_tuple):
+        ov.update(GRID[k][i])
+    return ov
 
 
 def _capture(eng):
@@ -92,10 +119,20 @@ def _macro(eng, measure_all):
         float(a.state.attrs.get("identity_alignment", 0.0))
         for a in eng.agents if a.state.attrs.get("party") in (0, 1)
     ]
+    # within-party spread (the diversity-knob readout): mean per-axis SD of
+    # each party's cloud, averaged over the two parties.
+    spreads = []
+    for p in (0, 1):
+        P = np.array([
+            a.state.ideology for a in eng.agents
+            if a.state.attrs.get("party") == p
+        ])
+        if len(P) > 1:
+            spreads.append(float(P.std(axis=0).mean()))
     return {
         "sep": round(float(m["party_sep"]), 3),
         "aff": round(float(m["affect"]), 3),
-        "mod": round(float(m["modularity"]), 3),
+        "spread": round(float(np.mean(spreads)) if spreads else 0.0, 3),
         "align": round(float(np.mean(aligns)) if aligns else 0.0, 3),
     }
 
@@ -133,7 +170,7 @@ def run_one(args):
     key = "".join(str(i) for i in idx_tuple)
     payload = {
         "key": key,
-        "knobs": {k: GRID[k][1][i] for k, i in zip(KNOB_ORDER, idx_tuple)},
+        "knobs": _overrides(idx_tuple),
         "ticks": _STORE_TICKS,
         "pos": frames_pos,
         "party": frames_party,
@@ -157,7 +194,7 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     workers = args.workers or max(1, (os.cpu_count() or 4) - 2)
 
-    combos = list(itertools.product(*[range(len(GRID[k][1])) for k in KNOB_ORDER]))
+    combos = list(itertools.product(*[range(len(GRID[k])) for k in KNOB_ORDER]))
     if args.limit:
         combos = combos[:args.limit]
 
@@ -179,9 +216,8 @@ def main():
     manifest = {
         "contract_version": 1, "kind": "sandbox",
         "knob_order": KNOB_ORDER,
-        "knobs": {k: {"label": KNOB_LABELS[k], "kwarg": GRID[k][0], "values": GRID[k][1]} for k in KNOB_ORDER},
-        "center_key": "".join(str(GRID[k][1].index(c)) for k, c in [
-            ("elite", 3.0), ("animus", 1.0), ("identity", 1.0), ("echo", 1.0), ("openness", 0.015)]),
+        "knobs": {k: {"label": KNOB_LABELS[k], "detents": GRID[k]} for k in KNOB_ORDER},
+        "center_key": "".join(str(CENTER_IDX[k]) for k in KNOB_ORDER),
         "ticks": _STORE_TICKS, "n_agents": len(_KEEP_IDX),
         "n_files": len(combos),
     }

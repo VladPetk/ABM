@@ -164,30 +164,32 @@ function sandboxFromTinker(v) {
 // ── sandbox: the 5-knob pre-rendered grid (build_sandbox_data.py) ─────────────
 // Each knob has 5 detents; the values MUST match GRID in build_sandbox_data.py.
 // Data-driven (scripts/sandbox_knob_screen.py): each owns a distinct axis.
+// All five are CAUSES you set; the readouts below (separation, animus, spread,
+// mega-identity) are OUTCOMES you watch. Order MUST match KNOB_ORDER in
+// scripts/build_sandbox_data.py — the cell key is the detent indices joined.
 const SANDBOX_KNOBS = [
-  { key: 'elite',    name: 'Elite extremism', stops: ['0×', '1.5×', '3×', '5×', '8×'],   owns: 'how far apart the parties pull' },
-  { key: 'animus',   name: 'Partisan animus', stops: ['0.5×', '1×', '2×', '4×', '8×'],   owns: 'how cold they get toward each other' },
-  { key: 'identity', name: 'Mega-identity',   stops: ['0×', '0.5×', '1×', '2×', '3×'],   owns: 'how stacked identity is with party' },
-  { key: 'echo',     name: 'Echo chambers',   stops: ['0×', '1×', '3×', '6×', '10×'],    owns: 'how walled-off the networks are' },
-  { key: 'openness', name: 'Open-mindedness', stops: ['closed', 'low', 'mid', 'high', 'max'], owns: 'how much people hear the other side' },
+  { key: 'identity',  name: 'Mega-identity',          stops: ['off', '½×', '1×', '2×', '3×'],          owns: 'how much race, religion & lifestyle line up with party' },
+  { key: 'elite',     name: 'Elite extremism',        stops: ['0×', '1.5×', '3×', '5×', '8×'],         owns: 'how far apart the party leaders pull' },
+  { key: 'openness',  name: 'Open-mindedness',        stops: ['closed', 'low', 'mid', 'high', 'open'], owns: 'how widely people will hear the other side' },
+  { key: 'contact',   name: 'Contact & mixing',       stops: ['none', 'some', 'lots', 'high', 'max'],  owns: 'how much the two sides mix in daily life' },
+  { key: 'diversity', name: 'Within-party diversity', stops: ['lockstep', 'low', 'mid', 'high', 'free'], owns: 'free-thinking individuals vs marching in lockstep' },
 ];
-const SANDBOX_CENTER = [2, 1, 2, 1, 1];   // the shipped arc (center cell of the grid)
-// Presets = named knob-vectors (indices into each knob's stops).
-// Each preset emulates a recognizable real-world / scholarly scenario; `note`
-// says WHAT it's modelling so the user knows what they're looking at.
+const SANDBOX_CENTER = [2, 2, 1, 0, 1];   // the shipped arc (center cell of the grid)
+// Presets = named knob-vectors (indices into each knob's stops, in KNOB_ORDER).
+// Each preset emulates a recognizable scenario; `note` says WHAT it models.
 const SANDBOX_PRESETS = [
-  { name: 'The shipped arc', vec: [2, 1, 2, 1, 1],
+  { name: 'The shipped arc', vec: [2, 2, 1, 0, 1],
     note: 'What actually happened — the calibrated 1980→2025 baseline. The center of the grid.' },
-  { name: 'Great Sorting', vec: [4, 3, 4, 4, 0],
-    note: 'Every force maxed: a maximally polarized society, the two camps slammed into opposite corners.' },
-  { name: 'Depolarized', vec: [0, 0, 0, 0, 4],
-    note: 'Every force dialed down: the low-conflict, overlapping politics of the mid-century — one warm cloud.' },
-  { name: 'Cold Peace', vec: [1, 4, 1, 1, 2],
-    note: 'Close on the issues, yet they despise each other — pure team loyalty (affective polarization without issue sorting).' },
-  { name: 'Leaders vs People', vec: [4, 1, 0, 1, 2],
-    note: 'Elites fly to the extremes while the public stays moderate — the elite-driven polarization thesis.' },
-  { name: 'Mega-identity', vec: [2, 1, 4, 1, 1],
+  { name: 'Great Sorting', vec: [4, 4, 0, 0, 0],
+    note: 'Identity stacked, elites maxed, minds closed, no mixing, lockstep ranks — the two camps slam into opposite corners.' },
+  { name: 'Depolarized', vec: [0, 0, 4, 4, 2],
+    note: 'Open minds and real mixing, with identity and elite divergence dialed away — the camps merge into one warmer cloud.' },
+  { name: 'Mega-identity', vec: [4, 2, 1, 0, 1],
     note: 'Race, religion and lifestyle all line up with party — Mason’s mega-identity end-state (the diagonal collapse).' },
+  { name: 'The Great Mixing', vec: [2, 2, 1, 4, 1],
+    note: 'The real arc, but the two sides mix everywhere — they warm to each other even while still disagreeing on the issues.' },
+  { name: 'Free Thinkers', vec: [2, 2, 1, 0, 4],
+    note: 'The real arc, but everyone thinks for themselves — the party clouds blur and the hard edges soften.' },
 ];
 
 // ── shared state ─────────────────────────────────────────────────────────────

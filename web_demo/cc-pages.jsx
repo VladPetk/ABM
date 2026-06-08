@@ -117,9 +117,9 @@ function MethodsPage() {
           engine rather than an illustrative estimate.
         </MethodRow>
         <MethodRow k="Beyond realism">
-          Mechanism-driven but hypothetical — each maps to a real engine knob (elite extremity, open-mindedness, media
-          power) cranked far past anything we'd calibrate. Useful for seeing how the system <em>can</em> respond; not a
-          claim about how it <em>would</em>.
+          Mechanism-driven but hypothetical — each maps to a real engine cause (mega-identity, elite extremism,
+          open-mindedness, contact &amp; mixing, within-party diversity) cranked far past anything we'd calibrate. Useful
+          for seeing how the system <em>can</em> respond; not a claim about how it <em>would</em>.
         </MethodRow>
       </div>
 

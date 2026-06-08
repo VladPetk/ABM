@@ -197,6 +197,14 @@ class AffectiveUpdate:
         coop_share = float(
             np.clip(agent.state.attrs.get("cooperative_share", 0.0), 0.0, 1.0)
         )
+        # Web-demo sandbox "contact / mixing" dial: an environment-level
+        # cooperative-share floor (Pettigrew-Tropp secondary transfer applied
+        # population-wide; read at apply-time so it covers cohort-replaced
+        # agents too). Default 0.0 → no change → bit-identical for the pillar
+        # and every default-path scenario.
+        _contact_floor = float(env.attrs.get("sandbox_contact_share", 0.0))
+        if _contact_floor > coop_share:
+            coop_share = _contact_floor
         neg_mute = 1.0 - coop_share * (1.0 - self.cooperative_mute)
         # Phase 8c §5 E5.2: identity-threat amplifier. Read with
         # fallback 0.0 (pillar-fallback: pillar agents don't carry

@@ -69,6 +69,12 @@ class BoundedConfidenceInfluence:
         # `self.epsilon` for any scenario that doesn't seed per-agent
         # epsilon — bit-identical to Phase 8a behaviour for the pillar.
         epsilon = float(agent.state.attrs.get("epsilon", self.epsilon))
+        # Web-demo sandbox "open-mindedness" dial: a global confidence-radius
+        # scale read from the environment (applied to both the hard-cutoff and
+        # graded branches, and to cohort-replaced agents since it's read at
+        # apply-time). Default 1.0 is exact in IEEE-754 → bit-identical for the
+        # pillar and canonical Hegselmann-Krause tests, which never set it.
+        epsilon *= float(env.attrs.get("bc_epsilon_scale", 1.0))
         if self.temperature <= 0.0:
             # Canonical hard-cutoff Hegselmann-Krause. Default; HK
             # replication path. The affect modulator is a feature of

@@ -88,7 +88,7 @@ const _sandboxCache = {};
 function expandSandbox(sb) {
   const ticks = sb.ticks, nF = ticks.length, nA = sb.pos[0].length, full = NT;
   const pos = new Array(full), party = new Array(full), macro = new Array(full);
-  const MK = ['sep', 'aff', 'mod', 'align'];
+  const MK = ['sep', 'aff', 'spread', 'align'];
   let fi = 0;
   for (let t = 0; t < full; t++) {
     while (fi < nF - 2 && ticks[fi + 1] < t) fi++;
