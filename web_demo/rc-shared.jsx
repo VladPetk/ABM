@@ -221,9 +221,12 @@ function centroids(pos, party) {
 }
 
 // ── the shared field canvas (edge-to-edge; square grid; field bleeds past it) ─
-function Field({ run, tick, layer = 'position', view = 'density', showGap = true, dim = 0, transform = null, landmarks = false, reveal = null }) {
+function Field({ run, tick, layer = 'position', view = 'density', showGap = true, dim = 0, transform = null, landmarks = false, reveal = null, morphT = null }) {
   // `reveal` (array of layer names) stages the first Watch chapter element by
   // element. null = draw everything, exactly as before.
+  // `morphT` crossfades the two representations of the SAME positions on one
+  // canvas: 0 = individual dots (the intro), 1 = density clouds (the story).
+  // null = no morph; `view` alone decides ('dots' or 'density').
   const show = (k) => !reveal || reveal.indexOf(k) !== -1;
   const ref = React.useRef(null);
   const wrapRef = React.useRef(null);
@@ -266,6 +269,9 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
     let pos = posAt(run, safeTick);
     if (transform) pos = transform(pos);
     const party = run.party[Math.round(safeTick)];
+    // representation crossfade: density alpha vs dot alpha (see prop docs above)
+    const denA = morphT == null ? (view === 'dots' ? 0 : 1) : Math.max(0, Math.min(1, morphT));
+    const dotA = morphT == null ? (view === 'dots' ? 1 : 0) : 1 - denA;
     const cold = coldnessAt(safeTick);
     // per-agent coldness drives the affect view so the camps cool at different rates
     const affArr = layer === 'affect' ? agentColdness(run, safeTick, pos, party) : null;
@@ -293,7 +299,7 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
     const Gy = Math.min(150, Math.max(20, Math.round((y1 - y0) / cell) + 1));
     const den = computeDensity(pos, party, { x0, x1, y0, y1, Gx, Gy, bw: 0.135 }, affArr);
 
-    if (show('blobs')) {
+    if (show('blobs') && denA > 0.01) {
     const off = document.createElement('canvas');off.width = Gx;off.height = Gy;
     const octx = off.getContext('2d');const img = octx.createImageData(Gx, Gy);
     // TWO overlapping party-coloured fields — Dem (navy) and Rep (oxblood) each
@@ -331,14 +337,15 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
     }
     octx.putImageData(img, 0, 0);
     ctx.imageSmoothingEnabled = true;ctx.imageSmoothingQuality = 'high';
-    ctx.globalAlpha = view === 'dots' ? 0.32 : 1;
+    ctx.globalAlpha = denA;
     ctx.drawImage(off, 0, 0, W, H);
     ctx.globalAlpha = 1;
 
     // Light contour edges — just TWO levels per camp, so the filled heatmap
     // leads and the lines only give the lumps a soft edge (the old four-level
     // pass read as busy noise — §3.6).
-    if (view === 'density') {
+    if (denA > 0.45) {
+      ctx.globalAlpha = denA;
       const gpx = (gi) => gi / (Gx - 1) * W;
       const gpy = (gj) => (1 - gj / (Gy - 1)) * H;
       const drawC = (grid, gmax, colorFn) => {
@@ -357,7 +364,23 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
         drawC(den.dD, den.maxD, (li) => `rgba(31,53,101,${0.28 + li * 0.16})`);
         drawC(den.dR, den.maxR, (li) => `rgba(139,37,48,${0.28 + li * 0.16})`);
       }
+      ctx.globalAlpha = 1;
     }
+    }
+
+    // individual agents — one dot per simulated American, coloured by party.
+    // Drawn over any (fading) density so the morph reads as dots gathering
+    // into clouds. Same positions, different representation (ADR-001: the
+    // compass is where state is SHOWN; influence flows along ties).
+    if (dotA > 0.01) {
+      const r = Math.max(2.2, Math.min(3.4, S * 0.0055));
+      ctx.globalAlpha = dotA * 0.9;
+      for (let i = 0; i < pos.length; i++) {
+        const pcol = party[i] === 0 ? CC.d : party[i] === 1 ? CC.r : _rgb(RGB_GREY, 1);
+        ctx.fillStyle = pcol;
+        ctx.beginPath();ctx.arc(mx(pos[i][0]), my(pos[i][1]), r, 0, 6.283);ctx.fill();
+      }
+      ctx.globalAlpha = 1;
     }
 
     // centroids + connector. In POSITION it's the literal party-gap tether; in
@@ -439,7 +462,7 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
         ctx.fillText(L.name, lx, py);
       });
     }
-  }, [run, tick, layer, view, showGap, dim, sz, transform, landmarks, reveal]);
+  }, [run, tick, layer, view, showGap, dim, sz, transform, landmarks, reveal, morphT]);
 
   return (
     <div ref={wrapRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
@@ -451,14 +474,14 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
 // ── small UI ──────────────────────────────────────────────────────────────────
 function Segmented({ value, onChange, options, accent = CC.ink }) {
   return (
-    <div style={{ display: 'inline-flex', gap: 3, padding: 3, background: CC.bg2, borderRadius: 999, border: `1px solid ${CC.border}` }}>
+    <div style={{ display: 'inline-flex', gap: 3, padding: 3, background: 'transparent', borderRadius: 999, border: `1px solid ${CC.ink}` }}>
       {options.map(([v, l]) => {
         const on = value === v;
         return (
           <button key={v} onClick={() => onChange(v)} style={{
             fontSize: 12.5, padding: '5px 13px', borderRadius: 999, cursor: 'pointer', fontFamily: SANS,
-            border: 'none', background: on ? CC.surface : 'transparent', color: on ? accent : CC.ink3,
-            fontWeight: on ? 600 : 500, boxShadow: on ? '0 1px 4px rgba(26,29,35,.1)' : 'none', whiteSpace: 'nowrap'
+            border: `1px solid ${on ? CC.ink : 'transparent'}`, background: 'transparent', color: on ? accent : CC.ink3,
+            fontWeight: on ? 600 : 500, whiteSpace: 'nowrap'
           }}>{l}</button>);
 
       })}

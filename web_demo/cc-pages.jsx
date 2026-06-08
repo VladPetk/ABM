@@ -17,7 +17,7 @@ function PageShell({ eyebrow, title, lead, children }) {
 }
 
 function Prose({ children }) {
-  return <p style={{ fontSize: DS.type.body, lineHeight: 1.68, color: CC.ink2, margin: '20px 0 0', maxWidth: '42em', textWrap: 'pretty' }}>{children}</p>;
+  return <p style={{ ...PROSE, lineHeight: 1.68, color: CC.ink2, margin: '20px 0 0', maxWidth: '42em', textWrap: 'pretty' }}>{children}</p>;
 }
 function H2({ children }) {
   return <h2 style={{ fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, letterSpacing: '-.015em', margin: '52px 0 0', paddingTop: 28, borderTop: `1px solid ${CC.border}` }}>{children}</h2>;
