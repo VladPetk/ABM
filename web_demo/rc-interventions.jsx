@@ -703,23 +703,48 @@ function IvRail({ iv }) {
   );
 }
 
+// Detent knob — the site's timeline grammar in miniature: a hairline track,
+// quiet ticks at the stops, ink up to a hollow playhead ring at the active
+// detent. The mono readout (top-right) carries the exact value, so the track
+// stays wordless. Click anywhere or DRAG the head — pointer x snaps to the
+// nearest detent (the ProtoTimeline scrub pattern). Arrow keys step it too.
 function Detent({ s, value, onChange }) {
+  const n = s.stops.length - 1;
+  const ref = React.useRef(null);
+  const cx = (k) => `calc(6px + ${(k / n) * 100}% - ${(k / n) * 12}px)`; // centre of stop k
+  const pickAt = (clientX) => {
+    const r = ref.current.getBoundingClientRect();
+    const frac = (clientX - r.left - 6) / Math.max(1, r.width - 12);
+    onChange(Math.round(Math.max(0, Math.min(1, frac)) * n));
+  };
+  const onDown = (e) => {
+    e.preventDefault();
+    if (ref.current) ref.current.focus();
+    pickAt(e.clientX);
+    const mv = (ev) => pickAt(ev.clientX);
+    const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', mv);
+    window.addEventListener('pointerup', up);
+  };
+  const onKey = (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); onChange(Math.max(0, value - 1)); }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); onChange(Math.min(n, value + 1)); }
+  };
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <span style={{ fontSize: DS.type.small, fontWeight: 500, color: CC.ink }}>{s.name}</span>
-        <MonoVal size={DS.type.micro} color={CC.ink3} weight={400}>{s.stops[value]}</MonoVal>
+        <MonoVal size={DS.type.micro} color={CC.ink} weight={600}>{s.stops[value]}</MonoVal>
       </div>
-      <div style={{ position: 'relative', height: 24, marginTop: 4, display: 'flex', alignItems: 'center' }}>
-        <div style={{ position: 'absolute', left: 5, right: 5, height: 3, borderRadius: DS.rad.pill, background: CC.border }} />
-        <div style={{ position: 'absolute', left: 5, width: `calc(${(value / (s.stops.length - 1)) * 100}% - ${(value / (s.stops.length - 1)) * 10}px)`, height: 3, borderRadius: DS.rad.pill, background: CC.ink3 }} />
-        {s.stops.map((_, k) => (
-          <button key={k} onClick={() => onChange(k)} aria-label={s.name + ' ' + s.stops[k]} style={{
-            position: 'absolute', left: `calc(${(k / (s.stops.length - 1)) * 100}% - ${(k / (s.stops.length - 1)) * 10}px)`,
-            width: value === k ? 14 : 10, height: value === k ? 14 : 10, borderRadius: DS.rad.pill, cursor: 'pointer', padding: 0,
-            background: value === k ? CC.ink : CC.surface, border: `2px solid ${value === k ? CC.ink : CC.ink4}`,
-          }} />
+      <div ref={ref} onPointerDown={onDown} onKeyDown={onKey} tabIndex={0} role="slider"
+        aria-label={s.name} aria-valuemin={0} aria-valuemax={n} aria-valuenow={value} aria-valuetext={s.stops[value]}
+        style={{ position: 'relative', height: 22, marginTop: 4, cursor: 'pointer', touchAction: 'none', outline: 'none' }}>
+        <div style={{ position: 'absolute', left: 6, right: 6, top: 10, height: 1.5, background: CC.borderS, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: 6, top: 10, width: `calc(${(value / n) * 100}% - ${(value / n) * 12}px)`, height: 1.5, background: CC.ink, pointerEvents: 'none', transition: 'width .12s ease' }} />
+        {s.stops.map((_, k) => (k === value ? null :
+          <span key={'t' + k} style={{ position: 'absolute', left: cx(k), top: 7, width: 1, height: 8, background: CC.ink4, transform: 'translateX(-50%)', pointerEvents: 'none' }} />
         ))}
+        <span style={{ position: 'absolute', left: cx(value), top: 10.75, transform: 'translate(-50%,-50%)', width: 11, height: 11, boxSizing: 'border-box', borderRadius: DS.rad.pill, background: CC.bg, border: `2px solid ${CC.ink}`, pointerEvents: 'none', transition: 'left .12s ease' }} />
       </div>
     </div>
   );
