@@ -33,15 +33,29 @@ each value was reached in Phase 9, see `results/phase9_results.md`.
 The engine has two top-level callers:
 
 ### 1.1 `abm/pillars/calm_to_camps.py` — the pillar
-Five-stage canonical journey. Bit-identity locked: 73 sacred tests
-defend it. **Do not touch this file** for new interventions or
-recalibration work; new mechanisms must default to no-op for the
-pillar path.
+Five-stage canonical journey — the **no-events composition control**
+(same rules as the shipped arc, no dated events/schedules, so an arc
+regression bisects into rule-interaction vs event-handler). Pinned by
+the pillar test families; **do not touch this file** for new
+interventions or recalibration work; new mechanisms must default to
+no-op for the pillar path. (The old "bit-identity locked" framing was
+retired at MHV T2.5 — the pinned tests guard against *accidental*
+drift; deliberate, documented rebuilds re-bless them honestly.)
 
 Stages: S0 baseline → S1 bounded confidence → S2 party identity →
 S3 partisan media → S4 homophilous network. Each stage adds
 mechanisms to the per-tick rule pipeline; positions and affects
 carry over continuously.
+
+**MHV S2 T2.5 rebuild:** the pillar runs on the D=7 issues substrate
+(stylized uniform-compass IC lifted to items with within-block
+residuals; `ideology` = cached block-means projection) with the
+emergent rule set — `ConstraintOp` on from S2 (rate 0.02 / resid 0.01,
+the arc prior center), `MeasuredAlignment` readout,
+`AffectiveUpdate.identity_weight=0.0`; `IdentitySorting` removed (it
+was at `sort_rate=0.0` in every stage bundle — never active here).
+Scale re-picks for the substrate: BC ε 0.30→0.35, σ_pc 0.25→0.35
+(measured: `scripts/audit/t25_pillar_repick.py`; methods §5.22).
 
 ### 1.2 `abm/pillars/historical_arc.py` — the historical scenario
 Same rules as the pillar, but with time-varying schedules and
@@ -719,9 +733,10 @@ new sweep scripts.
 
 ## 9. Discipline summary
 
-1. **Pillar (`calm_to_camps.py`) is bit-identity-locked.** Do not
-   touch it. New mechanisms default to no-op so the pillar tests
-   stay green.
+1. **Pillar (`calm_to_camps.py`) is drift-guarded, not frozen.** New
+   mechanisms default to no-op so the pillar tests stay green;
+   deliberate rebuilds (e.g. MHV T2.5) re-bless the pinned tests
+   honestly, with the measurement documented.
 2. **All Phase 9 changes are gated.** `tier_d_axis_balance=False`
    and `tier_d_anes_knobs=False` reproduce pre-Phase-9 behavior.
 3. **Anything outside `calm_to_camps.py` is in-scope for tuning.**

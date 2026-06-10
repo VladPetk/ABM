@@ -1398,6 +1398,47 @@ with the same measured formula; legacy paths are bit-identical
 (IdentityAlignment, the seeding formula, and `identity_weight=0.5` all
 unchanged when `constraint_rate=0`).
 
+### 5.22 MHV S2 T2.5 — pillar rebuilt on the issues substrate (2026-06)
+
+The calm-to-camps pillar (the no-events composition control — the only
+layer where an arc regression bisects into rule-interaction vs
+event-handler) is rebuilt on the D=7 issue substrate with the emergent
+rule set: `ConstraintOp` enters at stage S2 (where `IdentitySorting`
+nominally sat — at `sort_rate=0.0` in every stage bundle, so the legacy
+rule had never actually run in the pillar), `MeasuredAlignment` provides
+the alignment readout, and `AffectiveUpdate.identity_weight=0.0` matches
+the M3-light collapse. The IC stays stylized — uniform 2D compass
+positions, party by sign — lifted to items with within-block residuals
+from the frozen correlation structure (the cohort-replacement draw
+semantics), NOT the arc's empirical party-conditional seeding: the
+pillar is a mechanism control, not an empirical build.
+
+**Re-bless outcome (full-suite measurement, 20-seed ensembles).** The
+rebuild broke 4 of 281 tests; none was a qualitative break:
+- Two phase-4 FJ isolation tests manipulated `state.ideology` and the
+  2D `anchor` directly — harness staleness (position state lives in
+  `issues`; the FJ anchor is `anchor_issues`). Ported to the issues
+  state; **original thresholds pass unchanged** — the FJ physics is
+  intact.
+- Two scale shifts, answered by re-picking knobs, never thresholds
+  (sweep: `scripts/audit/t25_pillar_repick.py`, 9-cell ε×σ_pc grid):
+  item-space RMS distances carry residual texture the 2D compass never
+  had, starving BC at ε=0.30 (S1 variance ratio 0.922 vs the pinned
+  <0.92 — the pillar-side twin of the T0.6 arc finding) → **pillar ε
+  0.30→0.35** (ratio ~0.89); and the block-means lens compresses the
+  projection's within-party SD (at σ_pc=0.25, S2-end SD_x 0.137, just
+  under the [0.14, 0.30] DW-NOMINATE band) → **σ_pc 0.25→0.35**, the
+  §11 bless's documented cushion ceiling (restores ~0.151–0.154). ε=0.40
+  (the arc's T2.6 re-pick value) was measured and rejected for the
+  pillar: it over-compresses wp_sd to the band floor. Pillar parameters
+  remain stylized; the arc re-picks its own preset at T2.6.
+
+Everything else — the S2 constraint rise, the S3 media-diet radial
+correlation, the S4 exposure-narrowing and the structural-ratchet
+release experiment, the affect-outpaces-ideology (Iyengar) claim, the
+phase-6/7 pillar intervention buckets, independents, cooperative
+contact — passed on the new substrate without touching a threshold.
+
 ---
 
 ## 6. What the model is for

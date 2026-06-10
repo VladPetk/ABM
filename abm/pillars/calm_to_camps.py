@@ -8,6 +8,23 @@ Phase 1 wires the **full superset** population, env and rule pipeline,
 and ships only the S0 and S1 Interventions. S2-S4 will arrive as new
 `Intervention` objects without changing the builder. Every later
 mechanism is constructed at strength 0 so it is an exact no-op.
+
+MHV S2 T2.5 — the pillar is REBUILT as the no-events composition control
+on the new state (s2_spec §6): agents carry D=7 issue vectors (the same
+frozen-loadings substrate the arc's emergent mode runs on), `ideology` is
+the cached block-means projection, and the emergent rule set replaces the
+legacy identity machinery — `ConstraintOp` (off at S0/S1, on from S2)
+where `IdentitySorting` used to sit (it was at sort_rate=0.0 in every
+stage bundle — the pillar never actually ran it), `MeasuredAlignment` as
+the alignment readout, and `AffectiveUpdate.identity_weight=0.0` (the
+M3-light collapse: identity reaches affect only through the measured
+alignment). The pillar's IC stays stylized — uniform 2D compass positions,
+party by sign — lifted to items with within-block residuals from the
+frozen correlation structure (`replacement_draw` semantics), NOT the
+arc's empirical party-conditional seeding: the pillar is a mechanism
+control, not an empirical build. Its job is unchanged: same rules as the
+shipped arc, no dated events/schedules, so an arc regression can be
+bisected into rule-interaction vs event-handler.
 """
 from __future__ import annotations
 
@@ -21,12 +38,14 @@ from ..core.outlets import US_MEDIA_OUTLETS_2024, diet_for_party
 from ..core.rules import RulePipeline
 from ..core.space import ContinuousSpace2D
 from ..core.state import AgentState
+from ..core.issues import build_runtime, load_loadings, project1, replacement_draw
 from ..rules.affective_update import AffectiveUpdate
+from ..rules.constraint_op import ConstraintOp
 from ..rules.elite_drift import EliteDrift
 from ..rules.faction_anchor import FactionAnchor
 from ..rules.identity_prime import IdentityPrimeExpiry
-from ..rules.identity_sorting import IdentitySorting
 from ..rules.influence import BoundedConfidenceInfluence
+from ..rules.measured_alignment import MeasuredAlignment, measure_alignment
 from ..rules.media_consumption import MediaConsumption
 from ..rules.noise import GaussianNoise
 from ..rules.party_pull import PartyPull
@@ -136,7 +155,35 @@ COOPERATIVE_MUTE = 0.5
 # Non-pillar scenarios (compass_basic, etc.) do not set `party_cue`
 # on their agents; `PartyPull.apply` falls back to the env-level
 # centroid in that case, preserving bit-identical behaviour.
-PARTY_CUE_SIGMA = 0.25
+#
+# MHV S2 T2.5 re-pick: 0.25 → 0.35 (the §11 bless's documented cushion
+# ceiling). On the D=7 substrate the block-means lens compresses the
+# projection's within-party SD (the x readout is a 3-item mean), and
+# PartyPull's native per-issue pull transmits the cue dispersion
+# differently — at σ=0.25 the S2-end SD_x measured 0.137, just below
+# the [0.14, 0.30] DW-NOMINATE band the phase-8a test pins. The sweep
+# (scripts/audit/t25_pillar_repick.py) shows σ=0.35 restores 0.151-0.154
+# at the chosen ε. The empirical band is unchanged — the knob moved,
+# not the threshold.
+PARTY_CUE_SIGMA = 0.35
+
+# MHV S2 T2.5 — the emergent constraint operating point for the pillar
+# stages S2+. Same values as the arc's prior center (methods §5.20): the
+# pillar composes the SAME mechanisms at a comparable operating point so
+# rule-interaction regressions bisect cleanly; the values are stylized
+# pillar parameters (like BC ε/0.08), not a calibration claim.
+PILLAR_CONSTRAINT_RATE = 0.02
+PILLAR_CONSTRAINT_RESID = 0.01
+
+# MHV S2 T2.5 re-pick: pillar BC confidence radius 0.30 → 0.35. Item-space
+# RMS distances carry within-block residual texture the 2D compass never
+# had, so at ε=0.30 the S1 variance ratio degraded to 0.922 (vs the
+# pinned <0.92; legacy measured ~0.83) — the pillar-side twin of the
+# T0.6 arc finding (BC starved by the substrate's distance scale). The
+# sweep puts ε=0.35 at ratio 0.891 with the wp_sd band still met; ε=0.40
+# (the arc's T2.6 re-pick value) over-compresses wp_sd to the band floor.
+# Stylized pillar parameter; the arc re-picks its own preset at T2.6.
+PILLAR_BC_EPSILON = 0.35
 
 
 def build_engine(
@@ -156,9 +203,9 @@ def build_engine(
     `party_cue`, no `affect` dict, no `perceived_other_party` etc.,
     so the partisan-aware rules (PartyPull, AffectiveUpdate,
     BacklashRepulsion, PerceptionUpdate, IdentityPrimeExpiry,
-    ThreatDecay) no-op on them. They DO participate in
-    BoundedConfidenceInfluence, MediaConsumption, TieRewiring,
-    GaussianNoise, IdentitySorting.
+    ThreatDecay, MeasuredAlignment) no-op on them. They DO participate
+    in BoundedConfidenceInfluence, MediaConsumption, TieRewiring,
+    GaussianNoise, ConstraintOp.
     """
     rng = np.random.default_rng(seed)
 
@@ -262,6 +309,35 @@ def build_engine(
         }
         agents.append(Agent(id=i, state=AgentState(ideology=pos, attrs=attrs)))
 
+    # --- MHV S2 T2.5: D=7 issue substrate -------------------------------
+    # Each agent's stylized 2D position is lifted to the seven ANES items
+    # with within-block residuals from the frozen correlation structure,
+    # recentered so the block-means projection equals the drawn position
+    # exactly (`replacement_draw` semantics; the [-1,1] item clip can pull
+    # extreme agents slightly inward, so `ideology` is set to the actual
+    # projection — the latent uniform position remains the party-
+    # assignment variable only). Dedicated rng stream: the main build
+    # stream is untouched.
+    _loadings = load_loadings()
+    _issue_runtime = build_runtime(_loadings)
+    _issue_rng = np.random.default_rng(10_000_019 + seed)
+    for a in agents:
+        _v = replacement_draw(a.state.ideology, _issue_runtime, _issue_rng)
+        a.state.attrs["issues"] = _v
+        a.state.attrs["anchor_issues"] = _v.copy()
+        _p = project1(_v, _issue_runtime)
+        a.state.ideology = _p
+        a.state.attrs["anchor"] = _p.copy()
+        a.state.attrs["origin"] = _p.copy()
+        # T2.4 measured-alignment readout, seeded consistent with the
+        # MeasuredAlignment rule (partisans only; see measured_alignment.py).
+        _ma = measure_alignment(
+            a.state.attrs.get("identities"), a.state.attrs.get("party"),
+            _v, party_identity_centers, _issue_runtime,
+        )
+        if _ma is not None:
+            a.state.attrs["identity_alignment"] = _ma
+
     # --- Phase 3: social_coord + homophilous tie network -----------------
     # Built with a SEPARATE RNG stream (spec E1) so the main build stream is
     # untouched and S0-S3 populations stay bit-identical to Phase 1/2.
@@ -308,6 +384,17 @@ def build_engine(
             "network": network,
             # F1: Friedkin-Johnsen anchor-pull rate, read by GaussianNoise.
             "fj_alpha": FJ_ALPHA,
+            # MHV S2 T2.5 — live issues mode (the apply site and every
+            # native kernel read the runtime) + the emergent-mode flag
+            # (read by the X1 setup guard; the pillar has no events or
+            # shocks, so the other readers never fire here).
+            "issue_runtime": _issue_runtime,
+            "issue_rng": _issue_rng,
+            "constraint_emergent": True,
+            # Read by MeasuredAlignment for the identity-stacking sign.
+            "party_identity_centers": {
+                pid: c.copy() for pid, c in party_identity_centers.items()
+            },
             "viz": {
                 "title": TITLE,
                 "group_names": PARTY_NAMES,
@@ -337,7 +424,7 @@ def build_engine(
         # Phase 5 A4: affect_weight stays at 0.0 here — bundles turn it on
         # at S2+ (BC_AFFECT_WEIGHT). Same opt-in discipline as `temperature`.
         BoundedConfidenceInfluence(
-            epsilon=0.30, strength=0.0,
+            epsilon=PILLAR_BC_EPSILON, strength=0.0,
             temperature=BC_TEMPERATURE, affect_weight=0.0,
         ),
         PartyPull(strength=0.0),
@@ -355,11 +442,27 @@ def build_engine(
         AffectiveUpdate(
             radius=1.5,
             learning_rate=0.0,
-            identity_weight=AFFECT_IDENTITY_WEIGHT,
+            # MHV S2 T2.5 (M3-light, matching the arc's emergent stack):
+            # the dyadic identity-distance valence term is retired —
+            # identity reaches affect only through the measured alignment.
+            # AFFECT_IDENTITY_WEIGHT is kept above as the documented
+            # legacy value (methods §5.21).
+            identity_weight=0.0,
             baseline=AFFECT_BASELINE,
             cooperative_mute=COOPERATIVE_MUTE,
         ),
-        IdentitySorting(sort_rate=0.0, step=0.05, differentiation=0.5),
+        # MHV S2 T2.5: ConstraintOp where IdentitySorting used to sit
+        # (the legacy rule was at sort_rate=0.0 in every stage bundle —
+        # never active). Off at build; the S2+ bundles turn it on at the
+        # pillar operating point. NOTE: resid_sigma must be zeroed with
+        # rate in the S0/S1 bundles — the residual noise is active even
+        # at rate=0 by design (it is the dispersion counterweight).
+        ConstraintOp(rate=0.0, resid_sigma=0.0),
+        # T2.4 measured-alignment readout (pure measurement through the
+        # delta pipeline; no consumer reads it in the pillar — the env
+        # alignment-affect weight is unset — but the metric stream is
+        # what the arc-vs-pillar bisection compares).
+        MeasuredAlignment(),
         # Phase 6 R1: BacklashRepulsion is added to the pipeline at
         # strength 0 (exact no-op for S0-S4 baseline). Phase 6
         # interventions in `interventions_phase6.py` turn it on.
@@ -438,7 +541,8 @@ S0_BASELINE = Intervention(
         ("PartyPull", "strength", 0.0),
         ("MediaConsumption", "strength", 0.0),
         ("AffectiveUpdate", "lr", 0.0),
-        ("IdentitySorting", "sort_rate", 0.0),
+        ("ConstraintOp", "rate", 0.0),
+        ("ConstraintOp", "resid_sigma", 0.0),
         ("EliteDrift", "rate", 0.0),
         ("TieRewiring", "rewire_rate", 0.0),
         ("TieRewiring", "affect_weight_rewire", 0.0),
@@ -462,14 +566,15 @@ S1_BOUNDED_CONFIDENCE = Intervention(
     predicted_effect="Population variance falls relative to baseline.",
     param_bundle=(
         ("GaussianNoise", "sigma", 0.01),
-        ("BoundedConfidenceInfluence", "epsilon", 0.30),
+        ("BoundedConfidenceInfluence", "epsilon", PILLAR_BC_EPSILON),
         ("BoundedConfidenceInfluence", "strength", 0.08),
         ("BoundedConfidenceInfluence", "temperature", BC_TEMPERATURE),
         ("BoundedConfidenceInfluence", "affect_weight", 0.0),
         ("PartyPull", "strength", 0.0),
         ("MediaConsumption", "strength", 0.0),
         ("AffectiveUpdate", "lr", 0.0),
-        ("IdentitySorting", "sort_rate", 0.0),
+        ("ConstraintOp", "rate", 0.0),
+        ("ConstraintOp", "resid_sigma", 0.0),
         ("EliteDrift", "rate", 0.0),
         ("TieRewiring", "rewire_rate", 0.0),
         ("TieRewiring", "affect_weight_rewire", 0.0),
@@ -494,14 +599,15 @@ S2_PARTY_IDENTITY = Intervention(
                      "constraint (party-issue correlation) rises.",
     param_bundle=(
         ("GaussianNoise", "sigma", 0.01),
-        ("BoundedConfidenceInfluence", "epsilon", 0.30),
+        ("BoundedConfidenceInfluence", "epsilon", PILLAR_BC_EPSILON),
         ("BoundedConfidenceInfluence", "strength", 0.08),
         ("BoundedConfidenceInfluence", "temperature", BC_TEMPERATURE),
         ("BoundedConfidenceInfluence", "affect_weight", BC_AFFECT_WEIGHT),
         ("PartyPull", "strength", 0.04),
         ("AffectiveUpdate", "lr", 0.01),
         ("MediaConsumption", "strength", 0.0),
-        ("IdentitySorting", "sort_rate", 0.0),
+        ("ConstraintOp", "rate", PILLAR_CONSTRAINT_RATE),
+        ("ConstraintOp", "resid_sigma", PILLAR_CONSTRAINT_RESID),
         ("EliteDrift", "rate", 0.0),
         ("TieRewiring", "rewire_rate", 0.0),
         ("TieRewiring", "affect_weight_rewire", TR_AFFECT_WEIGHT_REWIRE),
@@ -525,14 +631,15 @@ S3_PARTISAN_MEDIA = Intervention(
                      "from centre than light consumers.",
     param_bundle=(
         ("GaussianNoise", "sigma", 0.01),
-        ("BoundedConfidenceInfluence", "epsilon", 0.30),
+        ("BoundedConfidenceInfluence", "epsilon", PILLAR_BC_EPSILON),
         ("BoundedConfidenceInfluence", "strength", 0.08),
         ("BoundedConfidenceInfluence", "temperature", BC_TEMPERATURE),
         ("BoundedConfidenceInfluence", "affect_weight", BC_AFFECT_WEIGHT),
         ("PartyPull", "strength", 0.04),
         ("AffectiveUpdate", "lr", 0.01),
         ("MediaConsumption", "strength", 0.04),
-        ("IdentitySorting", "sort_rate", 0.0),
+        ("ConstraintOp", "rate", PILLAR_CONSTRAINT_RATE),
+        ("ConstraintOp", "resid_sigma", PILLAR_CONSTRAINT_RESID),
         ("EliteDrift", "rate", 0.0),
         ("TieRewiring", "rewire_rate", 0.0),
         ("TieRewiring", "affect_weight_rewire", TR_AFFECT_WEIGHT_REWIRE),
@@ -557,14 +664,15 @@ S4_HOMOPHILOUS_NETWORK = Intervention(
                      "sorted state becomes sticky (structural ratchet).",
     param_bundle=(
         ("GaussianNoise", "sigma", 0.01),
-        ("BoundedConfidenceInfluence", "epsilon", 0.30),
+        ("BoundedConfidenceInfluence", "epsilon", PILLAR_BC_EPSILON),
         ("BoundedConfidenceInfluence", "strength", 0.08),
         ("BoundedConfidenceInfluence", "temperature", BC_TEMPERATURE),
         ("BoundedConfidenceInfluence", "affect_weight", BC_AFFECT_WEIGHT),
         ("PartyPull", "strength", 0.04),
         ("AffectiveUpdate", "lr", 0.01),
         ("MediaConsumption", "strength", 0.04),
-        ("IdentitySorting", "sort_rate", 0.0),
+        ("ConstraintOp", "rate", PILLAR_CONSTRAINT_RATE),
+        ("ConstraintOp", "resid_sigma", PILLAR_CONSTRAINT_RESID),
         ("EliteDrift", "rate", 0.0),
         # Post-ADR-001 S4 turns on tie rewiring only. Exposure narrowing is
         # now structural — influence already flows along edges, so a

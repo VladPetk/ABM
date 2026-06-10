@@ -60,12 +60,19 @@ def test_stubborn_agent_ends_near_anchor():
     # Both anchored at the centre; both started displaced from anchor.
     # The anchor pull is non-zero from t=0, so the test exercises the
     # FJ recurrence (not just the (1-s) scaling of a BC pull).
+    # MHV S2 T2.5: position state lives in attrs["issues"] (ideology is
+    # the projection cache) and the FJ anchor is `anchor_issues` — the
+    # displacement/anchor setup is ported via lift(); same FJ claim,
+    # same thresholds.
+    from abm.core.issues import lift
+    rt = eng.env.attrs["issue_runtime"]
     anchor = np.array([0.0, 0.0])
     start = np.array([0.30, 0.30])
-    a_stubborn.state.attrs["anchor"] = anchor.copy()
-    a_free.state.attrs["anchor"] = anchor.copy()
-    a_stubborn.state.ideology = start.copy()
-    a_free.state.ideology = start.copy()
+    for a in (a_stubborn, a_free):
+        a.state.attrs["anchor_issues"] = lift(anchor, rt)
+        a.state.attrs["anchor"] = anchor.copy()
+        a.state.attrs["issues"] = lift(start, rt)
+        a.state.ideology = start.copy()
     eng.space.rebuild(eng.agents)
 
     eng.run(60)
@@ -106,11 +113,19 @@ def test_anchor_pull_recovers_displaced_agent():
             rule.sigma = 0.0
         elif name == "AffectiveUpdate":
             rule.lr = 0.0
-        elif name == "IdentitySorting":
-            rule.sort_rate = 0.0
+        elif name == "ConstraintOp":
+            rule.rate = 0.0
+            rule.resid_sigma = 0.0
     a = eng.agents[0]
+    # MHV S2 T2.5: displace the agent in the issues state (ideology is
+    # the projection cache) and anchor it via `anchor_issues` — the FJ
+    # decay claim and thresholds are unchanged.
+    from abm.core.issues import lift
+    rt = eng.env.attrs["issue_runtime"]
     a.state.attrs["stubbornness"] = 0.5
     a.state.attrs["anchor"] = np.array([0.0, 0.0])
+    a.state.attrs["anchor_issues"] = lift(np.array([0.0, 0.0]), rt)
+    a.state.attrs["issues"] = lift(np.array([0.5, 0.5]), rt)
     a.state.ideology = np.array([0.5, 0.5])
     eng.space.rebuild(eng.agents)
     d0 = float(np.linalg.norm(a.state.ideology - a.state.attrs["anchor"]))

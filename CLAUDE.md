@@ -90,13 +90,15 @@ are bundled and parameterized.
   the "ratchet"). Each stage turns on one more mechanism, but the stages
   *compound* — by S4 the whole stack runs together — and there are **no dated
   events/shocks**, so any trajectory change is attributable to rule
-  *interaction*, not an exogenous handler. Pinned by ~73 tests; stable **by
+  *interaction*, not an exogenous handler. Since MHV S2 (T2.5) it runs on the
+  D=7 issues substrate with the emergent rule set (`ConstraintOp` from S2,
+  `MeasuredAlignment`, no `IdentitySorting`). Pinned by ~73 tests; stable **by
   design, not by decree** (the tests guard against *accidental* drift, not a
   claim it's beyond question). It *can* change — deliberately, for a documented
   reason, with the pinned tests re-validated (expect them to fail and need
-  honest re-blessing). Don't bolt unrelated new mechanisms onto its stages: that
-  breaks it as a fixed control *and* still wouldn't isolation-test them (see the
-  three layers below).
+  honest re-blessing; precedent: the T2.5 rebuild, methods §5.22). Don't bolt
+  unrelated new mechanisms onto its stages: that breaks it as a fixed control
+  *and* still wouldn't isolation-test them (see the three layers below).
 - **Historical arc** (`abm/pillars/historical_arc.py`, public surface
   `build_engine`) — the *empirical build that ships*. The same rules under
   time-varying schedules + ANES anchors targeting US 1980→2025, with dated event

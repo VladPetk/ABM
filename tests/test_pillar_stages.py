@@ -46,6 +46,13 @@ def test_s1_bounded_confidence_pulls_society_together(s0_ensemble, s1_ensemble):
     from the ADR-001 measurement — anchoring damps both worlds
     proportionally). The qualitative direction (variance falls) is what
     the test asserts; the 0.92 threshold has a ~0.09 cushion.
+
+    Re-blessed under MHV S2 T2.5 (D=7 issues substrate): item-space RMS
+    distances carry within-block residual texture, which starved BC at
+    ε=0.30 (ratio degraded to 0.922 — the pillar-side twin of the T0.6
+    arc finding). The model was re-picked, not the threshold: pillar ε
+    0.30 → 0.35 (sweep in scripts/audit/t25_pillar_repick.py) restores
+    the measured ratio to ~0.89; threshold unchanged at <0.92.
     """
     _, s0_finals = s0_ensemble
     _, s1_finals = s1_ensemble

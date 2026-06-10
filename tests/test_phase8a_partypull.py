@@ -192,6 +192,14 @@ def test_within_party_sd_at_s2_lands_in_legislator_band():
     upper bound is generous in case future tuning lifts SD; the lower
     bound is at Phase 7's baseline so any future regression below
     that level fails loudly.
+
+    Re-blessed under MHV S2 T2.5 (D=7 issues substrate): the block-means
+    lens compresses the projection's within-party SD (x is a 3-item
+    mean) and PartyPull pulls per-issue natively — at σ_pc=0.25 the
+    measured SD fell to 0.137, just below the band floor. The knob
+    moved, not the band: σ_pc 0.25 → 0.35 (the §11 bless's documented
+    cushion ceiling; sweep in scripts/audit/t25_pillar_repick.py)
+    restores ~0.151-0.154. Band unchanged.
     """
     from .conftest import STAGE_SEEDS
     from abm.calibration_parallel import run_seeds_parallel
