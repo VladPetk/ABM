@@ -1042,6 +1042,46 @@ series (DW-NOMINATE dim-2 is not a clean cultural axis pre-2000s). It
 is a declared proxy: **MED** evidence grade, **N** provenance on the
 magnitude. The x-axis anchor (NOMINATE dim-1) remains L/HIGH.
 
+### 5.14 MHV T0.3 — "events as a brake" attributed (2026-06)
+
+The knob audit's open question — removing the dated events makes 2025
+party separation **overshoot 1.13 → 1.61 (+0.48)**, so the event layer
+net-*restrains* the arc — is now attributed by a leave-one-out /
+add-one-back bisection over all 12 event units (8 seeds, decomposed
+schedule validated bit-identical to the shipped one before ablation).
+
+**Finding: the brake is the partisan-media tether plus faction anchors,
+98% jointly attributed.** Removing {Fairness Doctrine 1987, Fox News
+1996, the four faction-emergence events} together reproduces **98%** of
+the overshoot (+0.474 of +0.482, sign-stable 8/8 seeds); adding the same
+set to the events-free schedule restores 100%. Mechanism: both media
+events do one thing — set `MediaConsumption.strength` (0 → 0.02 at the
+1987 repeal, → 0.04 at Fox '96) — and the media pull targets outlet
+positions that sit **inward of the party centroids** (the documented
+outlet-calibration property the X3 reading also depends on; see the
+ENGINE_OVERVIEW provenance row "Media-diet pulls inward"). Activating
+partisan-media drift therefore *tethers* the mass inward against
+elite-driven separation. The two events are **redundant activators** —
+Fox alone restrains +0.46 (95%), the Fairness Doctrine alone +0.26
+(54%), but each is nearly inert *marginally* when the other is present —
+which is why the additive leave-one-out sum captured only 35% and the
+audit's earlier single-mechanism tests (stubbornness bumps, +0.03)
+failed to find the cause. Faction anchors contribute a further ~+0.13
+independent restraint. All other events are ≈0 on separation (Citizens
+United, COVID/Jan6, the 2016 status threat, both exogenous shocks),
+confirming the audit's falsification; the affect side of the overshoot
+(+0.10 warming) traces mainly to the social-media ramp's animus channel.
+
+**Two honest implications.** (a) The brake rests on the inward-outlet
+property, which is **E-tagged** (a calibration artifact of the 2024 ANES
+outlet roster, not a literature claim) — so "events restrain the arc" is
+a *model* property, not an empirical finding. (b) For MHV S3
+(forces-as-inputs): when the media events are re-expressed as
+adoption/penetration series, this attribution must be re-checked — the
+brake should survive re-expression or the S3 change is wrong (spec
+requirement). Full tables:
+`docs/internal/audit/events_brake_bisection.{json,md}`.
+
 ---
 
 ## 6. What the model is for
