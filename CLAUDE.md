@@ -31,7 +31,7 @@ There are two tracks in this repo, and most sessions touch only one:
 abm/            the engine — core/ rules/ pillars/ scenarios/ metrics/
 data/           literature PDFs + phase9 ANES recodes (calibration anchors)
 scripts/        measurement sweeps + the web data pipeline
-tests/          ~200 tests pinned to literature targets (full run ~14 min)
+tests/          ~240 tests: small literature-pinned core + band gates + drift guards + machinery (full run ~14 min)
 web/data/       full per-tick engine exports (JSON) — pipeline intermediate
 web_demo/       the static demo the public sees
 docs/           all documentation (see index at the bottom)
@@ -42,7 +42,12 @@ docs/           all documentation (see index at the bottom)
 ## The engine (`abm/`)
 
 Pure Python, no ABM framework. Fully reproducible — `python -m pytest` runs the
-literature-pinned suite. Two top-level scenarios share one rules engine.
+suite. (Honest label, per the T0.2 provenance census: a small literature-pinned
+core (~15 tests, e.g. the HK reduction and the ANES thermometer band), a few
+empirical-band gates, ~40 blessed-output drift guards, and ~210 machinery
+tests. The heavyweight empirical gates — the ANES §11 scorecard and the
+Phase 10 bucket measurement — are measure-then-bless *scripts*, not pytest.)
+Two top-level scenarios share one rules engine.
 
 ### Substrate (ADR-001)
 Every agent is **two things at once**: a point in a 2D ideology compass
@@ -167,7 +172,7 @@ intervention library re-measure on that baseline).
 ### Engine quickstart (Windows PowerShell)
 ```powershell
 .venv\Scripts\Activate.ps1
-.venv\Scripts\python.exe -m pytest                       # literature-pinned tests (~14 min)
+.venv\Scripts\python.exe -m pytest                       # full test suite (~14 min)
 .venv\Scripts\python.exe scripts\phase10_measure.py      # re-measure the intervention library
 ```
 

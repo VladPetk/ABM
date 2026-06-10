@@ -132,6 +132,17 @@ the threat mediator); Mutz 2018 (status threat → 2016 vote);
 Settle 2018 (*Frenemies*); Levendusky & Stecula 2021; Yeomans
 et al. 2020.
 
+**Evidence grade (MHV T0.2): LOW / CONTESTED.** The backfire
+*direction* rests on Bail 2018 and has not replicated as a general
+phenomenon: Guess & Coppock 2020 found no attitudinal backlash in
+three experiments, and Wood & Porter 2019 found factual-correction
+backfire "elusive" across 10k+ subjects. In-engine, the backfire is
+delivered by `BacklashRepulsion`, whose affect gate (`warmth < −0.3`)
+fires for **99.8% of partisan agents** in the polarized regime where
+interventions are measured (methods.md §5.4.bis) — the mechanism is
+nearly unconditional there, so the engine cannot express the
+conditional, threat-moderated backfire the literature debates.
+
 **Engine reading.** **Strong backfire** (Δsep +0.32 to +0.37)
 across all four release decades. Decade-invariant — unlike X5
 and X6, X1's effect doesn't depend on starting state. The
@@ -139,7 +150,8 @@ affect-gated repulsion cascades: a small initial push moves
 agents past the `affect_threshold = -0.3`, which triggers more
 repulsion, which moves them further. The naive lay expectation
 ("seeing the other side humanises them") is exactly inverted at
-population scale.
+population scale — *conditional on the Bail-2018 backfire being the
+rule rather than the exception (see the evidence grade above)*.
 
 ### 4.2 X2 — Fix the algorithm
 
@@ -309,13 +321,18 @@ says it doesn't move the macro picture.
 
 Cross-partisan exposure is the depolarization lever most often
 demanded in popular media and the one Bail's 2018 PNAS paper
-established backfires under threat. In the Phase 10 engine, it
+found backfires under threat. In the Phase 10 engine, it
 backfires *strongly* and *robustly* across decades — Δsep ≈ +0.33
 at every release. The mechanism cascades: small initial pushes
 trip the affect-threshold gate, which triggers more repulsion.
 
 This is the cleanest naive-vs-engine contrast in the library and
-the project's headline pedagogical exhibit.
+the project's headline pedagogical exhibit — **graded LOW/CONTESTED
+(MHV T0.2)**: the backfire premise did not replicate in Guess &
+Coppock 2020 or Wood & Porter 2019, and the engine's affect gate
+fires for 99.8% of partisans at measurement time (§4.1), so the
+robustness is partly built in. Present it as "what follows if
+Bail-style backfire is the rule," not as settled science.
 
 ### 5.2 The empirically-supported workers — X5 and X6
 

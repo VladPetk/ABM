@@ -56,7 +56,7 @@ scripts/
   phase10_measure.py        the intervention sweep that produces phase10
   phase9_anes_score.py      ANES-band scoring
   phase9_*                  Phase 9 sweep + diagnostic tooling
-tests/                      ~200 tests pinned to literature targets
+tests/                      ~240 tests (literature-pinned core + empirical-band gates + drift guards + machinery)
 ```
 
 ## Quickstart (Windows PowerShell)

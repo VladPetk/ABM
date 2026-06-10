@@ -231,7 +231,10 @@ toward in-party / away-from-out-party.
 | `differentiation` | 0.5 | float | [0, 1] | Weight on "differentiate from out-party" component. |
 
 **Historical-arc:** sort_rate driven by `IDENTITY_SORTING_SCHEDULE`
-(0.02 at 1980 → 0.045 at 2020).
+(0.02 at 1980 → 0.045 at 2020). **Honesty relabel (MHV T0.2):** with all
+schedules frozen at 1980 values, only ~17% of the arc's alignment rise
+remains — treat the alignment trajectory as schedule-carried, not
+emergent (methods.md §5.13).
 
 ### 3.8 `IdentityToIdeologyPull` (`identity_to_position.py`) — Phase 9 new
 Mason 2018 mega-identity → ideology coupling. Per tick, pulls
@@ -385,14 +388,14 @@ designer knows what's load-bearing.
 |---|---|---|
 | `ELITE_DRIFT_SCHEDULE` | per-decade rates 0.003-0.008 | Legacy. |
 | `ELITE_DRIFT_SCHEDULE_ANES` | per-decade rates ~ANES centroid velocities | x-axis. |
-| `ELITE_DRIFT_SCHEDULE_ANES_Y` | 1.3 × x-rate per decade | y-axis (cult sort > econ sort). |
+| `ELITE_DRIFT_SCHEDULE_ANES_Y` | 1.3 × x-rate per decade | y-axis (cult sort > econ sort). **MED / N (MHV T0.2):** anchored to ANES *voter*-centroid velocities — a declared proxy, not a legislator series (NOMINATE dim-2 is not a clean cultural axis). The x-anchor stays L/HIGH. |
 | `ELITE_DRIFT_ASYMMETRIC` | `{0: 0.5, 1: 1.5}` (constant) | Legacy. |
 | `ELITE_DRIFT_ASYMMETRIC_ANES_SCHEDULE` | Per-decade: 1980 `{D:0.5, R:1.5}`, balanced 1990-2010, 2010 `{D:1.5, R:0.5}` | **ANES.** Reagan-era R-heavy → modern D-heavy cult sort. |
 
 ### 4.5 Identity sorting schedule
 | Constant | Value | Notes |
 |---|---|---|
-| `IDENTITY_SORTING_SCHEDULE` | 1980: 0.02, 1990: 0.025, 2000: 0.03, 2010: 0.04, 2020: 0.045 | Mason 2018 trajectory. |
+| `IDENTITY_SORTING_SCHEDULE` | 1980: 0.02, 1990: 0.025, 2000: 0.03, 2010: 0.04, 2020: 0.045 | Direction per Mason 2018; the *values* are tuned (**N**). Carries ~83% of the arc's alignment rise (methods.md §5.13) — an S2 retirement target per the MHV plan. |
 
 ### 4.6 Party-issue coupling schedule
 | Constant | Value | Notes |

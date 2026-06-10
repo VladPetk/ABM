@@ -90,7 +90,9 @@ in [`ENGINE_OVERVIEW.md`](ENGINE_OVERVIEW.md) §4.7):
 
 1. **Emergent / endogenous** — the per-agent delta depends on the
    agent's own evolving state and/or its network neighbours (bounded
-   confidence, contact-gated affect, tie rewiring, identity sorting).
+   confidence, contact-gated affect, tie rewiring; identity sorting is
+   endogenous *in form* but its 1980→2025 rise is ~83% schedule-carried —
+   see the §5.13 relabel).
 2. **Exogenous drivers on a calendar clock** — the same pressure applied
    to everyone (or a fixed group) at dated times. Legitimate *because
    the model is of the mass public*: elite divergence (`EliteDrift` /
@@ -400,7 +402,7 @@ a 95% CI for transparency.
 
 | ID | Lay name | Δsep ± SE | issue_sorting | Δaff ± SE | affect | Anchor |
 |---|---|---|---|---|---|---|
-| X1 | Show people the other side (asymmetric) | +0.490 ± 0.006 | **backfire** | −0.014 ± 0.001 | null | Bail et al. 2018 [Phase 8c §6: asymmetric backfire — party=1 push ×1.3, party=0 push ×0.7 (1.86× ratio); macro bucket unchanged but per-party drift now asymmetric per Bail's R-user finding]. |
+| X1 | Show people the other side (asymmetric) | +0.490 ± 0.006 | **backfire** | −0.014 ± 0.001 | null | Bail et al. 2018 [Phase 8c §6: asymmetric backfire — party=1 push ×1.3, party=0 push ×0.7 (1.86× ratio); macro bucket unchanged but per-party drift now asymmetric per Bail's R-user finding]. **Evidence grade LOW/CONTESTED** — backfire did not replicate in Guess & Coppock 2020 / Wood & Porter 2019, and the in-engine affect gate fires for 99.8% of partisans at measurement time (§5.4.bis, §5.13). |
 | X2 | Fix the algorithm | −0.029 ± 0.002 | **null** | −0.012 ± 0.001 | null | Guess/Nyhan 2023 |
 | X3 | Quit cable news (cable-only) | −0.001 ± 0.002 | **null** | −0.013 ± 0.001 | null | Levendusky 2013; Allcott 2020; Martin & Yurukoglu 2017 [Phase 8c §3 re-bless: bucket flipped from backfire to null. Old X3 zeroed MediaConsumption.strength entirely (R1's "category error" — bundling centripetal broadcast with centrifugal cable). New X3 zeros only MSNBC + Fox News weights; result: cable's exit alone doesn't measurably move the macro picture.] |
 | X4 | Shared-identity priming program | −0.027 ± 0.002 | **null** | −0.012 ± 0.001 | null | Levendusky 2021 (*Our Common Bonds*); Transue 2007; Wright & Esses 2017 [Phase 8c §4 re-implementation: superordinate-identity prime at 20% of population for 30 ticks. Modest individual-level effects but population-level null, consistent with Levendusky's experimental reports.] |
@@ -998,6 +1000,48 @@ construction, no pinned value moved. Drift guards:
 `tests/test_t01_retire_k.py`. No provenance-table change: no mechanism was
 added or removed (the retired constant never acted in the shipped build).
 
+### 5.13 MHV T0.2 — honesty relabels (2026-06)
+
+Three claims are re-graded to match what the engine-wide knob audit
+measured (internal audit notes, `docs/internal/engine_knob_audit.md`).
+Buckets and mechanisms are unchanged — these are *label* corrections,
+per the measure-then-bless discipline.
+
+**1. Identity alignment is ~83% schedule-carried (until the planned
+emergent-sorting rebuild lands).** The freeze ablation (all schedules
+clamped at their 1980 values, ≥6 seeds) leaves only **17%** of the
+1980→2025 `identity_alignment` rise — the rest is carried by
+`IDENTITY_SORTING_SCHEDULE` (0.02→0.045), the ×5
+`IDENTITY_SORTING_REGRADE_MULTIPLIER`, and the party-issue coupling
+schedule. The `IdentitySorting` *mechanism* is endogenous in form and
+its qualitative story is Mason 2018 (**L**), but the *trajectory* is a
+scheduled input (**N**) and must not be presented as an emergent
+finding. (Party separation and affect are different: 0.65 / 0.63
+emergent fractions under the same ablation.) Compare the §6 dark-matter
+budget once the MHV S2 rebuild lands (target: ≥0.50 emergent).
+
+**2. X1 ("show people the other side") backfire — external grade
+LOW/CONTESTED.** The measured in-engine bucket stays **backfire**
+(Δsep +0.25…+0.49 depending on variant; §4.3, §4.5). But (a) the
+anchoring finding (Bail et al. 2018) has not replicated as a general
+phenomenon — counter-attitudinal exposure produced *no* attitudinal
+backfire across 3 experiments in Guess & Coppock 2020, and factual-
+correction backfire is "elusive" in Wood & Porter 2019; and (b)
+in-engine, the backfire is delivered by `BacklashRepulsion`, whose
+affect gate (`warmth < −0.3`) fires for **99.8% of partisan agents** in
+the polarized regime where interventions are measured (§5.4.bis) — the
+mechanism is nearly unconditional there, so the engine cannot exhibit
+the conditional, threat-moderated backfire the literature debates. Read
+the X1 result as "what follows *if* Bail-2018-style backfire is the
+rule," not as settled science.
+
+**3. Cultural-axis elite anchor — MED/N.** The y-axis elite-drift
+schedule (`ELITE_DRIFT_SCHEDULE_ANES_Y`, 1.3× the x-rate per decade) is
+anchored to ANES *voter*-centroid velocities, not to a legislator
+series (DW-NOMINATE dim-2 is not a clean cultural axis pre-2000s). It
+is a declared proxy: **MED** evidence grade, **N** provenance on the
+magnitude. The x-axis anchor (NOMINATE dim-1) remains L/HIGH.
+
 ---
 
 ## 6. What the model is for
@@ -1094,6 +1138,33 @@ intervention briefs, and `polarization_causal_model.md`, but had not yet been
 folded into the alphabetical list above. Full annotation (what each anchors) is
 in [`literature.md`](literature.md); a few post-2020 intervention citations
 still need venue/year verification — see literature.md §5.*
+
+### MHV T0.2 anchors (belief-system structure + X1 evidence grade, 2026-06)
+
+*DOI-verified at entry; annotations in literature.md §2.8 and §3.*
+
+- Bonica, A. (2014). Mapping the ideological marketplace. *AJPS*
+  58(2):367. [+ the DIME dataset, data.stanford.edu/dime — reserved
+  for the S3 elite input series.]
+- Boutyline, A., & Vaisey, S. (2017). Belief network analysis: A
+  relational approach to understanding the structure of attitudes.
+  *AJS* 122(5):1371.
+- DellaPosta, D. (2020). Pluralistic collapse: The "oil spill" model
+  of mass opinion polarization. *ASR* 85(3):507.
+- Guess, A., & Coppock, A. (2020). Does counter-attitudinal
+  information cause backlash? Results from three large survey
+  experiments. *BJPS* 50(4):1497.
+- Hare, C. (2022). Constrained citizens? Ideological structure and
+  conflict extension in the US electorate, 1980–2016. *BJPS*
+  52(4):1602.
+- Kozlowski, A. C., & Murphy, J. P. (2021). Issue alignment and
+  partisanship in the American public: Revisiting the "partisans
+  without constraint" thesis. *Social Science Research* 94:102498.
+- Treier, S., & Hillygus, D. S. (2009). The nature of political
+  ideology in the contemporary electorate. *POQ* 73(4):679.
+- Wood, T., & Porter, E. (2019). The elusive backfire effect: Mass
+  attitudes' steadfast factual adherence. *Political Behavior*
+  41(1):135.
 
 - Abramowitz, A. I., & Webster, S. (2016). The rise of negative
   partisanship. *Electoral Studies* 41:12.

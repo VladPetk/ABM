@@ -109,6 +109,13 @@ are in methods.md's provenance table.
 - **Levendusky, M.** (2013). Why do partisan media polarize viewers? *AJPS*
   57:611. — Partisan-media drift; heavy-diet agents move further
   (`MediaConsumption`); X3 anchor.
+- **Bonica, A.** (2014). Mapping the ideological marketplace. *AJPS* 58:367. —
+  Campaign-finance ideal points (CFscores) spanning candidates, donors, and
+  officeholders. **Reserved for the MHV S3 elite input series**: a planned
+  cross-check on the NOMINATE-anchored elite-position channel (no engine use
+  yet; logged at adoption per the log-every-source rule). Dataset: **DIME**
+  (Database on Ideology, Money in Politics, and Elections, public v4.0,
+  1979–2024), data.stanford.edu/dime — cite the version actually used.
 
 ### 2.4 Identity & affect
 - **Mason, L.** (2018). *Uncivil Agreement: How Politics Became Our Identity*.
@@ -173,6 +180,54 @@ are in methods.md's provenance table.
 
 ---
 
+### 2.8 Belief-system structure & constraint (the multi-issue / MHV anchors)
+
+Added at MHV T0.2 (2026-06). These anchor the **multi-issue state rebuild**
+(MHV S2): the dimension-parametric issue vector, the emergent constraint
+operator replacing the scheduled identity-sorting trajectory, and the
+constraint observables added to the audit battery (T0.5). Until S2 lands,
+their engine footprint is the S1 covariance-signature pilot
+(`scripts/audit/pilot_cov_signature.py`) and the battery design.
+
+- **Baldassarri, D., & Gelman, A.** (2008). Partisans without constraint:
+  Political polarization and trends in American public opinion. *AJS* 114:408. —
+  Through 2004, Americans polarized via *partisan alignment* of issues, not
+  rising *issue–issue constraint*. Anchors (a) the Phase 9 published-table
+  fallbacks (Tables 2–3 cross-issue correlations, §1 above) and (b) — extended
+  role at T0.2 — the **B&G dual-index target**: partisan alignment and issue
+  alignment tracked as *separate* observables (S1 pilot `bg_partisan` /
+  `bg_issue_pooled`; T0.5 battery; the S2 calibration target pair).
+- **Treier, S., & Hillygus, D. S.** (2009). The nature of political ideology in
+  the contemporary electorate. *POQ* 73:679. — Bayesian IRT: mass ideology is
+  2-dimensional (economic ≠ social); cross-pressured citizens self-label
+  "moderate". Anchors the 2-axis compass justification (§1 fallback tables) and
+  — extended role at T0.2 — the **2-factor loading design** for the MHV issue
+  vector and the econ/cultural item blocks used in the S1 pilot's real-IC path
+  (ANES VCF items).
+- **Boutyline, A., & Vaisey, S.** (2017). Belief network analysis: A relational
+  approach to understanding the structure of attitudes. *AJS* 122:1371. —
+  Attitude networks have measurable structure with political identity at the
+  center. Anchors the **constraint-index observable** (mean |pairwise issue r|,
+  within-party PR) in the S1 pilot and the T0.5 battery v2 stat registry.
+- **DellaPosta, D.** (2020). Pluralistic collapse: The "oil spill" model of
+  mass opinion polarization. *ASR* 85:507. — 44 years of GSS as an evolving
+  belief network: polarization spread by absorbing previously cross-cutting
+  attitudes ("oil spill"), not by deepening existing divides. **The design
+  anchor for the S2 `constraint_op`** (network-local, self-reinforcing
+  correlation growth — the operator piloted in S1).
+- **Kozlowski, A. C., & Murphy, J. P.** (2021). Issue alignment and partisanship
+  in the American public: Revisiting the "partisans without constraint" thesis.
+  *Social Science Research* 94:102498. — Documents a marked rise in
+  inter-attitude correlation 2004–2016, revising B&G's picture. Anchors the
+  **constraint-slope target** the S2 emergent operator must reproduce (rate
+  prior for bounded collapse).
+- **Hare, C.** (2022). Constrained citizens? Ideological structure and conflict
+  extension in the US electorate, 1980–2016. *BJPS* 52:1602. — Dynamic IRT:
+  mass attitudes became markedly more structured via conflict extension.
+  Companion constraint-trend target to Kozlowski & Murphy. *(Correction logged
+  at T0.2: the MHV planning docs cited "Kozlowski et al., Constrained
+  Citizens?" — that title is Hare's; the two papers are split here.)*
+
 ## 3. Intervention literature (X1–X7)
 
 Full envelopes, mismatch analyses, and knob-level provenance tags live in
@@ -182,7 +237,7 @@ This is the compact map of which sources anchor which lever. Measured buckets:
 
 | Lever | Mechanism | Primary anchors | Supporting / envelope |
 |---|---|---|---|
-| **X1** Show the other side | `BacklashRepulsion` + identity weight | Bail 2018 (backfire) | Combs et al. 2023 (anonymous reduces); Mutz 2018 (threat); Settle 2018; Levendusky & Stecula 2021; Yeomans et al. 2020 |
+| **X1** Show the other side | `BacklashRepulsion` + identity weight | Bail 2018 (backfire) — **grade LOW/CONTESTED (T0.2)** | Combs et al. 2023 (anonymous reduces); Mutz 2018 (threat); Settle 2018; Levendusky & Stecula 2021; Yeomans et al. 2020. **Counterweights:** Guess & Coppock 2020 (*BJPS* 50:1497 — no backlash in 3 experiments); Wood & Porter 2019 (*Political Behavior* 41:135 — backfire "elusive" across 52 issues, 10k+ subjects). These two anchor the LOW/CONTESTED grade on X1's backfire reading (methods.md §5.13); beside it sits the 99.8% affect-gate firing rate (methods.md §5.4.bis). |
 | **X2** Fix the algorithm | `BC.affect_weight = 0` (null) | Guess et al. 2023 (Meta-2020); Allcott et al. 2024 | Stray 2022 (bridging, theoretical); Hangartner et al. 2021; Munger 2017 |
 | **X3** Quit cable news | zero Fox/MSNBC `media_diet` | Allcott et al. 2020 (quit-analogue); Levendusky 2013 | Broockman & Kalla 2024 (switching, X3b candidate); DellaVigna & Kaplan 2007; Levendusky & Malhotra 2016 |
 | **X4** Bipartisan dialogue | identity-prime + threat reset | Voelkel et al. 2024 (best single anchor); Levendusky 2018 | Bursztyn & Yang 2023; Santoro & Broockman 2022; Kalla & Broockman 2020; Mutz 2006; Levendusky 2021; Mason 2018 (resistance) |
@@ -241,6 +296,14 @@ Ahler & Sood 2018, Druckman 2022, Lees & Cikara 2020, Enos 2014, Paluck et al.
 2021, McGhee & Shor 2017, Reilly 2018, DellaVigna & Kaplan 2007, Hangartner
 2021, Munger 2017, Settle 2018, Bursztyn & Yang 2023, Gidron/Adams/Horne 2020,
 Moore-Berg 2020, Finkel 2020, Guess 2023, Nyhan 2023, Allcott 2020.
+
+Verified at MHV T0.2 (2026-06, DOI-pinned): DellaPosta 2020 (*ASR* 85:507),
+Guess & Coppock 2020 (*BJPS* 50:1497), Wood & Porter 2019 (*Political
+Behavior* 41:135), Boutyline & Vaisey 2017 (*AJS* 122:1371), Treier &
+Hillygus 2009 (*POQ* 73:679), Bonica 2014 (*AJPS* 58:367) + DIME v4.0,
+Kozlowski & Murphy 2021 (*SSR* 94:102498), Hare 2022 (*BJPS* 52:1602),
+Baldassarri & Gelman 2008 (*AJS* 114:408). Note the §2.8 correction: the
+title "Constrained Citizens?" belongs to Hare 2022, not Kozlowski.
 
 **Pending venue/year verification** (flagged in redesign_briefs.md §"Citation
 verification TODO" — pin before treating as load-bearing): Voelkel et al. 2024
