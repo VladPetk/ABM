@@ -760,15 +760,28 @@ histogram across `FJ_ALPHA ∈ {0.02, 0.05, 0.08, 0.10}`:
 
 | α | <0.20 | [0.20, 0.50) | ≥0.80 |
 |---|---|---|---|
-| 0.02 | 0.023 | **0.974** | 0.000 |
-| 0.05 (default) | 0.019 | **0.931** | 0.001 |
-| 0.08 | 0.014 | 0.836 | 0.002 |
-| 0.10 | 0.011 | 0.773 | 0.005 |
+| 0.02 | 0.048 | **0.944** | 0.000 |
+| 0.05 (default) | 0.030 | **0.901** | 0.000 |
+| 0.08 | 0.023 | 0.821 | 0.005 |
+| 0.10 | 0.019 | 0.756 | 0.011 |
+| 0.14 (arc effective) | 0.019 | 0.647 | 0.023 |
 
 The no-collapse property (mid-band fraction > 0.85, extreme fraction
 < 0.02) holds at α ∈ {0.02, 0.05}; the band loosens at α=0.08 (still
 no-collapse but fewer agents in the mid-band) and looser still at
 α=0.10. The default α=0.05 is the comfortable middle.
+
+*MHV T0.6 (2026-06) re-run + extension.* The table above is the
+2026-06 re-run (12 seeds); the α ≤ 0.10 rows shifted slightly vs the
+original Phase 7 run (engine evolution since, with the pillar
+re-blessed along the way) — the default-α no-collapse guard in
+`tests/test_phase7.py` still passes. The new **α = 0.14** row is the
+historical arc's *effective* α (0.05 × `fj_alpha_scale` 2.8, §5.15):
+the strict pillar band does not hold there — mid-band 0.647, extremes
+2.3% — but the failure direction is "agents held spread at their FJ
+anchors" (center fraction 1.9%, no consensus collapse), which is the
+*intended* effect of the lifetime-mover pinning. Flagged honestly: the
+arc operates outside the pillar's documented comfortable band.
 
 ### 5.5 INVOLUNTARY_PER_AGENT sweep
 
@@ -1171,6 +1184,44 @@ block — its design purpose — and the mega-identity multiplier, net
 shrinkages 0.37/0.44), a real mass-channel substitution ridge
 (party-pull ↔ identity-pull), and the bounded-confidence strength
 uninformative because the shipped value is effectively off (T0.6).
+
+### 5.17 MHV T0.6 — de-saturation attempt: STOP-by-finding (2026-06)
+
+The shipped operating point sits on three saturations (elite centroids
+corner-pinned at ±1 from **1996** onward, every seed; 28.5 % of
+partisans at the −1 affect floor by 2025; bounded-confidence influence
+effectively off at strength 0.015). A pre-registered re-pick attempt
+under a user-adopted acceptance gate (ANES scorecard ≥ 18/24, cloud
+distance within 15 % of shipped, headline anchors no-regress, plus the
+de-saturation goals) **found no passing interior point and stopped
+without changing the shipped configuration**. The three structural
+findings, each now an evidence-backed requirement on the MHV rebuild
+stages rather than a knob change:
+
+1. **The elite corner-pin is not fixable by the drift multiplier.**
+   Lowering it makes the DW-NOMINATE shape residual *worse* (2.75 →
+   17.3 at 1.0×) and only delays the pin — the drift schedule
+   integrates without bound, and the shipped 3.0× scores best precisely
+   because early pinning mimics the empirical late deceleration. Fix:
+   a data-fed elite position series (NOMINATE dim 1), already planned.
+2. **The affect floor trades one-for-one against the current affect
+   bands**, which were calibrated against the over-cooled baseline;
+   the floor cannot come down until the bands are re-derived from the
+   raw ANES thermometer (a validated, not-yet-applied recalibration).
+3. **BC can be woken** (ε 0.40, strength 0.03 → ~2.9× effective gain,
+   within-party SD essentially unchanged) at a small scorecard cost;
+   deferred into the substrate rebuild rather than shipped as a lone
+   knob flip.
+
+The de-saturated *diagnostic* point also answered the open
+identifiability question from the external math review: the
+party-pull ↔ identity-pull substitution ridge persists essentially
+unchanged off the corner (cosine 0.67 vs 0.63–0.68 shipped) — the
+ridge is **intrinsic to mass-position observables**, not a saturation
+artifact, and a new honest trade-off pair (BC strength ↔ noise σ,
+cosine ≈ −0.65) appears once BC is awake. Breaking these ridges
+requires different facts (the elite block; multi-wave curvature), not
+a different operating point.
 
 ---
 

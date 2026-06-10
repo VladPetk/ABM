@@ -133,7 +133,10 @@ def sweep_fj_alpha():
     """Position-histogram at end-of-S4 across FJ_ALPHA values."""
     print("\n[5.3] FJ_ALPHA sweep — no-collapse property")
 
-    for fj_alpha in (0.02, 0.05, 0.08, 0.10):
+    # 0.14 added at MHV T0.6: the shipped historical arc runs an effective
+    # alpha = 0.05 x fj_alpha_scale 2.8 = 0.14 (methods.md §5.15), which sat
+    # outside the documented sweep range — the queued T0.4 honesty flag.
+    for fj_alpha in (0.02, 0.05, 0.08, 0.10, 0.14):
         radii_all = []
         for seed in SEEDS:
             eng = build_engine(seed=seed, n_agents=N)

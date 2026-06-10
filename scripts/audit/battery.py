@@ -88,9 +88,11 @@ def _apply_params(theta):
     return ov
 
 
-def run_arc_rich(theta, seed):
+def run_arc_rich(theta, seed, extra_overrides=None):
     """Run the shipped arc with parameter vector theta; return
-    (series ndarray [T+1, n_macro], final_state dict)."""
+    (series ndarray [T+1, n_macro], final_state dict). extra_overrides
+    (dict) lets a caller pin non-PARAMS kwargs (T0.6 interior-point
+    ridge re-run: tier_c_bc_epsilon)."""
     from abm.pillars.historical_arc import build_engine, build_schedule
     from abm.pillars.schedule import run_to
     from abm.metrics.affective import affective_polarization, ideological_constraint, sorting_index
@@ -98,6 +100,8 @@ def run_arc_rich(theta, seed):
     from abm.metrics.network import party_modularity, cross_cutting_tie_fraction
 
     ov = _apply_params(theta)
+    if extra_overrides:
+        ov.update(extra_overrides)
 
     eng = build_engine(seed=seed, **ov)
     sched = build_schedule(faction_anchor_events=True,
@@ -610,4 +614,13 @@ def battery_worker(arg):
     """arg = (theta_tuple, seed). Returns (theta_tuple, seed, {stat: val})."""
     theta, seed = arg
     series, final = run_arc_rich(np.array(theta, float), seed)
+    return (theta, seed, compute_battery(series, final))
+
+
+def battery_worker_extra(arg):
+    """arg = (theta_tuple, seed, extra_items_tuple). Like battery_worker
+    but with pinned non-PARAMS kwargs (T0.6 interior-point analysis)."""
+    theta, seed, extra = arg
+    series, final = run_arc_rich(np.array(theta, float), seed,
+                                 extra_overrides=dict(extra))
     return (theta, seed, compute_battery(series, final))
