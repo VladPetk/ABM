@@ -122,8 +122,24 @@ def build_runtime(loadings: dict) -> dict:
     lift_map[y_idx] = 1
     sd_pooled = np.asarray(
         loadings.get("pooled", {}).get("item_sds", np.ones(D)), dtype=float)
+    # MHV S2 T2.4 — frozen party-gap axis for the measured-alignment
+    # readout: u = (rep − dem)/||rep − dem|| item means, m = the midpoint.
+    # Frozen DATA (the 1986 wave the loadings were built from), never
+    # re-fit from the running population — the per-item gap signs are not
+    # uniform (VCF0838's 1986 gap is inverted), which is why a naive
+    # sign-mean would mis-measure. Degenerate gap (the D=2 identity
+    # loadings: dem == rep == 0) → align_u None → the readout is off.
+    _dem = np.asarray(loadings["party_conditional"]["dem"]["item_means"],
+                      dtype=float)
+    _rep = np.asarray(loadings["party_conditional"]["rep"]["item_means"],
+                      dtype=float)
+    _gap = _rep - _dem
+    _gn = float(np.linalg.norm(_gap))
+    align_u = (_gap / _gn) if _gn > 1e-12 else None
+    align_m = (_rep + _dem) / 2.0
     return {"D": D, "x_idx": x_idx, "y_idx": y_idx, "lift_map": lift_map,
-            "chol": chol_corr(loadings), "sd_pooled": sd_pooled}
+            "chol": chol_corr(loadings), "sd_pooled": sd_pooled,
+            "align_u": align_u, "align_m": align_m}
 
 
 def lift(xy: np.ndarray, rt: dict) -> np.ndarray:

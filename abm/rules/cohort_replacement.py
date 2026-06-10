@@ -393,16 +393,33 @@ def _replace_agent_inplace(
     # the explicit stacking state starts at the period level rather than
     # inheriting the prior occupant's value. Regrade-only (the attr does
     # not exist on the default path → bit-identical).
+    # MHV S2 T2.4: on the emergent path the attr is a MEASURED readout —
+    # reseed it with the exact MeasuredAlignment formula on the new
+    # occupant's state (new identities + new issue vector), so the value
+    # is consistent the moment the person exists rather than one tick
+    # later. Falls through to the legacy seeding formula otherwise.
     if _regrade:
-        _centers = env.attrs.get("party_identity_centers") or {}
-        _c = _centers.get(new_party)
-        if _c is None:
-            _sign = 1.0 if new_party == 1 else -1.0
-        else:
-            _sign = 1.0 if float(np.mean(np.asarray(_c))) >= 0.0 else -1.0
-        agent.state.attrs["identity_alignment"] = float(
-            np.clip(np.mean(new_identities * _sign), 0.0, 1.0)
-        )
+        _measured = None
+        if env.attrs.get("constraint_emergent"):
+            from .measured_alignment import measure_alignment
+            _measured = measure_alignment(
+                new_identities, new_party,
+                agent.state.attrs.get("issues"),
+                env.attrs.get("party_identity_centers"),
+                env.attrs.get("issue_runtime") or {},
+            )
+        if _measured is not None:
+            agent.state.attrs["identity_alignment"] = _measured
+        elif not env.attrs.get("constraint_emergent"):
+            _centers = env.attrs.get("party_identity_centers") or {}
+            _c = _centers.get(new_party)
+            if _c is None:
+                _sign = 1.0 if new_party == 1 else -1.0
+            else:
+                _sign = 1.0 if float(np.mean(np.asarray(_c))) >= 0.0 else -1.0
+            agent.state.attrs["identity_alignment"] = float(
+                np.clip(np.mean(new_identities * _sign), 0.0, 1.0)
+            )
     agent.state.attrs["affect"] = new_affect
     agent.state.attrs["anchor"] = new_anchor
     agent.state.attrs["origin"] = new_pos.copy()

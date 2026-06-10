@@ -241,7 +241,14 @@ def _x1_setup(engine):
             backlash.threat_amplification = float(
                 X1_THREAT_AMPLIFICATION_BOOSTED
             )
-    if affect is not None and hasattr(affect, "identity_weight"):
+    # MHV S2 T2.4: the dyadic identity-distance valence term is retired on
+    # the emergent-constraint path (identity_weight built at 0.0 — identity
+    # reaches affect only through the measured alignment). Boosting it to
+    # 0.6 there would resurrect a retired coupling mid-window, so the X1
+    # identity lever is skipped; its emergent-mode re-mechanization (e.g.
+    # via identity_alignment_affect_weight) is an S4 re-measure item.
+    if (affect is not None and hasattr(affect, "identity_weight")
+            and not engine.env.attrs.get("constraint_emergent")):
         reverts.append((
             affect, "identity_weight",
             float(affect.identity_weight),

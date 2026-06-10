@@ -1340,6 +1340,64 @@ simply closer together). Prior center for the rate: **0.02** (residual
 σ 0.01) — kwarg default stays 0.0 (off); S4 fits the rate against the
 B&G/Kozlowski constraint-slope targets.
 
+### 5.21 MHV S2 T2.4 — measured identity alignment (M3-light) (2026-06)
+
+The identity cluster was one latent wearing five hats (the parallel
+reviews' construct census): `IdentitySorting` moved the `identities`
+vector on a schedule; the `IdentityAlignment` rule relaxed a scalar
+projection of that vector; `IdentityToIdeologyPull` pulled positions
+toward its mean; `AffectiveUpdate` read the vector again as a dyadic
+`identity_term` *and* multiplied animus by the scalar (`align_factor`);
+`MediatedAnimus` multiplied by the same scalar once more. T2.4 collapses
+this, on the emergent-constraint path, to **exactly two identity
+couplings**: **identity→issues** (`IdentityToIdeologyPull`, unchanged)
+and **identity→affect** (one quantity — the measured
+`identity_alignment` — read by `MediatedAnimus` and `align_factor`
+through the same attr name, unchanged consumers).
+
+`identity_alignment` is no longer a relaxed stock; it is a **measured
+per-agent readout of current state** (`abm/rules/measured_alignment.py`,
+maintained through the ordinary delta pipeline):
+
+> `align = sqrt( clip(sign_p·mean(identities), 0, 1) ×
+> clip(p·((v − m)·u), 0, 1) )`
+
+where `u`, `m` are the **frozen 1986 party-gap axis and midpoint** over
+the seven issue items (from `data/mhv/issue_loadings.json` — measured
+data, never re-fit from the running population; the per-item gap signs
+are not uniform, e.g. VCF0838's 1986 gap is inverted, which is why a
+naive sign-mean would mis-measure). Geometric mean of identity stacking
+× issue-package stacking: the Mason construct is *both* pointing at the
+same party pole. Construct **L** (Mason 2018; the measured-not-imposed
+discipline is DellaPosta 2020's); the formula itself **N**, pinned
+exactly by `tests/test_t24_measured_alignment.py`. The `identities`
+vector becomes a slow endowment (changed only by generational
+turnover), which retires the weakest within-person claim — survivors'
+identities re-sorting on a hand-drawn schedule.
+
+Consequences, measured (`scripts/audit/t24_alignment_trace.py`, 8
+seeds): emergent alignment runs **0.21 → 0.31**, carried entirely by
+the issue factor (0.41 → 0.63) — real sorting, zero schedule — vs the
+legacy spine's 0.21 → 0.41, roughly half of which the freeze test had
+attributed to schedule. The measured construct needs its **own
+empirical anchor at S4** (the old 0.35–0.45 band was authored against
+the relaxed-stock definition and doesn't transfer). Emergent affect
+also runs cooler early (coupling pinned at 1.0 from 1980 + the dyadic
+identity term retired) — the same hotter-start shape as §5.20, owned by
+the S3 data-fed series and the T2.6 re-pick.
+
+Guard rails: `IDENTITY_ALIGNMENT` shocks raise on the emergent path (an
+additive bump to a measurement would be silently erased next tick —
+shock the underlying identities/issues/affect instead); X1's
+`identity_weight` 0.5→0.6 lever is skipped there (it would resurrect
+the retired dyadic coupling mid-window; its emergent-mode
+re-mechanization is an S4 re-measure item); the sandbox identity dial
+has nothing to scale on this path (a measurement is not a force) and is
+inert pending the S5 dial re-map. Cohort replacement reseeds arrivals
+with the same measured formula; legacy paths are bit-identical
+(IdentityAlignment, the seeding formula, and `identity_weight=0.5` all
+unchanged when `constraint_rate=0`).
+
 ---
 
 ## 6. What the model is for

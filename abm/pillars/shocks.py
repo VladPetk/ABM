@@ -416,6 +416,17 @@ def make_shock_event(spec: ShockSpec):
             )
             kind = "transient_scalar"
         else:  # IDENTITY_ALIGNMENT
+            # MHV S2 T2.4: on the emergent path `identity_alignment` is a
+            # MEASURED readout — an additive bump would be silently erased
+            # by the next tick's measurement. Refuse loudly: shock the
+            # underlying state (identities / issues / affect) instead.
+            if engine.env.attrs.get("constraint_emergent"):
+                raise ValueError(
+                    "IDENTITY_ALIGNMENT shocks are incompatible with the "
+                    "emergent-constraint path (T2.4: alignment is a measured "
+                    "readout, not a stock) — target the underlying "
+                    "identities/issues/affect state instead"
+                )
             residual = _apply_threat_or_alignment(
                 engine, spec, target_ids, "identity_alignment"
             )

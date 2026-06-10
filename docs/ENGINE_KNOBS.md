@@ -328,7 +328,11 @@ each tick so the state accretes. `AffectiveUpdate` reads it to amplify
 out-party animus for stacked agents. **Self-gates on
 `env.attrs["evidence_regrade"]` — returns an empty delta WITHOUT drawing
 rng when off, so the default path is bit-identical** (rule present but
-inert). In the historical-arc pipeline only.
+inert). In the historical-arc pipeline only. **MHV S2 T2.4: on the
+emergent-constraint path (`constraint_rate > 0`) this rule is retired —
+`identity_alignment` is a measured readout there (`MeasuredAlignment`; see
+the MHV S2 paragraphs at the end of §5, and methods §5.21); everything in
+this section describes the legacy path.**
 
 | Rule | Key knob | Default | Range | Used by |
 |---|---|---|---|---|
@@ -563,6 +567,18 @@ and `PARTY_ISSUE_COUPLING_SCHEDULE` are retired on this path (coupling
 pinned 1.0). `constraint_resid_sigma` is the within-block residual noise —
 the dispersion counterweight (compass-invisible; zero at D=2). Prior center
 0.02 / 0.01 (S4 fits); methods.md §5.20.
+
+**MHV S2 (T2.4, M3-light), same path:** `identity_alignment` becomes a
+**measured readout** — `MeasuredAlignment` (`abm/rules/measured_alignment.py`)
+replaces the `IdentityAlignment` relaxation; the formula (geometric mean of
+identity stacking × issue-package stacking along the frozen 1986 party-gap
+axis) is pinned by `tests/test_t24_measured_alignment.py`. The dyadic
+identity-distance valence term retires (`AffectiveUpdate.identity_weight`
+built at 0.0; identity reaches affect only through the measured alignment,
+read by `align_factor` + `MediatedAnimus` unchanged). `IDENTITY_ALIGNMENT`
+shocks raise on this path; X1's `identity_weight` lever is skipped (S4
+re-mechanization item); `sandbox_identity_mult` is inert here (a
+measurement is not a force — S5 dial re-map pending). methods.md §5.21.
 
 ---
 

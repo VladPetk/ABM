@@ -51,6 +51,7 @@ from ..rules.intervention_expiry import (
     X1ExposureExpiry,
 )
 from ..rules.identity_alignment import IdentityAlignment
+from ..rules.measured_alignment import MeasuredAlignment, measure_alignment
 from ..rules.constraint_op import ConstraintOp
 from ..rules.identity_sorting import IdentitySorting
 from ..rules.identity_to_position import IdentityToIdeologyPull
@@ -1284,11 +1285,22 @@ def build_engine(
             if a.id in _protected:
                 a.state.attrs["do_not_replace"] = True
 
+    # MHV S2 T2.3/T2.4 — the emergent-constraint master flag, needed from
+    # seeding onward (T2.4: the alignment state is seeded MEASURED on this
+    # path, after the issue vectors exist).
+    _emergent = float(constraint_rate) > 0.0
+    if _emergent and n_issues is None:
+        raise ValueError("constraint_rate > 0 requires n_issues (the "
+                         "emergent ConstraintOp works on issue vectors)")
+
     # Step 1 (web_demo evidence re-grade, D3b): seed the explicit
     # identity-alignment state from the 1980 identities so it exists at
     # tick 0 (the IdentityAlignment rule then relaxes it each tick).
     # Gated → no attr added on the default path → bit-identical.
-    if evidence_regrade:
+    # MHV S2 T2.4: on the emergent path the stock+relaxation design is
+    # retired — alignment is seeded (and maintained) as the MEASURED
+    # readout instead, below, once the issue vectors exist.
+    if evidence_regrade and not _emergent:
         for a in agents:
             party = a.state.attrs.get("party")
             if party is None or party == 2:
@@ -1348,6 +1360,24 @@ def build_engine(
                 a.state.ideology = _proj[_k].copy()
                 a.state.attrs["anchor"] = _proj[_k].copy()
                 a.state.attrs["origin"] = _proj[_k].copy()
+        _issue_runtime = build_runtime(_loadings)
+        # MHV S2 T2.4 (M3-light): on the emergent path, seed the alignment
+        # state as the MEASURED readout of the seeded state — the exact
+        # formula MeasuredAlignment maintains each tick. Requires the
+        # empirical party-gap axis (align_u); the D=2 identity loadings
+        # have none, so that path carries no alignment channel (documented
+        # in the rule module).
+        if _emergent and _issue_runtime.get("align_u") is not None:
+            for a in agents:
+                _ma = measure_alignment(
+                    a.state.attrs.get("identities"),
+                    a.state.attrs.get("party"),
+                    a.state.attrs.get("issues"),
+                    party_identity_centers,
+                    _issue_runtime,
+                )
+                if _ma is not None:
+                    a.state.attrs["identity_alignment"] = _ma
 
     network = Network.homophilous(
         agents,
@@ -1546,17 +1576,14 @@ def build_engine(
     # the main stream. Momentum (a retired presentation-era knob) is not
     # supported together with issues mode.
     if n_issues is not None:
-        from ..core.issues import build_runtime as _build_runtime
         if float(momentum) != 0.0:
             raise ValueError("momentum > 0 is not supported with n_issues "
                              "(momentum was retired to the repack display "
                              "EMA at MHV T0.4)")
-        env.attrs["issue_runtime"] = _build_runtime(_loadings)
+        env.attrs["issue_runtime"] = _issue_runtime
         env.attrs["issue_rng"] = _issue_rng
-    _emergent = float(constraint_rate) > 0.0
-    if _emergent and n_issues is None:
-        raise ValueError("constraint_rate > 0 requires n_issues (the "
-                         "emergent ConstraintOp works on issue vectors)")
+    # `_emergent` is defined just before the seeding blocks (T2.4 needs it
+    # there); the env flag is what the rules / events / shocks read.
     env.attrs["constraint_emergent"] = _emergent
     if _emergent:
         # retire the coupling schedule on this path: pin at 1.0; the
@@ -1607,7 +1634,13 @@ def build_engine(
         # remains negative-going via the Phase 5 sign fix.
         AffectiveUpdate(
             radius=1.5, learning_rate=0.01,
-            identity_weight=0.5, baseline=0.0,   # 8f §1.1: 0.10 → 0.0
+            # MHV S2 T2.4 (M3-light): on the emergent path the dyadic
+            # identity-distance valence term retires — identity reaches
+            # affect through exactly ONE quantity, the measured
+            # `identity_alignment` (align_factor here + MediatedAnimus).
+            # Legacy path keeps the Phase 5 weight 0.5, bit-identical.
+            identity_weight=(0.0 if _emergent else 0.5),
+            baseline=0.0,   # 8f §1.1: 0.10 → 0.0
             cooperative_mute=COOPERATIVE_MUTE,
             # Phase 9 §11.7-G — soft affect saturation. The hard clip
             # at ±1 was producing step-function-like cooling that
@@ -1658,7 +1691,16 @@ def build_engine(
         # (the rule is present but inert). When on, it maintains the
         # per-agent `identity_alignment` scalar that AffectiveUpdate
         # reads to amplify out-party animus for stacked agents.
-        IdentityAlignment(rate=0.10 * sandbox_identity_mult),   # sandbox dial (1.0 = no-op)
+        # MHV S2 T2.4 (M3-light): on the emergent path the relaxed-stock
+        # design retires — `identity_alignment` becomes a MEASURED
+        # readout (MeasuredAlignment; formula in measured_alignment.py),
+        # maintained through the same delta pipeline and read by the
+        # same consumers through the same attr name. Note the sandbox
+        # identity dial has nothing to scale on this path (a measurement
+        # is not a force) — it is inert pending the S5 dial re-map.
+        *((MeasuredAlignment(),)
+          if _emergent else
+          (IdentityAlignment(rate=0.10 * sandbox_identity_mult),)),   # sandbox dial (1.0 = no-op)
         BacklashRepulsion(
             epsilon=0.30, max_range=1.5, strength=0.0,
             affect_threshold=BACKLASH_AFFECT_THRESHOLD,
