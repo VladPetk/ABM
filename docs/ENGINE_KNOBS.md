@@ -541,14 +541,18 @@ New no-op-by-default kwargs added for v2: `tier_c_bc_epsilon` (None → ε scale
 `sandbox_animus_mult` / `sandbox_rewire_mult` kwargs remain in the signature
 (still default-1.0 no-ops) but are no longer wired to a sandbox dial.
 
-**MHV S2 (T2.1): `n_issues`** (default None → no-op). When set, every agent
-gets an `issues` vector (attrs `issues`, shape `(n_issues,)`) seeded from the
-frozen ANES loadings file (`data/mhv/issue_loadings.json`; kernels in
-`abm/core/issues.py`). Valid values: **7** (the real-data ANES battery) and
-**2** (the I1 identity-reduction path). T2.1 wiring is **dormant** — no rule
-reads the vector, seeding uses a dedicated rng stream, and the trajectory is
-bit-identical with or without it (pinned by `tests/test_t21_issue_state.py`).
-T2.2 switches the rule kernels onto this state; methods.md §5.18.
+**MHV S2 (T2.1/T2.2): `n_issues`** (default None → no-op). When set, the
+position substrate becomes a D-dim `issues` vector (attrs `issues`) seeded
+from the frozen ANES loadings file (`data/mhv/issue_loadings.json`; kernels
+in `abm/core/issues.py`) and `ideology` becomes its cached block-means
+projection — the BC / PartyPull / Media / Noise / FJ-anchor / Backlash
+kernels run natively in issue space (RMS distance `‖Δv‖·√(2/D)`), legacy
+emitters are lifted at the apply site. Valid values: **7** (the real-data
+ANES battery — the live S2 IC with native wrong-side tails; T0.4's soft cap
+is bypassed on this path) and **2** (the I1 reduction: trajectory
+bit-identical to the plain 2D run, pinned by test). Not compatible with
+`momentum` (retired). No shipped preset sets it yet — the canonical flip is
+the S2 arc re-pick. methods.md §5.18–5.19.
 
 ---
 

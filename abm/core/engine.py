@@ -18,6 +18,7 @@ import numpy as np
 
 from .agent import Agent
 from .environment import Environment
+from .issues import lift, project1
 from .rules import EnvRule, RulePipeline, merge_attr
 from .space import ContinuousSpace2D
 from .state import StateDelta
@@ -64,8 +65,32 @@ class Engine:
         # step as prev_delta so momentum can't accumulate past the
         # compass boundary.
         momentum = float(self.env.attrs.get("momentum", 0.0))
+        # MHV S2 T2.2 — live issues mode. When the env carries the issue
+        # runtime, position state lives in attrs["issues"] (D-dim) and
+        # `ideology` is its cached block-means projection. Native rules
+        # emit d_attrs["issues"]; legacy rules still emit d_ideology,
+        # which is LIFTED (block-broadcast) onto the items — a lifted
+        # delta moves the projection by exactly that delta, so legacy
+        # emitters keep their semantics unchanged. At D=2 lift and
+        # projection are identities and the arithmetic below reproduces
+        # the plain path bit-for-bit (invariant I1). Momentum is a
+        # retired presentation-era knob (always 0.0 on canonical paths)
+        # and is not supported together with issues mode.
+        _rt = self.env.attrs.get("issue_runtime")
         for agent in self.agents:
             d = deltas[agent.id]
+            _v = agent.state.attrs.get("issues") if _rt is not None else None
+            if _v is not None:
+                step = lift(d.d_ideology, _rt)
+                dv = d.d_attrs.pop("issues", None)
+                if dv is not None:
+                    step = step + dv
+                v_new = np.clip(_v + step, -1.0, 1.0)
+                agent.state.attrs["issues"] = v_new
+                agent.state.ideology = project1(v_new, _rt)
+                for k, v in d.d_attrs.items():
+                    agent.state.attrs[k] = merge_attr(agent.state.attrs.get(k), v)
+                continue
             if momentum:
                 prev = agent.state.attrs.get("prev_delta")
                 step = d.d_ideology

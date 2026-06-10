@@ -18,6 +18,7 @@ from __future__ import annotations
 import numpy as np
 
 from ..core.agent import Agent
+from ..core.issues import issues_of, lift
 from ..core.environment import Environment
 from ..core.space import ContinuousSpace2D
 from ..core.state import StateDelta
@@ -60,6 +61,18 @@ class GaussianNoise:
     ) -> StateDelta:
         s = float(agent.state.attrs.get("stubbornness", 0.0))
         anchor = agent.state.attrs.get("anchor")
+        # MHV S2 T2.2 — native D-dim path. Noise stays an AXIS-level
+        # draw lifted onto the items (same rng consumption as the 2D
+        # path — the sigma is calibrated as axis dispersion; item-level
+        # idiosyncratic noise is a T2.3 design question, part of the
+        # bounded-collapse dynamics). The FJ anchor pull goes native:
+        # agents anchor to their initial ITEM positions
+        # (attrs["anchor_issues"], seeded at build/replacement). At D=2
+        # lift is the identity and anchor_issues equals the 2D anchor,
+        # so the reduction is bit-exact.
+        _v = issues_of(agent, env)
+        if _v is not None:
+            anchor = agent.state.attrs.get("anchor_issues")
         # Phase 8b M1: per-agent fj_alpha heterogeneity (engaged
         # partisans more anchored; Achen & Bartels 2016). Falls back
         # to env-level fj_alpha if per-agent not set — bit-identical
@@ -77,6 +90,9 @@ class GaussianNoise:
                 return StateDelta()
             # Anchor pull still fires even when noise is off — F1 is
             # structural, not noise-coupled.
+            if _v is not None:
+                return StateDelta(
+                    d_attrs={"issues": alpha * s * (anchor - _v)})
             return StateDelta(
                 d_ideology=alpha * s * (anchor - agent.state.ideology)
             )
@@ -100,6 +116,12 @@ class GaussianNoise:
                 sx * u,
                 sy * (r * u + float(np.sqrt(max(0.0, 1.0 - r * r))) * v),
             ])
+        if _v is not None:
+            rt = env.attrs["issue_runtime"]
+            if not fj_active:
+                return StateDelta(d_attrs={"issues": lift(noise, rt)})
+            return StateDelta(d_attrs={"issues": (
+                lift((1.0 - s) * noise, rt) + alpha * s * (anchor - _v))})
         if not fj_active:
             return StateDelta(d_ideology=noise)
         # Brownian motion scales with mobility (1 - s); anchor pull adds

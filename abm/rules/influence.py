@@ -30,6 +30,7 @@ import numpy as np
 
 from ..core.agent import Agent
 from ..core.environment import Environment
+from ..core.issues import issues_of, rms_distance
 from ..core.network import neighbor_agents
 from ..core.space import ContinuousSpace2D
 from ..core.state import StateDelta
@@ -63,7 +64,16 @@ class BoundedConfidenceInfluence:
         neighbours = neighbor_agents(agent, space, env)
         if not neighbours:
             return StateDelta()
-        my_ide = agent.state.ideology
+        # MHV S2 T2.2 — native D-dim path. In live issues mode the rule
+        # measures distances and averages targets over the FULL issue
+        # vectors (RMS distance convention), emitting d_attrs["issues"].
+        # At D=2 every quantity below is arithmetically identical to the
+        # 2D path (rms factor = 1.0 exactly; vectors == ideology), so the
+        # reduction is bit-exact. Legacy scenarios (no issue runtime)
+        # never enter this branch.
+        from ..core.issues import issues_of, rms_distance
+        my_issues = issues_of(agent, env)
+        my_ide = my_issues if my_issues is not None else agent.state.ideology
         # Phase 8b M1: per-agent epsilon heterogeneity (engaged-partisan
         # fat-tail; Taber & Lodge 2006). Falls back to the rule's
         # `self.epsilon` for any scenario that doesn't seed per-agent
@@ -87,18 +97,29 @@ class BoundedConfidenceInfluence:
                     "filter, not the hard-cutoff branch). Set temperature "
                     "before enabling affect_weight."
                 )
-            within = [
-                n.state.ideology
-                for n in neighbours
-                if np.linalg.norm(my_ide - n.state.ideology) <= epsilon
-            ]
+            if my_issues is not None:
+                within = [
+                    n.state.attrs["issues"]
+                    for n in neighbours
+                    if rms_distance(my_issues, n.state.attrs["issues"]) <= epsilon
+                ]
+            else:
+                within = [
+                    n.state.ideology
+                    for n in neighbours
+                    if np.linalg.norm(my_ide - n.state.ideology) <= epsilon
+                ]
             if not within:
                 return StateDelta()
             target = np.mean(within, axis=0)
         else:
             # Graded logistic filter — pillar opt-in (Phase 4 F2).
-            positions = np.array([n.state.ideology for n in neighbours])
-            ds = np.linalg.norm(positions - my_ide, axis=1)
+            if my_issues is not None:
+                positions = np.array([n.state.attrs["issues"] for n in neighbours])
+                ds = rms_distance(positions, my_issues)
+            else:
+                positions = np.array([n.state.ideology for n in neighbours])
+                ds = np.linalg.norm(positions - my_ide, axis=1)
             # Clip the exponent to keep np.exp safe under extreme params
             # (e.g. tiny temperature). Logistic saturates well before 50;
             # this is a numerical-safety guard, not a behavioural change.
@@ -138,4 +159,6 @@ class BoundedConfidenceInfluence:
         d = self.strength * (target - my_ide)
         # F1: Friedkin-Johnsen scaling — stubborn agents move less.
         s = float(agent.state.attrs.get("stubbornness", 0.0))
+        if my_issues is not None:
+            return StateDelta(d_attrs={"issues": (1.0 - s) * d})
         return StateDelta(d_ideology=(1.0 - s) * d)

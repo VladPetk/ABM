@@ -35,6 +35,7 @@ from __future__ import annotations
 import numpy as np
 
 from ..core.agent import Agent
+from ..core.issues import issues_of, lift
 from ..core.environment import Environment
 from ..core.space import ContinuousSpace2D
 from ..core.state import StateDelta
@@ -85,6 +86,25 @@ class MediaConsumption:
         # heterogeneity in the diet's effective target, mirroring
         # Phase 8a's party_cue fix to PartyPull.
         media_cue = agent.state.attrs.get("media_cue")
+        # MHV S2 T2.2 — native D-dim path: each (2D) outlet position is
+        # LIFTED (block-broadcast) and pulls every issue toward the
+        # outlet's package position — media frames bundle issues, same
+        # logic as PartyPull's cue-taking. At D=2 lift is the identity
+        # and the arithmetic is bit-identical.
+        v = issues_of(agent, env)
+        if v is not None:
+            rt = env.attrs["issue_runtime"]
+            pull = np.zeros(rt["D"])
+            for outlet_id, weight in diet.items():
+                outlet = outlets.get(outlet_id)
+                if outlet is None:
+                    continue
+                effective_pos = outlet.position
+                if media_cue is not None:
+                    effective_pos = effective_pos + np.asarray(media_cue)
+                pull += weight * (lift(np.asarray(effective_pos, float), rt) - v)
+            s = float(agent.state.attrs.get("stubbornness", 0.0))
+            return StateDelta(d_attrs={"issues": (1.0 - s) * (self.strength * pull)})
         pull = np.zeros(2)
         for outlet_id, weight in diet.items():
             outlet = outlets.get(outlet_id)

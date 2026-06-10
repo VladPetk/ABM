@@ -326,7 +326,21 @@ def _apply_position(engine, spec, target_ids, frac=1.0):
             if spec.axis in (Axis.Y, Axis.BOTH):
                 dvec[1] = sign * m
             new = pos + dvec
-        a.state.ideology = engine.space.clip(new)
+        # MHV S2 T2.2 — issues-mode sync: position state lives in
+        # attrs["issues"] with ideology a cached projection; a direct 2D
+        # write would be silently overwritten at the next apply. Lift the
+        # 2D displacement onto the items instead (an I3-flagged outcome
+        # write either way — S3 re-expresses shocks as typed inputs).
+        _env = getattr(engine, "env", None)   # test shims may lack env
+        _rt = _env.attrs.get("issue_runtime") if _env is not None else None
+        _v = a.state.attrs.get("issues") if _rt is not None else None
+        if _v is not None:
+            from ..core.issues import lift, project1
+            v_new = np.clip(_v + lift(new - pos, _rt), -1.0, 1.0)
+            a.state.attrs["issues"] = v_new
+            a.state.ideology = project1(v_new, _rt)
+        else:
+            a.state.ideology = engine.space.clip(new)
 
 
 def _apply_rule_multiplier(engine, spec):

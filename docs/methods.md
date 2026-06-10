@@ -1256,6 +1256,48 @@ pinned by test).
   the 1986 marginals vs the 3.76%/1.60% 1980–90 pooled targets) — the
   retirement path for the §5.15 soft cap.
 
+### 5.19 MHV S2 T2.2 — issue kernels live (2026-06)
+
+Second S2 increment: the D-dimensional state became the *live* position
+substrate behind `n_issues` (still opt-in; no shipped preset sets it —
+the canonical flip happens at the S2 arc re-pick, together with the BC
+re-pick, so there is exactly one re-bless wave).
+
+- **Apply site** (`Engine.step`): in issues mode the position state is
+  `attrs["issues"]`; `ideology` is its cached block-means projection,
+  recomputed after every apply. Native rules emit `d_attrs["issues"]`;
+  legacy rules still emit `d_ideology`, which is **lifted**
+  (block-broadcast) onto the items — lift is the exact right-inverse of
+  the projection, so a lifted delta moves the compass by exactly that
+  delta and legacy emitters keep their semantics.
+- **Native D-dim kernels:** `BoundedConfidenceInfluence` (RMS distances
+  + targets over full issue vectors, both filter branches),
+  `PartyPull` and `MediaConsumption` (2D cues/outlets lifted; every
+  issue pulled toward the package position — cue-taking bundles issues,
+  the party_pull → constraint catalysis made explicit),
+  `GaussianNoise` (axis-level draws lifted — same rng consumption;
+  item-level idiosyncratic noise is deliberately deferred to the
+  constraint-operator design, where it is part of the bounded-collapse
+  dynamics), the FJ anchor pull (native: agents anchor to initial item
+  positions), `BacklashRepulsion` (RMS ring + item-space push).
+  **Deliberately projection-based:** `AffectiveUpdate` (affect responds
+  to compass-level distance; perceptions are stored 2D; the affect
+  rebuild is M4, out of MHV scope) and `TieRewiring` (shares its metric
+  with the network generator, which is projection-based).
+- **Out-of-pipeline writers synced** (I3-flagged either way; S3
+  re-expresses them): shock position nudges lift their 2D displacement;
+  cohort replacement reseeds a fresh issue vector anchored at the drawn
+  2D position (item residuals from the frozen correlation structure,
+  recentered so the projection is exact; draws from a dedicated rng).
+- **The I1 proof got teeth:** with `n_issues=2` the entire position
+  state flows through the live path (native kernels, lift, projection),
+  and the arc trajectory is **bit-identical** to the plain 2D run over
+  an event-bearing window (`tests/test_t21_issue_state.py`). The D=7
+  live path is guarded by `tests/test_t22_issues_live.py`: the
+  projection-cache invariant holds at <1e-12 over 45 ticks of the full
+  pipeline (events, shocks, replacements), native IC moments in band,
+  momentum rejected (retired knob).
+
 ---
 
 ## 6. What the model is for

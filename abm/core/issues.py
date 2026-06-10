@@ -100,6 +100,65 @@ def rms_distance(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return np.sqrt((diff * diff).sum(axis=-1)) * np.sqrt(2.0 / D)
 
 
+# ---------------------------------------------------------------------------
+# T2.2 live-mode runtime — precomputed index maps the engine and rules use
+# every tick. Stored once in env.attrs["issue_runtime"] by build_engine.
+# ---------------------------------------------------------------------------
+
+def build_runtime(loadings: dict) -> dict:
+    """Precompute the projection/lift index maps for live issues mode.
+
+    lift_map[i] = which compass axis (0=x, 1=y) item i belongs to, so
+    lifting a 2D vector is the O(D) gather `xy[lift_map]`. Lifting adds
+    the axis value to EVERY item of the block, which makes lift the exact
+    right-inverse of the block-means projection: project(lift(xy)) == xy,
+    and a lifted delta moves the projection by exactly that delta. At
+    D=2 both maps are the identity."""
+    ro = loadings["compass_readout"]
+    x_idx = np.asarray(ro["x_idx"], dtype=int)
+    y_idx = np.asarray(ro["y_idx"], dtype=int)
+    D = len(loadings["items"])
+    lift_map = np.zeros(D, dtype=int)
+    lift_map[y_idx] = 1
+    sd_pooled = np.asarray(
+        loadings.get("pooled", {}).get("item_sds", np.ones(D)), dtype=float)
+    return {"D": D, "x_idx": x_idx, "y_idx": y_idx, "lift_map": lift_map,
+            "chol": chol_corr(loadings), "sd_pooled": sd_pooled}
+
+
+def lift(xy: np.ndarray, rt: dict) -> np.ndarray:
+    """2D compass vector -> D-dim issue vector (block-broadcast)."""
+    return np.asarray(xy, dtype=float)[rt["lift_map"]]
+
+
+def project1(v: np.ndarray, rt: dict) -> np.ndarray:
+    """Single agent's issue vector -> 2D compass point (block means)."""
+    return np.array([v[rt["x_idx"]].mean(), v[rt["y_idx"]].mean()])
+
+
+def issues_of(agent, env) -> np.ndarray | None:
+    """The rule-side gate: the agent's issue vector when live mode is on
+    (env carries the runtime) and the agent carries the state, else None
+    (legacy 2D path)."""
+    if "issue_runtime" not in env.attrs:
+        return None
+    return agent.state.attrs.get("issues")
+
+
+def replacement_draw(pos2d: np.ndarray, rt: dict,
+                     rng: np.random.Generator) -> np.ndarray:
+    """Issue vector for a cohort-replacement arrival anchored at a drawn
+    2D position: realistic item-level residuals from the frozen
+    correlation structure, recentered so the projection equals pos2d
+    EXACTLY (the 2D anchored-draw semantics are preserved; the items add
+    within-block texture). At D=2 the residual term cancels identically
+    and this returns pos2d."""
+    z = rng.standard_normal(rt["D"])
+    raw = rt["sd_pooled"] * (rt["chol"] @ z)
+    centered = raw - lift(project1(raw, rt), rt)
+    return np.clip(centered + lift(pos2d, rt), -1.0, 1.0)
+
+
 def identity_loadings_2d() -> dict:
     """Minimal D=2 loadings dict for the I1 reduction path and its tests:
     issue 0 IS the economic axis, issue 1 IS the cultural axis."""

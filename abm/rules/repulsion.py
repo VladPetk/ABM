@@ -32,6 +32,7 @@ import numpy as np
 
 from ..core.agent import Agent
 from ..core.environment import Environment
+from ..core.issues import issues_of, rms_distance
 from ..core.network import neighbor_agents
 from ..core.space import ContinuousSpace2D
 from ..core.state import StateDelta
@@ -97,7 +98,11 @@ class BacklashRepulsion:
 
         own_party = agent.state.attrs.get("party")
         own_affect = agent.state.attrs.get("affect") or {}
-        push = np.zeros(2)
+        # MHV S2 T2.2 — native D-dim path: the repulsion ring test uses
+        # the RMS distance and the push acts on the full issue vectors.
+        # At D=2 both equal the 2D arithmetic bit-for-bit.
+        my_v = issues_of(agent, env)
+        push = np.zeros(2 if my_v is None else len(my_v))
         count = 0
         for n in neighbours:
             other = n.state.attrs.get("party")
@@ -112,8 +117,12 @@ class BacklashRepulsion:
             if warmth >= self.affect_threshold:
                 # Not hot enough — no backfire from this encounter.
                 continue
-            diff = agent.state.ideology - n.state.ideology
-            d = float(np.linalg.norm(diff))
+            if my_v is not None:
+                diff = my_v - n.state.attrs["issues"]
+                d = float(rms_distance(my_v, n.state.attrs["issues"]))
+            else:
+                diff = agent.state.ideology - n.state.ideology
+                d = float(np.linalg.norm(diff))
             # Keep the [epsilon, max_range] ring semantics — too-close =
             # below ideological-distance threshold; too-far = no
             # meaningful exposure (Macy-Flache).
@@ -145,4 +154,6 @@ class BacklashRepulsion:
         d = self.strength * threat_factor * asym_factor * push / count
         # F1: Friedkin-Johnsen scaling — stubborn agents move less.
         s = float(agent.state.attrs.get("stubbornness", 0.0))
+        if my_v is not None:
+            return StateDelta(d_attrs={"issues": (1.0 - s) * d})
         return StateDelta(d_ideology=(1.0 - s) * d)

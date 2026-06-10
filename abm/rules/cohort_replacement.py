@@ -370,6 +370,19 @@ def _replace_agent_inplace(
     # In-place mutation of the agent's state. id is preserved by
     # virtue of mutating in place — caller doesn't need to do anything.
     agent.state.ideology = new_pos
+    # MHV S2 T2.2 — issues-mode reseed: a new person gets a fresh issue
+    # vector anchored at the drawn 2D position (item residuals from the
+    # frozen correlation structure, recentered so the projection equals
+    # new_pos exactly — the 2D anchored-draw semantics are preserved).
+    # Draws come from the env's dedicated issue rng, so the main rng
+    # stream — and therefore every non-issues trajectory — is untouched.
+    _rt = env.attrs.get("issue_runtime")
+    if _rt is not None and "issues" in agent.state.attrs:
+        from ..core.issues import replacement_draw, project1
+        _v = replacement_draw(new_pos, _rt, env.attrs["issue_rng"])
+        agent.state.attrs["issues"] = _v
+        agent.state.attrs["anchor_issues"] = _v.copy()
+        agent.state.ideology = project1(_v, _rt)
     agent.state.attrs["party"] = new_party
     agent.state.attrs["group"] = new_party
     agent.state.attrs["identity_strength"] = new_id_strength
@@ -439,6 +452,14 @@ def _replace_independent_inplace(
     from ..core.outlets import diet_for_party, US_MEDIA_OUTLETS_2024
     new_diet = diet_for_party(np.zeros(2), US_MEDIA_OUTLETS_2024, rng)
     agent.state.ideology = new_pos
+    # MHV S2 T2.2 — issues-mode reseed (see _replace_agent_inplace).
+    _rt = env.attrs.get("issue_runtime")
+    if _rt is not None and "issues" in agent.state.attrs:
+        from ..core.issues import replacement_draw, project1
+        _v = replacement_draw(new_pos, _rt, env.attrs["issue_rng"])
+        agent.state.attrs["issues"] = _v
+        agent.state.attrs["anchor_issues"] = _v.copy()
+        agent.state.ideology = project1(_v, _rt)
     agent.state.attrs["party"] = 2
     agent.state.attrs["group"] = 2
     agent.state.attrs["identity_strength"] = new_id_strength

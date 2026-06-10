@@ -1288,12 +1288,24 @@ def build_engine(
                 np.clip(np.mean(np.asarray(ids, dtype=float) * sign), 0.0, 1.0)
             )
 
-    # MHV S2 T2.1 — dormant issue-vector seeding. Dedicated rng stream
-    # (never touches `rng`/`net_rng`), so enabling n_issues leaves every
-    # existing draw — and therefore the whole trajectory — bit-identical.
+    # MHV S2 T2.1/T2.2 — issue-vector state (LIVE as of T2.2). Seeding
+    # uses a dedicated rng stream (never touches `rng`/`net_rng`), so the
+    # main draw sequence — and therefore the non-issues trajectory — is
+    # untouched by construction.
+    #   D=2 (the I1 reduction path): issues seeded FROM the engine's 2D
+    #   IC positions (identity loadings; same initial conditions, identity
+    #   projection, RMS factor 1.0) → the trajectory must be bit-identical
+    #   to the plain 2D run, pinned by test.
+    #   D=7 (the real substrate): issues seeded from the frozen ANES
+    #   loadings file and `ideology` REPLACED by the block-means
+    #   projection — this is the S2 IC rebuild (native wrong-side tails,
+    #   measured within-party spread; the T0.4 soft cap is bypassed on
+    #   this path). The drawn 2D position remains as the latent party-
+    #   assignment variable only.
     if n_issues is not None:
         from ..core.issues import (load_loadings, identity_loadings_2d,
-                                   chol_corr, seed_issue_vectors)
+                                   chol_corr, seed_issue_vectors,
+                                   build_runtime, project_compass)
         if int(n_issues) == 2:
             _loadings = identity_loadings_2d()
         else:
@@ -1304,11 +1316,21 @@ def build_engine(
                     f"{len(_loadings['items'])} items (D=2 uses the identity "
                     "reduction loadings; other D need their own file)")
         _issue_rng = np.random.default_rng(10_000_019 + seed)
-        _parties = np.array([a.state.attrs["party"] for a in agents], dtype=int)
-        _V = seed_issue_vectors(_parties, _loadings, _issue_rng,
-                                chol=chol_corr(_loadings))
+        if int(n_issues) == 2:
+            _V = np.array([a.state.ideology for a in agents], dtype=float)
+        else:
+            _parties = np.array([a.state.attrs["party"] for a in agents],
+                                dtype=int)
+            _V = seed_issue_vectors(_parties, _loadings, _issue_rng,
+                                    chol=chol_corr(_loadings))
+            _proj = project_compass(_V, _loadings)
         for _k, a in enumerate(agents):
             a.state.attrs["issues"] = _V[_k].copy()
+            a.state.attrs["anchor_issues"] = _V[_k].copy()
+            if int(n_issues) != 2:
+                a.state.ideology = _proj[_k].copy()
+                a.state.attrs["anchor"] = _proj[_k].copy()
+                a.state.attrs["origin"] = _proj[_k].copy()
 
     network = Network.homophilous(
         agents,
@@ -1501,6 +1523,19 @@ def build_engine(
             "party_centers": party_centers,
         },
     })
+    # MHV S2 T2.2 — live issues mode env hooks. The runtime carries the
+    # precomputed projection/lift maps every rule and the apply site use;
+    # the dedicated rng serves cohort-replacement reseeds without touching
+    # the main stream. Momentum (a retired presentation-era knob) is not
+    # supported together with issues mode.
+    if n_issues is not None:
+        from ..core.issues import build_runtime as _build_runtime
+        if float(momentum) != 0.0:
+            raise ValueError("momentum > 0 is not supported with n_issues "
+                             "(momentum was retired to the repack display "
+                             "EMA at MHV T0.4)")
+        env.attrs["issue_runtime"] = _build_runtime(_loadings)
+        env.attrs["issue_rng"] = _issue_rng
     space = ContinuousSpace2D(bounds=((-1.0, 1.0), (-1.0, 1.0)))
 
     # Pipeline — every rule the historical arc uses. Phase 8b M5:

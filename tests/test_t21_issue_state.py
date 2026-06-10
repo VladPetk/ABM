@@ -111,19 +111,24 @@ def _macro_sha(eng, sched, ticks=12):
     return h.hexdigest()
 
 
-def test_dormant_wiring_bit_identity():
-    """n_issues seeds the vector from a dedicated rng stream: the arc
-    trajectory must be bit-identical with and without it."""
+def test_n2_live_engine_bit_identity():
+    """THE I1 engine-level reduction proof (upgraded at T2.2, when the
+    kernels went live): with n_issues=2 the whole position state flows
+    through the issues apply path — native BC/PartyPull/Noise kernels,
+    lift, projection — and the trajectory must be bit-identical to the
+    plain 2D run. Any kernel whose D=2 arithmetic deviates from the 2D
+    code by a single ulp fails this."""
     from abm.pillars.historical_arc import build_engine, build_schedule
 
     eng_a = build_engine(seed=3)
-    eng_b = build_engine(seed=3, n_issues=7)
+    eng_b = build_engine(seed=3, n_issues=2)
     assert "issues" not in eng_a.agents[0].state.attrs
-    V0 = eng_b.agents[0].state.attrs["issues"]
-    assert V0.shape == (7,)
+    assert eng_b.agents[0].state.attrs["issues"].shape == (2,)
     sched_a = build_schedule()
     sched_b = build_schedule()
-    assert _macro_sha(eng_a, sched_a) == _macro_sha(eng_b, sched_b)
+    # 24 ticks: past the 1987 Fairness-Doctrine event so the
+    # MediaConsumption native path is exercised, not just BC/pull/noise.
+    assert _macro_sha(eng_a, sched_a, ticks=24) == _macro_sha(eng_b, sched_b, ticks=24)
 
 
 def test_n2_reduction_engine_path():

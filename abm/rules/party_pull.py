@@ -40,6 +40,7 @@ from __future__ import annotations
 import numpy as np
 
 from ..core.agent import Agent
+from ..core.issues import issues_of, lift
 from ..core.environment import Environment
 from ..core.space import ContinuousSpace2D
 from ..core.state import StateDelta
@@ -79,7 +80,20 @@ class PartyPull:
         # 2018's "great sort" arriving gradually post-1990) and
         # rising to 1.10 by 2020-25.
         coupling = float(env.attrs.get("party_issue_coupling", 1.0))
+        stubbornness = float(agent.state.attrs.get("stubbornness", 0.0))
+        # MHV S2 T2.2 — native D-dim path: the 2D cue is LIFTED
+        # (block-broadcast) and each ISSUE is pulled toward the party's
+        # package position. This is cue-taking made explicit at the item
+        # level: elite cues bundle issues, which is exactly the
+        # party_pull → constraint catalysis the S1 pilot measured. At
+        # D=2 lift is the identity and the arithmetic matches the 2D
+        # path bit-for-bit.
+        from ..core.issues import issues_of, lift
+        v = issues_of(agent, env)
+        if v is not None:
+            tgt = lift(np.asarray(target, dtype=float), env.attrs["issue_runtime"])
+            d = self.strength * coupling * ident * (tgt - v)
+            return StateDelta(d_attrs={"issues": (1.0 - stubbornness) * d})
         d = self.strength * coupling * ident * (target - agent.state.ideology)
         # F1: Friedkin-Johnsen scaling — stubborn agents move less.
-        stubbornness = float(agent.state.attrs.get("stubbornness", 0.0))
         return StateDelta(d_ideology=(1.0 - stubbornness) * d)
