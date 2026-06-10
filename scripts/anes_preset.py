@@ -47,7 +47,9 @@ ANES_FULL_KWARGS = {
     "tier_d_cohort_y_signs_fix": True,
     "tier_d_anes_knobs": True,
     "tier_d_anes_drift_multiplier": 3.0,
-    "tier_d_anes_sigma_pc_multiplier": 1.6,
+    # MHV T0.1: tier_d_anes_sigma_pc_multiplier (was 1.6) removed — folded
+    # into PARTY_CUE_SIGMA_HISTORICAL_ANES (0.42*1.6 / 0.57*1.6), bit-
+    # identically. The kwarg is deprecated (accepted, warns, no-op).
     "tier_c_identity_pull_x": 0.020,
     "tier_c_identity_pull_y": 0.040,
     # D4: unified to the shipped-baseline value (0.04, the web_demo

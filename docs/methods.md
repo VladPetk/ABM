@@ -966,6 +966,38 @@ let visitors build intuition about which channels move which outcome, not to
 predict counterfactual histories. The measured, blessed results remain the
 Phase 10 intervention buckets (§4.3, `docs/results/phase10_results.md`).
 
+### 5.12 MHV T0.1 — dead-knob retirement: `PARTY_ASSIGNMENT_K_ANES` + σ_pc fold (2026-06)
+
+The engine-wide knob audit (`docs/internal/engine_knob_audit.md`,
+`docs/internal/calibration_interpretation.md` §2.1 — internal audit
+notes, kept out of the public repo) found that
+`PARTY_ASSIGNMENT_K_ANES` — the ANES-derived party-assignment sigmoid
+schedule — was **dead code in the shipped configuration**: under
+`tier_d_anes_knobs` party is pre-committed at build (§11.7-D6) and cohort
+replacement uses the centroid-anchor draw, so the K-sigmoid never executed
+(a 100× swing changed the 58-stat audit battery by exactly 0.00e+00). It
+was retired (audit Option A). The actual **sorting-sharpness lever** under
+the ANES path is `tier_d_ic_sigma` (σ_ic, the IC width around the party
+centroids). The legacy `PARTY_ASSIGNMENT_K` remains live on the non-ANES
+path.
+
+In the same change, the near-inert `tier_d_anes_sigma_pc_multiplier`
+(×1.6 in the shipped preset) was **folded into**
+`PARTY_CUE_SIGMA_HISTORICAL_ANES` (now `0.42*1.6` / `0.57*1.6`,
+bit-identical products); the kwarg is deprecated (accepted, warns,
+ignored). The within-party-spread lever is `noise_sigma`
+(`tier_d_aniso_noise_sigma_x/y`), which dominates that channel (§2.2 of
+the calibration-interpretation doc).
+
+**Inertness proof, not assertion:** the full shipped arc (`anes_full`,
+seed 0, ticks 0–135) hashes bit-identically before and after the change
+(sha256 `17395a6b…`; runner `scripts/audit/t01_bit_identity.py`, which
+anyone can re-run — the hash JSONs live in the local-only
+`docs/internal/audit/`). No re-bless was needed — by
+construction, no pinned value moved. Drift guards:
+`tests/test_t01_retire_k.py`. No provenance-table change: no mechanism was
+added or removed (the retired constant never acted in the shipped build).
+
 ---
 
 ## 6. What the model is for

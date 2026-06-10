@@ -372,13 +372,13 @@ designer knows what's load-bearing.
 | Constant | Value | Notes |
 |---|---|---|
 | `PARTY_CUE_SIGMA_HISTORICAL` | `{0: 0.22, 1: 0.30}` | Legacy. |
-| `PARTY_CUE_SIGMA_HISTORICAL_ANES` | `{0: 0.42, 1: 0.57}` | **ANES.** Multiplied by `tier_d_anes_sigma_pc_multiplier` (default 1.6 under `anes_full`). |
+| `PARTY_CUE_SIGMA_HISTORICAL_ANES` | `{0: 0.672, 1: 0.912}` | **ANES.** MHV T0.1: the old `tier_d_anes_sigma_pc_multiplier=1.6` is folded in (values are `0.42*1.6` / `0.57*1.6`, bit-identical). Note σ_pc is a weak lever — within-party spread is dominated by `noise_sigma` (internal audit notes, `docs/internal/calibration_interpretation.md` §2.2). |
 
 ### 4.3 Party-assignment sigmoid K (logit slope)
 | Constant | Value | Notes |
 |---|---|---|
-| `PARTY_ASSIGNMENT_K` | Per-decade: 1.5 → 4.5 | Legacy. |
-| `PARTY_ASSIGNMENT_K_ANES` | Per-decade: 2.1 → 5.1 | **ANES** back-solved from real `corr(party, axis)`. |
+| `PARTY_ASSIGNMENT_K` | Per-decade: 1.5 → 4.5 | Legacy — live only on the non-ANES sigmoid path. |
+| ~~`PARTY_ASSIGNMENT_K_ANES`~~ | *(retired, MHV T0.1)* | Was dead code in the shipped config: under ANES knobs party is pre-committed (§11.7-D6) and cohort replacement uses the centroid-anchor draw, so the K-sigmoid never ran (100× swing = exactly-zero battery change). The sorting-sharpness lever is **`tier_d_ic_sigma`** (σ_ic), not K. See the internal audit notes (`docs/internal/calibration_interpretation.md` §2.1). |
 
 ### 4.4 Elite drift schedule
 | Constant | Value | Notes |
@@ -475,7 +475,7 @@ preset is `phase9_anes_score.PRESETS["anes_full"]`.
 |---|---|---|---|
 | `tier_d_anes_knobs` | False | True | **ANES recalibration master switch.** When True, swaps the historical constants for `_ANES` variants. Only consulted if `tier_d_axis_balance=True`. |
 | `tier_d_anes_drift_multiplier` | 1.0 | 3.0 | Multiplier on `ELITE_DRIFT_SCHEDULE_ANES` |
-| `tier_d_anes_sigma_pc_multiplier` | 1.0 | 1.6 | Multiplier on `PARTY_CUE_SIGMA_HISTORICAL_ANES` |
+| `tier_d_anes_sigma_pc_multiplier` | 1.0 | *(removed)* | **DEPRECATED no-op (MHV T0.1).** Accepted for compatibility; any non-1.0 value warns and is ignored — the shipped 1.6 is folded into `PARTY_CUE_SIGMA_HISTORICAL_ANES`. Within-party-spread lever: `tier_d_aniso_noise_sigma_x/y`. |
 
 ### 5.6 New rules (Phase 9 §11.7-C onward)
 | Kwarg | Default | anes_full | Notes |
@@ -488,7 +488,7 @@ preset is `phase9_anes_score.PRESETS["anes_full"]`.
 ### 5.7 ANES-derived shape knobs
 | Kwarg | Default | anes_full | Notes |
 |---|---|---|---|
-| `tier_d_ic_sigma` | None | 0.35 | IC position σ (overrides hardcoded 0.45) |
+| `tier_d_ic_sigma` | None | 0.35 | IC position σ (overrides hardcoded 0.45). **The sorting-sharpness knob** under the ANES path: party↔position tightness = σ_ic + centroid separation (MHV T0.1; the K-sigmoid is not in this loop). |
 | `tier_d_cue_correlation` | 0.0 | 0.40 | Cue draw (party_cue + media_cue) x-y correlation |
 
 ### 5.8 Step-1 evidence re-grade master gate
@@ -628,9 +628,10 @@ weight-samples 1000 points per decade, builds Silverman KDEs, writes
 ```
 Emits per-decade ANES centroid stats, sigmoid K back-solve, centroid
 velocities to `docs/results/phase9_anes_knob_anchors.json`. The
-`PARTY_CENTERS_*_ANES`, `PARTY_CUE_SIGMA_HISTORICAL_ANES`, and
-`PARTY_ASSIGNMENT_K_ANES` constants in `historical_arc.py` are pinned
-to this output.
+`PARTY_CENTERS_*_ANES` and `PARTY_CUE_SIGMA_HISTORICAL_ANES` constants in
+`historical_arc.py` are pinned to this output (σ_pc now carries the folded
+×1.6; the `sigmoid_K_anchors` output is historical — its consumer
+`PARTY_ASSIGNMENT_K_ANES` was retired in MHV T0.1).
 
 ### 8.4 Side-by-side ANES vs sim plot
 ```bash

@@ -23,6 +23,8 @@ are pre-registered in §9.1-§9.2. Targets do not slide.
 """
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 
 from ..core.agent import Agent
@@ -148,9 +150,16 @@ PARTY_CUE_SIGMA_HISTORICAL = {
 # vs ANES 0.34 means σ_pc must roughly double. Empirical back-solve at
 # pooled wp_sd_x = 0.345 (flat 1980-2020 in ANES) gives σ_pc ≈ {D: 0.42,
 # R: 0.57} preserving the D:R 1:1.36 asymmetry (Hacker-Pierson 2020).
+# MHV T0.1 — σ_pc fold: the shipped config carried
+# tier_d_anes_sigma_pc_multiplier=1.6 on top of the Phase 9 base values
+# (0.42 / 0.57). The multiplier is deprecated (accepted, warns, no-op) and
+# its effect is folded into the constants. Written as explicit products so
+# the IEEE result is bit-identical to the old runtime `s * 1.6`.
+# Within-party spread is dominated by `noise_sigma`, not σ_pc — see
+# docs/internal/calibration_interpretation.md §2.2.
 PARTY_CUE_SIGMA_HISTORICAL_ANES = {
-    0: 0.42,
-    1: 0.57,
+    0: 0.42 * 1.6,
+    1: 0.57 * 1.6,
 }
 
 # Per-agent heterogeneity magnitudes (Phase 8b M1 §3.2; B-Heterogeneity-
@@ -410,20 +419,17 @@ PARTY_ASSIGNMENT_K = {
     "2020-25": 8.0,
 }
 
-# Phase 9 §11.7-B — ANES-derived K-schedule. Back-solved from the
-# empirical per-decade weighted sign-alignment (party-with-econ-sign)
-# such that E[sigmoid(K * econ)] matches the observed alignment. See
-# docs/results/phase9_anes_knob_anchors.json sigmoid_K_anchors.
-# Engine over-sorts at every decade under the 8f schedule; ANES bands
-# require a much softer K-trajectory, with mild fuzziness even at the
-# modern endpoint (2020 still has ~15% cross-pressured partisans).
-PARTY_ASSIGNMENT_K_ANES = {
-    "1980-90": 2.1,
-    "1990-00": 2.3,
-    "2000-10": 3.1,
-    "2010-20": 3.9,
-    "2020-25": 5.1,
-}
+# MHV T0.1 — PARTY_ASSIGNMENT_K_ANES retired (was: a Phase 9 §11.7-B
+# ANES-derived K-schedule, {2.1, 2.3, 3.1, 3.9, 5.1}). It was dead code in
+# the shipped config: selected only when ANES knobs are active, but under
+# that path party is pre-committed from `side` (§11.7-D6) and cohort
+# replacement uses the ANES centroid-anchor draw — the K-sigmoid is never
+# evaluated. A 100× swing changed the 58-stat audit battery by exactly
+# 0.00e+00. The sorting-sharpness lever the literature implies (Levendusky
+# 2009) is `tier_d_ic_sigma` (σ_ic, the IC width around the party
+# centroids), not K. Full trace: docs/internal/calibration_interpretation.md §2.1
+# (Option A). The legacy PARTY_ASSIGNMENT_K above remains live for the
+# non-ANES path.
 
 # Phase 8e §3 — per-agent `media_cue` bias. Each partisan agent
 # perceives outlets as shifted by a personal bias vector drawn from
@@ -583,7 +589,6 @@ def build_engine(
     # constants for their ANES-derived counterparts:
     #   PARTY_CENTERS_1980          → PARTY_CENTERS_1980_ANES
     #   PARTY_CUE_SIGMA_HISTORICAL  → PARTY_CUE_SIGMA_HISTORICAL_ANES
-    #   PARTY_ASSIGNMENT_K          → PARTY_ASSIGNMENT_K_ANES
     #   ELITE_DRIFT_SCHEDULE        → ELITE_DRIFT_SCHEDULE_ANES
     #   ELITE_DRIFT_ASYMMETRIC      → ELITE_DRIFT_ASYMMETRIC_ANES
     # Default False → bit-identical to head. Each replacement value
@@ -591,11 +596,14 @@ def build_engine(
     # docs/results/phase9_anes_knob_anchors.json. The pillar
     # (calm_to_camps.py) is unaffected.
     tier_d_anes_knobs: bool = False,
-    # Phase 9 §11.7-B sweep multipliers — let the calibration harness
+    # Phase 9 §11.7-B sweep multiplier — lets the calibration harness
     # search around the central ANES values without re-editing
-    # constants. Multipliers default to 1.0 (no change). Only consulted
+    # constants. Defaults to 1.0 (no change). Only consulted
     # when tier_d_anes_knobs=True.
     tier_d_anes_drift_multiplier: float = 1.0,
+    # DEPRECATED (MHV T0.1): no-op, kept accepted for compatibility.
+    # Any non-1.0 value emits a DeprecationWarning and is ignored — the
+    # shipped 1.6 is folded into PARTY_CUE_SIGMA_HISTORICAL_ANES.
     tier_d_anes_sigma_pc_multiplier: float = 1.0,
     # Phase 9 §11.7-C — IdentityToIdeologyPull strengths (Mason 2018
     # mega-identity → ideology channel). Default 0.0 → bit-identical
@@ -625,6 +633,11 @@ def build_engine(
     # ~0.41 vs ANES band [0.22, 0.36]. Default None preserves 0.45
     # (bit-identical). Recommended ANES value ≈ 0.35 (lands 1980 var
     # ≈ 0.25, in the ANES band).
+    # MHV T0.1: under the ANES path this is THE sorting-sharpness knob —
+    # party↔position tightness is set by σ_ic and the centroid
+    # separation, not by a K-sigmoid (party is pre-committed; the retired
+    # PARTY_ASSIGNMENT_K_ANES had zero live consumers). See
+    # docs/internal/calibration_interpretation.md §2.1.
     tier_d_ic_sigma: float | None = None,
     # Phase 9 §11.7-D5 — within-cue x-y correlation. Default 0.0 = the
     # cue draws (party_cue + media_cue) remain x-y independent — bit-
@@ -749,6 +762,19 @@ def build_engine(
     # 1980 empirical centroids regardless of tier_d_party_center_y
     # (the sweep knob is ignored — ANES is the empirical anchor).
     anes_knobs_active = bool(tier_d_axis_balance and tier_d_anes_knobs)
+    # MHV T0.1 — σ_pc multiplier deprecated: the shipped 1.6 value is folded
+    # into PARTY_CUE_SIGMA_HISTORICAL_ANES. Accepted for compatibility; any
+    # non-1.0 value warns and is ignored.
+    if float(tier_d_anes_sigma_pc_multiplier) != 1.0:
+        warnings.warn(
+            "tier_d_anes_sigma_pc_multiplier is deprecated and ignored "
+            "(MHV T0.1): the shipped 1.6 multiplier is folded into "
+            "PARTY_CUE_SIGMA_HISTORICAL_ANES. The within-party-spread "
+            "lever is noise_sigma (tier_d_aniso_noise_sigma_x/y); see "
+            "docs/internal/calibration_interpretation.md §2.2.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
     if anes_knobs_active:
         party_centers_active = {
             pid: c.copy() for pid, c in PARTY_CENTERS_1980_ANES.items()
@@ -780,16 +806,16 @@ def build_engine(
         perception_bias_x = PERCEPTION_EXTREME_BIAS
         perception_bias_y = 0.0  # legacy: y-bias was inert
 
-    # Phase 9 §11.7-B: pick active K-schedule + party_cue σ +
-    # ELITE_DRIFT (rate + asymmetric). Default values preserved
-    # bit-identically when flag is off.
-    party_assignment_k_active = (
-        PARTY_ASSIGNMENT_K_ANES if anes_knobs_active else PARTY_ASSIGNMENT_K
-    )
+    # Phase 9 §11.7-B: pick active party_cue σ + ELITE_DRIFT (rate +
+    # asymmetric). Default values preserved bit-identically when flag is
+    # off. MHV T0.1: the K-schedule is no longer forked — the ANES variant
+    # was dead code (party is pre-committed under the ANES path; see the
+    # PARTY_ASSIGNMENT_K_ANES tombstone above). The legacy schedule is
+    # still registered into env.attrs for the live non-ANES sigmoid path.
+    party_assignment_k_active = PARTY_ASSIGNMENT_K
     if anes_knobs_active:
-        _sm = float(tier_d_anes_sigma_pc_multiplier)
         party_cue_sigma_active = {
-            pid: float(s) * _sm
+            pid: float(s)
             for pid, s in PARTY_CUE_SIGMA_HISTORICAL_ANES.items()
         }
         _dm = float(tier_d_anes_drift_multiplier)
