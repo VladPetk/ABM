@@ -228,6 +228,15 @@ their engine footprint is the S1 covariance-signature pilot
   at T0.2: the MHV planning docs cited "Kozlowski et al., Constrained
   Citizens?" — that title is Hare's; the two papers are split here.)*
 
+### 2.9 Methodology (simulation-based inference)
+
+- **Talts, S., Betancourt, M., Simpson, D., Vehtari, A., & Gelman, A.** (2018).
+  Validating Bayesian inference algorithms with simulation-based calibration.
+  arXiv:1804.06788. — The SBC rank-uniformity check. Anchors the MHV T0.5
+  inference-hygiene gate: no posterior shrinkage from the identifiability
+  harness is quoted without an SBC + coverage pass
+  (`scripts/audit/sbc_harness.py`; `methods.md` §5.16).
+
 ## 3. Intervention literature (X1–X7)
 
 Full envelopes, mismatch analyses, and knob-level provenance tags live in

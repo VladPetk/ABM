@@ -1127,6 +1127,51 @@ moved into band), and the X1–X7 library was re-measured
 for the post-T0.4 buckets). The web bundle and sandbox grid were
 regenerated on the new substrate.
 
+### 5.16 MHV T0.5 — battery v2 + inference hygiene (2026-06)
+
+The identifiability instruments (`scripts/audit/battery.py`,
+`phase5_identifiability.py`) were rebuilt after an external math review
+found the published "model is sloppy, rank ≈ 1 of 10" headline to be an
+artifact of one discrete statistic (a BIC mode count with seed-SD
+exactly 0) hitting an unprincipled Monte-Carlo-SD floor. No engine
+behavior changed — this is instrument-side only. The hygiene now in
+force:
+
+- **Every battery stat is tagged `continuous | discrete`**; Fisher/
+  Jacobian analyses consume continuous-only, and discrete stats enter
+  ABC/SBI only as soft summaries with real prior-variance.
+- **Noise model** in place of the floor: per-stat scale
+  σ = √(MC-var over 24 seeds + (1% of the stat's prior-design range)²).
+  The target-error term matters because some stats are
+  *schedule-deterministic* (the elite-trajectory block) — their MC-SD is
+  float noise, and pure-MC standardization lets them carry the entire
+  Fisher (reproduced and documented before fixing).
+- **A known-dead control parameter** (a no-op by construction) rides the
+  full inference path; its posterior shrinkage (0.096) measures the
+  pipeline's spurious-contraction floor, and all shrinkages are reported
+  net of it.
+- **SBC + coverage** (Talts et al. 2018 rank-uniformity, leave-one-out
+  over the ABC reference table; `scripts/audit/sbc_harness.py`) gate any
+  quoted shrinkage. Current verdict: rejection-ABC is conservative
+  (over-coverage), so shrinkages are lower bounds.
+- **New stats** future-proofed for the multi-issue substrate:
+  participation-ratio dimensionality of the attitude cloud, a
+  constraint index and the Baldassarri–Gelman 2008 partisan-vs-issue
+  alignment pair (pooled + within-party), and an APC cohort-affect
+  decomposition (recent entrants vs 1980 incumbents, from the
+  replacement log).
+
+Corrected headline (full tables in the internal analysis): the model is
+**moderately sloppy, not degenerate** — local Fisher rank 2 at the
+shipped point under the 1% noise model (rank 1→7 as assumed measurement
+precision varies, dominated by how precisely the deterministic elite
+block is matched), scale-free effect-direction rank ≈ 5 of 8, two
+parameters individually identified (the elite-drift gain via the elite
+block — its design purpose — and the mega-identity multiplier, net
+shrinkages 0.37/0.44), a real mass-channel substitution ridge
+(party-pull ↔ identity-pull), and the bounded-confidence strength
+uninformative because the shipped value is effectively off (T0.6).
+
 ---
 
 ## 6. What the model is for
@@ -1245,6 +1290,9 @@ still need venue/year verification — see literature.md §5.*
 - Kozlowski, A. C., & Murphy, J. P. (2021). Issue alignment and
   partisanship in the American public: Revisiting the "partisans
   without constraint" thesis. *Social Science Research* 94:102498.
+- Talts, S., Betancourt, M., Simpson, D., Vehtari, A., & Gelman, A.
+  (2018). Validating Bayesian inference algorithms with
+  simulation-based calibration. arXiv:1804.06788.
 - Treier, S., & Hillygus, D. S. (2009). The nature of political
   ideology in the contemporary electorate. *POQ* 73(4):679.
 - Wood, T., & Porter, E. (2019). The elusive backfire effect: Mass
