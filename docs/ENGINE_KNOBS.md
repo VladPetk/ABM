@@ -499,6 +499,20 @@ preset is `phase9_anes_score.PRESETS["anes_full"]`.
 |---|---|---|---|
 | `evidence_regrade` | False | **True** | Master gate for the Step-1 truth-pass (Gingrich/CU re-attribution, social-media demotion, identity-alignment → affect). `False` is a strict no-op → default path bit-identical. Pair with `build_schedule(evidence_regrade=...)`. See §7.1. |
 
+### 5.8-bis Demo-physics knobs — T0.4 adjudication (MHV, 2026-06)
+
+The three "web_demo jumpiness/realism" knobs were adjudicated per-knob
+(mechanism-with-provenance vs presentation-side; user sign-off 2026-06-10):
+
+| Kwarg | Default | anes_full | Verdict |
+|---|---|---|---|
+| `momentum` | 0.0 | *(removed — was 0.4)* | **RELOCATED to presentation** (`scripts/repack_web_demo.py` display EMA, β=0.6, reset at replacement splices). It was a display-smoothness knob, not a mechanism; the engine kwarg stays accepted (0.0 = off). |
+| `fj_alpha_scale` | 1.0 | 2.8 | **KEPT as mechanism.** L (Friedkin–Johnsen anchoring) / E (the 1–2% lifetime-big-mover target from panel stability — Converse 1964; Green, Palmquist & Schickler) / N (the 2.8 value). Note: α=0.14 sits outside the §5.4 no-collapse sweep (0.02–0.10) — sweep extension queued at T0.6. |
+| `tier_d_ic_partisan_x_cap` (+ new `tier_d_ic_wrongside_tail_target`) | None | 0.45 + `{0: 0.0376, 1: 0.0160}` | **RECALIBRATED.** The hard cap forced the wrong-side 1980 econ tail to 0%, but ANES 1980–1990 shows a real tail (D 3.76% / R 1.60% past ±0.45, weighted). The cap is now a *soft* cap: beyond-cap draws kept with analytic probability target/P_gauss(beyond) — L (the rates) / N (the thinning operator). Slated for retirement at MHV S2 (the IC rebuild must reproduce the tail natively). |
+
+Re-bless on the new substrate: ANES scorecard improved 15/24 → **20/24**;
+phase10 buckets re-measured (see `docs/results/phase10_results.md`).
+
 ### 5.9 Web-demo sandbox dials (illustrative — not a finding)
 Hooks for the web demo's interactive sandbox (`scripts/build_sandbox_data.py`).
 All default to an exact no-op (`×1.0` / `0.0` / `None`, all exact in IEEE-754),

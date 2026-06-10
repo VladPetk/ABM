@@ -54,6 +54,44 @@ def _round3(xy):
     return [round(float(xy[0]), 3), round(float(xy[1]), 3)]
 
 
+# MHV T0.4 — presentation-side trajectory smoothing (user adjudication
+# 2026-06-10). The engine's `momentum=0.4` knob (an EMA on per-tick deltas,
+# added for display smoothness in the demo_jumpiness work) was relocated
+# OUT of the canonical substrate: it was a display knob, not a mechanism.
+# The equivalent smoothing now happens here, on the published positions —
+# an EMA over each agent's position track, reset at cohort-replacement
+# splices (the new occupant starts a fresh track at t+1, matching the
+# crossfade semantics in cc-proto-engine.jsx). Display-only: macro series,
+# affect, and all measured numbers are untouched.
+DISPLAY_EMA_BETA = 0.6  # weight on the CURRENT tick; 1.0 = no smoothing
+
+
+def _ema_positions(ticks: list, replacement_events: list) -> list:
+    """EMA-smooth per-agent position tracks across ticks (display only)."""
+    n_ticks = len(ticks)
+    if n_ticks == 0:
+        return []
+    n_agents = len(ticks[0]["positions"])
+    # replacement at tick t: NEW person first appears at pos[t+1] — reset
+    # the EMA there so smoothing never bridges two different people.
+    resets = {}
+    for t, a in replacement_events:
+        resets.setdefault(int(a), set()).add(int(t) + 1)
+    out = [[None] * n_agents for _ in range(n_ticks)]
+    b = DISPLAY_EMA_BETA
+    for a in range(n_agents):
+        rs = resets.get(a, ())
+        ex = ey = None
+        for t in range(n_ticks):
+            x, y = float(ticks[t]["positions"][a][0]), float(ticks[t]["positions"][a][1])
+            if ex is None or t in rs:
+                ex, ey = x, y
+            else:
+                ex, ey = b * x + (1 - b) * ex, b * y + (1 - b) * ey
+            out[t][a] = [ex, ey]
+    return out
+
+
 def _in_party_warmth(t: int, n_ticks: int) -> float:
     """Empirical in-party warmth (degrees) at tick ``t`` — linear ramp
     from IN_PARTY_WARMTH_START_DEG to IN_PARTY_WARMTH_END_DEG across the
@@ -73,7 +111,10 @@ def build_run(traj: dict, char_indices: list[int]) -> dict:
     ticks = traj["ticks"]
     n_ticks = len(ticks)
 
-    pos = [[_round3(p) for p in td["positions"]] for td in ticks]
+    # T0.4: display-side EMA replaces the retired engine momentum knob.
+    smoothed = _ema_positions(
+        ticks, traj.get("replacement_events", []))
+    pos = [[_round3(p) for p in tick_pos] for tick_pos in smoothed]
     party = [list(td["party"]) for td in ticks]
 
     # Full-crowd per-agent out-party warmth (contract v1, §1): the

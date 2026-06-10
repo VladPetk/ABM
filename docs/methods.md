@@ -1082,6 +1082,51 @@ brake should survive re-expression or the S3 change is wrong (spec
 requirement). Full tables:
 `docs/internal/audit/events_brake_bisection.{json,md}`.
 
+### 5.15 MHV T0.4 — demo-physics knob adjudication (2026-06)
+
+The three "web-demo jumpiness/realism" knobs that had crept into the
+canonical substrate (§5.11 history) were adjudicated per-knob, with user
+sign-off, into mechanism-with-provenance vs presentation-side:
+
+**`momentum = 0.4` → relocated to presentation.** The engine's
+delta-EMA (added so trajectories read smoothly) is *not* a calibrated
+mechanism; it now lives in `scripts/repack_web_demo.py` as a
+display-only EMA over published position tracks (β = 0.6, reset at
+cohort-replacement splices). The engine kwarg remains accepted
+(default 0.0 = off). Opinion-inertia per se is literature-plausible
+(Converse 1964; Green, Palmquist & Schickler r ≈ .97 stability), and an
+S4 refit may *calibrate* a momentum term against VOTER-panel
+within-person autocorrelation — but the 0.4 was tuned for looks, so out
+it goes.
+
+**`fj_alpha_scale = 2.8` → kept as mechanism, L/E/N.** The scale was
+picked so lifetime big-movers (>1 unit over 45 model-years among
+never-replaced agents) fall to 2.4%, against a 1–2% target from panel
+stability. Tag: **L** (Friedkin–Johnsen anchoring) / **E** (the
+lifetime-mover target) / **N** (the 2.8 value). Honest flag: the
+effective α = 0.14 sits outside the §5.4 no-collapse sweep range
+(0.02–0.10); extending that sweep is queued at T0.6.
+
+**`tier_d_ic_partisan_x_cap = 0.45` → recalibrated to an ANES-anchored
+soft cap.** A data check (this change) showed the hard cap *overcorrects*:
+the real ANES 1980–1990 cloud has a wrong-side economic tail — **3.76%**
+of Democratic partisans past +0.45 and **1.60%** of Republicans past
+−0.45 (weighted, `respondent_coordinates.csv`) — which the hard cap
+clipped to exactly 0% (and the untruncated Gaussian over-produced at
+~6%/3%). The cap is now *soft*: a beyond-cap draw is kept with analytic
+probability `target_rate / P_gauss(beyond)`, reproducing the measured
+tail (engine-measured 3.6%/2.0% over 24 seeds). Tag: **L** (the target
+rates) / **N** (the thinning operator). Slated for retirement at MHV S2,
+whose IC rebuild must reproduce the tail natively.
+
+**Re-bless.** The substrate change (momentum out, soft cap in) was
+re-blessed: the ANES §11 scorecard *improved* 15/24 → **20/24** (the
+1980 variance and party_sep cells and several later sep/affect cells
+moved into band), and the X1–X7 library was re-measured
+(`scripts/phase10_measure.py`; see `docs/results/phase10_results.md`
+for the post-T0.4 buckets). The web bundle and sandbox grid were
+regenerated on the new substrate.
+
 ---
 
 ## 6. What the model is for

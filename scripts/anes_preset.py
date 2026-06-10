@@ -63,13 +63,22 @@ ANES_FULL_KWARGS = {
     "tier_d_coupling_rho": 0.30,
     "tier_d_cue_correlation": 0.40,
     "tier_d_ic_sigma": 0.35,
-    # web_demo jumpiness Step 5 — opinion momentum (was publish-only;
-    # now canonical so phase10 measures the same trajectory).
-    "momentum": 0.4,
+    # MHV T0.4 — momentum (was 0.4) RELOCATED to a presentation-side
+    # EMA in scripts/repack_web_demo.py (user adjudication 2026-06-10):
+    # it was a display-smoothness knob, not a mechanism. The engine kwarg
+    # remains accepted (default 0.0 = off).
     # web_demo jumpiness Step 4 — tighten the free-mover tail.
+    # MHV T0.4 adjudication: KEPT as mechanism. L (Friedkin–Johnsen
+    # anchoring) / E (the 1–2% lifetime-big-mover target from panel
+    # stability) / N (the 2.8 value). See methods.md §5.15.
     "fj_alpha_scale": 2.8,
-    # web_demo realism — truncate the 1980 economic IC tail.
+    # MHV T0.4 — the hard 1980 economic IC tail cap (0.45) is RECALIBRATED
+    # to an ANES-anchored soft cap: the wrong-side tail is thinned to the
+    # measured 1980s rates (D 3.76% / R 1.60% past ±0.45; weighted,
+    # respondent_coordinates.csv 1980–1990) instead of clipped to zero.
+    # Provenance L (rates) / N (the thinning operator). Retire at S2.
     "tier_d_ic_partisan_x_cap": 0.45,
+    "tier_d_ic_wrongside_tail_target": {0: 0.0376, 1: 0.0160},
     # Step 1 (web_demo evidence re-grade) — master gate for the engine
     # truth-pass (D1a Gingrich/CU, D2a social-media demotion, D3b
     # identity-alignment → animus). On for the web/ANES path.

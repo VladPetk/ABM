@@ -23,6 +23,7 @@ are pre-registered in §9.1-§9.2. Targets do not slide.
 """
 from __future__ import annotations
 
+import math
 import warnings
 
 import numpy as np
@@ -680,6 +681,19 @@ def build_engine(
     # consulted on the ANES IC path; None → no truncation → bit-
     # identical to head. The demo preset uses 0.45.
     tier_d_ic_partisan_x_cap: float | None = None,
+    # MHV T0.4 — ANES-anchored soft cap (recalibration of the hard cap).
+    # The hard cap forces the wrong-side economic tail to exactly 0%,
+    # but the ANES 1980s cloud HAS such a tail: 3.76% of Dem partisans
+    # sit past econ +0.45 and 1.60% of Rep partisans past −0.45
+    # (weighted, data/phase9_empirical/derived/respondent_coordinates.csv,
+    # 1980–1990 waves; provenance L). When this dict {party: target_rate}
+    # is set (requires tier_d_ic_partisan_x_cap as the threshold), a
+    # beyond-cap draw is KEPT with probability target/P_gauss(beyond) —
+    # an analytic thinning that reproduces the measured tail rate instead
+    # of clipping it to zero. None → hard-cap behavior unchanged.
+    # Slated for retirement at MHV S2 (the IC rebuild must reproduce the
+    # empirical tail natively).
+    tier_d_ic_wrongside_tail_target: dict | None = None,
     # Step 1 (web_demo evidence re-grade). Master gate for the engine
     # truth-pass changes (decisions D1a/D2a/D3b). Default False → a
     # strict no-op: every re-grade consumer reads its no-op value, so
@@ -960,23 +974,45 @@ def build_engine(
                 None if tier_d_ic_partisan_x_cap is None
                 else float(tier_d_ic_partisan_x_cap)
             )
+            # MHV T0.4 — soft cap: keep a beyond-cap draw with probability
+            # target_rate / P_gauss(beyond cap), so the wrong-side tail
+            # matches the measured ANES 1980s rate instead of being
+            # clipped to zero. None → hard cap (resample all), unchanged.
+            _tail_keep = None
+            if _x_cap is not None and tier_d_ic_wrongside_tail_target is not None:
+                if _ic_party_pre == 0:
+                    _z = (_x_cap - float(_ic_cent[0])) / _ic_sigma
+                else:
+                    _z = (float(_ic_cent[0]) + _x_cap) / _ic_sigma
+                _q = 0.5 * math.erfc(_z / math.sqrt(2.0))
+                _tgt = float(
+                    tier_d_ic_wrongside_tail_target.get(_ic_party_pre, 0.0))
+                _tail_keep = min(1.0, _tgt / _q) if _q > 1e-12 else 0.0
+            _kept_tail = False
             for _try in range(64):
                 _u, _v = rng.normal(0.0, 1.0), rng.normal(0.0, 1.0)
                 _cand_x = float(_ic_cent[0]) + _ic_sigma * _u
                 if _x_cap is None:
                     break
-                if _ic_party_pre == 0 and _cand_x > _x_cap:
-                    continue  # Democrat reaching too far right — redraw
-                if _ic_party_pre == 1 and _cand_x < -_x_cap:
-                    continue  # Republican reaching too far left — redraw
+                _beyond = (
+                    (_ic_party_pre == 0 and _cand_x > _x_cap)
+                    or (_ic_party_pre == 1 and _cand_x < -_x_cap)
+                )
+                if _beyond:
+                    if _tail_keep is not None and rng.random() < _tail_keep:
+                        _kept_tail = True
+                        break  # empirically-rated wrong-side draw — keep
+                    continue  # redraw (hard cap, or thinned-out tail draw)
                 break
             _ic_noise_y = (
                 _cue_rho_ic * _u
                 + float(np.sqrt(max(0.0, 1.0 - _cue_rho_ic ** 2))) * _v
             )
             pos_x = float(np.clip(_cand_x, -1.0, 1.0))
-            if _x_cap is not None:
-                # clamp fallback in case all 64 retries failed (≈0 prob)
+            if _x_cap is not None and not _kept_tail:
+                # clamp fallback in case all 64 retries failed (≈0 prob).
+                # Skipped for an accepted soft-cap tail draw (T0.4) — the
+                # kept wrong-side position IS the point of the thinning.
                 pos_x = (
                     min(pos_x, _x_cap) if _ic_party_pre == 0
                     else max(pos_x, -_x_cap)

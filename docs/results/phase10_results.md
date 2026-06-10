@@ -1,8 +1,26 @@
 # Phase 10 — Landing Summary
 
 *Status: shipped. Intervention library (X1–X7) redesigned against
-the Phase 9 ANES-recalibrated engine. Last updated 2026-06-01
-(Step 2 re-measure).*
+the Phase 9 ANES-recalibrated engine. Last updated 2026-06-10
+(MHV T0.4 re-measure).*
+
+> **MHV T0.4 re-measure (demo-physics knob adjudication, 2026-06-10).**
+> Re-measured after the canonical substrate changed: **momentum (0.4)
+> relocated** to a presentation-side EMA in the repack (it was a display
+> knob, not a mechanism), and the **hard IC x-cap recalibrated** to an
+> ANES-anchored soft cap (wrong-side 1980 econ tail thinned to the
+> measured 3.76%/1.60% instead of clipped to 0%); `fj_alpha_scale=2.8`
+> kept and provenance-tagged L/E/N. (methods.md §5.15.) **All public
+> buckets unchanged**: X1 backfire at every decade (cross-release mean
+> **+0.188**, was +0.203 — momentum had been mildly amplifying the
+> repulsion cascade), X5 partial-on-average with the same decade pattern
+> (partial 2000/2020: −0.119/−0.070; null 1990/2010), X6 affect partial
+> 1990–2010 / real 2020 (+0.091/+0.140/+0.146/+0.218 — numerically
+> indistinguishable from the prior table), X2/X3/X4/X7 null.
+> Falsification 27/28 with the same pre-existing (1990, X7) miss. ANES
+> §11 scorecard on the new substrate: **20/24** (up from 15/24). No tag
+> re-bless required; the scoreboard below stands with the X1 magnitude
+> note above superseded by the T0.4 numbers.
 
 > **Step 2 re-measure (web_demo evidence re-grade).** The numbers below
 > were re-measured on the **unified Step-1 substrate** — the single
