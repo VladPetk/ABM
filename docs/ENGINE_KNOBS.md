@@ -554,6 +554,16 @@ bit-identical to the plain 2D run, pinned by test). Not compatible with
 `momentum` (retired). No shipped preset sets it yet — the canonical flip is
 the S2 arc re-pick. methods.md §5.18–5.19.
 
+**MHV S2 (T2.3): `constraint_rate` + `constraint_resid_sigma`** (defaults
+0.0 → strict no-op). `constraint_rate > 0` (requires `n_issues`) switches
+the alignment spine from scheduled to **emergent**: `ConstraintOp`
+(network-local consensus projection, `abm/rules/constraint_op.py`) replaces
+`IdentitySorting`; `IDENTITY_SORTING_SCHEDULE`, the ×5 regrade multiplier,
+and `PARTY_ISSUE_COUPLING_SCHEDULE` are retired on this path (coupling
+pinned 1.0). `constraint_resid_sigma` is the within-block residual noise —
+the dispersion counterweight (compass-invisible; zero at D=2). Prior center
+0.02 / 0.01 (S4 fits); methods.md §5.20.
+
 ---
 
 ## 6. Interventions library (X1–X7)

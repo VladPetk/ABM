@@ -1298,6 +1298,48 @@ re-pick, so there is exactly one re-bless wave).
   pipeline (events, shocks, replacements), native IC moments in band,
   momentum rejected (retired knob).
 
+### 5.20 MHV S2 T2.3 — emergent constraint: `ConstraintOp` (2026-06)
+
+The S2 core mechanism: `abm/rules/constraint_op.py` productionizes the
+S1 pilot's validated operator. For each agent, the rule builds the
+**network-local consensus direction** (normalized mean of network
+neighbours' issue vectors) and pulls the agent's own vector toward its
+projection onto that axis — within-person cross-issue spread collapses
+onto a locally shared line. This is the oil-spill mechanism (DellaPosta
+2020) operating on the Boutyline–Vaisey belief-network reading;
+provenance **L** (mechanism) / **N** (operator form and rate). Two
+properties are pinned by permanent tests: the **anti-centroid AST
+guard** carried over from the pilot (the executable body references no
+party/centroid/corner target — the operator is correlation-inducing,
+never position-herding; an agent already on its local axis is a fixed
+point however far it sits from the neighbourhood mean), and a
+**bounded-collapse tripwire** (at the operating rate over 2× the arc
+horizon, within-party effective dimensionality stays > 2 — within-party,
+because pooled PR also absorbs partisan alignment, which is PartyPull's
+job, not this rule's). The dispersion counterweight is the rule's own
+**block-residual noise** (deferred from §5.19): per-item noise with its
+block means removed, so it disperses items within blocks without moving
+the compass at all (exactly zero at D=2 — I1-safe by construction).
+
+**Emergent mode** (`constraint_rate > 0`, requires `n_issues`): the
+scheduled alignment spine is retired on this path — `IdentitySorting`
+is not installed, `IDENTITY_SORTING_SCHEDULE` and the ×5 regrade
+multiplier are inert, and `PARTY_ISSUE_COUPLING_SCHEDULE` is pinned at
+1.0 (the ~83%-schedule-carried trajectory the knob audit flagged).
+Defaults 0.0 → strict no-op → every existing path bit-identical.
+
+**Prior-centering sweep** (`scripts/audit/t23_rate_sweep.py`, 28 arc
+runs): the headline finding is that emergent mode roughly **reproduces
+the legacy pooled-constraint endpoint without the schedules** (pooled
+mean |r| 2025 ≈ 0.70–0.74 vs legacy 0.745) — the operator + un-scheduled
+cue-taking generate what the hand-drawn spine used to impose. The shape
+differs honestly: emergent starts hotter at 1986 (0.38 vs 0.27; the
+coupling schedule used to suppress early bundling), which is what S3's
+data-fed elite series should restore mechanically (1980s elites were
+simply closer together). Prior center for the rate: **0.02** (residual
+σ 0.01) — kwarg default stays 0.0 (off); S4 fits the rate against the
+B&G/Kozlowski constraint-slope targets.
+
 ---
 
 ## 6. What the model is for

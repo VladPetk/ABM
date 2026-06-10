@@ -51,6 +51,7 @@ from ..rules.intervention_expiry import (
     X1ExposureExpiry,
 )
 from ..rules.identity_alignment import IdentityAlignment
+from ..rules.constraint_op import ConstraintOp
 from ..rules.identity_sorting import IdentitySorting
 from ..rules.identity_to_position import IdentityToIdeologyPull
 from ..rules.influence import BoundedConfidenceInfluence
@@ -756,6 +757,22 @@ def build_engine(
     # projection). n_issues=2 is the I1 reduction path (identity loadings).
     # Default None → no attr, no file read.
     n_issues: int | None = None,
+    # ── MHV S2 (T2.3) — emergent constraint mode ──────────────────────────────
+    # constraint_rate > 0 switches the alignment spine from SCHEDULED to
+    # EMERGENT: `ConstraintOp` (network-local consensus projection — the S1
+    # pilot operator productionized; abm/rules/constraint_op.py) enters the
+    # pipeline, and the three scheduled drivers are retired on this path:
+    # IdentitySorting is NOT installed, IDENTITY_SORTING_SCHEDULE events
+    # no-op (rule absent), the ×5 regrade multiplier is inert, and
+    # PARTY_ISSUE_COUPLING_SCHEDULE is pinned at 1.0 (decade events skip
+    # their coupling writes). Requires n_issues (the operator works on the
+    # issue vectors). constraint_resid_sigma is the within-block residual
+    # noise — the dispersion counterweight that bounds the collapse
+    # (exactly zero at D=2 by construction). Defaults 0.0 → strict no-op →
+    # every existing path bit-identical. Rate is a fitted quantity (S4);
+    # prior centered on the B&G/Kozlowski constraint slope.
+    constraint_rate: float = 0.0,
+    constraint_resid_sigma: float = 0.0,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -1536,6 +1553,15 @@ def build_engine(
                              "EMA at MHV T0.4)")
         env.attrs["issue_runtime"] = _build_runtime(_loadings)
         env.attrs["issue_rng"] = _issue_rng
+    _emergent = float(constraint_rate) > 0.0
+    if _emergent and n_issues is None:
+        raise ValueError("constraint_rate > 0 requires n_issues (the "
+                         "emergent ConstraintOp works on issue vectors)")
+    env.attrs["constraint_emergent"] = _emergent
+    if _emergent:
+        # retire the coupling schedule on this path: pin at 1.0; the
+        # decade events skip their writes when constraint_emergent.
+        env.attrs["party_issue_coupling"] = 1.0
     space = ContinuousSpace2D(bounds=((-1.0, 1.0), (-1.0, 1.0)))
 
     # Pipeline — every rule the historical arc uses. Phase 8b M5:
@@ -1605,18 +1631,26 @@ def build_engine(
         MediatedAnimus(
             learning_rate=(MEDIATED_ANIMUS_LR if evidence_regrade else 0.0) * sandbox_animus_mult,
         ),
-        IdentitySorting(
-            # Step 2 (flag-1 fix): scale the initial sort rate by the
-            # regrade multiplier (1.0 off → bit-identical). Decade
-            # boundaries re-scale via _set_identity_sorting.
-            sort_rate=IDENTITY_SORTING_SCHEDULE["1980-90"] * (
-                IDENTITY_SORTING_REGRADE_MULTIPLIER if evidence_regrade else 1.0
-            ) * sandbox_identity_mult,   # sandbox dial (1.0 = no-op)
-            step=(
-                IDENTITY_SORTING_REGRADE_STEP if evidence_regrade else 0.05
-            ) * sandbox_identity_mult,
-            differentiation=0.5,
-        ),
+        # MHV S2 T2.3 — emergent constraint mode: ConstraintOp REPLACES
+        # IdentitySorting's mean-field operator + its decade schedule +
+        # the ×5 regrade multiplier (the ~83%-schedule-carried alignment
+        # spine). Off-path (constraint_rate=0) the legacy rule is built
+        # exactly as before — bit-identical.
+        *((ConstraintOp(rate=float(constraint_rate),
+                        resid_sigma=float(constraint_resid_sigma)),)
+          if _emergent else
+          (IdentitySorting(
+              # Step 2 (flag-1 fix): scale the initial sort rate by the
+              # regrade multiplier (1.0 off → bit-identical). Decade
+              # boundaries re-scale via _set_identity_sorting.
+              sort_rate=IDENTITY_SORTING_SCHEDULE["1980-90"] * (
+                  IDENTITY_SORTING_REGRADE_MULTIPLIER if evidence_regrade else 1.0
+              ) * sandbox_identity_mult,   # sandbox dial (1.0 = no-op)
+              step=(
+                  IDENTITY_SORTING_REGRADE_STEP if evidence_regrade else 0.05
+              ) * sandbox_identity_mult,
+              differentiation=0.5,
+          ),)),
         # Step 1 (web_demo evidence re-grade, D3b): explicit
         # identity-alignment state (Mason mega-identity). Self-gates on
         # env.attrs["evidence_regrade"] — returns an empty delta WITHOUT
@@ -2206,7 +2240,10 @@ def _decade_boundary_1990(engine):
     )
     # Phase 8e §2: party-issue coupling rises with the great sort.
     # Phase 8e §4: under phase8e_baseline=True, coupling stays at 1.0.
-    if not engine.env.attrs.get("phase8e_baseline"):
+    # MHV S2 T2.3: in emergent-constraint mode the coupling schedule is
+    # retired (pinned 1.0 at build) — the decade events skip the write.
+    if not (engine.env.attrs.get("phase8e_baseline")
+            or engine.env.attrs.get("constraint_emergent")):
         engine.env.attrs["party_issue_coupling"] = PARTY_ISSUE_COUPLING_SCHEDULE["1990-00"]
 
 
@@ -2222,7 +2259,10 @@ def _decade_boundary_2000(engine):
         rate_y=(sched_y["2000-10"] if sched_y is not None else None),
         asymmetric=(asym_sched["2000-10"] if asym_sched is not None else None),
     )
-    if not engine.env.attrs.get("phase8e_baseline"):
+    # MHV S2 T2.3: in emergent-constraint mode the coupling schedule is
+    # retired (pinned 1.0 at build) — the decade events skip the write.
+    if not (engine.env.attrs.get("phase8e_baseline")
+            or engine.env.attrs.get("constraint_emergent")):
         engine.env.attrs["party_issue_coupling"] = PARTY_ISSUE_COUPLING_SCHEDULE["2000-10"]
 
 
@@ -2243,7 +2283,10 @@ def _decade_boundary_2010(engine):
             rate_y=(sched_y["2010-20"] if sched_y is not None else None),
             asymmetric=(asym_sched["2010-20"] if asym_sched is not None else None),
         )
-    if not engine.env.attrs.get("phase8e_baseline"):
+    # MHV S2 T2.3: in emergent-constraint mode the coupling schedule is
+    # retired (pinned 1.0 at build) — the decade events skip the write.
+    if not (engine.env.attrs.get("phase8e_baseline")
+            or engine.env.attrs.get("constraint_emergent")):
         engine.env.attrs["party_issue_coupling"] = PARTY_ISSUE_COUPLING_SCHEDULE["2010-20"]
 
 
@@ -2259,7 +2302,10 @@ def _decade_boundary_2020(engine):
         rate_y=(sched_y["2020-25"] if sched_y is not None else None),
         asymmetric=(asym_sched["2020-25"] if asym_sched is not None else None),
     )
-    if not engine.env.attrs.get("phase8e_baseline"):
+    # MHV S2 T2.3: in emergent-constraint mode the coupling schedule is
+    # retired (pinned 1.0 at build) — the decade events skip the write.
+    if not (engine.env.attrs.get("phase8e_baseline")
+            or engine.env.attrs.get("constraint_emergent")):
         engine.env.attrs["party_issue_coupling"] = PARTY_ISSUE_COUPLING_SCHEDULE["2020-25"]
 
 
