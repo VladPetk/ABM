@@ -744,6 +744,18 @@ def build_engine(
     tier_c_bc_epsilon: float | None = None,
     sandbox_contact: float = 0.0,
     sandbox_diversity: float | None = None,
+    # ── MHV S2 (T2.1) — D-dimensional issue state ─────────────────────────────
+    # When set, each agent gets an `issues` vector (attrs["issues"], shape
+    # (n_issues,)) seeded from the frozen ANES loadings file
+    # (data/mhv/issue_loadings.json: party-conditional 1986 item moments +
+    # measured correlation structure; abm/core/issues.py). T2.1 wiring is
+    # DORMANT: no rule reads the vector yet, and the seeding uses its own
+    # dedicated rng stream, so the default path AND the n_issues path are
+    # bit-identical to head on every existing metric. T2.2 switches the rule
+    # kernels to this state (ideology becomes the cached block-means
+    # projection). n_issues=2 is the I1 reduction path (identity loadings).
+    # Default None → no attr, no file read.
+    n_issues: int | None = None,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -1275,6 +1287,28 @@ def build_engine(
             a.state.attrs["identity_alignment"] = float(
                 np.clip(np.mean(np.asarray(ids, dtype=float) * sign), 0.0, 1.0)
             )
+
+    # MHV S2 T2.1 — dormant issue-vector seeding. Dedicated rng stream
+    # (never touches `rng`/`net_rng`), so enabling n_issues leaves every
+    # existing draw — and therefore the whole trajectory — bit-identical.
+    if n_issues is not None:
+        from ..core.issues import (load_loadings, identity_loadings_2d,
+                                   chol_corr, seed_issue_vectors)
+        if int(n_issues) == 2:
+            _loadings = identity_loadings_2d()
+        else:
+            _loadings = load_loadings()
+            if len(_loadings["items"]) != int(n_issues):
+                raise ValueError(
+                    f"n_issues={n_issues} but the frozen loadings file has "
+                    f"{len(_loadings['items'])} items (D=2 uses the identity "
+                    "reduction loadings; other D need their own file)")
+        _issue_rng = np.random.default_rng(10_000_019 + seed)
+        _parties = np.array([a.state.attrs["party"] for a in agents], dtype=int)
+        _V = seed_issue_vectors(_parties, _loadings, _issue_rng,
+                                chol=chol_corr(_loadings))
+        for _k, a in enumerate(agents):
+            a.state.attrs["issues"] = _V[_k].copy()
 
     network = Network.homophilous(
         agents,

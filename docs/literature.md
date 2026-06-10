@@ -64,7 +64,13 @@ phase9_raw_data_sources.md §"Published-paper tables."
 `phase9_empirical_targets_visualization_v2.pdf` (the visual spec + density
 small-multiples for the per-decade distribution targets).
 `data/phase9_empirical/derived/` holds the ANES-derived per-decade pointclouds
-and KDEs used by the Wasserstein gate.
+and KDEs used by the Wasserstein gate. **`data/mhv/issue_loadings.json`**
+(MHV S2, 2026-06) is the frozen D=7 issue-battery structure — the 1986-wave
+item correlation matrix, party-conditional item moments, 3-block latent map,
+and compass-readout definition — derived from the ANES CDF by
+`scripts/build_issue_loadings.py` with the same recode recipe as the compass
+pipeline; it seeds the S2 issue-vector substrate (`abm/core/issues.py`;
+methods.md §5.18).
 
 ---
 

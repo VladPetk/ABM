@@ -1223,6 +1223,39 @@ cosine ≈ −0.65) appears once BC is awake. Breaking these ridges
 requires different facts (the elite block; multi-wave curvature), not
 a different operating point.
 
+### 5.18 MHV S2 T2.1 — D-dimensional issue state, dormant substrate (2026-06)
+
+First S2 increment: the engine gains a dimension-parametric issue vector,
+wired dormant (nothing reads it yet; the shipped trajectory is bit-identical,
+pinned by test).
+
+- **Frozen loadings file** `data/mhv/issue_loadings.json` (generator:
+  `scripts/build_issue_loadings.py`): the D=7 ANES battery the S1 pilot
+  validated — econ {VCF0803, VCF0809, VCF0839}, cultural-moral {VCF0838,
+  VCF0852, VCF0853}, racial {VCF0830} — with the measured 1986-wave item
+  correlation matrix (PSD-corrected), party-conditional item means/SDs
+  (weighted, VCF0301 with leaners as partisans), and the compass-readout
+  definition. Recode recipe is byte-identical to the empirical compass
+  pipeline (`scripts/anes_2d_compass.py`), so engine issue space and the
+  ANES targets share units exactly. **Wave caveat (E):** 1980 lacks
+  VCF0839/0852/0853 entirely; 1986 is the earliest full-coverage wave and
+  stands in for the ~1980 baseline. Tags: **L** (items, moments,
+  correlations — ANES CDF) / **N** (the 3-block assignment) / **E** (the
+  1986→1980 proxy).
+- **Kernels** (`abm/core/issues.py`, pure vectorized numpy): party-
+  conditional Gaussian-copula-style seeding `v = μ_party + σ_party ⊙ (Lz)`
+  clipped to [−1,1]; compass projection x = econ-block mean, y =
+  cultural-core mean (the empirical pipeline's exact lens); **RMS distance
+  convention** `‖Δv‖·√(2/D)` — at D=2 the factor is exactly 1.0, so the
+  N=2 path reproduces the current 2D arithmetic bit-for-bit (invariant I1;
+  pinned by `tests/test_t21_issue_state.py`).
+- **Measured-by-construction bonuses** (to be pinned when kernels go live
+  at T2.2): the seeded projection's within-party SD lands at ~0.32–0.34
+  (the ANES wp_sd target the 2D IC undershot at 0.28), and the wrong-side
+  economic tail appears **natively** (Dem 6.0% / Rep 2.2% past ±0.45 from
+  the 1986 marginals vs the 3.76%/1.60% 1980–90 pooled targets) — the
+  retirement path for the §5.15 soft cap.
+
 ---
 
 ## 6. What the model is for

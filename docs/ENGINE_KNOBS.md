@@ -541,6 +541,15 @@ New no-op-by-default kwargs added for v2: `tier_c_bc_epsilon` (None → ε scale
 `sandbox_animus_mult` / `sandbox_rewire_mult` kwargs remain in the signature
 (still default-1.0 no-ops) but are no longer wired to a sandbox dial.
 
+**MHV S2 (T2.1): `n_issues`** (default None → no-op). When set, every agent
+gets an `issues` vector (attrs `issues`, shape `(n_issues,)`) seeded from the
+frozen ANES loadings file (`data/mhv/issue_loadings.json`; kernels in
+`abm/core/issues.py`). Valid values: **7** (the real-data ANES battery) and
+**2** (the I1 identity-reduction path). T2.1 wiring is **dormant** — no rule
+reads the vector, seeding uses a dedicated rng stream, and the trajectory is
+bit-identical with or without it (pinned by `tests/test_t21_issue_state.py`).
+T2.2 switches the rule kernels onto this state; methods.md §5.18.
+
 ---
 
 ## 6. Interventions library (X1–X7)
