@@ -88,6 +88,15 @@ data/phase9_empirical/derived/densities/
 /web/data/
 
 
+# Internal investigation / planning notes — kept on workstation, not in
+# the public repo (2026-06 decision). Holds the engine-knob-audit and MHV
+# working docs (reviews, roadmap, mhv_spec, calibration interpretation) and
+# the audit harness OUTPUTS (docs/internal/audit/*.json|md — regenerable by
+# the committed scripts/audit/*.py instruments). Public docs may cite these
+# as "internal audit notes"; the load-bearing conclusions are summarized in
+# methods.md / ENGINE_KNOBS.md.
+docs/internal/
+
 # Temporary files:
 docs/_*
 web_demo/OLD_VERSION/
