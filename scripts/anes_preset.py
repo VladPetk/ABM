@@ -59,7 +59,11 @@ ANES_FULL_KWARGS = {
     "tier_d_aniso_noise_sigma_x": 0.04,
     "tier_d_aniso_noise_sigma_y": 0.04,
     "tier_c_party_pull_strength": 0.04,
-    "tier_c_bc_strength": 0.015,
+    # MHV S2 T2.6 — the BC wake (T0.6 finding: at 0.30/0.015 the BC
+    # channel was effectively dead on the ANES substrate; eps 0.40 /
+    # strength 0.03 restores a live influence channel, gain ~2.9x).
+    "tier_c_bc_strength": 0.03,
+    "tier_c_bc_epsilon": 0.40,
     "tier_d_coupling_rho": 0.30,
     "tier_d_cue_correlation": 0.40,
     "tier_d_ic_sigma": 0.35,
@@ -72,13 +76,26 @@ ANES_FULL_KWARGS = {
     # anchoring) / E (the 1–2% lifetime-big-mover target from panel
     # stability) / N (the 2.8 value). See methods.md §5.15.
     "fj_alpha_scale": 2.8,
-    # MHV T0.4 — the hard 1980 economic IC tail cap (0.45) is RECALIBRATED
-    # to an ANES-anchored soft cap: the wrong-side tail is thinned to the
-    # measured 1980s rates (D 3.76% / R 1.60% past ±0.45; weighted,
-    # respondent_coordinates.csv 1980–1990) instead of clipped to zero.
-    # Provenance L (rates) / N (the thinning operator). Retire at S2.
-    "tier_d_ic_partisan_x_cap": 0.45,
-    "tier_d_ic_wrongside_tail_target": {0: 0.0376, 1: 0.0160},
+    # MHV S2 T2.6 — the T0.4 soft wrong-side-tail cap is RETIRED as
+    # promised (s2_spec §1): on the D=7 substrate the item-level seeding
+    # reproduces wrong-side tails NATIVELY from the measured 1986
+    # party-conditional moments (pinned by tests/test_t21_issue_state.py).
+    # The tier_d_ic_partisan_x_cap / tier_d_ic_wrongside_tail_target
+    # kwargs remain available for the legacy 2D path only.
+    #
+    # MHV S2 T2.6 — THE CANONICAL FLIP. The shipped substrate becomes the
+    # D=7 ANES issue battery (frozen loadings, native IC) and the
+    # emergent rule set replaces the scheduled alignment spine:
+    # ConstraintOp (network-local consensus projection; rate at the
+    # T2.3 prior center) + MeasuredAlignment readout; IdentitySorting,
+    # IDENTITY_SORTING_SCHEDULE, the x5 regrade multiplier, and
+    # PARTY_ISSUE_COUPLING_SCHEDULE are retired on this path; the dyadic
+    # identity-distance affect term is off (M3-light). Viability re-pick
+    # (NOT calibration - S4 owns the fit): scripts/audit/t26_arc_repick.py;
+    # methods.md §5.23.
+    "n_issues": 7,
+    "constraint_rate": 0.02,
+    "constraint_resid_sigma": 0.01,
     # Step 1 (web_demo evidence re-grade) — master gate for the engine
     # truth-pass (D1a Gingrich/CU, D2a social-media demotion, D3b
     # identity-alignment → animus). On for the web/ANES path.

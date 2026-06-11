@@ -50,12 +50,19 @@ not refactors.
 | **X3** | Quit cable news | null / null | Disengage from partisan media |
 | **X4** | Bipartisan dialogue programs | null / null* | Civic dialogue + shared-identity priming |
 | **X5** | Ranked-choice voting | **partial** / null | Electoral reform (RCV + open primaries) |
-| **X6** | Shared neighborhoods and workplaces | null / **partial** | Structural shared-life contact (real at 2020, partial earlier) |
+| **X6** | Shared neighborhoods and workplaces | null / **real**† | Structural shared-life contact (real at 2020, partial earlier) |
 | **X7** | Correct the perception gap | null / null | Sustained civic perception-correction campaign |
 
 *X4 affect is null at the bucket cutoff but trends helpful at
 the Voelkel 2024 ~0.04 SD floor across all release decades —
 honest direction-match without crossing the partial threshold.
+
+†X6 affect re-blessed partial→real at MHV S2 T2.6 (user sign-off
+2026-06-10): on the emergent D=7 canonical substrate the
+cross-release mean Δaff measures +0.172, over the 0.15 real
+boundary X6 had been flagged as sitting on. The full-protocol S4
+phase-10 re-measure revisits all tags and the per-decade detail
+in §4.6 (which still describes the pre-flip engine).
 
 Measured across **four release ticks (1990 / 2000 / 2010 /
 2020)** × 30-tick counterfactual horizon × 9 seeds = 252

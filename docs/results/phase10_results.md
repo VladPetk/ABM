@@ -4,6 +4,18 @@
 the Phase 9 ANES-recalibrated engine. Last updated 2026-06-10
 (MHV T0.4 re-measure).*
 
+> **⚠ STALE vs the canonical engine as of MHV S2 T2.6 (2026-06-10).**
+> The canonical preset has flipped to the emergent substrate
+> (`n_issues=7` + `ConstraintOp` + the BC wake; methods.md §5.23).
+> Every number below was measured on the **pre-flip** engine and is NOT
+> re-blessed in S2 — the MHV S4 phase-10 re-measure owns that. The web
+> demo continues to serve the pre-flip export until the S5 re-export.
+> First measured movement on the new substrate (consolidated directions
+> test): X6's affect axis crosses partial→real (Δaff +0.172) — **tag
+> re-blessed at T2.6 user sign-off** (X6 had been flagged as sitting on
+> the real/partial boundary); all other X-buckets hold their declared
+> class.
+
 > **MHV T0.4 re-measure (demo-physics knob adjudication, 2026-06-10).**
 > Re-measured after the canonical substrate changed: **momentum (0.4)
 > relocated** to a presentation-side EMA in the repack (it was a display

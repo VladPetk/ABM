@@ -569,8 +569,10 @@ emitters are lifted at the apply site. Valid values: **7** (the real-data
 ANES battery — the live S2 IC with native wrong-side tails; T0.4's soft cap
 is bypassed on this path) and **2** (the I1 reduction: trajectory
 bit-identical to the plain 2D run, pinned by test). Not compatible with
-`momentum` (retired). No shipped preset sets it yet — the canonical flip is
-the S2 arc re-pick. methods.md §5.18–5.19.
+`momentum` (retired). **Canonical as of MHV T2.6:** `ANES_FULL_KWARGS`
+ships `n_issues=7` + `constraint_rate=0.02` + `constraint_resid_sigma=0.01`
++ the BC wake (ε 0.40 / strength 0.03); the soft-cap kwargs are retired
+from the preset (legacy 2D path only). methods.md §5.18–5.19, §5.23.
 
 **MHV S2 (T2.3): `constraint_rate` + `constraint_resid_sigma`** (defaults
 0.0 → strict no-op). `constraint_rate > 0` (requires `n_issues`) switches

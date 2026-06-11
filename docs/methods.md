@@ -1439,6 +1439,74 @@ release experiment, the affect-outpaces-ideology (Iyengar) claim, the
 phase-6/7 pillar intervention buckets, independents, cooperative
 contact — passed on the new substrate without touching a threshold.
 
+### 5.23 MHV S2 T2.6 — the canonical flip + freeze gate (2026-06)
+
+**The flip.** The canonical shipped preset (`scripts/anes_preset.py`,
+`ANES_FULL_KWARGS`) now builds the emergent engine: `n_issues=7` (the
+frozen ANES battery, native item-level IC), `constraint_rate=0.02` /
+`constraint_resid_sigma=0.01` (the T2.3 prior center), and the T0.6 BC
+wake (`tier_c_bc_epsilon=0.40`, `tier_c_bc_strength=0.03` — the BC
+channel was effectively dead at 0.30/0.015). The T0.4 soft wrong-side
+tail cap is **retired** from the preset as promised (§5.15→s2_spec §1):
+the item-level seeding reproduces wrong-side tails natively (pinned by
+`tests/test_t21_issue_state.py`); the soft-cap kwargs remain available
+on the legacy 2D path only.
+
+**Viability re-pick, not calibration** (s2_spec §7;
+`scripts/audit/t26_arc_repick.py`, 24 cells × 6 seeds over
+constraint_rate × party_pull × animus × idpull). The surface is flat —
+the emergent substrate is forgiving — and the **minimal-change cell**
+was chosen: every knob other than the flip components keeps its shipped
+value (party_pull 0.04, idpull 0.020/0.040, animus ×1.0; the ×0.8
+animus cell *under*-cools to −0.63). Chosen-cell endpoints (6 seeds):
+sep@2025 0.93, affect@2025 −0.70, pooled |r| 0.73 (legacy 0.745),
+measured alignment 0.33, modularity 0.20.
+
+**Freeze gate — the S2 headline.** The phase-2 freeze instrument on the
+flipped canonical (8 seeds, `docs/internal/audit/phase2_freeze.json`):
+the **alignment emergent fraction is 1.07** (107% of the 1980→2025 rise
+survives all-schedules-frozen + no-events) vs **0.17 on the legacy
+spine** — the ≥0.50 S2 gate passes decisively; the alignment trajectory
+is now carried by rule interaction, not schedules. The
+`freeze_identity_sorting` / `freeze_coupling` / `freeze_party_k` rows
+read exactly 1.00: the three retired schedules are measured-dead on the
+canonical path. Dark-matter budgets (§6 of the MHV spec, adopted at S2
+sign-off) measured sep 1.10 / affect 0.87 / alignment 1.07 against
+floors 0.60/0.60/0.50 and are now **wired into
+`tests/test_dark_matter_budget.py`** (with the pre-registered alignment
+ratchet to 0.60 at S4 documented in the file).
+
+**Honest ledger of what is still imposed.** Elite drift carries ~30% of
+the sep rise (freeze fraction 0.70) and the social-media ramp ~21% of
+the affect rise (0.79) — these are the two residual schedule levers the
+S3 typed-inputs caps (≤0.15/≤0.15/≤0.10) exist to retire. Dated events
+still *brake* separation on the new substrate (no-events sep fraction
+1.60 — the T0.3 finding survives the rebuild). The informational §11
+scorecard reads **9/24 ANES cells vs the legacy 20/24** (w2_total
+1.018): the dominant systematic miss is `within_party_sd` ≈ 0.24 vs the
+voter band [0.27, 0.41] at every decade (the known
+bc_strength↔noise_sigma pair from §5.17 is S4's lever), with mid-arc
+affect slightly over-cool; 1980 sep and 2020/2025 constraint land
+in-band natively. S2's gate is explicitly not ANES quality — **S4 owns
+the fit** — but the number is recorded here so the cost of the honest
+rebuild is visible, not hidden.
+
+**Consequences for published numbers.** The phase-10 intervention
+buckets and the web export were blessed on the pre-flip substrate;
+`phase10_results.md` carries a staleness banner until the S4
+full-protocol re-measure. The consolidated arc-buckets test measured
+exactly one movement on the new substrate — **X6's affect axis crosses
+partial→real** (cross-release Δaff +0.172 vs the 0.15 boundary; X6 had
+been flagged as sitting on that line) — and the tag was **re-blessed at
+user sign-off** (move the tag, not the threshold); every other X-bucket
+holds its declared class. The T0.4 soft-cap drift guards convert to
+explicit legacy-2D-path guards (user sign-off; kill candidates at the
+post-S4 legacy retirement pass). One shock guard re-blessed: the
+Obergefell gap-preservation checkpoints at ticks 120/135 get a 0.005
+noise tolerance (the strict ≥ was pinning paired butterfly-effect noise
+on the 7-item substrate, measured −0.0002 on a 0.59 gap; the onset
+check stays strict).
+
 ---
 
 ## 6. What the model is for

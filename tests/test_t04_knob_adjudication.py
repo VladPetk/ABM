@@ -5,6 +5,14 @@ EMA (engine kwarg stays, default 0.0; the canonical preset no longer sets
 it); the hard IC x-cap RECALIBRATED to an ANES-anchored soft cap (the
 wrong-side 1980 economic tail is thinned to the measured ANES 1980s rates
 instead of clipped to zero); fj_alpha_scale kept as a tagged mechanism.
+
+MHV S2 T2.6 (user sign-off 2026-06-10): the canonical preset flipped to
+the D=7 emergent substrate, where the wrong-side tails are NATIVE to the
+item-level seeding (pinned by tests/test_t21_issue_state.py) and the
+soft-cap kwargs are retired from the preset. The soft-cap tests below
+become **legacy-2D-path guards**: they pin the (still live) legacy
+mechanism on an explicit legacy config rather than the canonical preset.
+Kill candidates at the post-S4 legacy-path retirement pass.
 """
 import numpy as np
 
@@ -15,10 +23,24 @@ from scripts.anes_preset import ANES_FULL_KWARGS
 # (data/phase9_empirical/derived/respondent_coordinates.csv)
 TARGET_D, TARGET_R = 0.0376, 0.0160
 
+# The explicit legacy-2D configuration the soft-cap guards pin: the
+# canonical preset as it stood pre-flip (no issue substrate, no emergent
+# constraint, legacy BC, soft-cap kwargs restored).
+LEGACY_2D_OVERRIDES = {
+    "n_issues": None,
+    "constraint_rate": 0.0,
+    "constraint_resid_sigma": 0.0,
+    "tier_c_bc_strength": 0.015,
+    "tier_c_bc_epsilon": None,
+    "tier_d_ic_partisan_x_cap": 0.45,
+    "tier_d_ic_wrongside_tail_target": {0: 0.0376, 1: 0.0160},
+}
+
 
 def _ic_rates(n_seeds=16, **overrides):
     rd, rr = [], []
     kw = dict(ANES_FULL_KWARGS)
+    kw.update(LEGACY_2D_OVERRIDES)
     kw.update(overrides)
     for seed in range(n_seeds):
         eng = H.build_engine(seed=seed, **kw)

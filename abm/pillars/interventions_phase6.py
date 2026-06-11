@@ -784,7 +784,12 @@ X6_SHARED_INSTITUTIONS = Intervention(
     # 2025 baseline is less polarized, so a contact-based lever has less animus
     # to undo. X6 remains the strongest affect lever; it sits right at the
     # real/partial boundary. See docs/affect_bands_investigation.md.
-    effect_buckets={"issue_sorting": "null", "affect": "partial"},
+    # MHV S2 T2.6 (user sign-off 2026-06-10): affect tag re-blessed
+    # partial -> real on the flipped emergent substrate (cross-release
+    # mean Δaff +0.172 vs the 0.15 real boundary — it crossed the line
+    # it was already sitting on). Move the tag, not the threshold. The
+    # full-protocol S4 phase-10 re-measure revisits all tags.
+    effect_buckets={"issue_sorting": "null", "affect": "real"},
     citation=(
         "Allport 1954 (The Nature of Prejudice); Pettigrew & Tropp "
         "2006 (JPSP 90:751, meta-analysis r ≈ −0.21 / 515 studies); "

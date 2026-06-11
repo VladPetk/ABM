@@ -104,7 +104,11 @@ are bundled and parameterized.
   time-varying schedules + ANES anchors targeting US 1980→2025, with dated event
   /shock handlers (Fox News '96, Tea Party '09, Trump '16, COVID/Jan6 '20…) and
   the 7-intervention library. **Where Phase 9 calibration lives, and what the
-  web demo serves** (engine `phase10`, preset `anes_full`, seed 0).
+  web demo serves** (engine `phase10`, preset `anes_full`, seed 0). Since MHV
+  S2 (T2.6) the canonical preset builds the **emergent** engine (`n_issues=7`
+  issue substrate + `ConstraintOp`; methods §5.23); the phase-10 buckets and
+  the web export are pre-flip until the S4 re-measure / S5 re-export
+  (staleness banner in `phase10_results.md`).
 
 ### How rules are drift-guarded — three test layers
 A rule's behavior is (or should be) pinned at three distinct levels; each
@@ -169,7 +173,9 @@ presenting results:
 Time maps via `ticks_per_year = 3` (1 tick ≈ 4 months), anchored to the ANES
 out-party thermometer; the shipped run is ticks `0…135` = 1980 → ~end 2025.
 **Status: Phase 10 complete** (Phase 9 = ANES recalibration; Phase 10 =
-intervention library re-measure on that baseline).
+intervention library re-measure on that baseline). **MHV S2 in progress:**
+the canonical engine substrate is now the emergent D=7 build (T2.6 flip);
+ANES re-fit + phase-10 re-measure land at MHV S4, web re-export at S5.
 
 ### Engine quickstart (Windows PowerShell)
 ```powershell
