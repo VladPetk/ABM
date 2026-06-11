@@ -774,6 +774,18 @@ def build_engine(
     # prior centered on the B&G/Kozlowski constraint slope.
     constraint_rate: float = 0.0,
     constraint_resid_sigma: float = 0.0,
+    # ── MHV S3 (T3.2) — data-fed elite/party-position channel ─────────────────
+    # When True, the scheduled `EliteDrift` is replaced by a `PartyCentroidSeries`
+    # input rule (abm/pillars/inputs.py) that sets env.attrs["parties"][pid] each
+    # tick from the committed ANES voter-centroid series
+    # (data/mhv/party_centroid_series.json; decision D-S3-1) and propagates the
+    # shift to party_cue. The decade/Gingrich/Citizens-United elite-rate event
+    # writes become natural no-ops (no EliteDrift rule to find), and the
+    # Trump-2016 centroid nudge is skipped (the series carries the 2016 shift
+    # natively). The ELITE_DRIFT_SCHEDULE* constants are retired on this path
+    # (kept live for the legacy non-data-fed path; kill candidates post-S4).
+    # Default False → EliteDrift unchanged → bit-identical to head.
+    data_fed_elite: bool = False,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -1585,6 +1597,8 @@ def build_engine(
     # `_emergent` is defined just before the seeding blocks (T2.4 needs it
     # there); the env flag is what the rules / events / shocks read.
     env.attrs["constraint_emergent"] = _emergent
+    # MHV S3 T3.2 — read by the Trump-2016 handler (the series owns the centroid).
+    env.attrs["data_fed_elite"] = bool(data_fed_elite)
     if _emergent:
         # retire the coupling schedule on this path: pin at 1.0; the
         # decade events skip their writes when constraint_emergent.
@@ -1751,13 +1765,22 @@ def build_engine(
             strength_y=float(tier_c_identity_pull_y),
         ),
     ]
-    env_rules = [
-        # Phase 8b: EliteDrift active from 1980 at low rate, ramping
-        # via decade-boundary scheduled transitions. Continuous
-        # elite divergence per McCarty-Poole-Rosenthal 2006;
-        # Citizens United 2010 is the discrete bump, not the
-        # onset.
-        EliteDrift(
+    # MHV S3 T3.2 — the elite channel. On the data-fed path the scheduled
+    # EliteDrift is replaced by a PartyCentroidSeries input rule reading the
+    # committed ANES voter-centroid series; the schedule-driven rate writes
+    # (decade boundaries / Gingrich / Citizens United) become natural no-ops
+    # because no EliteDrift rule is present for `_set_elite_drift_rate` to find.
+    if data_fed_elite:
+        from .inputs import (
+            PARTY_CENTROID_SERIES_PATH, PartyCentroidSeries, load_series,
+        )
+        _elite_channel = PartyCentroidSeries(load_series(PARTY_CENTROID_SERIES_PATH))
+    else:
+        # Phase 8b: EliteDrift active from 1980 at low rate, ramping via
+        # decade-boundary scheduled transitions. Continuous elite divergence
+        # per McCarty-Poole-Rosenthal 2006; Citizens United 2010 is the
+        # discrete bump, not the onset.
+        _elite_channel = EliteDrift(
             rate=elite_drift_schedule_active["1980-90"],
             rate_y=(
                 elite_drift_schedule_y_active["1980-90"]
@@ -1770,7 +1793,9 @@ def build_engine(
                 if anes_knobs_active
                 else elite_drift_asymmetric_active
             ),
-        ),
+        )
+    env_rules = [
+        _elite_channel,
         TieRewiring(
             # Cross-cutting recalibration (2026-06). 0.02 left the
             # 1980->2025 cross-cutting decline too compressed at the
@@ -1987,11 +2012,16 @@ def _event_2016_trump_election(engine):
     Trump-coalition shift (overwhelmingly cultural, not economic).
     Default path keeps the original (+0.05, 0.0) bit-identically.
     """
-    parties = engine.env.attrs["parties"]
-    if engine.env.attrs.get("tier_d_axis_balance") and not engine.env.attrs.get("tier_d_lever6_off"):
-        parties[1] = parties[1] + np.array([0.02, 0.10])
-    else:
-        parties[1] = parties[1] + np.array([0.05, 0.0])
+    # MHV S3 T3.2 — on the data-fed elite path the party centroids are set
+    # every tick from the ANES voter-centroid series, which carries the 2016
+    # shift natively; the hand nudge is retired (it would be overwritten next
+    # tick anyway). The identity-sorting bump below is independent and stays.
+    if not engine.env.attrs.get("data_fed_elite"):
+        parties = engine.env.attrs["parties"]
+        if engine.env.attrs.get("tier_d_axis_balance") and not engine.env.attrs.get("tier_d_lever6_off"):
+            parties[1] = parties[1] + np.array([0.02, 0.10])
+        else:
+            parties[1] = parties[1] + np.array([0.05, 0.0])
     # Bump identity sorting for the next 2 years (6 ticks). Step 2
     # (flag-1 fix): the +0.005 increment and the 0.040 cap scale with
     # the regrade multiplier so the bump rides on top of the (scaled)

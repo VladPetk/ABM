@@ -25,6 +25,7 @@ one-shot nudges that remain ride the declarative ``shocks.py`` channel.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -32,6 +33,13 @@ import numpy as np
 # Standard arc time anchor (CLAUDE.md: tick 0 = 1980, 3 ticks/year).
 DEFAULT_YEAR0 = 1980.0
 DEFAULT_TICKS_PER_YEAR = 3
+
+_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+# Committed S3 input series (generators under scripts/).
+PARTY_CENTROID_SERIES_PATH = os.path.join(
+    _ROOT, "data", "mhv", "party_centroid_series.json")
+MEDIA_PENETRATION_SERIES_PATH = os.path.join(
+    _ROOT, "data", "mhv", "media_penetration_series.json")
 
 REQUIRED_META = ("name", "unit", "source", "lne_tag")
 _LNE = ("L", "N", "E")
