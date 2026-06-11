@@ -52,7 +52,12 @@ class MediaConsumption:
         env: Environment,
         rng: np.random.Generator,
     ) -> StateDelta:
-        if self.strength == 0:
+        # MHV S3 T3.3 — data-fed media channel: when MediaPenetrationSeries is
+        # installed it writes env.attrs["media_strength"] each tick from the
+        # partisan-media penetration curve; absent that key, fall back to the
+        # rule's own (event-set) strength → bit-identical for every other path.
+        strength = float(env.attrs.get("media_strength", self.strength))
+        if strength == 0:
             return StateDelta()
         diet = agent.state.attrs.get("media_diet")
         outlets = env.attrs.get("outlets")
@@ -104,7 +109,7 @@ class MediaConsumption:
                     effective_pos = effective_pos + np.asarray(media_cue)
                 pull += weight * (lift(np.asarray(effective_pos, float), rt) - v)
             s = float(agent.state.attrs.get("stubbornness", 0.0))
-            return StateDelta(d_attrs={"issues": (1.0 - s) * (self.strength * pull)})
+            return StateDelta(d_attrs={"issues": (1.0 - s) * (strength * pull)})
         pull = np.zeros(2)
         for outlet_id, weight in diet.items():
             outlet = outlets.get(outlet_id)
@@ -114,7 +119,7 @@ class MediaConsumption:
             if media_cue is not None:
                 effective_pos = effective_pos + np.asarray(media_cue)
             pull += weight * (effective_pos - agent.state.ideology)
-        d = self.strength * pull
+        d = strength * pull
         # F1: Friedkin-Johnsen scaling — stubborn agents move less.
         s = float(agent.state.attrs.get("stubbornness", 0.0))
         return StateDelta(d_ideology=(1.0 - s) * d)

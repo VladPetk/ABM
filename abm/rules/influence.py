@@ -64,6 +64,11 @@ class BoundedConfidenceInfluence:
         neighbours = neighbor_agents(agent, space, env)
         if not neighbours:
             return StateDelta()
+        # MHV S3 T3.3 — data-fed media channel: when MediaPenetrationSeries is
+        # installed it writes env.attrs["bc_affect_weight"] each tick from the
+        # social-media adoption curve; absent that key, fall back to the rule's
+        # own (event-set) affect_weight → bit-identical for every other path.
+        affect_weight = float(env.attrs.get("bc_affect_weight", self.affect_weight))
         # MHV S2 T2.2 — native D-dim path. In live issues mode the rule
         # measures distances and averages targets over the FULL issue
         # vectors (RMS distance convention), emitting d_attrs["issues"].
@@ -90,7 +95,7 @@ class BoundedConfidenceInfluence:
             # replication path. The affect modulator is a feature of
             # the graded filter only — surface the misconfiguration
             # rather than silently ignoring it.
-            if self.affect_weight > 0.0:
+            if affect_weight > 0.0:
                 raise ValueError(
                     "BoundedConfidenceInfluence: affect_weight > 0 requires "
                     "temperature > 0 (affect feedback applies on the graded "
@@ -132,7 +137,7 @@ class BoundedConfidenceInfluence:
             # affect_weight = 0.0 → ms is all 1.0 → no behavioural change
             # (the multiplication is a pure scalar 1.0, leaving ws
             # bit-identical to the Phase 4 path).
-            if self.affect_weight > 0.0:
+            if affect_weight > 0.0:
                 own_affect = agent.state.attrs.get("affect") or {}
                 own_party = agent.state.attrs.get("party")
                 ms = np.empty(len(neighbours))
@@ -149,7 +154,7 @@ class BoundedConfidenceInfluence:
                         warmth = float(np.clip(
                             own_affect.get(other, 0.0), -1.0, 1.0
                         ))
-                        m = 1.0 + self.affect_weight * warmth
+                        m = 1.0 + affect_weight * warmth
                         ms[k] = float(np.clip(m, 0.1, 2.0))
                 ws = ws * ms
             wsum = float(ws.sum())

@@ -786,6 +786,16 @@ def build_engine(
     # (kept live for the legacy non-data-fed path; kill candidates post-S4).
     # Default False → EliteDrift unchanged → bit-identical to head.
     data_fed_elite: bool = False,
+    # ── MHV S3 (T3.3) — data-fed media channel ────────────────────────────────
+    # When True, a `MediaPenetrationSeries` input rule
+    # (data/mhv/media_penetration_series.json) writes env.attrs["media_strength"]
+    # and ["bc_affect_weight"] each tick from the partisan-media + social-media
+    # penetration curves (weak coupling per the media-paradox blindspot cluster).
+    # MediaConsumption + BoundedConfidenceInfluence read those env slots with a
+    # fallback to their own (event-set) values, so the discrete FD/Fox/social-
+    # media step writes are overridden on this path. Default False → rules read
+    # their own values → bit-identical to head.
+    data_fed_media: bool = False,
 ) -> Engine:
     """Cold-build at 1980. Population matches the §9.3 initial-
     condition target band:
@@ -1844,6 +1854,16 @@ def build_engine(
             decay_rate=0.0 if phase8e_baseline else THREAT_DECAY_RATE
         ),
     ]
+
+    # MHV S3 T3.3 — data-fed media channel. Runs in the env phase (before the
+    # agent rules each tick) so MediaConsumption / BC read the fresh penetration
+    # value. Default off → not installed → bit-identical.
+    if data_fed_media:
+        from .inputs import (
+            MEDIA_PENETRATION_SERIES_PATH, MediaPenetrationSeries, load_series,
+        )
+        env_rules.append(
+            MediaPenetrationSeries(load_series(MEDIA_PENETRATION_SERIES_PATH)))
 
     # web_demo exogenous-shocks workstream: ShockRelaxation walks the
     # `active_shocks` ledger to decay/revert transient/windowed/ramped

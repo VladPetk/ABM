@@ -198,3 +198,36 @@ class PartyCentroidSeries(DataFedSeries):
             )
         viz = env.attrs.setdefault("viz", {})
         viz["party_centers"] = parties
+
+
+class MediaPenetrationSeries(DataFedSeries):
+    """Media channel (T3.3). Writes two typed coupling slots into ``env.attrs``
+    from the penetration curves, with **weak** coefficients (media-paradox
+    blindspot cluster — Boxell/Guess/Allcott/Prior):
+
+    * ``media_strength`` = ``media_strength_max`` × ``partisan_media`` — read by
+      ``MediaConsumption`` (the partisan-media diet pull). The default max
+      (0.04) reproduces the FD-1987→0.02 / Fox-1996→0.04 step values as a
+      penetration ramp.
+    * ``bc_affect_weight`` = ``bc_aw_per_adoption`` × ``social_media`` — read by
+      ``BoundedConfidenceInfluence`` (the homophilous echo amplifier). The
+      default coefficient (0.094) reproduces the demoted evidence-regrade ramp
+      (~0.02 @2008 / ~0.04 @2010 / ~0.05 @2012) from the Pew adoption curve.
+
+    Both slots are read with a fallback to the rule's own value, so a scenario
+    that doesn't install this series stays bit-identical.
+    """
+
+    def __init__(self, series: Series, media_strength_max: float = 0.04,
+                 bc_aw_per_adoption: float = 0.094, **kw):
+        super().__init__(series, **kw)
+        self.media_strength_max = float(media_strength_max)
+        self.bc_aw_per_adoption = float(bc_aw_per_adoption)
+
+    def _apply(self, env, agents, values, tick):
+        if "partisan_media" in values:
+            env.attrs["media_strength"] = (
+                self.media_strength_max * values["partisan_media"])
+        if "social_media" in values:
+            env.attrs["bc_affect_weight"] = (
+                self.bc_aw_per_adoption * values["social_media"])
