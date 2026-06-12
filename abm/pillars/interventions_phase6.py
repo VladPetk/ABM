@@ -640,7 +640,14 @@ X5_RANKED_CHOICE_VOTING = Intervention(
         "theoretical [T] — direct RCV empirics are mostly null."
     ),
     label_kind="intervention",
-    effect_buckets={"issue_sorting": "partial", "affect": "null"},
+    # MHV S4 T4.5 re-measure-then-bless: partial -> BACKFIRE (Δsep +0.117,
+    # cross-decade mean). X5's primary lever halves tier_d_anes_drift_multiplier
+    # (3.0->1.5) — but that knob is INERT on the S3 data-fed elite path (the
+    # scheduled EliteDrift it scaled is gone), so RCV no longer damps divergence;
+    # the residual FactionAnchor.strength halving slightly raises separation.
+    # X5 needs re-mechanization onto the elite_lead_factor / party-centroid
+    # series (deferred — flagged for S5). Measured, not authored.
+    effect_buckets={"issue_sorting": "backfire", "affect": "null"},
     citation=(
         "Drutman 2020 (Breaking the Two-Party Doom Loop — theoretical "
         "RCV + multi-member districts + open primaries reduces "

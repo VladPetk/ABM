@@ -1,20 +1,32 @@
 # Phase 10 — Landing Summary
 
 *Status: shipped. Intervention library (X1–X7) redesigned against
-the Phase 9 ANES-recalibrated engine. Last updated 2026-06-10
-(MHV T0.4 re-measure).*
+the Phase 9 ANES-recalibrated engine. Last updated 2026-06-12
+(MHV S4 T4.5 re-measure on the calibrated config).*
 
-> **⚠ STALE vs the canonical engine as of MHV S2 T2.6 (2026-06-10).**
-> The canonical preset has flipped to the emergent substrate
-> (`n_issues=7` + `ConstraintOp` + the BC wake; methods.md §5.23).
-> Every number below was measured on the **pre-flip** engine and is NOT
-> re-blessed in S2 — the MHV S4 phase-10 re-measure owns that. The web
-> demo continues to serve the pre-flip export until the S5 re-export.
-> First measured movement on the new substrate (consolidated directions
-> test): X6's affect axis crosses partial→real (Δaff +0.172) — **tag
-> re-blessed at T2.6 user sign-off** (X6 had been flagged as sitting on
-> the real/partial boundary); all other X-buckets hold their declared
-> class.
+> **✅ RE-MEASURED on the S4-calibrated canonical engine (MHV T4.5, 2026-06-12).**
+> The stale-banner (below, from S2 T2.6) is now **RESOLVED**: X1–X7 were
+> re-measured on the fitted preset (`scripts/anes_preset.py`: the S4 ABC point
+> — party_pull 0.297, fj 2.195, constraint_rate 0.0348, animus 0.655, noise
+> 0.0478, **elite_lead 1.798**; methods §5.25). 9 seeds × 4 release decades.
+> **Only one bucket moved: X5 (ranked-choice voting) issue_sorting partial →
+> BACKFIRE** (Δsep +0.117 cross-decade mean). Cause: X5's primary lever halves
+> `tier_d_anes_drift_multiplier`, which is **inert on the S3 data-fed elite path**
+> (the scheduled EliteDrift it scaled is gone), so RCV no longer damps divergence
+> and the residual FactionAnchor halving slightly *raises* separation. X5 needs
+> re-mechanization onto the elite-lead / party-centroid series — **deferred to S5**.
+> All others hold: **X1 backfire** (Δsep +0.129), **X6 affect real** (Δaff +0.165),
+> X2/X3/X4/X7 null. The directions test (`test_intervention_library_directions_hold`)
+> is un-xfailed and **passes**. Falsification: 6 cells fail — X5 at all 4 decades
+> (RCV backfires: a measured, reportable finding, not luck) + the pre-existing X7
+> null at 1990/2000. ANES §11 scorecard on the fitted config: **18/24 PASS**;
+> four-cut holdout battery **PASS 3/3** ([s4_holdout.md](s4_holdout.md)).
+> Web demo still serves the pre-flip export until the **S5 re-export**.
+>
+> *Superseded historical banner (S2 T2.6 — pre-S4):* the preset had flipped to
+> the emergent substrate (`n_issues=7` + `ConstraintOp` + BC wake; §5.23) but
+> phase-10 was not yet re-blessed; X6 affect had been re-blessed partial→real at
+> T2.6. That re-measure is now done (this banner).
 
 > **MHV T0.4 re-measure (demo-physics knob adjudication, 2026-06-10).**
 > Re-measured after the canonical substrate changed: **momentum (0.4)
@@ -115,27 +127,28 @@ Raw JSON at
 Buckets: |Δ| < 0.05 → null; 0.05–0.15 helpful → partial; ≥ 0.15
 helpful → real; > 0.05 opposite → backfire.
 
-_(Re-measured 2026-06 on the affect-re-graded engine; 9 seeds, anes_full.)_
+_(**MHV S4 T4.5 — re-measured 2026-06-12 on the S4-calibrated config**; 9 seeds,
+anes_full. Supersedes the prior affect-re-graded table.)_
 
 | release | X1 sep | X2 sep | X3 sep | X4 sep | X5 sep | X6 sep | X7 sep |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 1990 | **+0.134 BF** | +0.000 | +0.004 | -0.000 | -0.035 | -0.001 | -0.000 |
-| 2000 | **+0.194 BF** | +0.000 | +0.007 | -0.000 | **-0.114 P** | +0.001 | +0.000 |
-| 2010 | **+0.242 BF** | -0.000 | +0.011 | -0.000 | -0.027 | -0.001 | +0.000 |
-| 2020 | **+0.240 BF** | -0.000 | +0.011 | -0.000 | **-0.060 P** | -0.000 | +0.000 |
+| 1990 | **+0.070 BF** | +0.000 | +0.002 | -0.000 | **+0.100 BF** | -0.003 | +0.000 |
+| 2000 | **+0.120 BF** | +0.000 | +0.004 | -0.000 | **+0.089 BF** | -0.005 | -0.000 |
+| 2010 | **+0.165 BF** | +0.000 | +0.004 | -0.000 | **+0.145 BF** | -0.004 | +0.000 |
+| 2020 | **+0.162 BF** | +0.000 | +0.004 | +0.000 | **+0.132 BF** | -0.002 | +0.000 |
 
 | release | X1 aff | X2 aff | X3 aff | X4 aff | X5 aff | X6 aff | X7 aff |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 1990 | -0.005 | +0.000 | -0.000 | +0.005 | +0.002 | **+0.092 P** | -0.002 |
-| 2000 | -0.005 | +0.000 | -0.000 | +0.006 | +0.005 | **+0.140 P** | -0.009 |
-| 2010 | -0.003 | +0.000 | -0.000 | +0.004 | +0.003 | **+0.146 P** | -0.011 |
-| 2020 | -0.001 | +0.000 | +0.000 | +0.002 | +0.002 | **+0.218 R** | -0.005 |
+| 1990 | -0.007 | +0.000 | -0.000 | +0.006 | +0.009 | **+0.103 P** | -0.002 |
+| 2000 | -0.007 | +0.000 | -0.001 | +0.004 | +0.002 | **+0.151 R** | -0.004 |
+| 2010 | -0.008 | +0.000 | -0.000 | +0.003 | -0.009 | **+0.171 R** | -0.007 |
+| 2020 | -0.006 | +0.000 | -0.000 | +0.001 | -0.009 | **+0.236 R** | -0.006 |
 
 Legend: **BF** = backfire, **P** = partial, **R** = real. (Cells with no
-tag are null, |Δ| < 0.05.) Cross-release means: X1 +0.203 (backfire),
-X5 -0.059 (partial), **X6 aff +0.149 (partial** — was +0.217/real; now
-decade-dependent like X5: partial 1990-2010, real at 2020); X2/X3/X4/X7
-null. Vs the pre-affect-regrade table: X1 backfire magnitude shrank
+tag are null, |Δ| < 0.05.) Cross-release means: **X1 +0.129 (backfire)**,
+**X5 +0.117 (backfire** — was partial; its drift_mult lever is inert on the
+data-fed elite path, so RCV no longer damps divergence — see top banner),
+**X6 aff +0.165 (real)**; X2/X3/X4/X7 null. Vs the pre-affect-regrade table: X1 backfire magnitude shrank
 (+0.351 → +0.203; warmer baseline → weaker affect-gated cascade) and X6
 affect dropped a hair below the real floor — both honest consequences of
 the less-polarized re-grounded baseline.
@@ -148,6 +161,13 @@ releases passes the looser ±0.10 envelope.
 ---
 
 ## 3. Three lanes (the public-facing story)
+
+> **⚠ Narrative below is pre-S4 (the prose lanes predate the T4.5 re-measure).**
+> On the S4-calibrated config (§2 table + top banner are authoritative): **X5
+> moved partial → backfire** (its drift_mult lever is inert on the data-fed elite
+> path) and **X6 affect is `real`** (not the partial/boundary the prose describes).
+> The three-lane framing is refreshed in S5's doc sweep; the buckets here are
+> superseded by §2.
 
 The seven interventions land in three honest categories:
 
