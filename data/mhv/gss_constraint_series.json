@@ -1,0 +1,515 @@
+{
+  "provenance": {
+    "source": "GSS 1972-2024 Cumulative (NORC Release 3); WTSSALL weighted",
+    "raw_file": "data/gss_raw/gss7224_r3.dta (gitignored, user-downloaded)",
+    "generated_by": "scripts/build_gss_constraint_series.py",
+    "method": "issue alignment = |corr(econ-axis, cult-axis)| pooled over Dem+Rep; partisan alignment = mean(|corr(econ,party)|, |corr(cult,party)|) with binary Dem(0-2)/Rep(4-6); axis = weighted-z item mean; mirrors scripts/audit/battery.py",
+    "battery_econ": [
+      "eqwlth",
+      "helppoor",
+      "helpsick",
+      "natfare",
+      "natheal"
+    ],
+    "battery_cult_racial": [
+      "helpblk",
+      "natrace",
+      "racdif1"
+    ],
+    "battery_cult_moral": [
+      "abany",
+      "homosex",
+      "premarsx",
+      "pornlaw",
+      "prayer",
+      "cappun",
+      "gunlaw",
+      "fefam",
+      "fepol"
+    ],
+    "party_coding": "partyid 0-2->Dem, 4-6->Rep, 3 & 7 dropped",
+    "citation": "Baldassarri & Gelman 2008 AJS 114:408 (issue vs party alignment)",
+    "engine_targets": [
+      "constraint_index",
+      "constraint_index_wp",
+      "bg_partisan_align"
+    ]
+  },
+  "per_year": [
+    {
+      "year": 1973,
+      "n_both": 1304,
+      "n_dr": 1179,
+      "constraint_index": 0.31696879994327515,
+      "constraint_index_wp": 0.2802317301269629,
+      "partisan_align_econ": 0.24991343465200433,
+      "partisan_align_cult": 0.17785467373729114,
+      "bg_partisan_align": 0.21388405419464773,
+      "bg_partisan_align_pid7": 0.19287780549847944
+    },
+    {
+      "year": 1974,
+      "n_both": 1303,
+      "n_dr": 1171,
+      "constraint_index": 0.30423849321880214,
+      "constraint_index_wp": 0.26989135912282725,
+      "partisan_align_econ": 0.12984898115217824,
+      "partisan_align_cult": 0.18221673325400795,
+      "bg_partisan_align": 0.1560328572030931,
+      "bg_partisan_align_pid7": 0.14010438605398423
+    },
+    {
+      "year": 1975,
+      "n_both": 1466,
+      "n_dr": 1258,
+      "constraint_index": 0.36307159800369193,
+      "constraint_index_wp": 0.3104284816650166,
+      "partisan_align_econ": 0.26765326301584375,
+      "partisan_align_cult": 0.1917601212253387,
+      "bg_partisan_align": 0.22970669212059122,
+      "bg_partisan_align_pid7": 0.22100062364054854
+    },
+    {
+      "year": 1976,
+      "n_both": 1372,
+      "n_dr": 1163,
+      "constraint_index": 0.2879000833912623,
+      "constraint_index_wp": 0.27591203009181664,
+      "partisan_align_econ": 0.17592435812982044,
+      "partisan_align_cult": 0.049793897991792735,
+      "bg_partisan_align": 0.11285912806080658,
+      "bg_partisan_align_pid7": 0.09720880757507039
+    },
+    {
+      "year": 1977,
+      "n_both": 1375,
+      "n_dr": 1224,
+      "constraint_index": 0.23470214504172726,
+      "constraint_index_wp": 0.21837946213869736,
+      "partisan_align_econ": 0.17357474380290988,
+      "partisan_align_cult": 0.07595189034968182,
+      "bg_partisan_align": 0.12476331707629584,
+      "bg_partisan_align_pid7": 0.11237723084144655
+    },
+    {
+      "year": 1978,
+      "n_both": 1445,
+      "n_dr": 1239,
+      "constraint_index": 0.2693992318823994,
+      "constraint_index_wp": 0.230334517512997,
+      "partisan_align_econ": 0.22255207449382045,
+      "partisan_align_cult": 0.14298046443401624,
+      "bg_partisan_align": 0.18276626946391833,
+      "bg_partisan_align_pid7": 0.14962937923571037
+    },
+    {
+      "year": 1980,
+      "n_both": 1432,
+      "n_dr": 1195,
+      "constraint_index": 0.24068752905597146,
+      "constraint_index_wp": 0.1822610656566704,
+      "partisan_align_econ": 0.2928109879063399,
+      "partisan_align_cult": 0.18133560053266157,
+      "bg_partisan_align": 0.23707329421950074,
+      "bg_partisan_align_pid7": 0.22111059682764142
+    },
+    {
+      "year": 1982,
+      "n_both": 1678,
+      "n_dr": 1482,
+      "constraint_index": 0.24762135929924248,
+      "constraint_index_wp": 0.22125556430703844,
+      "partisan_align_econ": 0.29027194993878375,
+      "partisan_align_cult": 0.1435685236718731,
+      "bg_partisan_align": 0.2169202368053284,
+      "bg_partisan_align_pid7": 0.19269181369271068
+    },
+    {
+      "year": 1983,
+      "n_both": 1571,
+      "n_dr": 1383,
+      "constraint_index": 0.22893890879601597,
+      "constraint_index_wp": 0.17841487197035102,
+      "partisan_align_econ": 0.37364701057139266,
+      "partisan_align_cult": 0.1541026769833615,
+      "bg_partisan_align": 0.2638748437773771,
+      "bg_partisan_align_pid7": 0.2554810358274694
+    },
+    {
+      "year": 1984,
+      "n_both": 1414,
+      "n_dr": 1263,
+      "constraint_index": 0.24009008782142943,
+      "constraint_index_wp": 0.2102984505390183,
+      "partisan_align_econ": 0.33780126036699387,
+      "partisan_align_cult": 0.15210002390430327,
+      "bg_partisan_align": 0.24495064213564857,
+      "bg_partisan_align_pid7": 0.23946055726363152
+    },
+    {
+      "year": 1985,
+      "n_both": 694,
+      "n_dr": 622,
+      "constraint_index": 0.2938241200402985,
+      "constraint_index_wp": 0.25785529864665135,
+      "partisan_align_econ": 0.2339758677681121,
+      "partisan_align_cult": 0.1378669964682007,
+      "bg_partisan_align": 0.1859214321181564,
+      "bg_partisan_align_pid7": 0.1763095012364782
+    },
+    {
+      "year": 1986,
+      "n_both": 1446,
+      "n_dr": 1263,
+      "constraint_index": 0.2502945315428894,
+      "constraint_index_wp": 0.20221162980618873,
+      "partisan_align_econ": 0.33183036561805473,
+      "partisan_align_cult": 0.19208304712987292,
+      "bg_partisan_align": 0.26195670637396384,
+      "bg_partisan_align_pid7": 0.24542919370271218
+    },
+    {
+      "year": 1987,
+      "n_both": 1785,
+      "n_dr": 1589,
+      "constraint_index": 0.3163038935307454,
+      "constraint_index_wp": 0.2596451904157955,
+      "partisan_align_econ": 0.32654255038033675,
+      "partisan_align_cult": 0.19027031618513607,
+      "bg_partisan_align": 0.2584064332827364,
+      "bg_partisan_align_pid7": 0.2540627567890818
+    },
+    {
+      "year": 1988,
+      "n_both": 1197,
+      "n_dr": 1054,
+      "constraint_index": 0.2835299198729557,
+      "constraint_index_wp": 0.24147737062035796,
+      "partisan_align_econ": 0.2166543694197524,
+      "partisan_align_cult": 0.21230157808924177,
+      "bg_partisan_align": 0.2144779737544971,
+      "bg_partisan_align_pid7": 0.21750227919052684
+    },
+    {
+      "year": 1989,
+      "n_both": 1233,
+      "n_dr": 1078,
+      "constraint_index": 0.2547076503605209,
+      "constraint_index_wp": 0.20304830219191544,
+      "partisan_align_econ": 0.29283007708752284,
+      "partisan_align_cult": 0.22332222487062744,
+      "bg_partisan_align": 0.25807615097907516,
+      "bg_partisan_align_pid7": 0.24003812174096256
+    },
+    {
+      "year": 1990,
+      "n_both": 1092,
+      "n_dr": 977,
+      "constraint_index": 0.2895053175902163,
+      "constraint_index_wp": 0.25600537308395527,
+      "partisan_align_econ": 0.26320661027823616,
+      "partisan_align_cult": 0.18013113116916005,
+      "bg_partisan_align": 0.22166887072369812,
+      "bg_partisan_align_pid7": 0.22214508525868237
+    },
+    {
+      "year": 1991,
+      "n_both": 1217,
+      "n_dr": 1072,
+      "constraint_index": 0.2916343645460014,
+      "constraint_index_wp": 0.2554065841988288,
+      "partisan_align_econ": 0.2703591898080097,
+      "partisan_align_cult": 0.18756437269423226,
+      "bg_partisan_align": 0.228961781251121,
+      "bg_partisan_align_pid7": 0.23271234281817013
+    },
+    {
+      "year": 1993,
+      "n_both": 1270,
+      "n_dr": 1110,
+      "constraint_index": 0.29270837211501066,
+      "constraint_index_wp": 0.22185540408775967,
+      "partisan_align_econ": 0.3287411199922349,
+      "partisan_align_cult": 0.2839171594478923,
+      "bg_partisan_align": 0.3063291397200636,
+      "bg_partisan_align_pid7": 0.29888495891280786
+    },
+    {
+      "year": 1994,
+      "n_both": 2352,
+      "n_dr": 2061,
+      "constraint_index": 0.35642867723226346,
+      "constraint_index_wp": 0.2853208221469895,
+      "partisan_align_econ": 0.3671229381953633,
+      "partisan_align_cult": 0.2820399745296779,
+      "bg_partisan_align": 0.32458145636252056,
+      "bg_partisan_align_pid7": 0.320820601640322
+    },
+    {
+      "year": 1996,
+      "n_both": 2316,
+      "n_dr": 1946,
+      "constraint_index": 0.33205439745081167,
+      "constraint_index_wp": 0.22982836873599347,
+      "partisan_align_econ": 0.3969409435969729,
+      "partisan_align_cult": 0.3364046325805361,
+      "bg_partisan_align": 0.3666727880887545,
+      "bg_partisan_align_pid7": 0.35377070645461706
+    },
+    {
+      "year": 1998,
+      "n_both": 2240,
+      "n_dr": 1871,
+      "constraint_index": 0.3280322621917661,
+      "constraint_index_wp": 0.25860980917243787,
+      "partisan_align_econ": 0.33080770544244753,
+      "partisan_align_cult": 0.29498857906667064,
+      "bg_partisan_align": 0.3128981422545591,
+      "bg_partisan_align_pid7": 0.2856612507145122
+    },
+    {
+      "year": 2000,
+      "n_both": 2251,
+      "n_dr": 1811,
+      "constraint_index": 0.36553507009343505,
+      "constraint_index_wp": 0.2877097454547821,
+      "partisan_align_econ": 0.35451784786871365,
+      "partisan_align_cult": 0.3185231346382556,
+      "bg_partisan_align": 0.3365204912534846,
+      "bg_partisan_align_pid7": 0.318998578921455
+    },
+    {
+      "year": 2002,
+      "n_both": 1089,
+      "n_dr": 881,
+      "constraint_index": 0.3173118014743609,
+      "constraint_index_wp": 0.20736943525009716,
+      "partisan_align_econ": 0.4112544920578906,
+      "partisan_align_cult": 0.3516942966980527,
+      "bg_partisan_align": 0.38147439437797165,
+      "bg_partisan_align_pid7": 0.3686360645269059
+    },
+    {
+      "year": 2004,
+      "n_both": 1091,
+      "n_dr": 924,
+      "constraint_index": 0.35741725922422957,
+      "constraint_index_wp": 0.23812431675676937,
+      "partisan_align_econ": 0.4405316031584623,
+      "partisan_align_cult": 0.35483610539071886,
+      "bg_partisan_align": 0.3976838542745906,
+      "bg_partisan_align_pid7": 0.3776130741693746
+    },
+    {
+      "year": 2006,
+      "n_both": 2397,
+      "n_dr": 1887,
+      "constraint_index": 0.3492016736994236,
+      "constraint_index_wp": 0.23677260080921497,
+      "partisan_align_econ": 0.36956752756079136,
+      "partisan_align_cult": 0.39086074929655545,
+      "bg_partisan_align": 0.3802141384286734,
+      "bg_partisan_align_pid7": 0.36088642451048286
+    },
+    {
+      "year": 2008,
+      "n_both": 1610,
+      "n_dr": 1348,
+      "constraint_index": 0.40707816275784836,
+      "constraint_index_wp": 0.26828970730313795,
+      "partisan_align_econ": 0.4559327445171951,
+      "partisan_align_cult": 0.42764249085875355,
+      "bg_partisan_align": 0.44178761768797437,
+      "bg_partisan_align_pid7": 0.4191078075800329
+    },
+    {
+      "year": 2010,
+      "n_both": 1640,
+      "n_dr": 1351,
+      "constraint_index": 0.40039056021942654,
+      "constraint_index_wp": 0.2584493581783226,
+      "partisan_align_econ": 0.45794730017268004,
+      "partisan_align_cult": 0.41400809881438944,
+      "bg_partisan_align": 0.4359776994935347,
+      "bg_partisan_align_pid7": 0.4105334447464647
+    },
+    {
+      "year": 2012,
+      "n_both": 1575,
+      "n_dr": 1272,
+      "constraint_index": 0.41828967720571,
+      "constraint_index_wp": 0.27111615614622997,
+      "partisan_align_econ": 0.47100695449254687,
+      "partisan_align_cult": 0.43389995949677673,
+      "bg_partisan_align": 0.4524534569946618,
+      "bg_partisan_align_pid7": 0.42687026197464606
+    },
+    {
+      "year": 2014,
+      "n_both": 2012,
+      "n_dr": 1598,
+      "constraint_index": 0.43350795154815197,
+      "constraint_index_wp": 0.28019898398818244,
+      "partisan_align_econ": 0.5123739789304964,
+      "partisan_align_cult": 0.42047460837576933,
+      "bg_partisan_align": 0.46642429365313287,
+      "bg_partisan_align_pid7": 0.4241878771179618
+    },
+    {
+      "year": 2016,
+      "n_both": 2297,
+      "n_dr": 1918,
+      "constraint_index": 0.46624827830274945,
+      "constraint_index_wp": 0.3027756537596492,
+      "partisan_align_econ": 0.48375582871198186,
+      "partisan_align_cult": 0.4817333093054144,
+      "bg_partisan_align": 0.4827445690086981,
+      "bg_partisan_align_pid7": 0.45857356533235816
+    },
+    {
+      "year": 2018,
+      "n_both": 1853,
+      "n_dr": 1515,
+      "constraint_index": 0.5032612791913059,
+      "constraint_index_wp": 0.33048798326735207,
+      "partisan_align_econ": 0.5052992086794216,
+      "partisan_align_cult": 0.5118131829897652,
+      "bg_partisan_align": 0.5085561958345934,
+      "bg_partisan_align_pid7": 0.49050878381079055
+    },
+    {
+      "year": 2021,
+      "n_both": 3197,
+      "n_dr": 2511,
+      "constraint_index": 0.6530906616810468,
+      "constraint_index_wp": 0.38897461160077607,
+      "partisan_align_econ": 0.6375874471671519,
+      "partisan_align_cult": 0.6806879280898142,
+      "bg_partisan_align": 0.659137687628483,
+      "bg_partisan_align_pid7": 0.6082097244930368
+    },
+    {
+      "year": 2022,
+      "n_both": 2801,
+      "n_dr": 2118,
+      "constraint_index": 0.5578749870276866,
+      "constraint_index_wp": 0.3427451506120112,
+      "partisan_align_econ": 0.5593428563850247,
+      "partisan_align_cult": 0.595146940104279,
+      "bg_partisan_align": 0.5772448982446519,
+      "bg_partisan_align_pid7": 0.5250513245380802
+    },
+    {
+      "year": 2024,
+      "n_both": 2628,
+      "n_dr": 1946,
+      "constraint_index": 0.5614043249798206,
+      "constraint_index_wp": 0.34372204044169047,
+      "partisan_align_econ": 0.5480096021947117,
+      "partisan_align_cult": 0.6090553190127874,
+      "bg_partisan_align": 0.5785324606037496,
+      "bg_partisan_align_pid7": 0.5248349172049311
+    }
+  ],
+  "by_decade": {
+    "1980": {
+      "years": [
+        1984,
+        1985,
+        1986,
+        1987,
+        1988,
+        1989
+      ],
+      "n_both": 7769,
+      "n_dr": 6869,
+      "constraint_index": 0.27765437198673576,
+      "constraint_index_wp": 0.22995054511756857,
+      "partisan_align_econ": 0.3002397059596358,
+      "partisan_align_cult": 0.19129259992777292,
+      "bg_partisan_align": 0.24576615294370435,
+      "bg_partisan_align_pid7": 0.23718865334422545
+    },
+    "1990": {
+      "years": [
+        1990,
+        1991,
+        1993,
+        1994,
+        1996,
+        1998
+      ],
+      "n_both": 10487,
+      "n_dr": 9037,
+      "constraint_index": 0.3196727475567284,
+      "constraint_index_wp": 0.2536062236394812,
+      "partisan_align_econ": 0.33299101499014927,
+      "partisan_align_cult": 0.2744478830501984,
+      "bg_partisan_align": 0.30371944902017384,
+      "bg_partisan_align_pid7": 0.29500281421386465
+    },
+    "2000": {
+      "years": [
+        2000,
+        2002,
+        2004,
+        2006,
+        2008
+      ],
+      "n_both": 8438,
+      "n_dr": 6851,
+      "constraint_index": 0.3627826120485149,
+      "constraint_index_wp": 0.2541177284499464,
+      "partisan_align_econ": 0.39890098341876556,
+      "partisan_align_cult": 0.3697949585377509,
+      "bg_partisan_align": 0.38434797097825824,
+      "bg_partisan_align_pid7": 0.36562246519097574
+    },
+    "2010": {
+      "years": [
+        2010,
+        2012,
+        2014,
+        2016,
+        2018
+      ],
+      "n_both": 9377,
+      "n_dr": 7654,
+      "constraint_index": 0.45253635681896004,
+      "constraint_index_wp": 0.30282454928584324,
+      "partisan_align_econ": 0.4805444934323674,
+      "partisan_align_cult": 0.44585936858866887,
+      "bg_partisan_align": 0.4632019310105181,
+      "bg_partisan_align_pid7": 0.437210631868288
+    },
+    "2020": {
+      "years": [
+        2021,
+        2022,
+        2024
+      ],
+      "n_both": 8626,
+      "n_dr": 6575,
+      "constraint_index": 0.5952724790738004,
+      "constraint_index_wp": 0.36201395251963364,
+      "partisan_align_econ": 0.5845594372433086,
+      "partisan_align_cult": 0.6332209709984471,
+      "bg_partisan_align": 0.6088902041208779,
+      "bg_partisan_align_pid7": 0.5564540820197579
+    }
+  },
+  "slopes": {
+    "constraint_index": {
+      "per_year": 0.005681925183265353,
+      "intercept": -10.98899480298988,
+      "first_year": 1973,
+      "last_year": 2024
+    },
+    "bg_partisan_align": {
+      "per_year": 0.008508867987721639,
+      "intercept": -16.652530436695134,
+      "first_year": 1973,
+      "last_year": 2024
+    }
+  }
+}

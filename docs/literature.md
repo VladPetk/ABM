@@ -46,7 +46,7 @@ cross-checks and host-machine re-derivation paths.
 | **ANES Time Series Cumulative Data File (CDF)** | 1948–2024; ~70k respondents (weighted, `VCF0009z`) | **Primary fit target.** The 2D ideological compass (1986–2024), per-decade moments (mean/var/corr), and the per-decade Wasserstein-2 distance gate against respondent clouds. The tick→year scalar is anchored here. | `scripts/anes_2d_compass.py`; `data/phase9_empirical/derived/`; methods.md §3.1, §3.6, §5.10 | electionstudies.org (free login) |
 | **ANES out-party feeling thermometer** (`VCF0218` Dem party / `VCF0224` Rep party; partisans only; weighted) | 1978–2024 | **Affect bands.** Rebuilt from raw via the principled midpoint map `aff=(deg−50)/50` (1978 47.8° → 2020 19.0° → 2024 20.4°). Replaced the old hand-scaled bands (which ran ~0.2 too cold). Drives the affect re-grade target. | `scripts/affect_band_builder.py`; `data/phase9_empirical/derived/{outparty_thermometer.csv, affect_bands.json}`; `docs/affect_bands_investigation.md`; methods.md §5.10 | same ANES CDF |
 | **DW-NOMINATE / Voteview** (party-median roll-call scores; dim1≈economic, dim2≈cultural) | 1789–present (House/Senate) | **Elite divergence.** `EliteDrift.rate` (~0.0026/tick; ~0.4 NOMINATE units over ~50 yrs) and the per-decade asymmetric drift schedule. | `abm/rules/elite_drift.py`; `abm/calibration.py`; methods.md §3.2; phase9_raw_data_sources.md §2 | voteview.com/data (CC-BY; `HSall_members.csv`, `HSall_parties.csv`) |
-| **GSS Cumulative File** | 1972–2022; ~70k | Cross-check / re-derivation of per-decade 2D ideology moments (`var_x`, `var_y`, `corr_xy`). Highest-priority host-machine re-derivation (no login, longest series). | phase9_raw_data_sources.md §1 | gss.norc.org (public domain) |
+| **GSS Cumulative File** (NORC Release 3) | 1972–2024; ~76k | **Ingested at S4/T4.0** for the per-year constraint + B&G dual series (`scripts/build_gss_constraint_series.py` → `data/mhv/gss_constraint_series.json`; 17-item econ/race/moral battery, WTSSALL-weighted, binary Dem/Rep). The S4 calibration target for emergent `ConstraintOp`. Also cross-checks per-decade 2D ideology moments. | phase9_raw_data_sources.md §1; methods.md (S4) | gss.norc.org `gss7224_r3.dta` (public domain) |
 | **CCES / CES 2020 Common Content** | 2020; ~60k | Modern bimodal distribution cross-check; per-issue variance. Highest-N modern source. | phase9_raw_data_sources.md §3 | Harvard Dataverse `doi:10.7910/DVN/E9N6PH` (CC-0) |
 | **Democracy Fund Voter Study Group (VOTER Survey)** | 2016/2017/2019/2020 panel; ~5–8k/wave | Within-person movement → per-tick volatility / noise calibration (the panel design is what makes this useful). | phase9_raw_data_sources.md §5 | voterstudygroup.org (attribution) |
 | **PRRI American Values Atlas** | 2013–2023; ~50k/yr | Modern cultural-axis trend cross-check. | phase9_raw_data_sources.md §6 | ava.prri.org |
@@ -226,7 +226,15 @@ their engine footprint is the S1 covariance-signature pilot
   fallbacks (Tables 2–3 cross-issue correlations, §1 above) and (b) — extended
   role at T0.2 — the **B&G dual-index target**: partisan alignment and issue
   alignment tracked as *separate* observables (S1 pilot `bg_partisan` /
-  `bg_issue_pooled`; T0.5 battery; the S2 calibration target pair).
+  `bg_issue_pooled`; T0.5 battery; the S2 calibration target pair). **Realized
+  at S4/T4.0:** the published-table fallback is now *replaced* by a per-year
+  series computed from the raw GSS cumulative file —
+  `scripts/build_gss_constraint_series.py` → `data/mhv/gss_constraint_series.json`,
+  the same `|corr|` definitions as the engine battery (issue alignment
+  `constraint_index`; partisan alignment `bg_partisan_align`). Measured trend
+  reproduces the paper's headline — party sorting rises faster than issue
+  constraint (1980→2020: partisan 0.25→0.61, +0.0085/yr; constraint 0.28→0.60,
+  +0.0057/yr) — and is the S4 calibration target for the emergent `ConstraintOp`.
 - **Treier, S., & Hillygus, D. S.** (2009). The nature of political ideology in
   the contemporary electorate. *POQ* 73:679. — Bayesian IRT: mass ideology is
   2-dimensional (economic ≠ social); cross-pressured citizens self-label
