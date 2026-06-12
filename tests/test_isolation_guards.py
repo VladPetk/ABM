@@ -357,3 +357,66 @@ def test_faction_anchor_no_op_without_center():
     eng.run(10)
     after = eng.positions()
     assert np.allclose(before, after)
+
+
+# --- X5 "Deprogramming & exit programs" (MHV S5 T5.0) ---------------------
+
+class _StubEngine:
+    """Minimal carrier the X5 setup reads (`engine.agents` only)."""
+    def __init__(self, agents):
+        self.agents = agents
+
+
+def _tagged_agents(n_tag, n_untag):
+    """n_tag faction-tagged agents (faction_center + identity_strength) +
+    n_untag untagged."""
+    agents = []
+    for i in range(n_tag):
+        agents.append(Agent(id=i, state=AgentState(
+            ideology=np.array([0.5, 0.5]),
+            attrs={"party": 1, "faction_center": np.array([0.6, 0.6]),
+                   "identity_strength": 0.8})))
+    for j in range(n_untag):
+        agents.append(Agent(id=n_tag + j, state=AgentState(
+            ideology=np.array([0.1, 0.1]),
+            attrs={"party": 0, "identity_strength": 0.8})))
+    return agents
+
+
+def test_x5_deprogramming_clears_treated_fraction_of_tagged():
+    """X5 clears `faction_center` AND halves `identity_strength` on exactly
+    the treated fraction of faction-tagged agents (faction exit +
+    identity moderation), and leaves untagged agents untouched."""
+    from abm.pillars.interventions_phase6 import (
+        _x5_deprogramming_setup, X5_TREATED_FRACTION,
+        X5_IDENTITY_MODERATE_FACTOR,
+    )
+    n_tag, n_untag = 50, 70
+    agents = _tagged_agents(n_tag, n_untag)
+    _x5_deprogramming_setup(_StubEngine(agents))
+    treated = [a for a in agents[:n_tag]
+               if a.state.attrs.get("faction_center") is None]
+    untreated_tagged = [a for a in agents[:n_tag]
+                        if a.state.attrs.get("faction_center") is not None]
+    assert len(treated) == int(X5_TREATED_FRACTION * n_tag)  # exactly 20%
+    # Treated: identity moderated; untreated-tagged: identity untouched.
+    assert all(
+        a.state.attrs["identity_strength"] == 0.8 * X5_IDENTITY_MODERATE_FACTOR
+        for a in treated
+    )
+    assert all(a.state.attrs["identity_strength"] == 0.8
+               for a in untreated_tagged)
+    # Untagged agents never lose the faction attr or get moderated.
+    assert all("faction_center" not in a.state.attrs for a in agents[n_tag:])
+    assert all(a.state.attrs["identity_strength"] == 0.8
+               for a in agents[n_tag:])
+
+
+def test_x5_deprogramming_no_op_without_factions():
+    """Pre-emergence releases have no tagged agents → exact no-op (the
+    decade-gating: you cannot deprogram a faction that hasn't emerged)."""
+    from abm.pillars.interventions_phase6 import _x5_deprogramming_setup
+    agents = _tagged_agents(0, 40)
+    before = [dict(a.state.attrs) for a in agents]
+    _x5_deprogramming_setup(_StubEngine(agents))
+    assert [dict(a.state.attrs) for a in agents] == before

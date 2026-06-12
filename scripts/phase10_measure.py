@@ -82,7 +82,7 @@ INTERVENTION_IDS = (
     "X2_fix_algorithm",
     "X3_quit_cable_news",
     "X4_bipartisan_dialogue",
-    "X5_ranked_choice_voting",
+    "X5_deprogramming",
     "X6_shared_institutions",
     "X7_perception_correction",
 )
@@ -288,11 +288,11 @@ PROVENANCE_TAGS = {
         "T":   2,  # identity_pull_y factor=0.5; treated fraction=0.20
         "C":   0,
     },
-    "X5_ranked_choice_voting": {
+    "X5_deprogramming": {
         "L:M": 0,
         "L:D": 0,
-        "T":   4,  # all four knobs theoretical (Drutman 2020 mechanism-pin)
-        "C":   0,
+        "T":   0,
+        "C":   1,  # treated fraction 0.20 (deradicalization reach — [N], contested)
     },
     "X6_shared_institutions": {
         "L:M": 1,  # +1 tie (Mousa 2020 / Lowe 2021 envelope)
@@ -341,12 +341,16 @@ def _check_falsification(iv_id: str, dsep: float, daff: float) -> dict:
         if daff < 0:
             return {"passed": False, "reason": f"Δaff={daff:+.3f} < 0 — prime doesn't survive IdentityToIdeologyPull interaction"}
         return {"passed": True, "reason": "Δaff ∈ [0, +0.10] as predicted"}
-    if iv_id == "X5_ranked_choice_voting":
-        if dsep >= 0:
-            return {"passed": False, "reason": f"Δsep={dsep:+.3f} ≥ 0 — drift-channel mechanism doesn't carry durability"}
+    if iv_id == "X5_deprogramming":
+        # Deprogramming pulls the faction tail in → helpful (Δsep ≤ 0) where
+        # factions exist; decade-gated (exact null pre-emergence). The
+        # cross-decade mean may be ~null (two no-op decades dilute it) — that
+        # is honest, not a failure. Falsify only on the wrong sign at scale.
+        if dsep > 0.05:
+            return {"passed": False, "reason": f"Δsep={dsep:+.3f} > +0.05 — clearing faction anchors *raised* separation; mechanism is backwards"}
         if dsep < -0.30:
-            return {"passed": False, "reason": f"Δsep={dsep:+.3f} < -0.30 — unrealistically large for theoretical reform"}
-        return {"passed": True, "reason": "Δsep ∈ [-0.30, 0) as predicted"}
+            return {"passed": False, "reason": f"Δsep={dsep:+.3f} < -0.30 — implausibly large for a 20%-reach program"}
+        return {"passed": True, "reason": "Δsep ∈ [-0.30, +0.05] — helpful-or-null as predicted (decade-gated)"}
     if iv_id == "X6_shared_institutions":
         if daff < 0:
             return {"passed": False, "reason": f"Δaff={daff:+.3f} < 0 — saturation isn't capping volume effect, or Enos pattern wins"}

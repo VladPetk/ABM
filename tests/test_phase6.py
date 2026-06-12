@@ -24,7 +24,7 @@ from abm.pillars import (
     apply_intervention,
     X1_SHOW_OTHER_SIDE,
     X4_BIPARTISAN_DIALOGUE,
-    X5_RANKED_CHOICE_VOTING,
+    X5_DEPROGRAMMING,
 )
 from abm.pillars.calm_to_camps import BACKLASH_AFFECT_THRESHOLD, build_engine
 from abm.pillars.intervention import Intervention

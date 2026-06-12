@@ -2,9 +2,34 @@
 
 *Status: shipped. Intervention library (X1–X7) redesigned against
 the Phase 9 ANES-recalibrated engine. Last updated 2026-06-12
-(MHV S4 T4.5 re-measure on the calibrated config).*
+(MHV S5 T5.0 — X5 replaced + re-measured on the S4-locked config).*
 
-> **✅ RE-MEASURED on the S4-calibrated canonical engine (MHV T4.5, 2026-06-12).**
+> **✅ MHV S5 T5.0 — X5 REPLACED: "Ranked-choice voting" → "Deprogramming &
+> exit programs" (2026-06-12).** The T4.5 X5 backfire (below) was a dangling-
+> lever artifact: X5's durable arm halved `tier_d_anes_drift_multiplier`, which
+> scales the *scheduled* `EliteDrift` — gone on the S3 data-fed elite path, so
+> the lever was inert and the residual faction-strength halve spuriously raised
+> separation. Rather than re-wire RCV onto an arbitrary `[T]` magnitude, X5 was
+> **replaced** with the library's only *targeted-tail* intervention:
+> deradicalization / exit programs applied to a treated **50%** of faction-tagged
+> agents via **two levers** — they exit the faction (clear `faction_center` →
+> `FactionAnchor` self-gates off) **and** have their extremist identity moderated
+> (`identity_strength` ×0.5 → weaker `PartyPull`). Both are live shipped levers.
+> **Re-measured (9 seeds × 4 release decades, fitted config): X5 → null / null**
+> (cross-release mean Δsep −0.0062, Δaff +0.0004) — exact no-op at 1990/2000 (no
+> factions emerged yet; decade-gated), correctly signed but sub-threshold at 2010
+> (−0.0037) / 2020 (−0.0212). Robust across an escalation ladder (exit-only,
+> +identity, +50% reach — all null). Honest finding: targeted counter-extremism
+> on the organized extreme does **not** scale to aggregate separation.
+> **All other buckets unchanged:** X1 backfire, X6 affect real, X2/X3/X4/X7 null.
+> The directions test (`test_intervention_library_directions_hold`) re-blessed
+> and **passes**. Provenance [N] (deradicalization efficacy contested; methods
+> §5.26). Web demo still serves the pre-flip export until the **S5 re-export
+> (T5.1)**.
+>
+> *Superseded banner (MHV T4.5 — the X5 backfire that motivated this replacement):*
+>
+> > **✅ RE-MEASURED on the S4-calibrated canonical engine (MHV T4.5, 2026-06-12).**
 > The stale-banner (below, from S2 T2.6) is now **RESOLVED**: X1–X7 were
 > re-measured on the fitted preset (`scripts/anes_preset.py`: the S4 ABC point
 > — party_pull 0.297, fj 2.195, constraint_rate 0.0348, animus 0.655, noise

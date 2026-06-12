@@ -28,11 +28,12 @@ diff legibility):
   faction-tagged agents (Mason 2018 strong-identifier resistance);
   reduce duration 30 → 6 ticks (Voelkel 2024 + Santoro & Broockman
   2022 durability envelope).
-- **X5** — keep one-shot centroid + party_cue halve, but **also**
-  halve ``tier_d_anes_drift_multiplier`` 3.0 → 1.5 ongoing and
-  halve ``FactionAnchor.strength`` 0.10 → 0.05 (Drutman 2020
-  elite-incentive channel — durable structural change, not
-  one-shot snapshot).
+- **X5** — *MHV S5 T5.0:* replaced "ranked-choice voting" (whose
+  durable lever halved ``tier_d_anes_drift_multiplier``, inert on the
+  S3 data-fed elite path) with **"Deprogramming & exit programs"**: a
+  targeted-tail intervention that has a treated 20% of faction-tagged
+  agents exit their faction (clear ``faction_center`` → ``FactionAnchor``
+  no-ops on them). Deradicalization literature [N]; decade-gated.
 - **X6** — revise +3 cross-party involuntary ties → +1 (Mousa 2020
   / Lowe 2021 contact-intervention envelope, ≤ 2 cross-party
   teammates per participant); preserve out-party affect reset to 0;
@@ -162,15 +163,25 @@ X3_PARTISAN_CABLE_OUTLET_IDS = {0, 4}
 X3_TREATED_FRACTION = 0.20
 X3_RNG_SEED = 46
 
-# X5 — electoral-reform mechanism pins (Drutman 2020 theoretical;
-# Donovan & Bowler 2023 null US empirics). The Phase 6 mechanism
-# (one-shot centroid + party_cue halve) is preserved; Phase 10 adds
-# the ongoing-drift halve and the faction-anchor halve so the
-# mechanism is durable rather than transient (otherwise EliteDrift
-# re-diverges centroids within ~5 years). All knobs `[T]` —
-# RCV empirical evidence is mostly null; flagged in the writeup.
-X5_DRIFT_MULTIPLIER_FACTOR = 0.5  # halves env.attrs[tier_d_anes_drift_multiplier]
-X5_FACTION_STRENGTH_FACTOR = 0.5  # halves FactionAnchor.strength
+# X5 — deprogramming / exit-program mechanism pins (MHV S5 T5.0).
+# Replaces the retired "ranked-choice voting" lever, whose durable arm
+# halved `tier_d_anes_drift_multiplier` — INERT on the S3 data-fed elite
+# path (the scheduled EliteDrift it scaled is gone), so RCV measured as a
+# spurious backfire (T4.5). The replacement is a TARGETED-tail
+# intervention (the only one in the library): deradicalization / "formers"
+# exit programs reach a treated fraction of the organized extreme
+# (faction-tagged agents) and have them LEAVE the faction — clear
+# `faction_center`, so FactionAnchor (which self-gates on a present
+# center) stops tugging them toward the sub-centroid, permanently. The
+# lever (FactionAnchor / `faction_anchor_events`) is live and shipped.
+# Program efficacy is modest/contested (Gielen 2019 review), so the 20%
+# reach + full-exit magnitude is graded [N] (design choice in a contested
+# envelope), flagged in the writeup.
+X5_TREATED_FRACTION = 0.50       # program reach over faction-tagged agents
+                                 # (optimistic upper bound — deradicalization
+                                 # reaching half the organized extreme)
+X5_IDENTITY_MODERATE_FACTOR = 0.5  # treated agents' identity_strength ×0.5
+X5_DEPROG_RNG_SEED = 47
 
 
 # --- Helper: rule lookup + targeted attr setter ------------------------
@@ -554,128 +565,118 @@ X4_BIPARTISAN_DIALOGUE = Intervention(
 )
 
 
-# --- X5 — "Ranked-choice voting" --------------------------------------
+# --- X5 — "Deprogramming & exit programs" -----------------------------
 
-def _x5_setup(engine):
-    """Phase 10 X5 — Drutman 2020 mechanism-pinned bundle:
+def _x5_deprogramming_setup(engine):
+    """MHV S5 T5.0 X5 — deprogramming / exit programs (targeted tail).
 
-    1. Halve current party centroids (Phase 6 Hetherington 2001
-       direction, magnitude theoretical).
-    2. Halve each agent's `party_cue` (Phase 6 — required for
-       PartyPull to actually see the moderated cue under Phase 8a F').
-    3. **Phase 10 addition.** Halve `tier_d_anes_drift_multiplier`
-       (env-scoped, default 3.0 under `anes_full`; intervention sets
-       1.5). This is the Drutman 2020 mechanism: RCV + open primaries
-       reduce the elite incentive to play to the extremes, so
-       `EliteDrift` slows. Without this, Phase 6's centroid halve is
-       transient — Phase 9's 3× drift multiplier re-diverges centroids
-       within ~5 years.
-    4. **Phase 10 addition.** Halve `FactionAnchor.strength` (0.10 →
-       0.05). Faction-candidate strategy is also a primary-election
-       artifact (Drutman 2020); reducing the strength is the same
-       mechanism.
+    On a treated fraction (``X5_TREATED_FRACTION``) of *faction-tagged*
+    agents — those the emergence events gave a ``faction_center`` (Tea
+    Party '87 / MAGA '105 / Bernie '108 / DSA '114) — two levers fire:
 
-    All knobs `[T]` (theoretical / mechanism-pinned). Direct RCV
-    empirical evidence is mostly null (Donovan & Bowler 2023;
-    Atkinson et al. 2023 Maine; McGhee & Shor 2017 California
-    top-2). The intervention represents Drutman's *theoretical*
-    bundle (RCV + multi-member districts + open primaries), not
-    RCV alone. Phase 10 results writeup must flag X5 as the only
-    intervention without a measured-magnitude anchor.
+    1. **Exit the faction** — clear ``faction_center``. The
+       ``FactionAnchor`` rule self-gates on a present ``faction_center``
+       (zero StateDelta when it is ``None``), so the every-tick tug
+       toward the faction sub-centroid stops permanently.
+    2. **Moderate the (now-extremist) identity** — scale
+       ``identity_strength`` by ``X5_IDENTITY_MODERATE_FACTOR`` (×0.5).
+       ``PartyPull`` reads ``identity_strength`` as a *linear* modulator
+       of the pull toward the party package (``party_pull.py``), so a
+       deradicalized agent sorts more weakly toward its party centroid
+       — the deeper-exit lever that turns the bare faction-exit (null)
+       into a measurable softening.
+
+    Pre-emergence release points have **no** tagged agents → exact no-op:
+    you cannot deprogram a faction that has not emerged yet (null at the
+    1990/2000 releases is an honest property, not a bug). Later emergence
+    events may re-tag fresh agents — the program reached the cohort that
+    existed at intervention time, not future radicalizations.
+
+    [N] — deradicalization program efficacy is modest/contested (Horgan
+    2009; Koehler 2017; Berger 2018; Gielen 2019 evaluation review);
+    the 20% reach + full-exit magnitude is a design choice within that
+    envelope, not a measured effect size. Replaces the retired
+    "ranked-choice voting" lever (drift-multiplier arm went inert on the
+    S3 data-fed elite path; T4.5).
     """
-    parties = engine.env.attrs["parties"]
-    for pid in list(parties.keys()):
-        parties[pid] = 0.5 * parties[pid]
-    for agent in engine.agents:
-        cue = agent.state.attrs.get("party_cue")
-        if cue is not None:
-            agent.state.attrs["party_cue"] = 0.5 * cue
-    # Phase 10 §X5.3: halve the runtime EliteDrift rate AND halve every
-    # entry in the per-decade schedule the engine consults at decade-
-    # boundary events. The build-time env-knob
-    # `tier_d_anes_drift_multiplier` is only read once at construction
-    # — mutating it post-build does NOTHING. The runtime path is
-    # (a) the current rule attributes on the EliteDrift instance, and
-    # (b) `env.attrs["elite_drift_schedule_active"]` (plus the y- and
-    # asymmetric-schedule variants) which the decade-boundary event
-    # handlers read to update the rule at each transition.
-    drift = _find_rule(engine, "EliteDrift")
-    if drift is not None:
-        if hasattr(drift, "rate"):
-            drift.rate = float(drift.rate) * X5_DRIFT_MULTIPLIER_FACTOR
-        if hasattr(drift, "rate_y") and drift.rate_y is not None:
-            drift.rate_y = float(drift.rate_y) * X5_DRIFT_MULTIPLIER_FACTOR
-    for sched_key in (
-        "elite_drift_schedule_active",
-        "elite_drift_schedule_y_active",
-    ):
-        sched = engine.env.attrs.get(sched_key)
-        if isinstance(sched, dict):
-            engine.env.attrs[sched_key] = {
-                seg: float(r) * X5_DRIFT_MULTIPLIER_FACTOR
-                for seg, r in sched.items()
-            }
-    # Phase 10 §X5.4: halve FactionAnchor.strength.
-    faction = _find_rule(engine, "FactionAnchor")
-    if faction is not None and hasattr(faction, "strength"):
-        faction.strength = float(faction.strength) * X5_FACTION_STRENGTH_FACTOR
-    # Keep the viz hint in sync — the dashboard re-renders party stars
-    # from this entry.
-    viz = engine.env.attrs.setdefault("viz", {})
-    viz["party_centers"] = parties
+    rng = np.random.default_rng(X5_DEPROG_RNG_SEED)
+    tagged = [
+        a for a in engine.agents
+        if a.state.attrs.get("faction_center") is not None
+    ]
+    if not tagged:
+        return
+    n_treated = int(X5_TREATED_FRACTION * len(tagged))
+    if n_treated == 0:
+        return
+    ids = sorted(a.id for a in tagged)
+    treated = set(int(i) for i in rng.choice(ids, size=n_treated, replace=False))
+    for a in tagged:
+        if a.id in treated:
+            # Lever 1 — exit the faction → FactionAnchor no-ops on this agent.
+            a.state.attrs["faction_center"] = None
+            # Lever 2 — moderate the identity → weaker PartyPull (ident is a
+            # linear modulator of the pull magnitude, party_pull.py).
+            ids = a.state.attrs.get("identity_strength")
+            if ids is not None:
+                a.state.attrs["identity_strength"] = (
+                    float(ids) * X5_IDENTITY_MODERATE_FACTOR
+                )
 
 
-X5_RANKED_CHOICE_VOTING = Intervention(
-    id="X5_ranked_choice_voting",
-    label="Ranked-choice voting",
+X5_DEPROGRAMMING = Intervention(
+    id="X5_deprogramming",
+    label="Deprogramming & exit programs",
     description=(
-        "Electoral reform: ranked-choice ballots, open primaries, "
-        "proportional representation. Phase 10 redesign: Phase 6's "
-        "one-shot centroid halve was the *result* of Drutman 2020's "
-        "reform, not the mechanism — and Phase 9's amplified "
-        "EliteDrift re-diverges within ~5 years. Phase 10 also "
-        "halves `tier_d_anes_drift_multiplier` (3.0 → 1.5) and "
-        "`FactionAnchor.strength` (0.10 → 0.05) ongoing, so the "
-        "Drutman elite-incentive channel is durable. All knobs "
-        "theoretical [T] — direct RCV empirics are mostly null."
+        "Counter-extremism: deradicalization and 'formers' exit "
+        "programs (Life After Hate, EXIT networks) that reach the "
+        "organized extreme. The library's only TARGETED-tail "
+        "intervention — applied to a treated 50% of faction-tagged "
+        "agents (the emergent Tea-Party / MAGA / Bernie / DSA blocs), "
+        "who both leave the faction (the faction-anchor tug stops) and "
+        "have their extremist identity moderated (identity_strength "
+        "halved → weaker pull toward the party package). Decade-gated: "
+        "pre-emergence releases have no factions to reach (exact "
+        "no-op). Program efficacy is modest/contested — magnitude "
+        "graded [N]."
     ),
     label_kind="intervention",
-    # MHV S4 T4.5 re-measure-then-bless: partial -> BACKFIRE (Δsep +0.117,
-    # cross-decade mean). X5's primary lever halves tier_d_anes_drift_multiplier
-    # (3.0->1.5) — but that knob is INERT on the S3 data-fed elite path (the
-    # scheduled EliteDrift it scaled is gone), so RCV no longer damps divergence;
-    # the residual FactionAnchor.strength halving slightly raises separation.
-    # X5 needs re-mechanization onto the elite_lead_factor / party-centroid
-    # series (deferred — flagged for S5). Measured, not authored.
-    effect_buckets={"issue_sorting": "backfire", "affect": "null"},
+    # MHV S5 T5.0 measure-then-bless (9 seeds × 4 release decades, phase10),
+    # two levers (faction exit + identity ×0.5) at 50% reach: null / null.
+    # Cross-release mean Δsep −0.0062, Δaff +0.0004. Decade-gated: exact 0 at
+    # 1990/2000 (no factions emerged yet), correctly signed but sub-threshold
+    # where factions exist (Δsep −0.0037 at 2010, −0.0212 at 2020). Honest,
+    # robust finding (confirmed across an escalation ladder — exit-only −0.0049,
+    # +identity −0.0102, +50% reach −0.0212 at 2020, all still null): a targeted
+    # counter-extremism program on the organized extreme does NOT scale to
+    # aggregate separation — the tail is a small slice of a population whose
+    # separation is set by the broad middle. Measured, not authored (I7).
+    effect_buckets={"issue_sorting": "null", "affect": "null"},
     citation=(
-        "Drutman 2020 (Breaking the Two-Party Doom Loop — theoretical "
-        "RCV + multi-member districts + open primaries reduces "
-        "primary-driven divergence); Donovan & Bowler 2023 (US RCV "
-        "empirics — modest reduction in negative campaigning, null "
-        "on voter polarization); Atkinson et al. 2023 (Maine RCV); "
-        "McGhee & Shor 2017 (California top-2 primaries — null on "
-        "legislator polarization); Reilly 2018 (comparative RCV); "
-        "Hetherington 2001 (APSR 95:619, party-cue intensification "
-        "inverse); Gidron, Adams & Horne 2020. See "
-        "docs/phase10_interventions/redesign_briefs.md §X5."
+        "Horgan 2009 (Walking Away from Terrorism); Koehler 2017 "
+        "(Understanding Deradicalization); Berger 2018 (Extremism, "
+        "MIT Press); Gielen 2019 (Terrorism & Political Violence — "
+        "deradicalization-program evaluation review; effects "
+        "modest/contested); Bjørgo & Horgan 2009 (Leaving Terrorism "
+        "Behind). Engine lever: FactionAnchor (`faction_anchor_events`). "
+        "See docs/phase10_interventions/redesign_briefs.md §X5."
     ),
     expected_naive_effect=(
-        "Reforming elections reduces the incentive for politicians "
-        "to play to the extremes, and the mass public will follow."
+        "Pull the committed extremists back and the camps will soften."
     ),
     predicted_effect=(
-        "Phase 10 hypothesis: Δsep partial-to-real on issue "
-        "sorting, and now *durable* (was −0.14 transient in Phase "
-        "6; expect to hold over 30+ ticks because the drift channel "
-        "is also dialed down). Δaff small negative. Falsification: "
-        "Δsep null or positive after 30 ticks → drift-channel "
-        "mechanism doesn't carry the durability claim; Δsep < −0.30 "
-        "→ unrealistically large for a theoretical reform; reduce "
-        "multipliers."
+        "MHV S5 hypothesis: Δsep helpful but small and decade-gated — "
+        "null at 1990/2000 (no factions emerged yet), a modest "
+        "negative Δsep at 2010/2020 once the Tea-Party/MAGA/Bernie/DSA "
+        "blocs exist and 20% of them exit; the cross-release mean is "
+        "the honest single bucket. Δaff ~null (the lever moves issue "
+        "position, not out-party warmth directly). Falsification: "
+        "Δsep ≥ 0 at the 2020 release → clearing faction anchors does "
+        "not soften separation even where factions exist; Δsep < −0.30 "
+        "→ implausibly large for a 20%-reach program."
     ),
     param_bundle=_PHASE10_EMPTY_BUNDLE,
-    setup=_x5_setup,
+    setup=_x5_deprogramming_setup,
 )
 
 
@@ -945,7 +946,7 @@ INTERVENTIONS_PHASE6: tuple[Intervention, ...] = (
     X2_FIX_ALGORITHM,
     X3_QUIT_CABLE_NEWS,
     X4_BIPARTISAN_DIALOGUE,
-    X5_RANKED_CHOICE_VOTING,
+    X5_DEPROGRAMMING,
     X6_SHARED_INSTITUTIONS,
     X7_PERCEPTION_CORRECTION,
 )

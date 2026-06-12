@@ -357,7 +357,7 @@ def run_trajectory(
     Parameters
     ----------
     seed: RNG seed.
-    intervention_id: optional intervention id (e.g., "X5_ranked_choice_voting").
+    intervention_id: optional intervention id (e.g., "X5_deprogramming").
         If None, runs the no-intervention baseline.
     release_tick: tick at which to apply the intervention. Ignored if
         intervention_id is None.
@@ -897,7 +897,7 @@ def build_intervention_metadata() -> dict:
         "X2_fix_algorithm":       {"L:M": 1, "L:D": 0, "T": 0, "C": 0},
         "X3_quit_cable_news":     {"L:M": 0, "L:D": 1, "T": 1, "C": 0},
         "X4_bipartisan_dialogue": {"L:M": 2, "L:D": 1, "T": 2, "C": 0},
-        "X5_ranked_choice_voting":{"L:M": 0, "L:D": 0, "T": 4, "C": 0},
+        "X5_deprogramming":       {"L:M": 0, "L:D": 0, "T": 0, "C": 1},
         "X6_shared_institutions": {"L:M": 1, "L:D": 2, "T": 0, "C": 1},
         "X7_perception_correction":{"L:M": 1, "L:D": 1, "T": 2, "C": 0},
     }
@@ -907,7 +907,7 @@ def build_intervention_metadata() -> dict:
         "X2_fix_algorithm":        "#7a7a7a",
         "X3_quit_cable_news":      "#8a6a3a",
         "X4_bipartisan_dialogue":  "#3a8a6a",
-        "X5_ranked_choice_voting": "#3a6ad0",
+        "X5_deprogramming":        "#3a6ad0",
         "X6_shared_institutions":  "#5a3ad0",
         "X7_perception_correction":"#aa3a8a",
     }
@@ -1097,7 +1097,7 @@ INTERVENTION_FULL_IDS = (
     "X2_fix_algorithm",
     "X3_quit_cable_news",
     "X4_bipartisan_dialogue",
-    "X5_ranked_choice_voting",
+    "X5_deprogramming",
     "X6_shared_institutions",
     "X7_perception_correction",
 )
@@ -1174,7 +1174,7 @@ def main():
     # Resolve config
     if args.quick:
         n_agents = args.n_agents or 80
-        intervention_ids = ["X1_show_other_side", "X5_ranked_choice_voting", "X6_shared_institutions"]
+        intervention_ids = ["X1_show_other_side", "X5_deprogramming", "X6_shared_institutions"]
         release_ticks = args.release_ticks or [90]
         variance_seeds: list[int] = []
     else:

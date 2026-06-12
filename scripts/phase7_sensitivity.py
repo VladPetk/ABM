@@ -104,9 +104,12 @@ def sweep_x3_outlets():
 
 
 def sweep_x5_magnitude():
-    """X5 'Ranked-choice voting' — Δsep at varying centroid-pull magnitudes."""
-    from abm.pillars.interventions_phase6 import X5_RANKED_CHOICE_VOTING
-    print("\n[5.2] X5 'Ranked-choice voting' — centroid-pull sensitivity")
+    """X5 centroid-pull sensitivity (LEGACY — characterised the retired
+    "ranked-choice voting" centroid-pull lever; X5 is now "Deprogramming
+    & exit programs" (a faction-exit lever), so this magnitude axis no
+    longer maps to the X5 mechanism. Kept for historical reference)."""
+    from abm.pillars.interventions_phase6 import X5_DEPROGRAMMING  # noqa: F401
+    print("\n[5.2] X5 (legacy RCV centroid-pull sensitivity sweep)")
 
     for pull in (0.00, 0.25, 0.50, 0.75, 1.00):
         diffs = []

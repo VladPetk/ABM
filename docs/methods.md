@@ -1652,6 +1652,50 @@ emergent+input fractions on the fitted config (6 seeds, `scripts/audit/s4_budget
 party_sep **1.02**, affect **0.85**, identity_alignment **0.975** — all clear their
 floors, the alignment fraction comfortably above the new 0.60 bar.
 
+### 5.26 MHV S5 T5.0 — X5 replaced: "Deprogramming & exit programs" (2026-06)
+
+The Phase-10 X5 "Ranked-choice voting" lever was an artifact of the pre-S3
+engine: its durable arm halved `tier_d_anes_drift_multiplier`, which scales the
+**scheduled** `EliteDrift` rule. S3 moved elite forcing to a data-fed party-
+centroid series (`PartyCentroidSeries`), so that rule is never added and the
+multiplier is inert (the `_find_rule(engine, "EliteDrift")` lookup returns
+`None`). With its durable arm dead, the remaining transient centroid/cue halve
+is overwritten each tick by the series, and the residual `FactionAnchor.strength`
+halve slightly *raised* separation — so the T4.5 re-measure honestly recorded X5
+as a **backfire**. That is a dangling-lever measurement, not a finding about RCV
+(whose direct empirics are mostly null anyway).
+
+**Decision (user, MHV S5 T5.0):** rather than re-wire RCV onto an arbitrary
+`[T]` magnitude, **replace X5** with **"Deprogramming & exit programs"** — the
+library's only *targeted-tail* intervention. Mechanism (`_x5_deprogramming_setup`):
+at the intervention tick, a treated fraction (`X5_TREATED_FRACTION = 0.50`) of
+**faction-tagged** agents (those the emergence events gave a `faction_center` —
+Tea Party '87 / MAGA '105 / Bernie '108 / DSA '114) undergoes **two levers**:
+(1) **exit the faction** — clear `faction_center`, so `FactionAnchor` (which
+self-gates on a present center) stops tugging them toward the sub-centroid
+permanently; (2) **moderate the extremist identity** — scale `identity_strength`
+by 0.5, which linearly damps `PartyPull` (it reads `identity_strength` as a pull
+modulator). Both levers are live and shipped (`FactionAnchor` /
+`faction_anchor_events=True`; `PartyPull`). Provenance **[N]** — deradicalization
+program efficacy is modest/contested (Horgan 2009; Koehler 2017; Berger 2018;
+Gielen 2019 review); the 50% reach (an optimistic upper bound) + two-lever
+magnitude is a design choice within that envelope, not a measured effect size.
+
+**Measured bucket (measure-then-bless, 9 seeds × 4 release decades):** **null /
+null** (cross-release mean Δsep −0.0062, Δaff +0.0004). Decade-gated: an exact
+no-op at the 1990/2000 releases (no factions have emerged), correctly signed but
+sub-threshold where factions exist (Δsep −0.0037 at 2010, −0.0212 at 2020). The
+finding is robust across an escalation ladder (exit-only −0.0049 → +identity
+−0.0102 → +50% reach −0.0212 at 2020, all still null): **a targeted
+counter-extremism program on the organized extreme does not scale to aggregate
+separation** — the tail is a small slice of a population whose separation is set
+by the broad middle; reaching "partial" would require abandoning the
+targeted-tail nature (population-wide identity moderation), a different
+intervention. This is the honest, on-message result (the library's thesis that
+most interventions barely move the needle). Isolation guards:
+`tests/test_isolation_guards.py::test_x5_deprogramming_*`. Replaces the §5.2 RCV
+centroid-pull sweep (now legacy).
+
 ---
 
 ## 6. What the model is for
@@ -1666,8 +1710,11 @@ literature-anchored demonstration that:
 2. Self-help interventions (quitting cable news, dialogue programs)
    are null at the population level even where they help
    participants.
-3. Even institutional reform (RCV) produces only partial issue-
-   sorting reductions over realistic timescales.
+3. Even a targeted intervention on the organized extreme
+   (deprogramming / exit programs that make half the faction-tagged
+   agents exit and moderate) is null at the aggregate — the extreme
+   tail is a small slice, and it is decade-gated by when those
+   factions emerge.
 4. Even structural shared-life contact under Allport conditions
    doesn't reverse accumulated animus — it slows further cooling but
    doesn't undo what's already there.

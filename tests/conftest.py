@@ -287,8 +287,9 @@ def intervention_buckets_with_independents() -> dict[str, dict[str, float]]:
 # phase10 substrate (ANES_FULL_KWARGS, evidence_regrade=True). Δ vs the
 # no-intervention control, averaged across ALL (release_tick, seed) cells
 # → the cross-release representative the single declared bucket stands for
-# (X5 in particular is decade-dependent: null at 1990/2010, partial at
-# 2000/2020; the cross-release mean is the honest single bucket).
+# (X5 "Deprogramming" in particular is decade-gated: an exact no-op at the
+# 1990/2000 releases because no factions have emerged yet, with any effect
+# confined to 2010/2020; the cross-release mean is the honest single bucket).
 
 
 @pytest.fixture(scope="session")
