@@ -596,6 +596,30 @@ shocks raise on this path; X1's `identity_weight` lever is skipped (S4
 re-mechanization item); `sandbox_identity_mult` is inert here (a
 measurement is not a force — S5 dial re-map pending). methods.md §5.21.
 
+**MHV S3 (T3.2/T3.3): `data_fed_elite` + `data_fed_media`** (defaults False →
+bit-identical). The forces-as-inputs flip — exogenous forces become typed,
+data-fed **input series** (`abm/pillars/inputs.py`) instead of schedules:
+- `data_fed_elite=True` replaces the scheduled `EliteDrift` with a
+  `PartyCentroidSeries` that sets `env.attrs["parties"][pid]` each tick from the
+  ANES voter-centroid series (`data/mhv/party_centroid_series.json`). The
+  `ELITE_DRIFT_SCHEDULE*` / Gingrich / Citizens-United rate writes become natural
+  no-ops; the Trump-2016 centroid nudge is skipped (series carries it). **Removes
+  the corner-pin** (scheduled EliteDrift pinned the attractor at `[±1,±1]` by
+  2014); the de-artifacted party_sep is lower (~0.59 vs the artifact 0.94) and
+  undershoots the ANES target pending the S4 fit.
+- `data_fed_media=True` adds a `MediaPenetrationSeries` writing
+  `env.attrs["media_strength"]` and `["bc_affect_weight"]` from the penetration
+  series (`data/mhv/media_penetration_series.json`); `MediaConsumption` and
+  `BoundedConfidenceInfluence` read those env slots with a fallback to their own
+  value. Faithful, near-trajectory-neutral re-expression of the FD/Fox/social
+  step events.
+
+Both are **ON in the canonical `ANES_FULL_KWARGS`** as of T3.5. The retired
+schedules (`ELITE_DRIFT_SCHEDULE*`) stay live for the legacy non-data-fed path
+(kill candidates post-S4). I3 (`tests/test_i3_no_outcome_writes.py`) now forbids
+direct outcome writes in arc handlers; the Obama-2008 warmth bump was dropped.
+methods.md §5.24.
+
 ---
 
 ## 6. Interventions library (X1–X7)

@@ -1509,6 +1509,95 @@ check stays strict).
 
 ---
 
+### 5.24 MHV S3 — forces as data-fed inputs (M6-lite) (2026-06)
+
+S3 re-expresses the arc's exogenous forces as **typed, data-fed input series**
+instead of hand-tuned schedules and ad-hoc state pokes. New module
+`abm/pillars/inputs.py`: a provenance-gated `Series` loader (units/source/L-N-E
+tag required) + a `DataFedSeries` env-rule with two consumers. Gated behind
+`data_fed_elite` / `data_fed_media` (default off → bit-identical); the canonical
+`ANES_FULL_KWARGS` flips both **on** at T3.5.
+
+**This is M6-*lite* — data-fed series, NOT feedback-coupled elites.** The
+mass→elite feedback literature (Hall 2015 extremist penalty; Bafumi & Herron
+2010 leapfrogging; Thomsen 2017 moderate self-selection; Leonard 2021 asymmetric
+feedback) is M6-full, out of MHV scope and recorded as a **documented blindspot**
+(`docs/model_blindspots.md` §3, §6): the model does not separate a more-extreme,
+R-led elite layer from the mass public.
+
+- **Elite channel (T3.2).** `PartyCentroidSeries` sets `env.attrs["parties"][pid]`
+  each tick from the measured ANES *voter* party centroids
+  (`data/mhv/party_centroid_series.json`; 1986–2024 + a pre-Reagan 1980 anchor)
+  and propagates the shift to `party_cue`, replacing the scheduled `EliteDrift`.
+  Decision **D-S3-1**: ANES voter centroids, **not DW-NOMINATE** — the compass is
+  the mass public, the drift was already voter-calibrated, and the elite/voter
+  series carry *opposite* asymmetry (DW-NOMINATE elites R-led ~3:1: R +0.24 / D
+  −0.08 1980→2020; ANES voters D-led ~2:1: D econ −0.34 / cult −0.47, R receding
+  post-2012). DW-NOMINATE is cited as corroborating elite evidence; the
+  mass-elite gap is the blindspot above. Provenance: **L** (ANES measured), the
+  1980 anchor **E**.
+  - **Why this was a hard requirement (T0.6).** The scheduled `EliteDrift` runs
+    the attractor into the domain corners (`[±1, ±1]` by 2014 — physically
+    nonsensical, maximally extreme on every issue). Its party_sep of 0.94 is that
+    corner-pin artifact. The data-fed series feeds realistic attractors
+    (max |coord| 0.44, **no domain bound — accept clause met**) and yields
+    party_sep **0.59**. The raw voter-centroid separation (~1.06) matches the
+    ANES target, but the FJ-anchored, weakly-pulled (`party_pull=0.04`) population
+    lags the attractor. **Closing 0.59 → ~1.04 is an S4 calibration lever**
+    (party_pull / fj / the bc↔noise ridge); an honest elite-lead factor (~1.2×
+    per leapfrogging) does not close it, so it is not faked at S3. Re-blessed
+    down honestly at the T3.5 sign-off (option 1: accept the de-artifacted
+    pre-S4 level; S4 closes the gap).
+- **Media channel (T3.3).** `MediaPenetrationSeries` writes `env.attrs`
+  `media_strength` (= 0.04 × a partisan-media regime curve) and `bc_affect_weight`
+  (= 0.094 × Pew social-media adoption) each tick from
+  `data/mhv/media_penetration_series.json`; `MediaConsumption` and
+  `BoundedConfidenceInfluence` read those slots with a fallback to their own
+  value (bit-identical when absent). The weak coefficients **reproduce** the
+  discrete step values they replace (FD-1987→0.02 / Fox-1996→0.04; the demoted
+  regrade ramp ~0.02/0.04/0.05 @2008/10/12) — a faithful re-expression, **near
+  trajectory-neutral** (full-flip affect −0.63 vs −0.69, alignment 0.28 vs 0.33).
+  Weak coupling is the **media-paradox blindspot cluster** (Boxell 2017
+  age-gradient — which the model cannot reproduce, no age structure: a documented
+  limitation; Guess 2023 / Allcott 2024 nulls; Prior 2013 / Guess 2021
+  heavy-tailed diets). Internet (Pew, verified 2000–24) is carried for context.
+  Provenance: social-media **L**, the FD/Fox regime curve **N/E** (re-expression
+  on documented onset dates).
+- **Outcome-nudge cleanup (T3.4).** The **Obama-2008 warmth bump** (a +0.05
+  one-shot direct write to every agent's out-party affect — an I3 violation) is
+  **dropped** (D-S3-2); if a 2008–09 warmth blip is real, S4's thermometer fit
+  recovers it. The **Trump-2016 centroid nudge** is retired on the data-fed path
+  (the series carries 2016 natively). **I3 is now enforced** by
+  `tests/test_i3_no_outcome_writes.py` (AST lint: no direct affect/issues/
+  ideology/alignment writes in arc handlers). *Deferred:* the 2016 status-threat
+  write (`perceived_threat`, a mechanism *input* to ThreatDecay — not an I3
+  outcome variable) stays a direct write; migrating it to the declarative
+  `shocks.py` `TargetState.THREAT` channel is deferred (it would move the event
+  from the always-on base schedule to the `exogenous_shocks`-gated catalogue,
+  changing every legacy non-shock arc test, and risks double-decay with
+  ThreatDecay).
+
+**Budget accounting + brake (T3.5).** Data-fed inputs are empirical — the
+opposite of dark matter — so they are deliberately **not** frozen in the
+`test_dark_matter_budget.py` floors (which still pass: frozen-fraction sep ≈0.81
+≥ 0.60). The finer split (`scripts/audit/t35_budget_brake.py`, 6 seeds):
+party_sep emergent 0.45 / input-carried 0.36; affect emergent 0.84 / input ~0;
+alignment 0.39 / 0.38 — the data-fed elite legitimately carries ~0.36 of sep.
+**T0.3 brake re-check:** the events-as-a-brake explanation **re-expressed** — the
+cause (the partisan-media tether) moved from the Fox/FD *events* into the
+always-on data-fed media *input*, so removing dated events no longer overshoots
+sep (full 0.598 vs no-events 0.550). The mechanism survives; its locus moved to
+the input where it belongs.
+
+**Tests retired (legacy-path kill, deliberate):**
+`test_obama_warmth_event_fires_at_tick_84` (pinned the dropped Obama event).
+`test_intervention_library_directions_hold` is **xfail pending the S4 re-measure**
+(the de-artifacted lower separation moves weak interventions — X5 ranked-choice,
+Δsep ≈ +0.002 — across the null/partial boundary; the X1–X7 bucket re-bless is
+S4's, phase10 bannered stale since T2.6).
+
+---
+
 ## 6. What the model is for
 
 polarlab is a **teaching artifact** for a public, non-expert

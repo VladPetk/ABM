@@ -10,10 +10,11 @@ This lint walks every ``_event_*`` / ``_decade_*`` handler in
 variable. The sanctioned channels (``DataFedSeries`` consumers, ``shocks.py``
 applicators) are exempt by construction — they are not bespoke arc handlers.
 
-T3.1 lands this **xfail**: the Obama-2008 warmth handler still writes ``affect``
-directly. T3.4 drops that nudge and migrates the remaining one-shot nudges to
-the shock channel; the ``xfail`` marker is removed there and this becomes a
-hard guard.
+T3.4 made this a **hard guard**: the Obama-2008 warmth handler (the only direct
+``affect`` write in an arc handler) was dropped (D-S3-2). The 2016 status-threat
+write targets ``perceived_threat`` — a *mechanism input* to ThreatDecay, not an
+I3 outcome variable — so it is out of this lint's scope (its migration to the
+declarative shock channel is deferred; see methods §5.24).
 """
 from __future__ import annotations
 
@@ -65,12 +66,6 @@ def _scan_handlers() -> list[tuple[str, int, str]]:
     return violations
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="T3.1 scaffold: Obama-2008 warmth still writes affect directly; "
-           "T3.4 drops it + routes nudges through the shock channel, then "
-           "removes this marker.",
-)
 def test_no_direct_outcome_writes_in_arc_handlers():
     violations = _scan_handlers()
     assert not violations, (

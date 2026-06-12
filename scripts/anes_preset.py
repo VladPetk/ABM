@@ -96,6 +96,21 @@ ANES_FULL_KWARGS = {
     "n_issues": 7,
     "constraint_rate": 0.02,
     "constraint_resid_sigma": 0.01,
+    # MHV S3 T3.5 — THE FORCES-AS-INPUTS FLIP. The scheduled EliteDrift and the
+    # discrete FD/Fox/social-media media steps are replaced by data-fed input
+    # series (abm/pillars/inputs.py):
+    #   - data_fed_elite: party centroids from the ANES voter-centroid series
+    #     (data/mhv/party_centroid_series.json). REMOVES the corner-pin artifact
+    #     (scheduled EliteDrift pinned the attractor at [+-1,+-1] by 2014; T0.6).
+    #     The de-artifacted party_sep is LOWER (~0.59 vs the artifact-inflated
+    #     0.94) and undershoots the ANES target pending the S4 fit — accepted at
+    #     the T3.5 sign-off (option 1): re-bless down honestly, S4 closes the gap
+    #     via party_pull/fj. See methods §5.24 + docs/internal/audit/t32_datafed.md.
+    #   - data_fed_media: media coupling from the penetration series
+    #     (data/mhv/media_penetration_series.json). Faithful re-expression of the
+    #     FD/Fox/social-media steps — near trajectory-neutral.
+    "data_fed_elite": True,
+    "data_fed_media": True,
     # Step 1 (web_demo evidence re-grade) — master gate for the engine
     # truth-pass (D1a Gingrich/CU, D2a social-media demotion, D3b
     # identity-alignment → animus). On for the web/ANES path.

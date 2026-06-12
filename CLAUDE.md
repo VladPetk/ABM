@@ -173,9 +173,16 @@ presenting results:
 Time maps via `ticks_per_year = 3` (1 tick ≈ 4 months), anchored to the ANES
 out-party thermometer; the shipped run is ticks `0…135` = 1980 → ~end 2025.
 **Status: Phase 10 complete** (Phase 9 = ANES recalibration; Phase 10 =
-intervention library re-measure on that baseline). **MHV S2 in progress:**
-the canonical engine substrate is now the emergent D=7 build (T2.6 flip);
-ANES re-fit + phase-10 re-measure land at MHV S4, web re-export at S5.
+intervention library re-measure on that baseline). **MHV S3 landed:** the
+canonical engine substrate is the emergent D=7 build (S2/T2.6) running on
+**data-fed input series** — party centroids from ANES voter data and media
+coupling from penetration curves replace the scheduled `EliteDrift` + FD/Fox/
+social-media steps (`abm/pillars/inputs.py`; `data_fed_elite`/`data_fed_media`
+on in `ANES_FULL_KWARGS`; methods §5.24). This **removed the elite corner-pin
+artifact**, so the de-artifacted party_sep (~0.59) now undershoots the ANES
+target — **closing that gap is the MHV S4 fit** (party_pull/fj), alongside the
+ANES re-fit + phase-10 re-measure; web re-export at S5. I3 (no direct outcome
+writes outside the delta pipeline) is now enforced by test.
 
 ### Engine quickstart (Windows PowerShell)
 ```powershell

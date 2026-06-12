@@ -286,40 +286,9 @@ def test_pillar_S4_has_no_cooperative_edges():
         )
 
 
-# ---------------------------------------------------------------------
-# Schedule-fired warmth shock: Obama 2008.
-# ---------------------------------------------------------------------
-
-
-def test_obama_warmth_event_fires_at_tick_84():
-    """Historical-arc Schedule fires _event_2008_obama_warmth at tick
-    84; every agent's out-party affect rises by exactly +0.05 (clipped
-    at +1.0). Tested by firing the event function directly on the
-    engine state (no tick-advance interference)."""
-    from abm.pillars.historical_arc import _event_2008_obama_warmth
-    eng = historical_build(seed=0, n_agents=100)
-    sched = build_schedule()
-    # Run up to tick 83 — just before the Obama event.
-    run_to(eng, sched, 83)
-    # Snapshot affect just before the event.
-    pre_affect = [
-        dict(a.state.attrs["affect"]) for a in eng.agents
-    ]
-    # Fire the Obama event in isolation (no tick advance).
-    _event_2008_obama_warmth(eng)
-    post_affect = [
-        dict(a.state.attrs["affect"]) for a in eng.agents
-    ]
-    # Each agent's out-party affect should be exactly +0.05 higher
-    # than before the event (or clipped at +1.0). No tick advance =
-    # no AffectiveUpdate interference.
-    for pre, post in zip(pre_affect, post_affect):
-        for party_id in pre:
-            expected = float(np.clip(pre[party_id] + 0.05, -1.0, 1.0))
-            assert abs(post[party_id] - expected) < 1e-9, (
-                f"out-party {party_id} affect: pre={pre[party_id]:+.4f}, "
-                f"post={post[party_id]:+.4f}, expected={expected:+.4f}"
-            )
+# MHV S3 T3.4 — `test_obama_warmth_event_fires_at_tick_84` RETIRED with the
+# Obama-2008 warmth event it pinned (decision D-S3-2; the +0.05 affect poke was
+# an I3-violating outcome write). A retired mechanism keeps no drift-guard.
 
 
 # ---------------------------------------------------------------------

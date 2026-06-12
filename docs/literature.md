@@ -122,6 +122,18 @@ are in methods.md's provenance table.
   yet; logged at adoption per the log-every-source rule). Dataset: **DIME**
   (Database on Ideology, Money in Politics, and Elections, public v4.0,
   1979–2024), data.stanford.edu/dime — cite the version actually used.
+- **MHV S3 elite input series — realized (T3.2, 2026-06).** The data-fed elite
+  channel (`data/mhv/party_centroid_series.json`, generator
+  `scripts/build_party_centroid_series.py`) is driven by the **ANES voter party
+  centroids** (`data/phase9_empirical/derived/party_centroids.csv`, 1986–2024)
+  with a pre-Reagan 1980 anchor — **not DW-NOMINATE** (decision D-S3-1): the
+  compass is the mass public, and the elite (NOMINATE, R-led ~3:1) and voter
+  (ANES, D-led ~2:1) series carry opposite asymmetry. McCarty/Poole/Rosenthal
+  (above) + Bafumi & Herron 2010 (leapfrog representation) + Leonard et al. 2021
+  (asymmetric feedback) are cited as the **corroborating elite evidence** and the
+  basis of the **mass-elite-gap blindspot** the model does not separate
+  (`docs/model_blindspots.md` §3, §6; the feedback layer is M6-full, out of
+  scope). Replaces the scheduled `EliteDrift` (removing its corner-pin artifact).
 
 ### 2.4 Identity & affect
 - **Mason, L.** (2018). *Uncivil Agreement: How Politics Became Our Identity*.
@@ -171,6 +183,18 @@ are in methods.md's provenance table.
 - **Ross Arguedas, A., Robertson, C. T., Fletcher, R., & Nielsen, R. K.**
   (2022). *Echo Chambers, Filter Bubbles, and Polarisation: A Literature
   Review*. Reuters Institute. — Media-polarization synthesis.
+- **MHV S3 media penetration series (T3.3, 2026-06).** The data-fed media
+  channel (`data/mhv/media_penetration_series.json`, generator
+  `scripts/build_media_penetration_series.py`) carries: **Pew Research Center**
+  social-media adoption (% of US adults; pre-2012 anchors approximate) and
+  internet adoption (% of US adults, verified 2000–2024, "Internet/Broadband"
+  fact sheet); and a **partisan-media regime curve** re-expressing the discrete
+  Fairness-Doctrine-repeal (Aug 1987) and Fox-News-launch (Oct 1996) steps on
+  their documented onset dates (dates HIGH; curve shape N/E). The **weak**
+  coupling magnitudes are anchored to the media-paradox cluster — Allcott 2020 /
+  Guess 2023 (above), Boxell, Gentzkow & Shapiro 2017 (age-gradient; the model
+  has no age structure, a documented limitation), Prior 2013 / Guess 2021
+  (heavy-tailed diets) — catalogued in `docs/model_blindspots.md` §1.
 
 ### 2.7 Comparative / scope
 - **Gidron, N., Adams, J., & Horne, W.** (2020). *American Affective

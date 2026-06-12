@@ -170,6 +170,12 @@ class PartyCentroidSeries(DataFedSeries):
     """
 
     def _apply(self, env, agents, values, tick):
+        # Freeze hook (dark-matter budget instrument): when set, the input is
+        # pinned — the centroids stay at whatever value they last held (the
+        # 1980 build value if frozen from tick 0). Default absent → no-op →
+        # bit-identical. See tests/test_dark_matter_budget.py (input-carried).
+        if env.attrs.get("_freeze_data_fed_inputs"):
+            return
         parties = env.attrs.get("parties")
         if not parties:
             return
@@ -225,6 +231,11 @@ class MediaPenetrationSeries(DataFedSeries):
         self.bc_aw_per_adoption = float(bc_aw_per_adoption)
 
     def _apply(self, env, agents, values, tick):
+        # Freeze hook (dark-matter budget instrument): when set, stop writing
+        # the coupling slots — MediaConsumption / BC fall back to their build
+        # (1980 = off) values. Default absent → no-op → bit-identical.
+        if env.attrs.get("_freeze_data_fed_inputs"):
+            return
         if "partisan_media" in values:
             env.attrs["media_strength"] = (
                 self.media_strength_max * values["partisan_media"])

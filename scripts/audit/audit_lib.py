@@ -146,6 +146,14 @@ def _apply_freeze(eng, freeze: set, base: dict) -> None:
         if bc is not None and "social_media_bc_aw" in base:
             bc.affect_weight = base["social_media_bc_aw"]
         eng.env.attrs["mediated_animus_weight"] = base["mediated_animus_weight"]
+    # MHV S3 T3.5 — pin the data-fed input series (elite party centroids +
+    # media coupling) at their 1980 value. The input rules self-gate on this
+    # flag and stop writing, so the centroids stay at the build IC and the
+    # media coupling falls back to the (1980 = off) rule values. This is the
+    # "input-carried" instrument: the budget can now distinguish emergent vs
+    # data-fed-input vs residual-schedule contributions.
+    if "data_fed_inputs" in freeze:
+        eng.env.attrs["_freeze_data_fed_inputs"] = True
 
 
 # ---------------------------------------------------------------------------

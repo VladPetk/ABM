@@ -1932,21 +1932,12 @@ def _event_2008_social_media_ramp_start(engine):
         engine.env.attrs["mediated_animus_weight"] = MEDIATED_ANIMUS_WEIGHT_RAMP[0]
 
 
-def _event_2008_obama_warmth(engine):
-    """Phase 8c §2 E2.3: Obama 2008 election → one-shot warmth bump.
-
-    Phase 8e §4 decomposition: skipped when env.attrs["phase8e_baseline"]
-    is True (the 8b-baseline cells don't get the warmth event).
-    """
-    if engine.env.attrs.get("phase8e_baseline"):
-        return
-    for a in engine.agents:
-        affect = a.state.attrs.get("affect")
-        if not affect:
-            continue
-        for other_party in list(affect.keys()):
-            new_val = float(np.clip(affect[other_party] + 0.05, -1.0, 1.0))
-            affect[other_party] = new_val
+# MHV S3 T3.4 — the Obama-2008 warmth bump (`_event_2008_obama_warmth`,
+# a +0.05 one-shot direct write to every agent's out-party affect) is
+# RETIRED (decision D-S3-2): it was a weakly-grounded outcome poke that
+# violated I3 (a direct affect write outside the delta pipeline). If a
+# 2008-09 warmth blip is real, S4's out-party-thermometer fit recovers it.
+# Its removal is what flips tests/test_i3_no_outcome_writes.py green.
 
 
 def _event_2010_social_media_ramp_mid(engine):
@@ -2437,11 +2428,9 @@ def build_schedule(
         ScheduledEvent(60, "decade_2000",
                        "Decade boundary 2000 — IdentitySorting up",
                        _decade_boundary_2000),
-        ScheduledEvent(84, "social_media_ramp_start_and_obama_2008",
-                       "Social media mass adoption begins (2008) + "
-                       "Obama warmth bump",
-                       _combined(_event_2008_social_media_ramp_start,
-                                  _event_2008_obama_warmth)),
+        ScheduledEvent(84, "social_media_ramp_start_2008",
+                       "Social media mass adoption begins (2008)",
+                       _event_2008_social_media_ramp_start),
         ScheduledEvent(90, "decade_2010_and_citizens_united",
                        "Decade boundary 2010 + Citizens United + ramp mid",
                        _combined(_decade_boundary_2010,

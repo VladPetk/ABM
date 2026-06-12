@@ -21,10 +21,20 @@ is a finding — floors may be lowered OPENLY in methods.md with reasoning,
 never silently here.
 
 Measured at the T2.6 canonical flip (8 seeds, phase2_freeze.json):
-sep 1.10 / affect 0.87 / alignment 1.07 — the emergent core now carries
-the arc; the residual schedule levers are elite drift (~30% of sep) and
-the social-media ramp (~21% of affect), which S3's typed-inputs caps
-(≤0.15 / ≤0.15 / ≤0.10) exist to retire.
+sep 1.10 / affect 0.87 / alignment 1.07.
+
+**MHV S3 T3.5 update.** The arc now runs on data-fed input series (elite party
+centroids + media coupling), NOT hand-drawn schedules. Data-fed inputs are
+empirical — the *opposite* of dark matter — so they are deliberately NOT in
+``ALL_FREEZE``: freezing them would wrongly count empirical grounding as a
+residual schedule. The frozen-fraction this test measures is therefore
+``emergent + input-carried`` (both "not hand-drawn machinery"), which is what
+the floor bounds. The finer split (emergent vs input-carried vs residual) is
+measured by ``scripts/audit/t35_budget_brake.py`` — at the flip (6 seeds):
+party_sep emergent 0.45 / input-carried 0.36; affect emergent 0.84 / input
+~0; alignment emergent 0.39 / input 0.38. The remaining hand-drawn residual
+(mediated-animus ramp, faction stubbornness bumps) is what the §6 caps bound;
+isolating it from the dated events is an S4 refinement.
 """
 from __future__ import annotations
 
