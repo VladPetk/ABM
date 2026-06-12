@@ -37,10 +37,13 @@ def _party_sep(eng):
 
 
 def test_elite_lead_default_is_bit_identical():
-    """L=1.0 == the build default (no elite_lead kwarg)."""
-    base = dict(ANES_FULL_KWARGS)
-    a = _run_to(base, 12)
-    b = _run_to({**base, "elite_lead_factor": 1.0}, 12)
+    """elite_lead_factor=1.0 is a no-op == relying on the build default.
+
+    Preset-independent: strip the shipped value (1.798 since T4.3) so this
+    pins the *mechanism's* default==1.0 bit-identity, not the calibrated point."""
+    base = {k: v for k, v in ANES_FULL_KWARGS.items() if k != "elite_lead_factor"}
+    a = _run_to(base, 12)                                   # build default (1.0)
+    b = _run_to({**base, "elite_lead_factor": 1.0}, 12)     # explicit 1.0
     assert np.allclose(a.positions(), b.positions(), atol=0, rtol=0)
 
 

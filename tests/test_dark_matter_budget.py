@@ -9,9 +9,9 @@ shipped preset):
 
     party separation        ≥ 0.60
     affective polarization  ≥ 0.60
-    identity alignment      ≥ 0.50  (PRE-REGISTERED ratchet to ≥ 0.60
-                                     after the S4 fit — move the floor
-                                     in this file at S4, nowhere else)
+    identity alignment      ≥ 0.60  (MHV S4 T4.3 — the pre-registered
+                                     ratchet from 0.50 is now APPLIED;
+                                     measured 0.975 on the fitted config)
 
 Derivation (s2_spec.md §10): sep/affect floors are today-minus-freeze-CI
 anti-regression bounds; the alignment floor is the S2 co-dominance bar
@@ -22,6 +22,9 @@ never silently here.
 
 Measured at the T2.6 canonical flip (8 seeds, phase2_freeze.json):
 sep 1.10 / affect 0.87 / alignment 1.07.
+Re-measured on the S4-fitted config (T4.3, 6 seeds, scripts/audit/s4_budget_check.py):
+sep 1.02 / affect 0.85 / alignment 0.975 — all clear the floors incl. the 0.60
+alignment ratchet.
 
 **MHV S3 T3.5 update.** The arc now runs on data-fed input series (elite party
 centroids + media coupling), NOT hand-drawn schedules. Data-fed inputs are
@@ -50,7 +53,8 @@ ALL_FREEZE = ("elite_drift", "identity_sorting", "coupling",
 FLOORS = {
     "party_sep": 0.60,
     "affect": 0.60,
-    "identity_alignment": 0.50,   # S4 ratchet: 0.60 (pre-registered)
+    "identity_alignment": 0.60,   # MHV S4 T4.3 — pre-registered ratchet 0.50->0.60
+    # applied (measured 0.975 on the fitted config, 6 seeds; methods §5.25).
 }
 
 

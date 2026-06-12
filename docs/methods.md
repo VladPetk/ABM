@@ -1628,6 +1628,28 @@ prior ~[1.0, 2.0]; SBC-gated). Provenance: **E** (the lead magnitude is calibrat
 the mechanism — elite-leads-mass — is **L**, DW-NOMINATE / leapfrogging
 Bafumi & Herron 2010).
 
+**The fit (T4.3, ABC point applied to `ANES_FULL_KWARGS`).** Full-trajectory NPE/ABC
+fit (2500 draws × 2 seeds, `scripts/audit/s4_fit.py`) against the ANES 1980–2025
+per-wave bands + grounded affect + the GSS constraint series. Shipped point (the ABC
+median; NPE corroborates the *arc* but its median sits at a poorer ridge location):
+party_pull **0.297**, fj_alpha_scale **2.195**, constraint_rate **0.0348**,
+animus_mult **0.655**, noise_sigma **0.0478**, elite_lead_factor **1.798**
+(idpull / bc_strength / drift_mult frozen). **Result: ANES §11 scorecard 18/24 PASS**
+(was 9/24 at S2); the de-artifacted party_sep undershoot is closed (2020 sep 0.58→1.08,
+in band); affect on-target late. **Identifiability (honest):** the three separation
+levers `party_pull ↔ fj_alpha_scale ↔ elite_lead_factor` form a **ridge** (column
+cosine up to 0.81) — the *arc* is identified, its decomposition into the three knobs is
+not; SBC coverage is ~nominal (0.89–0.96) but rank-uniformity fails on the ridge-coupled
+marginals. The shipped point is one defensible location on that ridge. Residual misfits
+reported, not chased: early affect ~0.1 too cold (animus at its 0.6 floor — the known
+over-cooling), and `wp_sd` slightly off (the bc↔noise structural limit).
+
+**Dark-matter ratchet (T4.3).** The pre-registered identity-alignment floor ratchet
+(0.50 → **0.60**) is **applied** in `tests/test_dark_matter_budget.py`. Re-measured
+emergent+input fractions on the fitted config (6 seeds, `scripts/audit/s4_budget_check.py`):
+party_sep **1.02**, affect **0.85**, identity_alignment **0.975** — all clear their
+floors, the alignment fraction comfortably above the new 0.60 bar.
+
 ---
 
 ## 6. What the model is for

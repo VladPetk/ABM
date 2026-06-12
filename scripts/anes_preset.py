@@ -56,9 +56,19 @@ ANES_FULL_KWARGS = {
     # jumpiness Step 3 value) — NOT phase10's old 0.08 — so the
     # intervention scoreboard is measured on the same substrate the
     # demo ships.
-    "tier_d_aniso_noise_sigma_x": 0.04,
-    "tier_d_aniso_noise_sigma_y": 0.04,
-    "tier_c_party_pull_strength": 0.04,
+    # MHV S4 T4.3 — CALIBRATED VALUES (the ABC fitted point, full-trajectory fit
+    # against ANES 1980-2025 per-wave bands + grounded affect; methods §5.25,
+    # docs/internal/audit/s4_fit.{json,md}). Closes the de-artifacted party_sep
+    # undershoot (2020 sep 0.58 -> 1.08, in ANES band) with affect on-target late.
+    # The three sep levers (party_pull, fj_alpha_scale, elite_lead_factor) are a
+    # documented RIDGE (arc identified, decomposition not; SBC coverage ~nominal,
+    # ks-uniformity fails on the ridge-coupled marginals) — this is one defensible
+    # point on it. idpull / bc_strength / drift_mult were FROZEN in the fit.
+    "tier_d_aniso_noise_sigma_x": 0.0478,
+    "tier_d_aniso_noise_sigma_y": 0.0478,
+    "tier_c_party_pull_strength": 0.297,
+    "sandbox_animus_mult": 0.655,
+    "elite_lead_factor": 1.798,
     # MHV S2 T2.6 — the BC wake (T0.6 finding: at 0.30/0.015 the BC
     # channel was effectively dead on the ANES substrate; eps 0.40 /
     # strength 0.03 restores a live influence channel, gain ~2.9x).
@@ -75,7 +85,7 @@ ANES_FULL_KWARGS = {
     # MHV T0.4 adjudication: KEPT as mechanism. L (Friedkin–Johnsen
     # anchoring) / E (the 1–2% lifetime-big-mover target from panel
     # stability) / N (the 2.8 value). See methods.md §5.15.
-    "fj_alpha_scale": 2.8,
+    "fj_alpha_scale": 2.195,   # MHV S4 T4.3 (was 2.8) — fitted
     # MHV S2 T2.6 — the T0.4 soft wrong-side-tail cap is RETIRED as
     # promised (s2_spec §1): on the D=7 substrate the item-level seeding
     # reproduces wrong-side tails NATIVELY from the measured 1986
@@ -94,7 +104,7 @@ ANES_FULL_KWARGS = {
     # (NOT calibration - S4 owns the fit): scripts/audit/t26_arc_repick.py;
     # methods.md §5.23.
     "n_issues": 7,
-    "constraint_rate": 0.02,
+    "constraint_rate": 0.0348,   # MHV S4 T4.3 (was 0.02) — fitted
     "constraint_resid_sigma": 0.01,
     # MHV S3 T3.5 — THE FORCES-AS-INPUTS FLIP. The scheduled EliteDrift and the
     # discrete FD/Fox/social-media media steps are replaced by data-fed input
