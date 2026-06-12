@@ -1449,8 +1449,10 @@ wake (`tier_c_bc_epsilon=0.40`, `tier_c_bc_strength=0.03` — the BC
 channel was effectively dead at 0.30/0.015). The T0.4 soft wrong-side
 tail cap is **retired** from the preset as promised (§5.15→s2_spec §1):
 the item-level seeding reproduces wrong-side tails natively (pinned by
-`tests/test_t21_issue_state.py`); the soft-cap kwargs remain available
-on the legacy 2D path only.
+`tests/test_t21_issue_state.py`). **MHV S4 T4.6:** the soft-cap kwargs
+(`tier_d_ic_partisan_x_cap` / `tier_d_ic_wrongside_tail_target`) + their IC
+cap/thinning code were **removed entirely** with the 3 t04 soft-cap tests — the
+cap-less draw is bit-identical for every non-cap caller (full suite 304 green).
 
 **Viability re-pick, not calibration** (s2_spec §7;
 `scripts/audit/t26_arc_repick.py`, 24 cells × 6 seeds over

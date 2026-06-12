@@ -90,8 +90,9 @@ ANES_FULL_KWARGS = {
     # promised (s2_spec §1): on the D=7 substrate the item-level seeding
     # reproduces wrong-side tails NATIVELY from the measured 1986
     # party-conditional moments (pinned by tests/test_t21_issue_state.py).
-    # The tier_d_ic_partisan_x_cap / tier_d_ic_wrongside_tail_target
-    # kwargs remain available for the legacy 2D path only.
+    # The tier_d_ic_partisan_x_cap / tier_d_ic_wrongside_tail_target kwargs
+    # were removed entirely at MHV S4 T4.6 (the legacy-2D soft-cap retirement;
+    # the canonical D=7 IC needs no cap).
     #
     # MHV S2 T2.6 — THE CANONICAL FLIP. The shipped substrate becomes the
     # D=7 ANES issue battery (frozen loadings, native IC) and the

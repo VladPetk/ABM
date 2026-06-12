@@ -671,31 +671,12 @@ def build_engine(
     # of random-walking across the whole compass. 1.0 → bit-identical;
     # the demo preset uses 1.6 (≈ the memo's 0.05 → 0.08).
     fj_alpha_scale: float = 1.0,
-    # web_demo realism — cap how far a partisan's *initial* economic
-    # draw may reach into the opposite half. Under the ANES IC path the
-    # two party clouds heavily overlap (centroids ~0.36 apart, σ≈0.35),
-    # so the Gaussian tails put a few Democrats in the far laissez-faire
-    # corner (and vice-versa) — calibrated mean overlap, but an
-    # implausible tail shape. When set, the economic IC draw is a
-    # *truncated* normal: a Democrat's pos_x is resampled to stay
-    # ≤ +cap, a Republican's to stay ≥ −cap. The cultural axis is left
-    # untouched (1980 cultural overlap is historically real). Only
-    # consulted on the ANES IC path; None → no truncation → bit-
-    # identical to head. The demo preset uses 0.45.
-    tier_d_ic_partisan_x_cap: float | None = None,
-    # MHV T0.4 — ANES-anchored soft cap (recalibration of the hard cap).
-    # The hard cap forces the wrong-side economic tail to exactly 0%,
-    # but the ANES 1980s cloud HAS such a tail: 3.76% of Dem partisans
-    # sit past econ +0.45 and 1.60% of Rep partisans past −0.45
-    # (weighted, data/phase9_empirical/derived/respondent_coordinates.csv,
-    # 1980–1990 waves; provenance L). When this dict {party: target_rate}
-    # is set (requires tier_d_ic_partisan_x_cap as the threshold), a
-    # beyond-cap draw is KEPT with probability target/P_gauss(beyond) —
-    # an analytic thinning that reproduces the measured tail rate instead
-    # of clipping it to zero. None → hard-cap behavior unchanged.
-    # Slated for retirement at MHV S2 (the IC rebuild must reproduce the
-    # empirical tail natively).
-    tier_d_ic_wrongside_tail_target: dict | None = None,
+    # MHV S4 T4.6 — the legacy-2D IC wrong-side cap kwargs
+    # (tier_d_ic_partisan_x_cap / tier_d_ic_wrongside_tail_target) were RETIRED
+    # with their tests (test_t04 soft-cap trio): the canonical D=7 IC reproduces
+    # the wrong-side econ tails natively (test_t21_issue_state), so the cap only
+    # ever fired on the legacy 2D path. Removal is bit-identical for every caller
+    # that did not set the cap. See methods §5.23 (pre-registered) + the ledger.
     # Step 1 (web_demo evidence re-grade). Master gate for the engine
     # truth-pass changes (decisions D1a/D2a/D3b). Default False → a
     # strict no-op: every re-grade consumer reads its no-op value, so
@@ -1021,60 +1002,22 @@ def build_engine(
             # carries the diagonal tilt (in addition to the cue/per-tick
             # noise correlation from D-5).
             _cue_rho_ic = float(tier_d_cue_correlation)
-            # Truncate the economic tail so a partisan can't initialize
-            # deep in the opposite half. Resample the (u, v) pair — not a
-            # hard clamp — so the result is a properly truncated bivariate
-            # normal (no pile-up on the cap line) that preserves the x-y
-            # correlation. Cap is one-sided per party; the other tail and
-            # the whole cultural axis are unaffected. Bounded retry with a
-            # clamp fallback keeps the RNG stream finite.
-            _x_cap = (
-                None if tier_d_ic_partisan_x_cap is None
-                else float(tier_d_ic_partisan_x_cap)
-            )
-            # MHV T0.4 — soft cap: keep a beyond-cap draw with probability
-            # target_rate / P_gauss(beyond cap), so the wrong-side tail
-            # matches the measured ANES 1980s rate instead of being
-            # clipped to zero. None → hard cap (resample all), unchanged.
-            _tail_keep = None
-            if _x_cap is not None and tier_d_ic_wrongside_tail_target is not None:
-                if _ic_party_pre == 0:
-                    _z = (_x_cap - float(_ic_cent[0])) / _ic_sigma
-                else:
-                    _z = (float(_ic_cent[0]) + _x_cap) / _ic_sigma
-                _q = 0.5 * math.erfc(_z / math.sqrt(2.0))
-                _tgt = float(
-                    tier_d_ic_wrongside_tail_target.get(_ic_party_pre, 0.0))
-                _tail_keep = min(1.0, _tgt / _q) if _q > 1e-12 else 0.0
-            _kept_tail = False
-            for _try in range(64):
-                _u, _v = rng.normal(0.0, 1.0), rng.normal(0.0, 1.0)
-                _cand_x = float(_ic_cent[0]) + _ic_sigma * _u
-                if _x_cap is None:
-                    break
-                _beyond = (
-                    (_ic_party_pre == 0 and _cand_x > _x_cap)
-                    or (_ic_party_pre == 1 and _cand_x < -_x_cap)
-                )
-                if _beyond:
-                    if _tail_keep is not None and rng.random() < _tail_keep:
-                        _kept_tail = True
-                        break  # empirically-rated wrong-side draw — keep
-                    continue  # redraw (hard cap, or thinned-out tail draw)
-                break
+            # MHV S4 T4.6 — the legacy-2D IC wrong-side cap
+            # (tier_d_ic_partisan_x_cap / tier_d_ic_wrongside_tail_target) was
+            # RETIRED with its tests: the canonical D=7 path reproduces the
+            # wrong-side econ tails natively from the 1986 party-conditional
+            # moments (tests/test_t21_issue_state.py), so the cap only ever
+            # fired on the legacy 2D path under those (now-removed) kwargs.
+            # This is the cap-less draw — bit-identical to the prior behaviour
+            # for every caller that did not set the cap (the retry loop broke
+            # on the first draw when _x_cap was None).
+            _u, _v = rng.normal(0.0, 1.0), rng.normal(0.0, 1.0)
+            _cand_x = float(_ic_cent[0]) + _ic_sigma * _u
             _ic_noise_y = (
                 _cue_rho_ic * _u
                 + float(np.sqrt(max(0.0, 1.0 - _cue_rho_ic ** 2))) * _v
             )
             pos_x = float(np.clip(_cand_x, -1.0, 1.0))
-            if _x_cap is not None and not _kept_tail:
-                # clamp fallback in case all 64 retries failed (≈0 prob).
-                # Skipped for an accepted soft-cap tail draw (T0.4) — the
-                # kept wrong-side position IS the point of the thinning.
-                pos_x = (
-                    min(pos_x, _x_cap) if _ic_party_pre == 0
-                    else max(pos_x, -_x_cap)
-                )
             pos_y = float(np.clip(
                 float(_ic_cent[1]) + _ic_sigma * _ic_noise_y, -1.0, 1.0
             ))
