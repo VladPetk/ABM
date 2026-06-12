@@ -167,7 +167,19 @@ class PartyCentroidSeries(DataFedSeries):
     ``p{p}_cult`` (y / cultural). Only parties present both in
     ``env.attrs["parties"]`` and in the series are driven (Independents have no
     centroid channel and are left alone).
+
+    ``lead_factor`` (MHV S4 / T4.2) scales each interpolated centroid outward
+    from the origin: the ``PartyPull`` *cue* attractor is the **elite** position,
+    which leads the voter mean (the mass-elite gap; DW-NOMINATE elite separation
+    exceeds ANES voter separation). It is a *static* declared lead (M6-lite, not
+    mass->elite feedback). Default 1.0 == voter centroids == bit-identical; the
+    centroid *trajectory* (asymmetry, 1994/2016 inflections) stays ANES-voter-
+    derived per D-S3-1 -- only the amplitude moves. L is fit at S4.
     """
+
+    def __init__(self, series, lead_factor: float = 1.0, **kw):
+        super().__init__(series, **kw)
+        self.lead_factor = float(lead_factor)
 
     def _apply(self, env, agents, values, tick):
         # Freeze hook (dark-matter budget instrument): when set, the input is
@@ -184,7 +196,7 @@ class PartyCentroidSeries(DataFedSeries):
             ex, cy = f"p{pid}_econ", f"p{pid}_cult"
             if ex not in values or cy not in values:
                 continue
-            target = np.array([values[ex], values[cy]], dtype=float)
+            target = np.array([values[ex], values[cy]], dtype=float) * self.lead_factor
             old = np.asarray(parties[pid], dtype=float).copy()
             new = np.clip(target, -1.0, 1.0)
             parties[pid] = new

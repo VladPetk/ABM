@@ -1598,6 +1598,38 @@ S4's, phase10 bannered stale since T2.6).
 
 ---
 
+### 5.25 MHV S4 T4.2 — the elite-lead factor (closing the undershoot) (2026-06)
+
+S4's calibration-lite fit (5-knob disciplined set: party_pull, fj_alpha_scale,
+constraint_rate, animus_mult, noise_sigma) hit a **STOP-by-finding**
+(`docs/internal/audit/t42_undershoot.md`): with the data-fed ANES *voter*
+centroids as the `PartyPull` cue attractor, `party_sep` **saturates ~0.81** — even
+at party_pull 25× canonical with FJ→0 — and so cannot reach the ANES ~1.11 (2020).
+The FJ-anchored, BC-coupled mass tracks its attractor at only ~76% efficiency, so
+attractors ~1.06 apart yield a mass-sep ceiling ~0.81. This **refines** the §5.24
+S3 estimate (a ~1.2× lead "does not close it"): the gap closes at a larger lead
+combined with elevated pull.
+
+**Fix (user-adopted 2026-06-12): `elite_lead_factor` (L).** A *static* declared
+factor scaling each data-fed centroid outward from the origin — the `PartyPull`
+cue attractor is the **elite** position, which leads the voter mean. This is the
+real, documented **mass-elite gap** (the §5.24 blindspot; DW-NOMINATE elite
+separation exceeds ANES voter separation), now made an explicit lever rather than
+left as a limitation. It is **M6-*lite* compatible**: a static lead, NOT mass→elite
+feedback (M6-full stays out of scope). It does **not** reverse D-S3-1: the centroid
+*trajectory* (asymmetry, 1994/2016 inflections) stays ANES-voter-derived; L sets
+only the cue *amplitude*. `build_engine(elite_lead_factor=...)`, default **1.0 =
+voter centroids = bit-identical**; wired into `PartyCentroidSeries`; guarded by
+`tests/test_s4_elite_lead.py` (default bit-identity, monotone widening, no domain
+bound at L=2.0). With L≈1.5–1.6 + party_pull≈0.4–0.5, sep2020 reaches 1.06–1.07
+(in band) with within-party SD in band (~0.35); max centroid coordinate ≈0.64 < 1
+(S3 accept clause survives). L is **fit at S4** (6th knob, DW-NOMINATE-anchored
+prior ~[1.0, 2.0]; SBC-gated). Provenance: **E** (the lead magnitude is calibrated,
+the mechanism — elite-leads-mass — is **L**, DW-NOMINATE / leapfrogging
+Bafumi & Herron 2010).
+
+---
+
 ## 6. What the model is for
 
 polarlab is a **teaching artifact** for a public, non-expert

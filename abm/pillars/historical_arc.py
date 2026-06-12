@@ -786,6 +786,12 @@ def build_engine(
     # (kept live for the legacy non-data-fed path; kill candidates post-S4).
     # Default False → EliteDrift unchanged → bit-identical to head.
     data_fed_elite: bool = False,
+    # MHV S4 (T4.2) — static elite-lead factor on the data-fed centroids: the
+    # PartyPull cue attractor = voter centroid × elite_lead_factor (the cue is
+    # the elite position, which leads the voter mean; mass-elite gap / DW-NOMINATE).
+    # Default 1.0 → voter centroids → bit-identical. Only active on the
+    # data_fed_elite path. Fit at S4; provenance tag E in methods.md.
+    elite_lead_factor: float = 1.0,
     # ── MHV S3 (T3.3) — data-fed media channel ────────────────────────────────
     # When True, a `MediaPenetrationSeries` input rule
     # (data/mhv/media_penetration_series.json) writes env.attrs["media_strength"]
@@ -1784,7 +1790,10 @@ def build_engine(
         from .inputs import (
             PARTY_CENTROID_SERIES_PATH, PartyCentroidSeries, load_series,
         )
-        _elite_channel = PartyCentroidSeries(load_series(PARTY_CENTROID_SERIES_PATH))
+        _elite_channel = PartyCentroidSeries(
+            load_series(PARTY_CENTROID_SERIES_PATH),
+            lead_factor=elite_lead_factor,
+        )
     else:
         # Phase 8b: EliteDrift active from 1980 at low rate, ramping via
         # decade-boundary scheduled transitions. Continuous elite divergence
