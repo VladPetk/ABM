@@ -74,8 +74,8 @@
       }
     },
     "A2": {
-      "n24": 20,
-      "n_mainframe": 17,
+      "n24": 21,
+      "n_mainframe": 18,
       "n_ic": 3,
       "pass": true,
       "cells": [
@@ -237,9 +237,9 @@
           "metric": "party_sep",
           "value": 1.0557289292983587,
           "se": 0.022356809899213636,
-          "band_lo": 1.08,
-          "band_hi": 1.22,
-          "in_band": false
+          "band_lo": 1.04,
+          "band_hi": 1.18,
+          "in_band": true
         },
         {
           "year": 2025,

@@ -27,9 +27,10 @@ Reproduce: `.venv/Scripts/python.exe scripts/audit/realism_battery.py --seeds 9`
 matches the ANES joint distribution (Wasserstein below the achievable floor),
 the **held-out GSS instrument**, the **per-issue trajectories including the
 racial item** (emergent — never fit), and the **external overlap-collapse curve**
-(near-exact to Pew). It scores **20/24** on the §11 ANES band scorecard. Four
-honest gaps remain (below), the chief being a **small, real 2025 `party_sep`
-undershoot** (1.056 vs the ANES floor 1.08) — the agreed T-UNDER target.
+(near-exact to Pew). It scores **21/24** on the §11 ANES band scorecard. The
+apparent "2025 `party_sep` undershoot" turned out to be a **band-extrapolation
+artifact, not a model deficiency** (resolved at T-UNDER, below); three documented
+blindspots remain (early over-animus + 1980 variance).
 
 ---
 
@@ -38,7 +39,7 @@ undershoot** (1.056 vs the ANES floor 1.08) — the agreed T-UNDER target.
 | ID | Check | Result (9 seeds) | Verdict |
 |----|-------|------------------|---------|
 | **A1** | per-party centroid endpoints vs ANES voter centroids (±0.07) | 2025 Dem d=(−0.01,+0.03)✓, Rep d=(+0.02,−0.01)✓; 1994 Rep ✓; **1994 Dem d=(−0.09,−0.03) miss** (sim Dems too econ-left early) | **3/4** — late excellent, one early miss |
-| **A2** | §11 ANES band scorecard (≥18/24) | **20/24 PASS**. Out: 1990/2000 affect (too cold), **2025 sep 1.056** (<1.08 floor), 1980 variance 0.367 (>0.36) | **PASS** (with named misses) |
+| **A2** | §11 ANES band scorecard (≥18/24) | **21/24 PASS**. Out: 1990/2000 affect (too cold), 1980 variance 0.367 (>0.36). *(2025 sep now in band after the T-UNDER band correction — see below)* | **PASS** (with named misses) |
 | **A3** | per-decade 2D Wasserstein-2 vs ANES pointcloud | per-decade 0.13–0.17, **w2_total 0.73** (achievable floor ~0.20/decade) | **strong** — below floor everywhere |
 | **A4** | out-party affect vs ANES thermometer | 1990 −0.270 / 2000 −0.355 **too cold** (band miss); 2010/2020/2025 in band | **early over-animus** (known blindspot) |
 | **A5** | sorting faster than constraint vs **held-out GSS** | partisan-align slope +0.0123/yr (GSS +0.0085 ✓); issue-corr slope +0.0086/yr (GSS +0.0057, **marginally hot**); sorting > constraint ✓ | **PASS** (issue-corr a touch steep) |
@@ -74,22 +75,43 @@ slope: the constraint mechanism over-aligns econ and cultural by the late period
 
 ---
 
-## The four honest gaps
+## Gaps — one resolved at T-UNDER, three documented
 
-1. **2025 `party_sep` undershoot — 1.056 vs ANES floor 1.08** (miss 0.024, stable
-   across 9 seeds). The single calibration miss. **Status: T-UNDER** (reopen the
-   S4 fit). Small, but real, and it propagates into the A6 racial-gap and B1
-   tail undershoots.
-2. **Early-period over-animus** — affect at 1990 (−0.270) and 2000 (−0.355) is
+### §T-UNDER — the "2025 undershoot" was a band artifact (RESOLVED, no engine change)
+
+The 9-seed 2025 `party_sep` (1.056) sat 1.09 SE below the old ANES floor 1.08.
+Investigation showed this was **not** the model under-sorting: the model
+reproduces the ANES **voter** party-separation *including a real late-period
+dip* — both ANES sources (`party_centroid_series.json` and the band's own
+`polarization_series.csv`) show separation **peak at 2020 (1.147) then decline
+to 2024 (1.056)**, and the model matches the 2024 value almost exactly. The old
+2025 band [1.08, 1.22] was an **upward extrapolation past the last ANES wave
+(2024)** — its floor (1.08) *exceeded the latest actual measurement (1.056)*.
+
+**Fix:** corrected the 2025 `party_sep` band to flat-carry the last complete
+ANES decade bucket (1.111 ± 0.07 = **[1.04, 1.18]**) instead of extrapolating a
+rise the 2024 release contradicts (`scripts/phase8f_lib.py`). **The engine is
+unchanged** — only a mis-derived threshold moved, justified because the old
+floor exceeded the data (not to chase the model). A probe confirmed the
+alternative (a `party_pull`/`elite_lead` lift) would only trade a better 2020
+peak for an overshot 2024 endpoint at ~net-zero total error while *worsening*
+the axis over-correlation (documented gap 2 below) — so the lift was declined. A residual
+**mild under-peak remains**: the model under-represents the 2020 polarization
+*peak* (~1.06 vs ANES 1.147) because its trajectory is flatter than ANES; it
+catches up by 2024. Documented, not closed.
+
+### Three documented gaps (open)
+
+1. **Early-period over-animus** — affect at 1990 (−0.270) and 2000 (−0.355) is
    colder than ANES bands. Known blindspot (cold 1980 affect seed + concave
    warmth shape; see the affect-band grounding work). Late period (2010+) is in
    band. **Status: documented blindspot.**
-3. **Axes over-correlate late** — econ-x and cultural-y reach corr 0.75 by 2025
+2. **Axes over-correlate late** — econ-x and cultural-y reach corr 0.75 by 2025
    (B2), with the issue-corr slope marginally above GSS (A5): the model sorts the
    two compass dimensions onto one diagonal somewhat faster than the
    cross-pressured literature. **Status: documented; candidate for a future
    constraint-anisotropy pass.**
-4. **1980 IC variance slightly high** (0.367 vs ≤0.36) and the **1994 Dem econ
+3. **1980 IC variance slightly high** (0.367 vs ≤0.36) and the **1994 Dem econ
    centroid a touch too left** (A1). Minor initial-condition / early-trajectory
    offsets. **Status: documented.**
 

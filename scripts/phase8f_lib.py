@@ -49,6 +49,12 @@ INITIAL_TARGETS_1980 = {
 # | 2010   |  0.858    |  0.649     | 0.329   |
 # | 2020   |  1.111    |  0.737     | 0.346   |
 #
+# NB (realism T-UNDER): party_sep is NOT monotone past 2020 — the 2024 wave
+# DECLINED from the 2020 peak (raw_separation 2020 1.147 -> 2024 1.056,
+# polarization_series.csv). 2024 is the last wave, so the 2025 cell carries
+# the 2020-decade bucket flat (no upward extrapolation; the old (1.08,1.22)
+# extrapolated a rise the 2024 data contradicts).
+#
 # Bands are point estimate ±0.07 to acknowledge sampling noise. The
 # main differences vs the original Levendusky-derived bands:
 #   * party_sep grows MUCH wider (real 2020 = 1.11 vs old band 0.65-0.80).
@@ -78,7 +84,18 @@ ANES_PRIMARY_TARGETS = {
            "affect": (-0.51, -0.41), "within_party_sd": (0.26, 0.40)},
     2020: {"constraint": (0.67, 0.80), "party_sep": (1.04, 1.18),
            "affect": (-0.66, -0.56), "within_party_sd": (0.28, 0.41)},
-    2025: {"constraint": (0.69, 0.82), "party_sep": (1.08, 1.22),
+    # 2025: there is NO ANES wave past 2024. The last complete decade bucket
+    # is "2020" (party_sep 1.111 ±0.07, table above). party_sep was previously
+    # EXTRAPOLATED UP for 2025 (party_sep (1.08, 1.22), center ~1.15) assuming
+    # continued rise — but the actual 2024 wave shows it DECLINED from the 2020
+    # peak (polarization_series.csv raw_separation: 2020 1.147 -> 2024 1.056).
+    # Corrected (realism T-UNDER, 2026-06): flat-carry the last real decade
+    # bucket (1.111 ±0.07 = (1.04, 1.18)) rather than extrapolate a rise the
+    # 2024 release contradicts. The engine (which faithfully tracks the dipped
+    # ANES voter centroids to ~1.056) is unchanged — only this mis-extrapolated
+    # threshold moved, because the old floor (1.08) exceeded the latest actual
+    # ANES measurement (1.056). See docs/results/realism_report.md §T-UNDER.
+    2025: {"constraint": (0.69, 0.82), "party_sep": (1.04, 1.18),
            "affect": (-0.71, -0.51), "within_party_sd": (0.28, 0.41)},
 }
 ANES_INITIAL_TARGETS_1980 = {

@@ -1696,6 +1696,38 @@ most interventions barely move the needle). Isolation guards:
 `tests/test_isolation_guards.py::test_x5_deprogramming_*`. Replaces the §5.2 RCV
 centroid-pull sweep (now legacy).
 
+### 5.27 Realism battery + the 2025 `party_sep` band correction (T-RB1/T-UNDER) (2026-06)
+
+A core realism battery (`scripts/audit/realism_battery.py` →
+[`docs/results/realism_report.md`](results/realism_report.md), 9 seeds, **live
+per-tick party labels**) scores the shipped config against checks it was *not*
+fit to. Verdict: **substantially realistic** — Wasserstein-2 below the
+achievable floor; the **held-out GSS instrument** matched (sorting outpaces
+constraint); the per-**issue** trajectories *including the racial item* VCF0830
+emergently track ANES (gap 0.22→0.73, never fit; `build_anes_item_means.py`);
+overlap collapse near-exact to **Pew 2014** (Republicans-more-liberal-than-median-
+Democrat 23%→4% vs sim 21%→2.4%); 21/24 on the §11 scorecard. Three documented
+gaps: early over-animus, axes over-correlate late (corr 0.75 vs Treier-Hillygus
+~0.21), 1980 variance slightly high.
+
+**T-UNDER — the "2025 `party_sep` undershoot" was a band artifact, not a model
+miss.** The 9-seed 2025 sep (1.056) sat ~1 SE below the old ANES floor 1.08. But
+both ANES sources (`party_centroid_series.json` and the band's own
+`polarization_series.csv`) show voter party-separation **peak at 2020 (1.147)
+then DECLINE to 2024 (1.056)** — and the engine reproduces the 2024 value almost
+exactly. The old 2025 band `(1.08, 1.22)` had been **extrapolated upward past the
+last ANES wave (2024)**, its floor exceeding the latest actual measurement.
+Corrected to flat-carry the last real decade bucket (1.111 ± 0.07 = `(1.04,
+1.18)`; `scripts/phase8f_lib.py` `ANES_PRIMARY_TARGETS[2025]`). **The engine is
+unchanged** — provenance **[N]** on the threshold move, justified solely because
+the old floor exceeded the data (a defective extrapolation), not to chase the
+model. A lift probe (`party_pull`/`elite_lead`) was declined: it only trades the
+2020-peak fit for the 2024-endpoint fit at ~net-zero error while worsening the
+axis over-correlation. Pinned guards: `tests/test_realism_guards.py` (per-tick-
+label discipline, projection parity, no corner-pin). A residual mild **under-
+peak** at 2020 (model ~1.06 vs ANES 1.147 — flatter trajectory) is documented,
+not closed.
+
 ---
 
 ## 6. What the model is for
