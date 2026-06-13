@@ -221,8 +221,8 @@ function DeltaReadout({ label, v, helpfulSign, side = 'l' }) {
 // ═══════════════════════════════════════════════════════════════════════════
 function NarrativeDetail({ iv }) {
   // Only interventions whose bucket actually changes across release decades
-  // (X5 ranked-choice + X6 shared-institutions today) get the "when did we try
-  // it?" control; for the rest, timing is immaterial, so we hide it and say so.
+  // (X1 cross-party exposure + X6 shared-institutions today) get the "when did
+  // we try it?" control; for the rest, timing is immaterial, so we hide it and say so.
   const varies = !!(iv.eff && iv.eff.varies);
   // predict gate
   if (iv.predicting) {

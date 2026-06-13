@@ -21,7 +21,7 @@
 // ── the 7 engine interventions (order + lay copy; numbers come from data) ────
 const IV_ORDER = [
   'X1_show_other_side', 'X2_fix_algorithm', 'X3_quit_cable_news',
-  'X4_bipartisan_dialogue', 'X5_ranked_choice_voting',
+  'X4_bipartisan_dialogue', 'X5_deprogramming',
   'X6_shared_institutions', 'X7_perception_correction',
 ];
 
@@ -31,7 +31,7 @@ const IV_TAKE = {
   X2_fix_algorithm: 'Muting the recommender moved nothing — faithful to the Meta-2020 deactivation null.',
   X3_quit_cable_news: 'At a realistic share who actually quit, the population-level effect washes out to nothing.',
   X4_bipartisan_dialogue: 'Dialogue helps the people in the room, but at realistic reach it does not move the country.',
-  X5_ranked_choice_voting: 'Structural electoral reform bends the split — but only in some decades. It bites hardest where the elite drift it suppresses is itself large.',
+  X5_deprogramming: 'Deradicalising the committed extreme helps the few it reaches — but the organized tail is too thin to move the country, so the aggregate split barely shifts.',
   X6_shared_institutions: 'Ordinary shared life — neighbourhoods, workplaces, institutions — is the one lever that reliably warms feelings toward the other side.',
   X7_perception_correction: 'Correcting the perception gap works for the treated — but in a sorted network the corrected view rarely meets the other side, so it never propagates.',
 };
@@ -39,7 +39,7 @@ const IV_TAKE = {
 // Extra caveats the audit requires be shown in-UI (§3.4 #6, §5.2).
 const IV_CAVEAT = {
   X1_show_other_side: 'The backfire magnitude here is this model’s extrapolation to a sustained 20-year policy — roughly 3× Bail’s ~0.1 SD field effect, and exposure can flip helpful when anonymous or structured. Read the direction, not the number.',
-  X5_ranked_choice_voting: 'Theoretical: direct RCV field studies (Donovan & Bowler 2023; Maine) find ~null effects. The engine reports the Drutman mechanism’s prediction, not a measured RCV impact.',
+  X5_deprogramming: 'The engine treats half the organized-faction tail — they leave the faction and their hardened identity is halved. Real-world deradicalization efficacy is itself contested; the null here means the treated tail is too small to move the population, not that exit programs fail the people they reach.',
 };
 
 const RELEASE_YEARS = ['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'];
@@ -665,9 +665,7 @@ function IvRail({ iv }) {
           <div style={{ marginTop: 8 }}><DecadeSparkline id={eff.id} year={iv.releaseYear} onPick={iv.setReleaseYear} /></div>
           <p style={{ margin: '4px 0 0', fontSize: DS.type.micro, lineHeight: 1.5, color: CC.ink3 }}>
             {eff.varies
-              ? (eff.id === 'X5_ranked_choice_voting'
-                ? 'Structural reform helps — but only in some windows. Tap a decade to see it flip.'
-                : 'The effect depends on when it’s enacted. Tap a decade to compare.')
+              ? 'The effect depends on when it’s enacted. Tap a decade to compare.'
               : 'Steady across decades — the result barely depends on when it’s tried.'}
           </p>
         </div>
