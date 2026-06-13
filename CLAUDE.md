@@ -198,7 +198,7 @@ writes outside the delta pipeline) is now enforced by test.
 A static page loaded over HTTP — React 18 UMD + `@babel/standalone` compiling
 the `.jsx` in-browser. **No build step, no bundler, no npm.** It must be served
 over HTTP, **not opened as `file://`** (the sibling `.jsx`/`.js` files load over
-relative paths). `web_demo/OLD_VERSION/` is legacy — ignore it.
+relative paths).
 
 ### Running it
 - Preview server is defined in `.claude/launch.json` as **`web_demo`**
@@ -284,6 +284,16 @@ engine (Python)
   (v1).
 - [`docs/results/phase10_results.md`](docs/results/phase10_results.md) — the
   authoritative measured intervention buckets (ground truth for the web build).
-- [`docs/web_demo_audit.md`](docs/web_demo_audit.md), `docs/web_demo_plan.md`,
-  `docs/execution_roadmap.md` — web-side design history and plan.
+- [`docs/model_blindspots.md`](docs/model_blindspots.md) — the register of
+  known structural/empirical blindspots (incl. #7: positional sorting is
+  input-carried, not emergent).
+- [`docs/results/realism_report.md`](docs/results/realism_report.md) +
+  [`docs/results/honesty_budget.json`](docs/results/honesty_budget.json) — the
+  realism battery and the emergent/input/hand-drawn budget split.
+
+**Project history.** The model was built in phases (engine phases 1–10, then the
+MHV S0–S5 honest-rebuild) and via a knob audit. The per-phase design specs,
+intermediate results, and review reports were removed in a June 2026 cleanup —
+the *current* state is documented in the live docs above; the detailed build
+trail lives in git history (and in the gitignored `docs/internal/`).
 </content>
