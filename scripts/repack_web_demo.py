@@ -318,12 +318,17 @@ def main():
         (data / "entities.json").read_text(encoding="utf-8")
     )
 
-    # Characters → agent indices the runs slice per-character series for.
+    # Characters are RETIRED from the shipped web (MHV S5 T5.1 — the character
+    # panel is unmounted in cc-unified.jsx). They are stripped from the bundle
+    # (`chars: {}` below) and no per-character series are sliced into the run.
+    # Loading stays tolerant so this works whether or not publish still emits the
+    # (now-unused) character files.
     char_files: dict[str, dict] = {}
-    for char_id in manifest["characters"]:
+    for char_id in manifest.get("characters", []):
         p = data / "characters" / f"{char_id}.json"
-        char_files[char_id] = json.loads(p.read_text(encoding="utf-8"))
-    char_indices = sorted({c["agent_index"] for c in char_files.values()})
+        if p.exists():
+            char_files[char_id] = json.loads(p.read_text(encoding="utf-8"))
+    char_indices: list[int] = []   # no per-character slicing (characters retired)
 
     # Baseline run (the only full per-tick run shipped; the old X7
     # single-intervention full-run path is dropped — interventions now
@@ -343,7 +348,7 @@ def main():
             "baseline": build_run(baseline, char_indices),
         },
         "counterfactuals": counterfactuals,
-        "chars": build_chars(char_files),
+        "chars": {},   # MHV S5 T5.1 — characters retired; stripped from the bundle.
     }
 
     payload = json.dumps(bundle, separators=(",", ":"), ensure_ascii=False)

@@ -169,7 +169,7 @@ function sandboxFromTinker(v) {
 // scripts/build_sandbox_data.py — the cell key is the detent indices joined.
 const SANDBOX_KNOBS = [
   { key: 'identity',  name: 'Mega-identity',          stops: ['off', '½×', '1×', '2×', '3×'],          owns: 'how much race, religion & lifestyle line up with party' },
-  { key: 'elite',     name: 'Elite extremism',        stops: ['0×', '1.5×', '3×', '5×', '8×'],         owns: 'how far apart the party leaders pull' },
+  { key: 'elite',     name: 'Elite extremism',        stops: ['none', 'low', 'mid', 'high', 'max'],    owns: 'how far apart the party leaders pull' },
   { key: 'openness',  name: 'Open-mindedness',        stops: ['closed', 'low', 'mid', 'high', 'open'], owns: 'how widely people will hear the other side' },
   { key: 'contact',   name: 'Contact & mixing',       stops: ['none', 'some', 'lots', 'high', 'max'],  owns: 'how much the two sides mix in daily life' },
   { key: 'diversity', name: 'Within-party diversity', stops: ['lockstep', 'low', 'mid', 'high', 'free'], owns: 'free-thinking individuals vs marching in lockstep' },

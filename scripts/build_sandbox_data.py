@@ -16,11 +16,15 @@ The five dials (audit 2026-06; docs/intervention_knob_audit.md) — all are
 CAUSES (each sign-stable at any position of the other four, 12/12 in the
 robustness screen). The polarization metrics are READOUTS, not knobs:
 
-    identity   sandbox_identity_mult              -> Mason mega-identity
-    elite      tier_d_anes_drift_multiplier       -> elite divergence
+    identity   tier_c_identity_pull_x/y (×mult)   -> Mason mega-identity
+    elite      elite_lead_factor                  -> elite divergence
     openness   tier_c_bc_epsilon (+ _bc_strength) -> open-mindedness (ε; depolarizes)
     contact    sandbox_contact                    -> cooperative mixing (warms)
     diversity  sandbox_diversity                  -> within-party free-thinking
+
+    (MHV S5 T5.1 re-map: identity + elite v2 knobs went inert on the data-fed
+    emergent substrate; re-pointed to the live levers above. openness + diversity
+    centers re-pinned to the S4 arc so the center cell stays the shipped baseline.)
 
 ILLUSTRATIVE ONLY — these crank the model past calibration. Not a finding.
 
@@ -55,26 +59,44 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # READOUTS you watch (no knob is also a readout). Each knob is sign-stable
 # across every position of the other four (12/12 in the audit robustness screen).
 KNOB_ORDER = ["identity", "elite", "openness", "contact", "diversity"]
+# ── grid v3 (MHV S5 T5.1): re-mapped onto the S4 data-fed emergent substrate ──
+# Two v2 dials went inert under MHV and were re-mapped to live levers (verified
+# sign-stable on the fitted config); openness + diversity centers were re-pinned
+# to the S4 arc so the center cell stays bit-identical to the shipped baseline:
+#   identity : sandbox_identity_mult (inert since the T2.4 measured-alignment
+#              rebuild) → IdentityToIdeologyPull strength (×mult of the Mason
+#              0.02/0.04), the live identity→issue-alignment lever.
+#   elite    : tier_d_anes_drift_multiplier (inert on the S3 data-fed path —
+#              the scheduled EliteDrift it scaled is gone) → elite_lead_factor,
+#              the live S4 elite-divergence carrier (1.0 = elites track the
+#              voter mean; higher = elites lead the base outward).
 GRID = {
-    # identity stacking → Mason mega-identity (drives align, and via it sep+animus)
-    "identity":  [{"sandbox_identity_mult": v} for v in (0.0, 0.5, 1.0, 2.0, 3.0)],
-    # elite divergence → party separation (DW-NOMINATE)
-    "elite":     [{"tier_d_anes_drift_multiplier": v} for v in (0.0, 1.5, 3.0, 5.0, 8.0)],
+    # identity → IdentityToIdeologyPull strength (Mason mega-identity: identity
+    # drives issue position; ×0.0–3.0 of the shipped 0.02/0.04). More → more sep.
+    "identity":  [
+        {"tier_c_identity_pull_x": 0.02 * f, "tier_c_identity_pull_y": 0.04 * f}
+        for f in (0.0, 0.5, 1.0, 2.0, 3.0)
+    ],
+    # elite divergence → elite_lead_factor (how far elite cues lead the voter
+    # mean; the live S4 carrier — DW-NOMINATE mass-elite gap). More → more sep.
+    "elite":     [{"elite_lead_factor": v} for v in (1.0, 1.4, 1.798, 2.2, 2.6)],
     # open-mindedness = confidence radius ε co-scaled with influence strength —
     # the REAL Hegselmann-Krause open-mindedness (closed → open). Depolarizes.
     "openness":  [
         {"tier_c_bc_epsilon": 0.15, "tier_c_bc_strength": 0.0},
-        {"tier_c_bc_epsilon": 0.30, "tier_c_bc_strength": 0.015},   # arc
-        {"tier_c_bc_epsilon": 0.60, "tier_c_bc_strength": 0.06},
+        {"tier_c_bc_epsilon": 0.40, "tier_c_bc_strength": 0.03},    # arc (S2 BC wake)
+        {"tier_c_bc_epsilon": 0.70, "tier_c_bc_strength": 0.07},
         {"tier_c_bc_epsilon": 1.20, "tier_c_bc_strength": 0.13},
         {"tier_c_bc_epsilon": 3.00, "tier_c_bc_strength": 0.20},
     ],
     # contact / mixing → cooperative-share floor (Pettigrew-Tropp). Warms affect.
     "contact":   [{"sandbox_contact": v} for v in (0.0, 0.25, 0.5, 0.75, 1.0)],
-    # within-party diversity → GaussianNoise σ (lockstep → free-thinking)
-    "diversity": [{"sandbox_diversity": v} for v in (0.02, 0.04, 0.08, 0.15, 0.25)],
+    # within-party diversity → GaussianNoise σ (lockstep → free-thinking).
+    # Center (idx 1) re-pinned to the S4 fitted within-party σ (0.0478).
+    "diversity": [{"sandbox_diversity": v} for v in (0.02, 0.0478, 0.08, 0.15, 0.25)],
 }
-# center detent per knob = the shipped arc value (so the center cell == the arc)
+# center detent per knob = the shipped arc value (so the center cell == the arc):
+# identity ×1.0 (0.02/0.04), elite_lead 1.798, ε0.40/0.03, contact 0.0, σ0.0478.
 CENTER_IDX = {"identity": 2, "elite": 2, "openness": 1, "contact": 0, "diversity": 1}
 KNOB_LABELS = {
     "identity": "Mega-identity", "elite": "Elite extremism",
