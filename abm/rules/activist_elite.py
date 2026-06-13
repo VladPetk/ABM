@@ -1,0 +1,126 @@
+"""
+Activist-elite cue — endogenous elite divergence (emergence-recovery E1).
+
+Each tick, each party's elite position **emerges** from its **activist tail**
+(the extreme, intensity-weighted minority of the party — distinct from, and more
+extreme than, the centroid), passed through a **saturating ceiling** that bounds
+the feedback loop to a stable interior fixed point. The elite is written to
+``env.attrs["parties"][p]`` and the per-tick shift is propagated to every agent's
+``party_cue`` (the quantity ``PartyPull`` reads) — structurally mirroring
+:class:`abm.pillars.inputs.PartyCentroidSeries`, except the cue is **generated
+from the mass**, not fed from a data series. That closes the endogenous loop::
+
+    mass -> activist tail -> elite -> cue -> (PartyPull) mass -> ...
+
+so positional sorting **amplifies** a small seed rather than replaying fed data.
+Elites track the activist tail, not the median voter (Bawn et al. 2012,
+*A Theory of Political Parties*; Hacker & Pierson; Zaller receive-accept-sample).
+The mass-elite **gap** (mass lags elite) and the bipolarization both emerge;
+nothing positional is fed.
+
+Reads (per agent): ``ideology`` (2D position), ``party``, ``identity_strength``,
+``party_cue``. Writes: ``env.attrs["parties"][p]`` and each agent's ``party_cue``.
+
+Provenance: **L** (Bawn / Hacker-Pierson / Zaller mechanism) + **N** (functional
+form — intensity-weighted tail mean, leapfrog gain, ``tanh`` ceiling; the
+load-bearing form was feasibility-mapped at E0, see
+``docs/internal/audit/e0_loop_feasibility.md``).
+"""
+from __future__ import annotations
+
+import numpy as np
+
+from ..core.agent import Agent
+from ..core.environment import Environment
+from ..core.space import ContinuousSpace2D
+
+
+class ActivistEliteCue:
+    """EnvRule. Endogenous elite cue from each party's activist tail.
+
+    - ``tail_q``: fraction of each party taken as the activist tail (most extreme
+      along the party's own direction).
+    - ``gain``: elite leapfrog over the centroid toward the tail (``> 1`` leads).
+    - ``ceiling``: saturating elite extremity (the bounding nonlinearity — keeps
+      the loop in a stable, partial, non-runaway regime; E0).
+    - ``intensity_weight``: weight the tail mean by ``identity_strength``
+      (the organized/intense activists carry the cue).
+    """
+
+    def __init__(
+        self,
+        tail_q: float = 0.10,
+        gain: float = 2.5,
+        ceiling: float = 0.65,
+        intensity_weight: bool = True,
+    ):
+        self.tail_q = float(tail_q)
+        self.gain = float(gain)
+        self.ceiling = float(ceiling)
+        self.intensity_weight = bool(intensity_weight)
+
+    def apply(
+        self,
+        env: Environment,
+        agents: list[Agent],
+        space: ContinuousSpace2D,
+        rng: np.random.Generator,
+        tick: int,
+    ) -> None:
+        parties = env.attrs.get("parties")
+        if not parties:
+            return
+        # Group only the driven parties (Independents carry no centroid channel,
+        # mirroring PartyCentroidSeries — they are left alone).
+        members: dict = {pid: [] for pid in parties}
+        for a in agents:
+            p = a.state.attrs.get("party")
+            if p in members:
+                members[p].append(a)
+
+        step: dict = {}
+        for pid, mem in members.items():
+            if not mem:
+                continue
+            pos = np.array([a.state.ideology for a in mem], dtype=float)
+            cent = pos.mean(0)
+            nrm = float(np.linalg.norm(cent))
+            if nrm > 1e-9:
+                dirv = cent / nrm
+            else:
+                # Degenerate centroid (at the origin): use a stable per-party
+                # axis so the seed asymmetry has a direction to amplify.
+                dirv = np.array([1.0, 0.0]) if pid == 1 else np.array([-1.0, 0.0])
+            proj = pos @ dirv                       # extremity along the party direction
+            if self.intensity_weight:
+                w = np.array(
+                    [float(a.state.attrs.get("identity_strength", 0.5)) for a in mem])
+            else:
+                w = np.ones(len(mem))
+            k = max(1, int(np.ceil(self.tail_q * len(mem))))
+            idx = np.argsort(proj)[-k:]             # the activist tail
+            wsum = float(w[idx].sum())
+            if wsum <= 0:
+                tail_mean = pos[idx].mean(0)
+            else:
+                tail_mean = np.average(pos[idx], axis=0, weights=w[idx])
+            raw = cent + self.gain * (tail_mean - cent)
+            # Saturating elite ceiling — the bounding nonlinearity (E0).
+            elite = self.ceiling * np.tanh(raw / self.ceiling)
+            old = np.asarray(parties[pid], dtype=float)
+            parties[pid] = elite
+            step[pid] = elite - old
+
+        # Propagate the elite shift to each agent's party_cue, preserving the
+        # agent's fixed personal offset (so a party translates toward its elite
+        # while keeping its within-party spread). Same coupling EliteDrift /
+        # PartyCentroidSeries carried.
+        for a in agents:
+            cue = a.state.attrs.get("party_cue")
+            if cue is None:
+                continue
+            p = a.state.attrs.get("party")
+            if p not in step:
+                continue
+            a.state.attrs["party_cue"] = np.clip(cue + step[p], -1.0, 1.0)
+        env.attrs.setdefault("viz", {})["party_centers"] = parties
