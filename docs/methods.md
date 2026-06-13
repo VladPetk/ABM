@@ -1728,6 +1728,36 @@ label discipline, projection parity, no corner-pin). A residual mild **under-
 peak** at 2020 (model ~1.06 vs ANES 1.147 — flatter trajectory) is documented,
 not closed.
 
+### 5.28 MHV S5 T5.2 — the honesty-budget panel + the input-carried finding (2026-06)
+
+The web Methods page gained an **honesty budget** section: per headline metric,
+the freeze-decomposition of the 1980→2025 rise into **emergent** (rules alone,
+every external driver frozen at 1980), **empirical-input** (what the data-fed
+ANES series adds back), and **hand-drawn residual** (scripted bumps + dated
+events), plus the four-cut **holdout scorecard** (transcribed from
+[`docs/results/s4_holdout.md`](results/s4_holdout.md), 3/3 PASS). Numbers are
+blessed in [`docs/results/honesty_budget.json`](results/honesty_budget.json) —
+re-measured on the **fitted shipped config** (`ANES_FULL_KWARGS`, 6 seeds;
+`scripts/audit/t35_budget_brake.py`), not the pre-fit S3 reading. Provenance
+**[N]** on the presentation; the fractions themselves are measured.
+
+**The finding the panel surfaces (honestly, not buried).** On the fitted config
+the 3-way split is: `party_sep` emergent **−0.04 / input 1.06 / residual −0.02**
+(grounded 1.02); `affect` emergent **0.87 / input −0.02 / residual 0.15**
+(grounded 0.85); `identity_alignment` emergent **0.02 / input 0.95 / residual
+0.02** (grounded 0.98). I.e. **party separation and identity alignment are
+carried almost entirely by the empirical data-fed party trajectory, not by
+emergent rule interaction; only affect is genuinely emergent.** The combined
+"grounded" (emergent + empirical-input) totals match the blessed dark-matter
+floors exactly (`tests/test_dark_matter_budget.py`: ≥0.60 each, all clear), and
+the T0.3 events-brake still survives. This is *by design* of the S3 forces-as-
+inputs flip (feeding real data was chosen over hand-drawing the elite curve),
+and is defensible under an elite-led reading of mass positional sorting — but it
+means the model **tracks** positional sorting rather than **explaining** it.
+Registered as a first-class blindspot (#7 in
+[`docs/model_blindspots.md`](model_blindspots.md)); an emergence-recovery pass is
+the next workstream.
+
 ---
 
 ## 6. What the model is for

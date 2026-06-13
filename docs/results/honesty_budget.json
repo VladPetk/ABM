@@ -1,0 +1,35 @@
+{
+  "_provenance": "MHV S5 T5.2 honesty panel \u2014 measure-then-bless on the fitted shipped config (ANES_FULL_KWARGS), 6 seeds. Reproduce: PYTHONPATH=. python scripts/audit/t35_budget_brake.py",
+  "seeds": 6,
+  "metrics": {
+    "party_sep": {
+      "b0": 0.3427,
+      "b1": 1.078,
+      "emergent": -0.039,
+      "input_carried": 1.06,
+      "residual": -0.021,
+      "grounded": 1.021
+    },
+    "affect": {
+      "b0": -0.0909,
+      "b1": -0.6567,
+      "emergent": 0.8663,
+      "input_carried": -0.0191,
+      "residual": 0.1528,
+      "grounded": 0.8472
+    },
+    "identity_alignment": {
+      "b0": 0.2089,
+      "b1": 0.3357,
+      "emergent": 0.0227,
+      "input_carried": 0.9525,
+      "residual": 0.0247,
+      "grounded": 0.9753
+    }
+  },
+  "events_brake": {
+    "full_arc": 1.078,
+    "no_events": 1.0934,
+    "survives": true
+  }
+}
