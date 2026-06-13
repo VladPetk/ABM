@@ -267,7 +267,25 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
     const y0 = (sy + S - H) / S * 2 - 1,y1 = (sy + S - 0) / S * 2 - 1;
 
     let pos = posAt(run, safeTick);
-    if (transform) pos = transform(pos);
+    // T-VIZ: cohort-replacement crossfade — NO glide across the splice.
+    // A replacement_event [te, a] means the old occupant's last frame is
+    // pos[te] and the NEW occupant first appears at pos[te+1] (the big jump is
+    // te->te+1, verified). posAt() would interpolate straight across that
+    // splice, drawing the dot gliding across the whole compass. Instead we HOLD
+    // the old occupant at pos[te] (so neither the KDE nor the base dot streaks)
+    // and fade the new occupant in at pos[te+1] below — death-fade / birth-fade.
+    const tFloor = Math.floor(safeTick);
+    const splitFrac = safeTick - tFloor;            // 0..1 within the splice
+    const replacing = (splitFrac > 0 && tFloor < LAST && run.replacement_events)
+      ? run.replacement_events.filter(([t]) => t === tFloor).map(([, a]) => a)
+      : [];
+    const replSet = replacing.length ? new Set(replacing) : null;
+    let posIn = null;                                // new occupants' positions
+    if (replSet) {
+      posIn = posAt(run, tFloor + 1);                // == pos[te+1] cloud
+      for (const a of replacing) pos[a] = run.pos[tFloor][a];  // hold old, no glide
+    }
+    if (transform) { pos = transform(pos); if (posIn) posIn = transform(posIn); }
     const party = run.party[Math.round(safeTick)];
     // representation crossfade: density alpha vs dot alpha (see prop docs above)
     const denA = morphT == null ? (view === 'dots' ? 0 : 1) : Math.max(0, Math.min(1, morphT));
@@ -374,11 +392,24 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
     // compass is where state is SHOWN; influence flows along ties).
     if (dotA > 0.01) {
       const r = Math.max(2.2, Math.min(3.4, S * 0.0055));
-      ctx.globalAlpha = dotA * 0.9;
+      const baseA = dotA * 0.9;
+      // T-VIZ: at a replacement splice the OLD occupant (held at pos[te] above)
+      // fades out by its own party colour; the NEW occupant fades in at pos[te+1].
+      const oldParty = replSet ? run.party[tFloor] : null;
+      const dotCol = (p) => p === 0 ? CC.d : p === 1 ? CC.r : _rgb(RGB_GREY, 1);
       for (let i = 0; i < pos.length; i++) {
-        const pcol = party[i] === 0 ? CC.d : party[i] === 1 ? CC.r : _rgb(RGB_GREY, 1);
-        ctx.fillStyle = pcol;
+        const isRepl = replSet && replSet.has(i);
+        ctx.globalAlpha = isRepl ? baseA * (1 - splitFrac) : baseA;
+        ctx.fillStyle = dotCol(isRepl ? oldParty[i] : party[i]);
         ctx.beginPath();ctx.arc(mx(pos[i][0]), my(pos[i][1]), r, 0, 6.283);ctx.fill();
+      }
+      if (replSet) {
+        const newParty = run.party[Math.min(LAST, tFloor + 1)];
+        ctx.globalAlpha = baseA * splitFrac;
+        for (const a of replacing) {
+          ctx.fillStyle = dotCol(newParty[a]);
+          ctx.beginPath();ctx.arc(mx(posIn[a][0]), my(posIn[a][1]), r, 0, 6.283);ctx.fill();
+        }
       }
       ctx.globalAlpha = 1;
     }
