@@ -773,6 +773,17 @@ def build_engine(
     # Default 1.0 → voter centroids → bit-identical. Only active on the
     # data_fed_elite path. Fit at S4; provenance tag E in methods.md.
     elite_lead_factor: float = 1.0,
+    # ── Emergence-recovery (E2) — endogenous activist-elite loop ───────────────
+    # When True, the elite channel is the `ActivistEliteCue` rule: each party's
+    # elite EMERGES from its activist tail (no fed series), closing the loop
+    # mass→tail→elite→cue→mass so positional sorting amplifies a small 1980 seed
+    # rather than replaying fed centroids. Takes precedence over data_fed_elite.
+    # Default False → unchanged → bit-identical. Operating point from E0
+    # (docs/internal/audit/e0_loop_feasibility.md); shipped gain calibrated at E4.
+    endogenous_elite: bool = False,
+    elite_gain: float = 2.5,
+    elite_ceiling: float = 0.65,
+    elite_tail_q: float = 0.10,
     # ── MHV S3 (T3.3) — data-fed media channel ────────────────────────────────
     # When True, a `MediaPenetrationSeries` input rule
     # (data/mhv/media_penetration_series.json) writes env.attrs["media_strength"]
@@ -1556,8 +1567,11 @@ def build_engine(
     # `_emergent` is defined just before the seeding blocks (T2.4 needs it
     # there); the env flag is what the rules / events / shocks read.
     env.attrs["constraint_emergent"] = _emergent
-    # MHV S3 T3.2 — read by the Trump-2016 handler (the series owns the centroid).
-    env.attrs["data_fed_elite"] = bool(data_fed_elite)
+    # MHV S3 T3.2 — read by the Trump-2016 handler + decade elite-rate writes:
+    # True when an env rule (the fed series OR the emergence-recovery endogenous
+    # loop) owns the centroid, so the scheduled/event elite writes no-op.
+    env.attrs["data_fed_elite"] = bool(data_fed_elite or endogenous_elite)
+    env.attrs["endogenous_elite"] = bool(endogenous_elite)
     if _emergent:
         # retire the coupling schedule on this path: pin at 1.0; the
         # decade events skip their writes when constraint_emergent.
@@ -1729,7 +1743,16 @@ def build_engine(
     # committed ANES voter-centroid series; the schedule-driven rate writes
     # (decade boundaries / Gingrich / Citizens United) become natural no-ops
     # because no EliteDrift rule is present for `_set_elite_drift_rate` to find.
-    if data_fed_elite:
+    if endogenous_elite:
+        # Emergence-recovery E2 — the endogenous loop replaces the fed centroid
+        # series. The elite emerges from the activist tail; PartyPull reads the
+        # resulting party_cue. The 1980 initial party separation is the seed it
+        # amplifies. data_fed_elite is overridden (no fed positions).
+        from ..rules.activist_elite import ActivistEliteCue
+        _elite_channel = ActivistEliteCue(
+            tail_q=elite_tail_q, gain=elite_gain, ceiling=elite_ceiling,
+        )
+    elif data_fed_elite:
         from .inputs import (
             PARTY_CENTROID_SERIES_PATH, PartyCentroidSeries, load_series,
         )
