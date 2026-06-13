@@ -241,7 +241,22 @@ their engine footprint is the S1 covariance-signature pilot
   "moderate". Anchors the 2-axis compass justification (§1 fallback tables) and
   — extended role at T0.2 — the **2-factor loading design** for the MHV issue
   vector and the econ/cultural item blocks used in the S1 pilot's real-IC path
-  (ANES VCF items).
+  (ANES VCF items). **Realism battery (T-RB1):** anchors check **B2** (cross-
+  pressured / off-diagonal fraction + econ-on-cultural slope) — the sim's 2004
+  off-diagonal 34% sits inside their 30–44% range, but the two axes over-
+  correlate by 2025 (corr 0.75 / slope 0.81 vs their ~0.21): a documented gap.
+- **Realism battery — external face-validity anchors (T-RB1; 2026-06).**
+  `scripts/audit/realism_battery.py` → `docs/results/realism_report.md` (+
+  `realism_measurement.json`). Checks the shipped config against maps the model
+  was *not* fit to, scale-free only: **Pew Research Center** (2014, *Political
+  Polarization in the American Public*, §1 "Growing Ideological Consistency") —
+  the overlap-collapse benchmark for check **B1** (% Republicans more liberal
+  than the median Democrat: Pew 23%→4%, 1994→2014; sim 21%→2.4%, near-exact);
+  **GSS** constraint series (the **held-out instrument**, check A5); and a new
+  per-item ANES artifact, `data/phase9_empirical/derived/anes_item_means_by_year.json`
+  (`scripts/audit/build_anes_item_means.py`), the per-year/per-party means of all
+  7 compass items — ground truth for check **A6**, which finds the racial item
+  VCF0830 ("aid to blacks") emergently tracks ANES (gap 0.22→0.73, never fit).
 - **Boutyline, A., & Vaisey, S.** (2017). Belief network analysis: A relational
   approach to understanding the structure of attitudes. *AJS* 122:1371. —
   Attitude networks have measurable structure with political identity at the
