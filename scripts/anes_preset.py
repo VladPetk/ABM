@@ -31,11 +31,14 @@ imports this preset, so it stays bit-identical.
 """
 from __future__ import annotations
 
-# The single canonical web/ANES engine configuration. Consumed by
-# scripts/publish_web_data.py and scripts/phase10_measure.py. Treat as
-# read-only — callers spread it (**ANES_FULL_KWARGS) or copy it
-# (dict(ANES_FULL_KWARGS)) rather than mutating it.
-ANES_FULL_KWARGS = {
+# The pre-E5 FED-centroid web/ANES configuration. Until emergence-recovery E5
+# this WAS the canonical `ANES_FULL_KWARGS`; it is now preserved under its own
+# name so the FED-mechanism drift-guards (elite_lead_factor, the fed elite/media
+# channels) keep a config to pin, and so the canonical flip is a one-line revert.
+# Positional sorting on this config is INPUT-CARRIED (fed ANES voter centroids —
+# blindspot #7); the canonical `ANES_FULL_KWARGS` below makes it EMERGENT.
+# Treat as read-only — callers spread it (**...) or copy it (dict(...)).
+ANES_FULL_FED_KWARGS = {
     "n_agents": 250,
     "independent_fraction": 0.12,
     "factional_seeding": False,
@@ -135,3 +138,52 @@ ANES_FULL_KWARGS = {
     # preset, so they stay bit-identical.
     "exogenous_shocks": True,
 }
+
+
+# ---------------------------------------------------------------------------
+# Emergence-recovery E5 — the ENDOGENOUS canonical preset.
+#
+# This is the fed-centroid preset above with the answer-feeding centroid
+# channels replaced by the endogenous activist→elite→mass loop
+# (`endogenous_elite=True`, `data_fed_elite=False`; ActivistEliteCue replaces
+# the fed PartyCentroidSeries — see abm/pillars/historical_arc.py ~L1799 and
+# abm/rules/activist_elite.py). Positional sorting now EMERGES (amplification
+# of the 1980 seed by the loop, time-structured by the activist-mobilization
+# schedule from the dated events) instead of replaying the fed ANES voter
+# centroids (blindspot #7).
+#
+# The 8 loop knobs are the ADOPTED E4 ABC-fit point (2026-06-14; 1500 draws ×
+# 3 seeds against the ANES per-decade bands, best distance 0.932, traces ANES
+# robustly across seeds — no seed-luck bifurcation after the align_u stable-
+# direction fix). This dict is the durable record of that point (e4_fit.json
+# is gitignored). It reproduces scripts/audit/e4_fit.py::_overrides(abc_point)
+# exactly. `elite_tail_q` stays at the build_engine default 0.10 (not fitted);
+# `elite_lead_factor` is inherited but INERT on this path (only the fed
+# PartyCentroidSeries reads it). Provenance: loop mechanism L (Bawn /
+# Hacker-Pierson / Zaller) + N (functional form); the 8 magnitudes are the
+# model's (E4 fit). Methods §5.28 / docs/internal/audit/e4_fit.md.
+#
+ANES_FULL_ENDOGENOUS_KWARGS = {
+    **ANES_FULL_FED_KWARGS,
+    "endogenous_elite": True,
+    "data_fed_elite": False,
+    # --- the adopted E4 ABC-fit point (8 knobs) ---
+    "elite_gain": 1.7689,
+    "elite_ceiling": 0.8237,
+    "mob_base": 0.0779,
+    "mob_peak": 2.4838,
+    "mob_backload": 1.3548,
+    "mob_asym": 0.1880,
+    "tier_c_party_pull_strength": 0.2532,   # uptake (was 0.297 fed)
+    "fj_alpha_scale": 1.7797,               # (was 2.195 fed)
+}
+
+
+# === E5 CANONICAL FLIP ===================================================
+# The shipped/measured config is now the ENDOGENOUS loop. Every consumer
+# (publish_web_data, phase10_measure, phase9_anes_score, realism_battery,
+# build_sandbox_data, conftest, audit_lib, ...) imports ANES_FULL_KWARGS, so
+# this single alias flips them all. To REVERT the entire E5 flip, point this
+# back at ANES_FULL_FED_KWARGS (and re-bless). FED-mechanism guards that must
+# keep testing the fed channels import ANES_FULL_FED_KWARGS directly.
+ANES_FULL_KWARGS = ANES_FULL_ENDOGENOUS_KWARGS
