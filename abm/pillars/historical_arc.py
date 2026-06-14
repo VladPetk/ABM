@@ -259,14 +259,30 @@ GINGRICH_1994_ASYMMETRIC = {0: 0.5, 1: 1.5}  # R-heavy (Hacker-Pierson 2020)
 # E4-calibration targets (default-path scenarios never read these). Stepped at
 # real event ticks, NOT a smooth curve fit to ANES. Provenance L (event dates /
 # asymmetry) + N (levels). Only active on the endogenous_elite path.
-ACTIVIST_MOBILIZATION_1980 = {0: 0.20, 1: 0.22}   # build baseline (loop quiescent)
-ACTIVIST_MOBILIZATION_SCHEDULE = {
-    "1990-00":       {0: 0.30, 1: 0.40},
-    "gingrich_1994": {0: 0.34, 1: 0.55},   # R step-up (Republican Revolution)
-    "2000-10":       {0: 0.46, 1: 0.72},
-    "2010-20":       {0: 0.78, 1: 1.15},   # accelerating, R-led (Tea Party/Trump)
-    "2020-25":       {0: 0.98, 1: 1.40},
-}
+# Parameterized by four knobs so E4 can fit the schedule LEVELS to the ANES
+# shape: `mob_base` (1980 level), `mob_peak` (2020-25 level), `mob_backload`
+# (the convexity — 0 = linear rise, higher = flat-early/steep-late, which is what
+# back-loads the emergent sep into the 2010s to match ANES), `mob_asym` (the R/D
+# split amount; R = level·(1+aτ), D = level·(1−aτ), growing with time — the
+# Hacker-Pierson asymmetry). The time fractions τ are at the real event ticks.
+MOB_BASE_DEFAULT = 0.20
+MOB_PEAK_DEFAULT = 1.20
+MOB_BACKLOAD_DEFAULT = 0.60
+MOB_ASYM_DEFAULT = 0.18
+_MOB_TAUS = {"1980": 0.0, "1990-00": 0.20, "gingrich_1994": 0.32,
+             "2000-10": 0.50, "2010-20": 0.80, "2020-25": 1.0}
+
+
+def compute_activist_mobilization_schedule(base, peak, backload, asym):
+    """Build the per-key {party: level} mobilization schedule from the four
+    knobs (E4-fittable). Pure function — no engine state."""
+    p = 1.0 + 2.0 * float(backload)
+    sched = {}
+    for key, tau in _MOB_TAUS.items():
+        lvl = float(base) + (float(peak) - float(base)) * (tau ** p)
+        a = float(asym) * tau
+        sched[key] = {0: lvl * (1.0 - a), 1: lvl * (1.0 + a)}
+    return sched
 
 # Step 1: re-graded social-media affect coupling (decision D2a). The
 # 2008/2010/2012 events ramp `BoundedConfidenceInfluence.affect_weight`
@@ -806,6 +822,12 @@ def build_engine(
     elite_gain: float = 2.5,
     elite_ceiling: float = 0.65,
     elite_tail_q: float = 0.10,
+    # E4-fittable activist-mobilization schedule knobs (only used on the
+    # endogenous path; see compute_activist_mobilization_schedule).
+    mob_base: float = MOB_BASE_DEFAULT,
+    mob_peak: float = MOB_PEAK_DEFAULT,
+    mob_backload: float = MOB_BACKLOAD_DEFAULT,
+    mob_asym: float = MOB_ASYM_DEFAULT,
     # ── MHV S3 (T3.3) — data-fed media channel ────────────────────────────────
     # When True, a `MediaPenetrationSeries` input rule
     # (data/mhv/media_penetration_series.json) writes env.attrs["media_strength"]
@@ -1595,10 +1617,14 @@ def build_engine(
     env.attrs["data_fed_elite"] = bool(data_fed_elite or endogenous_elite)
     env.attrs["endogenous_elite"] = bool(endogenous_elite)
     if endogenous_elite:
-        # E3: start the activist mobilization at its 1980 baseline (low → loop
-        # quiescent → mass holds near the 1980 seed); the dated elite events
-        # ramp it over time to supply the gradual/accelerating drive.
-        env.attrs["activist_mobilization"] = dict(ACTIVIST_MOBILIZATION_1980)
+        # E3/E4: the activist-mobilization schedule (per-party institutional
+        # capacity) is computed from the fittable knobs and stored in env; the
+        # dated elite events step env["activist_mobilization"] through it. Start
+        # at the 1980 baseline (low → loop quiescent → mass holds near the seed).
+        _mob_sched = compute_activist_mobilization_schedule(
+            mob_base, mob_peak, mob_backload, mob_asym)
+        env.attrs["activist_mobilization_schedule"] = _mob_sched
+        env.attrs["activist_mobilization"] = dict(_mob_sched["1980"])
     if _emergent:
         # retire the coupling schedule on this path: pin at 1.0; the
         # decade events skip their writes when constraint_emergent.
@@ -2324,7 +2350,9 @@ def _set_activist_mobilization(engine, key):
     energize the loop over time."""
     if not engine.env.attrs.get("endogenous_elite"):
         return
-    engine.env.attrs["activist_mobilization"] = dict(ACTIVIST_MOBILIZATION_SCHEDULE[key])
+    sched = engine.env.attrs.get("activist_mobilization_schedule")
+    if sched and key in sched:
+        engine.env.attrs["activist_mobilization"] = dict(sched[key])
 
 
 def _decade_boundary_1990(engine):
