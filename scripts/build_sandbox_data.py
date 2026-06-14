@@ -17,7 +17,7 @@ CAUSES (each sign-stable at any position of the other four, 12/12 in the
 robustness screen). The polarization metrics are READOUTS, not knobs:
 
     identity   tier_c_identity_pull_x/y (×mult)   -> Mason mega-identity
-    elite      elite_lead_factor                  -> elite divergence
+    elite      elite_gain (endogenous loop)       -> elite divergence
     openness   tier_c_bc_epsilon (+ _bc_strength) -> open-mindedness (ε; depolarizes)
     contact    sandbox_contact                    -> cooperative mixing (warms)
     diversity  sandbox_diversity                  -> within-party free-thinking
@@ -59,17 +59,18 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # READOUTS you watch (no knob is also a readout). Each knob is sign-stable
 # across every position of the other four (12/12 in the audit robustness screen).
 KNOB_ORDER = ["identity", "elite", "openness", "contact", "diversity"]
-# ── grid v3 (MHV S5 T5.1): re-mapped onto the S4 data-fed emergent substrate ──
-# Two v2 dials went inert under MHV and were re-mapped to live levers (verified
-# sign-stable on the fitted config); openness + diversity centers were re-pinned
-# to the S4 arc so the center cell stays bit-identical to the shipped baseline:
+# ── grid v4 (emergence-recovery E5.6): re-mapped onto the ENDOGENOUS substrate ──
+# The v3 'elite' dial (elite_lead_factor) went inert with the E5 flip — it only
+# feeds the now-absent PartyCentroidSeries — so it is re-mapped to elite_gain,
+# the endogenous loop's live elite-divergence carrier. The other four v3 dials
+# stay live on the endogenous config; centers remain pinned so the center cell
+# == the shipped arc. (grid v3, MHV S5 T5.1, re-mapped two earlier-inert dials:)
 #   identity : sandbox_identity_mult (inert since the T2.4 measured-alignment
 #              rebuild) → IdentityToIdeologyPull strength (×mult of the Mason
 #              0.02/0.04), the live identity→issue-alignment lever.
-#   elite    : tier_d_anes_drift_multiplier (inert on the S3 data-fed path —
-#              the scheduled EliteDrift it scaled is gone) → elite_lead_factor,
-#              the live S4 elite-divergence carrier (1.0 = elites track the
-#              voter mean; higher = elites lead the base outward).
+#   elite    : (v3) tier_d_anes_drift_multiplier → elite_lead_factor; (v4/E5)
+#              → elite_gain, the ActivistEliteCue leapfrog over the activist tail
+#              (1.0 = elites at the activist base; higher = elites lead outward).
 GRID = {
     # identity → IdentityToIdeologyPull strength (Mason mega-identity: identity
     # drives issue position; ×0.0–3.0 of the shipped 0.02/0.04). More → more sep.
@@ -77,9 +78,16 @@ GRID = {
         {"tier_c_identity_pull_x": 0.02 * f, "tier_c_identity_pull_y": 0.04 * f}
         for f in (0.0, 0.5, 1.0, 2.0, 3.0)
     ],
-    # elite divergence → elite_lead_factor (how far elite cues lead the voter
-    # mean; the live S4 carrier — DW-NOMINATE mass-elite gap). More → more sep.
-    "elite":     [{"elite_lead_factor": v} for v in (1.0, 1.4, 1.798, 2.2, 2.6)],
+    # elite divergence → elite_gain + elite_ceiling co-scaled (emergence-recovery
+    # E5: elite_lead_factor is INERT on the endogenous path). The live carrier is
+    # the ActivistEliteCue loop: elite_gain = the elite leapfrog over the activist
+    # tail (Bawn et al. 2012), elite_ceiling = the saturating bound on elite
+    # extremity. gain ALONE saturates above the shipped point (the tanh ceiling
+    # caps it), so the two are co-scaled to keep "Elite extremism" responsive
+    # across the whole slider (verified monotone: 2025 sep 0.92→1.04→1.10→1.13→1.20).
+    # Center = the adopted E4 ABC point so the center cell == the shipped arc.
+    "elite":     [{"elite_gain": g, "elite_ceiling": c} for g, c in
+                  ((1.0, 0.65), (1.4, 0.74), (1.7689, 0.8237), (2.1, 0.88), (2.5, 0.93))],
     # open-mindedness = confidence radius ε co-scaled with influence strength —
     # the REAL Hegselmann-Krause open-mindedness (closed → open). Depolarizes.
     "openness":  [
@@ -96,7 +104,7 @@ GRID = {
     "diversity": [{"sandbox_diversity": v} for v in (0.02, 0.0478, 0.08, 0.15, 0.25)],
 }
 # center detent per knob = the shipped arc value (so the center cell == the arc):
-# identity ×1.0 (0.02/0.04), elite_lead 1.798, ε0.40/0.03, contact 0.0, σ0.0478.
+# identity ×1.0 (0.02/0.04), elite_gain 1.7689, ε0.40/0.03, contact 0.0, σ0.0478.
 CENTER_IDX = {"identity": 2, "elite": 2, "openness": 1, "contact": 0, "diversity": 1}
 KNOB_LABELS = {
     "identity": "Mega-identity", "elite": "Elite extremism",
