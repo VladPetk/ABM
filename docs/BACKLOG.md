@@ -42,6 +42,44 @@ demographically-targeted interventions in the demo.
 (several weeks of design + implementation + calibration). Worth
 its own phase.
 
+### Media as a reciprocal loop (audience ⇄ outlet feedback)
+
+**What it is.** Media is currently a **one-way forcing**: exogenous penetration
+(cable/broadband/social-media adoption — legitimately fed) scales a pull toward
+**fixed, hand-set outlet positions** (`MediaConsumption` → `outlet.position`),
+and each agent's `media_diet` is set at birth and never re-selected as the agent
+drifts. So both arms of the real media feedback loop are absent:
+- **Supply side** — outlets positioning their *slant toward their audience*
+  (Gentzkow & Shapiro 2010 "What Drives Media Slant?", *Econometrica* — slant is
+  substantially demand-driven; Mullainathan & Shleifer 2005; the "outrage
+  industry" escalation, Berry & Sobieraj). Nothing moves `outlet.position`.
+- **Demand side** — dynamic selective exposure (choose congenial media →
+  reinforce → choose more; Stroud *Niche News*, Prior *Post-Broadcast
+  Democracy*). The diet doesn't co-evolve (only a partial static echo via
+  `bc_affect_weight`).
+
+This is **structurally the same deficiency as blindspot #7** (positional sorting
+input-carried, not emergent) but for the media channel — an *audience-tail →
+outlet-slant* feedback would mirror the emergence-recovery *activist-tail → elite*
+loop. The project already half-flagged it: the media-outlet-drift workstream's
+**Phase A (scheduled drift)** is hand-drawn and on a separate branch, and its
+**Phase B (the actual feedback loop) was left pending and never built.**
+
+**Why deferred.** A parallel endogenous loop — would roughly double the
+emergence-recovery workstream; and media is the *secondary* channel for positional
+sorting (in the honesty budget the media-fed input carried ~0 of the affect rise),
+so the elite–mass loop is the priority. Surfaced and deferred 2026-06-14.
+
+**Why worth picking up later.** Once the elite-loop emergence work lands, the same
+activist-tail/saturating-cue pattern transfers directly to media; closing it would
+make the media channel honestly emergent too and unlock structural media
+interventions (deplatforming, algorithm transparency) — pairs with the
+"First-class outlets as network nodes" item below.
+
+**Rough effort.** Moderate — a new outlet-responsiveness rule + dynamic
+diet-selection, plus calibration + re-bless. Smaller than the elite loop (outlets
+are few; penetration stays exogenous).
+
 ---
 
 ## Engineering / methodology deferred from 8c
