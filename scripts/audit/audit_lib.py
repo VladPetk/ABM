@@ -154,6 +154,12 @@ def _apply_freeze(eng, freeze: set, base: dict) -> None:
     # data-fed-input vs residual-schedule contributions.
     if "data_fed_inputs" in freeze:
         eng.env.attrs["_freeze_data_fed_inputs"] = True
+    # Emergence-recovery E5.2 — pin the endogenous activist->elite->mass loop
+    # (ActivistEliteCue self-gates on this flag and stops moving the elite /
+    # pushing party_cue). The loop-OFF counterfactual: the share of party_sep's
+    # rise that collapses when frozen is the loop-attributable (emergent) share.
+    if "endogenous_loop" in freeze:
+        eng.env.attrs["_freeze_endogenous_loop"] = True
 
 
 # ---------------------------------------------------------------------------

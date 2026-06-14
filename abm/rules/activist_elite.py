@@ -67,6 +67,12 @@ class ActivistEliteCue:
         rng: np.random.Generator,
         tick: int,
     ) -> None:
+        # Honesty-budget instrument (emergence-recovery E5.2): when the budget
+        # harness pins the loop, the elite stays at its 1980 seed and no shift is
+        # propagated to party_cue. This is the loop-OFF counterfactual that
+        # measures the loop-attributable (emergent) fraction of party_sep.
+        if env.attrs.get("_freeze_endogenous_loop"):
+            return
         parties = env.attrs.get("parties")
         if not parties:
             return
