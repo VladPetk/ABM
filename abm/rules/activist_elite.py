@@ -84,19 +84,29 @@ class ActivistEliteCue:
             if p in members:
                 members[p].append(a)
 
+        # Each party's amplification AXIS is fixed at the first tick (its initial
+        # 1980 centroid direction = the historical realignment direction, D-left /
+        # R-right) and reused thereafter. Anchoring the direction is what makes
+        # the loop reliably IGNITE rather than bifurcate on the seed: real
+        # polarization had a given direction and an emergent magnitude, not a
+        # coin-flip direction. Without this the near-origin live centroid gives a
+        # noisy direction → some seeds fizzle, some ignite (sep variance ±0.3).
+        axes = env.attrs.get("party_axis")
+        if axes is None:
+            axes = {}
+            env.attrs["party_axis"] = axes
+
         step: dict = {}
         for pid, mem in members.items():
             if not mem:
                 continue
             pos = np.array([a.state.ideology for a in mem], dtype=float)
             cent = pos.mean(0)
-            nrm = float(np.linalg.norm(cent))
-            if nrm > 1e-9:
-                dirv = cent / nrm
-            else:
-                # Degenerate centroid (at the origin): use a stable per-party
-                # axis so the seed asymmetry has a direction to amplify.
-                dirv = np.array([1.0, 0.0]) if pid == 1 else np.array([-1.0, 0.0])
+            if pid not in axes:
+                nrm0 = float(np.linalg.norm(cent))
+                axes[pid] = ((cent / nrm0).tolist() if nrm0 > 1e-9
+                             else ([1.0, 0.0] if pid == 1 else [-1.0, 0.0]))
+            dirv = np.asarray(axes[pid], dtype=float)
             proj = pos @ dirv                       # extremity along the party direction
             if self.intensity_weight:
                 w = np.array(
