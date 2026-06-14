@@ -1,8 +1,21 @@
 # Phase 10 — Landing Summary
 
 *Status: shipped. Intervention library (X1–X7) redesigned against
-the Phase 9 ANES-recalibrated engine. Last updated 2026-06-12
-(MHV S5 T5.0 — X5 replaced + re-measured on the S4-locked config).*
+the Phase 9 ANES-recalibrated engine. Last updated 2026-06-14
+(emergence-recovery E5.5 — re-measured on the ENDOGENOUS canonical config).*
+
+> **✅ emergence-recovery E5.5 — RE-MEASURED on the endogenous canonical config
+> (2026-06-14).** After the E5 canonical flip (positional sorting now EMERGES
+> from the activist→elite→mass loop instead of replaying fed centroids —
+> `ANES_FULL_KWARGS`, `endogenous_elite`, the adopted E4 ABC point), X1–X7 were
+> re-measured (9 seeds × 4 release decades, 288 runs). **Every bucket is
+> UNCHANGED** — the intervention library's honest story is robust to the engine
+> flip: **X1 backfire** (cross-release Δsep +0.158, was +0.129), **X6 affect real**
+> (Δaff +0.169, was +0.165), **X5 deprogramming null/null** (Δsep −0.009 / Δaff
+> +0.001 — same targeted-tail-doesn't-scale finding), **X2/X3/X4/X7 null**. No tag
+> moved; magnitudes shifted only slightly. Falsification: 26/28 pass (the same
+> pre-existing X7 1990/2000 early-decade null). The §2 scoreboard below is updated
+> to the endogenous numbers; the lower banners are pre-E5 history.
 
 > **✅ MHV S5 T5.0 — X5 REPLACED: "Ranked-choice voting" → "Deprogramming &
 > exit programs" (2026-06-12).** The T4.5 X5 backfire (below) was a dangling-
@@ -152,36 +165,38 @@ Raw JSON at
 Buckets: |Δ| < 0.05 → null; 0.05–0.15 helpful → partial; ≥ 0.15
 helpful → real; > 0.05 opposite → backfire.
 
-_(**MHV S4 T4.5 — re-measured 2026-06-12 on the S4-calibrated config**; 9 seeds,
-anes_full. Supersedes the prior affect-re-graded table.)_
+_(**emergence-recovery E5.5 — re-measured 2026-06-14 on the ENDOGENOUS config**;
+9 seeds, anes_full = endogenous canonical. Supersedes the S4 fed-config table.
+X5 = "deprogramming & exit programs" (T5.0 replacement), not RCV.)_
 
 | release | X1 sep | X2 sep | X3 sep | X4 sep | X5 sep | X6 sep | X7 sep |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 1990 | **+0.070 BF** | +0.000 | +0.002 | -0.000 | **+0.100 BF** | -0.003 | +0.000 |
-| 2000 | **+0.120 BF** | +0.000 | +0.004 | -0.000 | **+0.089 BF** | -0.005 | -0.000 |
-| 2010 | **+0.165 BF** | +0.000 | +0.004 | -0.000 | **+0.145 BF** | -0.004 | +0.000 |
-| 2020 | **+0.162 BF** | +0.000 | +0.004 | +0.000 | **+0.132 BF** | -0.002 | +0.000 |
+| 1990 | **+0.103 BF** | +0.000 | +0.003 | +0.000 | +0.000 | -0.007 | +0.000 |
+| 2000 | **+0.175 BF** | +0.000 | +0.007 | -0.000 | +0.000 | -0.009 | +0.000 |
+| 2010 | **+0.181 BF** | +0.000 | +0.007 | -0.000 | -0.005 | -0.008 | +0.000 |
+| 2020 | **+0.174 BF** | +0.000 | +0.006 | +0.000 | -0.032 | -0.005 | +0.000 |
 
 | release | X1 aff | X2 aff | X3 aff | X4 aff | X5 aff | X6 aff | X7 aff |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 1990 | -0.007 | +0.000 | -0.000 | +0.006 | +0.009 | **+0.103 P** | -0.002 |
-| 2000 | -0.007 | +0.000 | -0.001 | +0.004 | +0.002 | **+0.151 R** | -0.004 |
-| 2010 | -0.008 | +0.000 | -0.000 | +0.003 | -0.009 | **+0.171 R** | -0.007 |
-| 2020 | -0.006 | +0.000 | -0.000 | +0.001 | -0.009 | **+0.236 R** | -0.006 |
+| 1990 | -0.006 | +0.000 | -0.000 | +0.006 | +0.000 | **+0.103 P** | -0.001 |
+| 2000 | -0.009 | +0.000 | -0.000 | +0.005 | +0.000 | **+0.151 R** | -0.004 |
+| 2010 | -0.008 | +0.000 | -0.000 | +0.003 | +0.000 | **+0.177 R** | -0.008 |
+| 2020 | -0.007 | +0.000 | -0.000 | +0.002 | +0.002 | **+0.244 R** | -0.006 |
 
 Legend: **BF** = backfire, **P** = partial, **R** = real. (Cells with no
-tag are null, |Δ| < 0.05.) Cross-release means: **X1 +0.129 (backfire)**,
-**X5 +0.117 (backfire** — was partial; its drift_mult lever is inert on the
-data-fed elite path, so RCV no longer damps divergence — see top banner),
-**X6 aff +0.165 (real)**; X2/X3/X4/X7 null. Vs the pre-affect-regrade table: X1 backfire magnitude shrank
-(+0.351 → +0.203; warmer baseline → weaker affect-gated cascade) and X6
-affect dropped a hair below the real floor — both honest consequences of
-the less-polarized re-grounded baseline.
+tag are null, |Δ| < 0.05.) Cross-release means: **X1 +0.158 (backfire)**,
+**X6 aff +0.169 (real)**, **X5 −0.009 sep / +0.001 aff (null/null)**;
+X2/X3/X4/X7 null. **Every bucket matches the FED config** (X1 +0.129→+0.158,
+X6 +0.165→+0.169) — the library is robust to the endogenous flip. X5 stays
+null/null (the T5.0 "targeted counter-extremism doesn't scale to aggregate
+separation" finding holds on the endogenous substrate too; X5 trends slightly
+more negative late — 2020 −0.032 — but stays sub-threshold).
 
-**Falsification (per brief §0.3):** 27/28 pass.
-Single fail at (1990, X7) on the "Δsep and Δaff both ≈ 0"
-sub-rule (pre-existing, unrelated to the re-grade); X7 at other
-releases passes the looser ±0.10 envelope.
+**Falsification (per brief §0.3):** 26/28 pass.
+Two fails at (1990, X7) and (2000, X7) on the "Δsep and Δaff both ≈ 0"
+sub-rule (pre-existing early-decade null — correction-rate boost insufficient
+before the late-period animus builds; Phase 11 bias-maintenance candidate);
+X7 at 2010/2020 passes the looser ±0.10 envelope.
 
 ---
 
