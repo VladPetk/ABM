@@ -206,7 +206,23 @@ def _replace_agent_inplace(
     #   2. Draw position from N(centroid[party], σ_cohort_anchor)
     # This preserves accumulated EliteDrift through replacement.
     parties = env.attrs.get("parties", {})
-    if env.attrs.get("tier_d_anes_knobs") and parties:
+    if env.attrs.get("endogenous_elite"):
+        # Emergence-recovery E3 — newcomers enter on the cohort distribution
+        # (near-centre, with the generational lean) and SORT toward their party's
+        # emergent elite via the loop, rather than being TELEPORTED to the
+        # centroid. Kills answer-feeding channel #2: composition no longer
+        # injects pre-sorted agents. Party is a cohort-leaning probabilistic
+        # draw; position is the cohort N(mean, sd), NOT the centroid. (RNG draw
+        # order — party then x then y — matches the anes-knobs branch so seed
+        # streams stay comparable.)
+        dem_lean = -float(cohort["x_mean"]) * 1.5
+        p_party_1 = float(np.clip(0.5 - dem_lean, 0.05, 0.95))
+        new_party = 1 if rng.random() < p_party_1 else 0
+        new_x = float(np.clip(rng.normal(cohort["x_mean"], cohort["x_sd"]), -1.0, 1.0))
+        _y_mean_endo = -cohort["y_mean"] if _fix_y else cohort["y_mean"]
+        new_y = float(np.clip(rng.normal(_y_mean_endo, cohort["y_sd"]), -1.0, 1.0))
+        new_pos = np.array([new_x, new_y])
+    elif env.attrs.get("tier_d_anes_knobs") and parties:
         # Cohort identity bias: younger cohorts more Dem (more negative
         # x_mean in the original spec). Treat as a Dem-lean offset to a
         # 50/50 base rate.

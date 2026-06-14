@@ -70,6 +70,12 @@ class ActivistEliteCue:
         parties = env.attrs.get("parties")
         if not parties:
             return
+        # Emergence-recovery E3 — per-party activist mobilization scales the
+        # elite leapfrog: the institutional capacity of each party's activist /
+        # donor base, the exogenous forcing the loop responds to (ramped over
+        # time by the dated events; low in 1980 keeps the loop quiescent).
+        # Absent → 1.0 → bit-identical to E2 (the fixed-gain loop).
+        mob = env.attrs.get("activist_mobilization")
         # Group only the driven parties (Independents carry no centroid channel,
         # mirroring PartyCentroidSeries — they are left alone).
         members: dict = {pid: [] for pid in parties}
@@ -104,7 +110,8 @@ class ActivistEliteCue:
                 tail_mean = pos[idx].mean(0)
             else:
                 tail_mean = np.average(pos[idx], axis=0, weights=w[idx])
-            raw = cent + self.gain * (tail_mean - cent)
+            g = self.gain * (float(mob.get(pid, 1.0)) if mob else 1.0)
+            raw = cent + g * (tail_mean - cent)
             # Saturating elite ceiling — the bounding nonlinearity (E0).
             elite = self.ceiling * np.tanh(raw / self.ceiling)
             old = np.asarray(parties[pid], dtype=float)

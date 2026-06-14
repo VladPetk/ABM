@@ -246,6 +246,28 @@ ELITE_DRIFT_GINGRICH_1994 = 0.010      # x-axis inflection (vs 1990-00 = 0.006)
 ELITE_DRIFT_GINGRICH_1994_Y = 0.013    # ~1.3× x, per ANES y/x velocity ratio
 GINGRICH_1994_ASYMMETRIC = {0: 0.5, 1: 1.5}  # R-heavy (Hacker-Pierson 2020)
 
+# ── Emergence-recovery E3 — activist-mobilization schedule ────────────────────
+# The per-party institutional capacity of each party's activist/donor base — the
+# exogenous forcing the ENDOGENOUS elite loop (ActivistEliteCue) responds to. It
+# scales the elite leapfrog: low in 1980 keeps the loop quiescent (the mass sits
+# near its 1980 seed); the dated events ramp it, R-led (Hacker-Pierson asymmetry)
+# and accelerating into the 2010s (Tea Party / Trump era), which back-loads the
+# EMERGENT party-separation rise to match the ANES shape. The force-calibration
+# diagnostic (scripts/audit/e_force_calibration.py) proved a constant-drive loop
+# cannot make the accelerating ANES shape — this rising drive is what supplies it.
+# DATES + the R/D asymmetry are from real events (exogenous); the LEVELS are
+# E4-calibration targets (default-path scenarios never read these). Stepped at
+# real event ticks, NOT a smooth curve fit to ANES. Provenance L (event dates /
+# asymmetry) + N (levels). Only active on the endogenous_elite path.
+ACTIVIST_MOBILIZATION_1980 = {0: 0.20, 1: 0.22}   # build baseline (loop quiescent)
+ACTIVIST_MOBILIZATION_SCHEDULE = {
+    "1990-00":       {0: 0.30, 1: 0.40},
+    "gingrich_1994": {0: 0.34, 1: 0.55},   # R step-up (Republican Revolution)
+    "2000-10":       {0: 0.46, 1: 0.72},
+    "2010-20":       {0: 0.78, 1: 1.15},   # accelerating, R-led (Tea Party/Trump)
+    "2020-25":       {0: 0.98, 1: 1.40},
+}
+
 # Step 1: re-graded social-media affect coupling (decision D2a). The
 # 2008/2010/2012 events ramp `BoundedConfidenceInfluence.affect_weight`
 # (a homophilic position-echo amplifier, not a direct affect shock).
@@ -1572,6 +1594,11 @@ def build_engine(
     # loop) owns the centroid, so the scheduled/event elite writes no-op.
     env.attrs["data_fed_elite"] = bool(data_fed_elite or endogenous_elite)
     env.attrs["endogenous_elite"] = bool(endogenous_elite)
+    if endogenous_elite:
+        # E3: start the activist mobilization at its 1980 baseline (low → loop
+        # quiescent → mass holds near the 1980 seed); the dated elite events
+        # ramp it over time to supply the gradual/accelerating drive.
+        env.attrs["activist_mobilization"] = dict(ACTIVIST_MOBILIZATION_1980)
     if _emergent:
         # retire the coupling schedule on this path: pin at 1.0; the
         # decade events skip their writes when constraint_emergent.
@@ -1939,6 +1966,9 @@ def _event_1994_gingrich(engine):
     on the default path; this guard is defence-in-depth)."""
     if not engine.env.attrs.get("evidence_regrade"):
         return
+    # E3: on the endogenous loop, the Gingrich inflection steps R activist
+    # mobilization up (no EliteDrift rule to set); no-op on other paths.
+    _set_activist_mobilization(engine, "gingrich_1994")
     _set_elite_drift_rate(
         engine,
         engine.env.attrs.get("gingrich_drift_rate"),
@@ -2284,6 +2314,19 @@ def _set_elite_drift_rate(engine, rate, rate_y=None, asymmetric=None):
                 r.asymmetric = dict(asymmetric)
 
 
+def _set_activist_mobilization(engine, key):
+    """Emergence-recovery E3 — set the per-party activist mobilization that
+    `ActivistEliteCue` scales its elite leapfrog by, from
+    `ACTIVIST_MOBILIZATION_SCHEDULE[key]`. Only active on the endogenous-elite
+    path; a strict no-op otherwise (the legacy/data-fed paths use EliteDrift /
+    PartyCentroidSeries). This is how the real-dated elite events — which
+    no-op on the endogenous path because there is no EliteDrift rule — instead
+    energize the loop over time."""
+    if not engine.env.attrs.get("endogenous_elite"):
+        return
+    engine.env.attrs["activist_mobilization"] = dict(ACTIVIST_MOBILIZATION_SCHEDULE[key])
+
+
 def _decade_boundary_1990(engine):
     sched = engine.env.attrs.get(
         "elite_drift_schedule_active", ELITE_DRIFT_SCHEDULE,
@@ -2291,6 +2334,7 @@ def _decade_boundary_1990(engine):
     sched_y = engine.env.attrs.get("elite_drift_schedule_y_active")
     asym_sched = engine.env.attrs.get("elite_drift_asymmetric_schedule_active")
     _set_identity_sorting(engine, IDENTITY_SORTING_SCHEDULE["1990-00"])
+    _set_activist_mobilization(engine, "1990-00")   # E3 (endogenous path only)
     _set_elite_drift_rate(
         engine, sched["1990-00"],
         rate_y=(sched_y["1990-00"] if sched_y is not None else None),
@@ -2312,6 +2356,7 @@ def _decade_boundary_2000(engine):
     sched_y = engine.env.attrs.get("elite_drift_schedule_y_active")
     asym_sched = engine.env.attrs.get("elite_drift_asymmetric_schedule_active")
     _set_identity_sorting(engine, IDENTITY_SORTING_SCHEDULE["2000-10"])
+    _set_activist_mobilization(engine, "2000-10")   # E3 (endogenous path only)
     _set_elite_drift_rate(
         engine, sched["2000-10"],
         rate_y=(sched_y["2000-10"] if sched_y is not None else None),
@@ -2326,6 +2371,7 @@ def _decade_boundary_2000(engine):
 
 def _decade_boundary_2010(engine):
     _set_identity_sorting(engine, IDENTITY_SORTING_SCHEDULE["2010-20"])
+    _set_activist_mobilization(engine, "2010-20")   # E3 (endogenous path only)
     # EliteDrift rate is set by the Citizens United event at the same
     # tick on the default path. Step 1 (D1a): under `evidence_regrade`
     # CU is demoted to a marker, so the 2010-20 drift transition is set
@@ -2355,6 +2401,7 @@ def _decade_boundary_2020(engine):
     sched_y = engine.env.attrs.get("elite_drift_schedule_y_active")
     asym_sched = engine.env.attrs.get("elite_drift_asymmetric_schedule_active")
     _set_identity_sorting(engine, IDENTITY_SORTING_SCHEDULE["2020-25"])
+    _set_activist_mobilization(engine, "2020-25")   # E3 (endogenous path only)
     _set_elite_drift_rate(
         engine, sched["2020-25"],
         rate_y=(sched_y["2020-25"] if sched_y is not None else None),
