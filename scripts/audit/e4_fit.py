@@ -39,12 +39,13 @@ TABLE_NPZ = ROOT / "docs" / "internal" / "audit" / "e4_fit_table.npz"
 # (name, [build_engine kwargs], prior_lo, prior_hi, E3-default)
 FIT_PARAMS = [
     ("elite_gain",     ["elite_gain"],                    0.8,  3.0,  2.5),
-    ("mob_base",       ["mob_base"],                      0.05, 0.50, 0.20),
+    ("mob_base",       ["mob_base"],                      0.02, 0.40, 0.20),
     ("mob_peak",       ["mob_peak"],                      0.70, 3.00, 1.20),
     ("mob_backload",   ["mob_backload"],                  0.0,  2.5,  0.60),
     ("mob_asym",       ["mob_asym"],                      0.0,  0.35, 0.18),
     ("uptake",         ["tier_c_party_pull_strength"],    0.04, 0.30, 0.297),
     ("fj_alpha_scale", ["fj_alpha_scale"],                1.0,  3.5,  2.195),
+    ("elite_ceiling",  ["elite_ceiling"],                 0.55, 0.90, 0.65),
 ]
 PNAMES = [p[0] for p in FIT_PARAMS]
 NPAR = len(FIT_PARAMS)
@@ -145,7 +146,7 @@ def dry_run():
     print(f"  distance(E3-default) = {distance(per, mid, half):.3f}")
 
 
-def run_fit(draws, seeds, accept_frac=0.03, reuse=False):
+def run_fit(draws, seeds, accept_frac=0.03, reuse=False, workers=None):
     from abm.calibration_parallel import run_seeds_parallel
     mid, half = _targets()
     seeds = list(range(seeds))
@@ -159,9 +160,10 @@ def run_fit(draws, seeds, accept_frac=0.03, reuse=False):
         rng = np.random.default_rng(0)
         TH = _sample_prior(draws, rng)
         jobs = [(i, tuple(TH[i]), s) for i in range(draws) for s in seeds]
-        print(f"running {len(jobs)} sims ({draws} draws x {len(seeds)} seeds)...")
+        print(f"running {len(jobs)} sims ({draws} draws x {len(seeds)} seeds, "
+              f"{workers or 'default'} workers)...")
         t0 = time.time()
-        results = run_seeds_parallel(fit_worker, jobs)
+        results = run_seeds_parallel(fit_worker, jobs, processes=workers)
         print(f"  sims done in {(time.time()-t0)/60:.1f} min")
         # aggregate: per draw, average per-decade obs across seeds, then distance
         by_draw = {}
@@ -242,13 +244,16 @@ def main():
     ap.add_argument("--draws", type=int, default=1500)
     ap.add_argument("--seeds", type=int, default=3)
     ap.add_argument("--accept-frac", type=float, default=0.03)
+    ap.add_argument("--workers", type=int, default=None,
+                    help="parallel worker processes (default: min(jobs, cpu_count))")
     ap.add_argument("--reuse", action="store_true")
     ap.add_argument("--dry", action="store_true")
     a = ap.parse_args()
     if a.dry:
         dry_run()
     else:
-        run_fit(a.draws, a.seeds, accept_frac=a.accept_frac, reuse=a.reuse)
+        run_fit(a.draws, a.seeds, accept_frac=a.accept_frac, reuse=a.reuse,
+                workers=a.workers)
 
 
 if __name__ == "__main__":
