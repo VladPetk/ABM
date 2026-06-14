@@ -14,13 +14,18 @@ Here we guard the two arc-level properties that matter:
 
 Gated behind `data_fed_elite` (default off → EliteDrift unchanged); the
 canonical preset flip + golden re-bless lands at T3.5.
+
+emergence-recovery E5.7 note: this contrast (fed series vs scheduled
+EliteDrift) is a FED-config concern. On the endogenous canonical config
+`data_fed_elite=False` activates the loop (not scheduled EliteDrift), so the
+file pins against the preserved FED config (`ANES_FULL_FED_KWARGS`).
 """
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
-from scripts.anes_preset import ANES_FULL_KWARGS
+from scripts.anes_preset import ANES_FULL_FED_KWARGS as ANES_FULL_KWARGS
 from abm.pillars.historical_arc import build_engine, build_schedule
 from abm.pillars.schedule import run_to
 

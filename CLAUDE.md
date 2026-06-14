@@ -106,9 +106,13 @@ are bundled and parameterized.
   the 7-intervention library. **Where Phase 9 calibration lives, and what the
   web demo serves** (engine `phase10`, preset `anes_full`, seed 0). Since MHV
   S2 (T2.6) the canonical preset builds the **emergent** engine (`n_issues=7`
-  issue substrate + `ConstraintOp`; methods §5.23); the phase-10 buckets and
-  the web export are pre-flip until the S4 re-measure / S5 re-export
-  (staleness banner in `phase10_results.md`).
+  issue substrate + `ConstraintOp`; methods §5.23). Since **emergence-recovery
+  E5** the canonical `ANES_FULL_KWARGS` is the **endogenous** build
+  (`endogenous_elite=True`, `data_fed_elite=False`, the adopted E4 ABC point):
+  positional sorting now *emerges* from the activist→elite→mass loop instead of
+  replaying fed centroids (blindspot #7 resolved; methods §5.29). Phase-10 +
+  web are re-blessed on it (E5.5/E5.6). The pre-E5 fed config is preserved as
+  `ANES_FULL_FED_KWARGS`.
 
 ### How rules are drift-guarded — three test layers
 A rule's behavior is (or should be) pinned at three distinct levels; each
@@ -173,16 +177,24 @@ presenting results:
 Time maps via `ticks_per_year = 3` (1 tick ≈ 4 months), anchored to the ANES
 out-party thermometer; the shipped run is ticks `0…135` = 1980 → ~end 2025.
 **Status: Phase 10 complete** (Phase 9 = ANES recalibration; Phase 10 =
-intervention library re-measure on that baseline). **MHV S3 landed:** the
-canonical engine substrate is the emergent D=7 build (S2/T2.6) running on
-**data-fed input series** — party centroids from ANES voter data and media
-coupling from penetration curves replace the scheduled `EliteDrift` + FD/Fox/
-social-media steps (`abm/pillars/inputs.py`; `data_fed_elite`/`data_fed_media`
-on in `ANES_FULL_KWARGS`; methods §5.24). This **removed the elite corner-pin
-artifact**, so the de-artifacted party_sep (~0.59) now undershoots the ANES
-target — **closing that gap is the MHV S4 fit** (party_pull/fj), alongside the
-ANES re-fit + phase-10 re-measure; web re-export at S5. I3 (no direct outcome
-writes outside the delta pipeline) is now enforced by test.
+intervention library re-measure on that baseline), **MHV S0–S5 done**, and
+**emergence-recovery E5 done**. The canonical engine substrate is the emergent
+D=7 build (S2/T2.6). Media coupling is still a **data-fed input series**
+(penetration curves; `data_fed_media`, methods §5.24). The elite channel,
+however, is no longer fed: since **emergence-recovery E5** the canonical
+`ANES_FULL_KWARGS` runs the **endogenous activist→elite→mass loop**
+(`endogenous_elite=True`, `data_fed_elite=False`, the adopted E4 ABC point;
+`abm/rules/activist_elite.py`, methods §5.29), so positional sorting **emerges**
+rather than replaying fed ANES voter centroids (**blindspot #7 resolved** — the
+honesty budget flips party_sep to ~1.00 emergent / ~0 input-carried). The whole
+re-bless cascade ran on it (scorecard 18/24, realism 18/24, phase-10 buckets
+unchanged, web re-exported). **Honest open caveat:** the loop's late-period
+*timing* is an exogenously-calibrated forcing, not out-of-sample predictable —
+the four-cut holdout fails the temporal + instrument cuts (1/3;
+`docs/results/e5_holdout.md`), and the single-axis loop over-correlates the
+compass axes (corr~0.78). The pre-E5 fed config is preserved as
+`ANES_FULL_FED_KWARGS`. I3 (no direct outcome writes outside the delta pipeline)
+is enforced by test.
 
 ### Engine quickstart (Windows PowerShell)
 ```powershell

@@ -73,22 +73,25 @@ function MethodRow({ k, children }) {
 
 // ── honesty budget ───────────────────────────────────────────────────────────
 // Measured fractions are blessed in docs/results/honesty_budget.json (re-measured
-// on the fitted shipped config at MHV S5 T5.2, 6 seeds; methods §5.28). Each
-// metric's 1980→2025 rise is decomposed by freeze experiments into: emergent
-// (rules alone, every external driver frozen at 1980), empirical-input (what the
-// data-fed ANES series adds back), and hand-drawn residual (scripted bumps +
-// dated events). Display widths are honest roundings that sum to 100; the raw
-// measured values (which may slightly over/undershoot from seed noise) live in
-// the JSON. "grounded" = emergent + empirical-input = the dark-matter-floor
-// quantity (floor ≥0.60 per metric; all clear).
+// on the ENDOGENOUS canonical config at emergence-recovery E5.2, 6 seeds; methods
+// §5.28). The shipped config no longer feeds party positions: positional sorting
+// EMERGES from an activist→elite→mass feedback loop. "emergent" is the
+// loop-attributable share — how much of the 1980→2025 rise COLLAPSES when the
+// loop is frozen (loop-off counterfactual); for affect, whose mechanism is
+// loop-independent, it is the all-frozen spontaneous floor. "input" is the
+// data-fed-answer instrument — now ~0 for every metric (nothing positional fed).
+// The residual is the small non-loop drift; the loop's PACE is set by an
+// exogenous event-timed mobilization schedule (timing, not positions — disclosed
+// in the prose). Display widths are honest roundings that sum to 100; raw values
+// live in the JSON.
 const BUDGET_C = { emergent: '#3f7d54', input: CC.d, residual: '#c47a2c' };
 const BUDGET = [
-  { k: 'Party separation', emergent: 0, input: 100, residual: 0, grounded: 100,
-    note: 'Tracks the empirical ANES party-centroid trajectory almost entirely — the model follows where the survey data says the parties went; it doesn’t invent the sorting.' },
-  { k: 'Affective polarization', emergent: 85, input: 0, residual: 15, grounded: 85,
-    note: 'The one arc the model’s own dynamics drive: 87% of the collapse in out-party warmth is emergent, produced by the animus rules themselves.' },
-  { k: 'Identity alignment', emergent: 2, input: 95, residual: 3, grounded: 97,
-    note: 'Also carried by the empirical party trajectory rather than self-organised — alignment follows the same data-fed series.' },
+  { k: 'Party separation', emergent: 100, input: 0, residual: 0, grounded: 100,
+    note: 'Now produced by the model itself: freeze the activist→elite→mass loop and the sorting collapses to its 1980 starting point. Nothing positional is fed — earlier versions replayed the ANES party-centroid data (this was ~100% input-carried). The loop’s pace is set by an exogenous, event-timed mobilization schedule.' },
+  { k: 'Affective polarization', emergent: 87, input: 0, residual: 13, grounded: 87,
+    note: 'Driven by the model’s own animus dynamics: 87% of the collapse in out-party warmth is emergent, produced by the affect rules themselves — unchanged, and independent of the positional loop.' },
+  { k: 'Identity alignment', emergent: 95, input: 0, residual: 5, grounded: 95,
+    note: 'Now self-organised: identity tracks the emergent party positions, so 95% is loop-attributable (was ~2% — it used to follow the same data-fed party series).' },
 ];
 
 function BudgetBar({ row }) {
@@ -122,31 +125,42 @@ function BudgetLegend() {
   );
   return (
     <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginBottom: 4 }}>
-      {dot(BUDGET_C.emergent, 'Emergent — the agents’ own dynamics')}
-      {dot(BUDGET_C.input, 'Empirical input — data-fed ANES series')}
-      {dot(BUDGET_C.residual, 'Hand-drawn — scripted bumps + events')}
+      {dot(BUDGET_C.emergent, 'Emergent — the loop’s own dynamics')}
+      {dot(BUDGET_C.input, 'Empirical input — data-fed positions (now ~0)')}
+      {dot(BUDGET_C.residual, 'Residual — drift + event timing')}
     </div>
   );
 }
 
-// four-cut holdout — transcribed from docs/results/s4_holdout.md (3/3 PASS;
-// bands pre-registered before the fit). MHV S4 T4.4.
+// four-cut holdout — transcribed from docs/results/e5_holdout.md (endogenous
+// config; 1/3 substantive cuts pass; bands pre-registered before the fit).
+// emergence-recovery E5.1. The FED config scored 3/3 — but it passed the
+// temporal cut TRIVIALLY by feeding the party trajectory; with sorting now
+// emergent, the cut is a real out-of-sample test the model does not pass.
 const HOLDOUT = [
-  { cut: 'Temporal', q: 'Fit on ≤2012 only, then predict 2010 / 2020 / 2025', v: 'PASS' },
-  { cut: 'Instrument', q: 'Shipped model vs a held-out survey (GSS) it was never fit to', v: 'PASS' },
-  { cut: 'Statistic', q: 'Fit separation / affect / spread, then predict issue constraint', v: 'PASS' },
+  { cut: 'Temporal', q: 'Fit on ≤2000 only, then predict 2010 / 2020 / 2025', v: 'FAIL',
+    why: 'The late-2010s acceleration isn’t predictable from the early decades alone — it rides an exogenously-calibrated mobilization schedule. (The old data-fed version passed this only by replaying the answer.)' },
+  { cut: 'Instrument', q: 'Shipped model vs a held-out survey (GSS) it was never fit to', v: 'MIXED',
+    why: 'Partisan-sorting slope lands inside the GSS band; the issue-to-issue correlation grows ~1.6× too fast (the compass axes over-align).' },
+  { cut: 'Statistic', q: 'Fit separation / affect / spread, then predict issue constraint', v: 'PASS',
+    why: 'Issue constraint is predicted from the other three statistics across all six decades.' },
 ];
+
+const HOLDOUT_C = { PASS: '#3f7d54', MIXED: '#c47a2c', FAIL: '#b04a3a' };
 
 function HoldoutScorecard() {
   return (
     <div style={{ marginTop: 18, border: `1px solid ${CC.border}`, borderRadius: DS.rad.inset, overflow: 'hidden' }}>
       {HOLDOUT.map((h, i) => (
-        <div key={h.cut} style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '13px 16px',
+        <div key={h.cut} style={{ padding: '13px 16px',
           borderTop: i ? `1px solid ${CC.border}` : 'none', background: CC.surface }}>
-          <span style={{ width: 86, flexShrink: 0, fontFamily: SANS, fontSize: DS.type.small, fontWeight: 600, color: CC.ink }}>{h.cut}</span>
-          <span style={{ flex: 1, fontSize: DS.type.small, lineHeight: 1.5, color: CC.ink2 }}>{h.q}</span>
-          <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '.06em',
-            color: '#3f7d54' }}>{h.v}</span>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+            <span style={{ width: 86, flexShrink: 0, fontFamily: SANS, fontSize: DS.type.small, fontWeight: 600, color: CC.ink }}>{h.cut}</span>
+            <span style={{ flex: 1, fontSize: DS.type.small, lineHeight: 1.5, color: CC.ink2 }}>{h.q}</span>
+            <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '.06em',
+              color: HOLDOUT_C[h.v] }}>{h.v}</span>
+          </div>
+          <p style={{ margin: '6px 0 0 100px', fontSize: DS.type.micro, lineHeight: 1.5, color: CC.ink3, maxWidth: '38em' }}>{h.why}</p>
         </div>
       ))}
     </div>
@@ -189,37 +203,47 @@ function MethodsPage() {
       <H2>How much of this is the model — the honesty budget</H2>
       <Prose>
         A fair question for any simulation: how much of the 1980→2025 arc is the model genuinely producing, versus
-        numbers we drew by hand? We measure it, rather than assert it. For each metric we re-run the 45 years with every
-        external driver frozen at its 1980 value, then switch only the real data series back on. What survives the full
-        freeze is <strong style={{ color: CC.ink }}>emergent</strong> — the agents' own dynamics. What the data adds back
-        is <strong style={{ color: CC.ink }}>empirical input</strong> — the model tracking real ANES survey trajectories.
-        The remainder is <strong style={{ color: CC.ink }}>hand-drawn</strong>: a few scripted bumps and the dated-event
-        handlers. We keep that last slice small on purpose.
+        numbers we fed in? We measure it, rather than assert it. The model does <em>not</em> feed in where the parties
+        went — positional sorting <strong style={{ color: CC.ink }}>emerges</strong> from a feedback loop: each party’s
+        activists pull its elite outward, the elite cue pulls the rank-and-file, and the cycle ratchets. To see how much
+        the loop is really doing, we freeze it and re-run the 45 years: what <em>collapses</em> is the loop’s doing —
+        <strong style={{ color: CC.ink }}> emergent</strong>. What a data-fed series would add back is
+        <strong style={{ color: CC.ink }}> empirical input</strong> — now ~0, because nothing positional is fed. The rest
+        is <strong style={{ color: CC.ink }}>residual</strong> drift.
       </Prose>
       <div style={{ marginTop: 24 }}>
         <BudgetLegend />
         {BUDGET.map((row) => <BudgetBar key={row.k} row={row} />)}
       </div>
       <Prose>
-        The split is revealing, and we'd rather show it than bury it. <strong style={{ color: CC.ink }}>Party
-        separation</strong> and <strong style={{ color: CC.ink }}>identity alignment</strong> are carried almost entirely
-        by the empirical party-position data — the model tracks where ANES says the parties went, it does not invent the
-        sorting. The <strong style={{ color: CC.ink }}>emotional</strong> arc is the exception: 87% of the collapse in
-        out-party warmth is emergent, produced by the animus dynamics themselves. Across all three, the hand-drawn residual
-        runs between 0% and 15% — comfortably inside the budget we committed to before measuring.
+        This is the big change from earlier versions, and we'd rather show it than bury it. <strong style={{ color: CC.ink }}>Party
+        separation</strong> and <strong style={{ color: CC.ink }}>identity alignment</strong> used to be replayed almost
+        entirely from the ANES party-position data — the model tracked where the survey said the parties went without
+        inventing the sorting. Now both <em>emerge</em>: freeze the loop and the sorting falls back to its 1980 starting
+        point (party separation 100% loop-attributable, identity alignment 95%, both ~0% fed). The
+        <strong style={{ color: CC.ink }}> emotional</strong> arc is produced by its own animus dynamics, as before (87%
+        emergent). One honest caveat: the loop’s <em>pace</em> is set by an exogenous, event-timed “mobilization” schedule
+        — that’s calibrated timing, not fed positions, so the model <em>amplifies</em> a real historical forcing rather
+        than inventing the timeline from nothing (with the loop forced only at its 1980 level, about a third of the
+        separation still emerges on its own).
       </Prose>
 
       <H2>Does it hold up out of sample — the holdout</H2>
       <Prose>
-        A fit that only reproduces what it was shown proves nothing. So the calibration was checked four ways, against
-        data deliberately held out before fitting — with the pass/fail bands written down first, so the test couldn't be
-        moved to fit the result.
+        A fit that only reproduces what it was shown proves nothing. So the calibration is checked against data
+        deliberately held out before fitting — with the pass/fail bands written down first, so the test couldn't be
+        moved to fit the result. Now that the sorting <em>emerges</em> rather than being replayed, this is a tougher,
+        more honest test — and the model only partly passes it. We show the result straight.
       </Prose>
       <HoldoutScorecard />
       <Prose>
-        All three substantive cuts pass. The instrument cut is the strongest: the model, calibrated only on ANES, lands
-        the trend in a <em>different</em> survey (the GSS) it never saw — survey-to-survey validation, not a circle drawn
-        around its own output.
+        The honest read: <strong style={{ color: CC.ink }}>the model explains the mechanism but not the timing.</strong>
+        The statistic cut passes outright. But the temporal cut now <em>fails</em> — the late-2010s explosion in
+        separation can’t be predicted from the early decades; it depends on an exogenous “when did activists mobilize”
+        schedule that’s calibrated to the whole period. (The earlier data-fed version passed this cut only because it was
+        handed the answer.) And the model sorts the two compass axes together a little faster than a held-out survey says
+        it should. These are real limitations — the price of making the sorting genuinely emergent instead of replaying
+        it — and we’d rather show them than hide behind a test the old version passed for the wrong reason.
       </Prose>
 
       <H2>Interventions — what's real, what isn't</H2>

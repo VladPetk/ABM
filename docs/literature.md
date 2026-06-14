@@ -134,6 +134,30 @@ are in methods.md's provenance table.
   basis of the **mass-elite-gap blindspot** the model does not separate
   (`docs/model_blindspots.md` §3, §6; the feedback layer is M6-full, out of
   scope). Replaces the scheduled `EliteDrift` (removing its corner-pin artifact).
+- **emergence-recovery E5 — the endogenous elite loop (2026-06).** The fed
+  voter-centroid series above is **retired from the canonical config** and
+  replaced by an endogenous activist→elite→mass loop
+  (`abm/rules/activist_elite.py::ActivistEliteCue`; methods §5.29) so positional
+  sorting **emerges** instead of being replayed (blindspot #7). Anchors:
+  - **Bawn, K., Cohen, M., Karol, D., Masket, S., Noel, H., & Zaller, J.** (2012).
+    A theory of political parties. *Perspectives on Politics* 10:571. — Parties as
+    coalitions of intense **policy-demanding activists**; elites track the
+    **activist base**, not the median voter. The core mechanism the loop encodes
+    (elite = leapfrog over the party's activist tail).
+  - **Zaller, J.** (1992). *The Nature and Origins of Mass Opinion*. Cambridge UP.
+    — Receive-accept-sample: mass cue-taking is per-individual fast but
+    awareness-gated, so aggregate sorting is slow (the loop's partial mass
+    `uptake`, the ~30-yr sort).
+  - **Hacker, J. S., & Pierson, P.** (asymmetric polarization, also cited §3.5) —
+    the R-led mobilization asymmetry (`mob_asym`) in the activist-mobilization
+    schedule that paces the loop.
+  - **Levendusky, M.** (2009, *The Partisan Sort*, above) — the mass sorts
+    individually in response to elite cues (the loop's mass-uptake reading).
+  The elite-follows-activist direction is **[L]**; the functional form
+  (intensity-weighted tail mean, `tanh` ceiling, mobilization-schedule shape) is
+  **[N]**; the fitted magnitudes (E4 ABC point) are **[E]**. Honest limitation:
+  the loop's late-period **timing** is an exogenously-calibrated forcing, not
+  out-of-sample predictable (holdout cut 1 fails — `docs/results/e5_holdout.md`).
 
 ### 2.4 Identity & affect
 - **Mason, L.** (2018). *Uncivil Agreement: How Politics Became Our Identity*.

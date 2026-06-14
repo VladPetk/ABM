@@ -5,6 +5,12 @@ attractor) outward from the origin: cue = voter centroid x L. It is the lever
 that closes the de-artifacted party_sep undershoot (voter-centroid attractors
 cap mass sep at ~0.81 << ANES ~1.11; see docs/internal/audit/t42_undershoot.md).
 
+emergence-recovery E5.7 note: `elite_lead_factor` only feeds the fed
+PartyCentroidSeries, which is GONE on the endogenous canonical config (the loop
+replaces it). So this file pins the lever against the preserved FED config
+(`ANES_FULL_FED_KWARGS`) — the mechanism still exists in code, just not as the
+shipped default.
+
 Guards:
   * L = 1.0 is bit-identical to the default (no silent behaviour change).
   * party_sep is monotone increasing in L (the lever does what it claims).
@@ -16,7 +22,7 @@ import numpy as np
 
 from abm.pillars.historical_arc import build_engine, build_schedule
 from abm.pillars.schedule import run_to
-from scripts.anes_preset import ANES_FULL_KWARGS
+from scripts.anes_preset import ANES_FULL_FED_KWARGS as ANES_FULL_KWARGS
 
 
 def _run_to(eng_kwargs, tick, seed=0):
