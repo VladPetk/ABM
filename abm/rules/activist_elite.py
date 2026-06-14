@@ -103,9 +103,26 @@ class ActivistEliteCue:
             pos = np.array([a.state.ideology for a in mem], dtype=float)
             cent = pos.mean(0)
             if pid not in axes:
-                nrm0 = float(np.linalg.norm(cent))
-                axes[pid] = ((cent / nrm0).tolist() if nrm0 > 1e-9
-                             else ([1.0, 0.0] if pid == 1 else [-1.0, 0.0]))
+                # Realignment direction = the frozen partisan-gap axis (align_u),
+                # projected to 2D; R = +axis, D = -axis. This is the established
+                # D-R direction from the ANES party moments (right cultural SIGN —
+                # D progressive), unlike the noisy/early 1980 mass centroid whose
+                # cultural component is spurious. Falls back to the centroid dir.
+                base = None
+                rt = env.attrs.get("issue_runtime")
+                au = rt.get("align_u") if rt else None
+                if au is not None:
+                    from ..core.issues import project1
+                    d2 = np.asarray(project1(np.asarray(au, dtype=float), rt), dtype=float)
+                    n2 = float(np.linalg.norm(d2))
+                    if n2 > 1e-9:
+                        base = d2 / n2
+                if base is not None:
+                    axes[pid] = (base if pid == 1 else -base).tolist()
+                else:
+                    nrm0 = float(np.linalg.norm(cent))
+                    axes[pid] = ((cent / nrm0).tolist() if nrm0 > 1e-9
+                                 else ([1.0, 0.0] if pid == 1 else [-1.0, 0.0]))
             dirv = np.asarray(axes[pid], dtype=float)
             proj = pos @ dirv                       # extremity along the party direction
             if self.intensity_weight:
