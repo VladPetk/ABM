@@ -12,21 +12,22 @@ seed 0 to 2025, and stores a DECIMATED per-frame cloud (for the compass) plus th
 four macro series (for the live metrics strip: separation, out-party warmth,
 modularity, identity alignment).
 
-The five dials (audit 2026-06; docs/intervention_knob_audit.md) — all are
-CAUSES (each sign-stable at any position of the other four, 12/12 in the
-robustness screen). The polarization metrics are READOUTS, not knobs:
+The five dials (grid v5, emergence-recovery v1 polish;
+docs/internal/sandbox_knob_redesign.md). Each dial OWNS ONE distinct readout, is
+TWO-SIDED around the arc (center detent idx 2 of all five → "all centered" == the
+shipped baseline), and has its off-center detents fit to LINEARIZE the owned
+readout (scripts/audit/sandbox_dial_sweep.py). The polarization metrics are
+READOUTS, not knobs:
 
-    identity   tier_c_identity_pull_x/y (×mult)   -> Mason mega-identity
-    elite      elite_gain (endogenous loop)       -> elite divergence
-    openness   tier_c_bc_epsilon (+ _bc_strength) -> open-mindedness (ε; depolarizes)
-    contact    sandbox_contact                    -> cooperative mixing (warms)
-    diversity  sandbox_diversity                  -> within-party free-thinking
+    leaders     elite_gain (+ceiling), endogenous loop -> SEPARATION
+    identities  tier_c_identity_pull_x/y (×mult)        -> MEGA-IDENTITY (align)
+    dailylife   sandbox_animus_mult ↔ sandbox_contact   -> ANIMUS (affect), 2-sided
+    within      sandbox_diversity σ + inverse bc_strength -> WITHIN-PARTY SPREAD
+    ties        sandbox_rewire_mult (TieRewiring rate)  -> ECHO CHAMBERS (modularity)
 
-    (MHV S5 T5.1 re-map: identity + elite v2 knobs went inert on the data-fed
-    emergent substrate; re-pointed to the live levers above. openness + diversity
-    centers re-pinned to the S4 arc so the center cell stays the shipped baseline.)
-
-ILLUSTRATIVE ONLY — these crank the model past calibration. Not a finding.
+ILLUSTRATIVE ONLY — these crank the model past calibration. Not a finding, and
+NOT a claim that any dial raises the emergent fraction (it doesn't — it just cranks
+knobs; the honest emergent/forcing split lives in the Methods honesty panel).
 
 Output: web_demo/cf/sandbox/<key>.json  (key = 5 digits 0-4, one per knob in
 KNOB_ORDER) + web_demo/cf/sandbox/index.json manifest.
@@ -58,58 +59,80 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # out-party animus, within-party spread, mega-identity alignment — are the
 # READOUTS you watch (no knob is also a readout). Each knob is sign-stable
 # across every position of the other four (12/12 in the audit robustness screen).
-KNOB_ORDER = ["identity", "elite", "openness", "contact", "diversity"]
-# ── grid v4 (emergence-recovery E5.6): re-mapped onto the ENDOGENOUS substrate ──
-# The v3 'elite' dial (elite_lead_factor) went inert with the E5 flip — it only
-# feeds the now-absent PartyCentroidSeries — so it is re-mapped to elite_gain,
-# the endogenous loop's live elite-divergence carrier. The other four v3 dials
-# stay live on the endogenous config; centers remain pinned so the center cell
-# == the shipped arc. (grid v3, MHV S5 T5.1, re-mapped two earlier-inert dials:)
-#   identity : sandbox_identity_mult (inert since the T2.4 measured-alignment
-#              rebuild) → IdentityToIdeologyPull strength (×mult of the Mason
-#              0.02/0.04), the live identity→issue-alignment lever.
-#   elite    : (v3) tier_d_anes_drift_multiplier → elite_lead_factor; (v4/E5)
-#              → elite_gain, the ActivistEliteCue leapfrog over the activist tail
-#              (1.0 = elites at the activist base; higher = elites lead outward).
+KNOB_ORDER = ["leaders", "identities", "dailylife", "within", "ties"]
+# ── grid v5 (emergence-recovery v1 polish): the 5-dial redesign ──────────────
+# docs/internal/sandbox_knob_redesign.md. The v4 grid had four structural faults:
+# two dials fought over `sep`, two over `spread` (one perversely — "Open-mindedness"
+# tightened within-party spread), the network/echo-chamber readout had NO dial, and
+# the centers sat at different detents per knob. v5 fixes all four:
+#   (1) ONE dial OWNS ONE readout — no collisions.
+#   (2) every dial is TWO-SIDED around the arc, which sits at the CENTER detent
+#       (idx 2) of all five — so "all centered" == the calibrated 1980→2025 arc.
+#   (3) the off-center detents LINEARIZE THE OWNED READOUT (not the raw param) —
+#       fit by scripts/audit/sandbox_dial_sweep.py so the whole slider feels alive.
+#   (4) every detent is a real build_engine config (illustrative-past-calibration,
+#       same wall as before) — NO faked effects, NO claim it raises the emergent
+#       fraction; the honest emergent/forcing split lives in the Methods panel.
+# Owned readouts (one each): separation←leaders · mega-identity←identities ·
+# animus←dailylife · within-party spread←within · echo-chambers(modularity)←ties.
 GRID = {
-    # identity → IdentityToIdeologyPull strength (Mason mega-identity: identity
-    # drives issue position; ×0.0–3.0 of the shipped 0.02/0.04). More → more sep.
-    "identity":  [
+    # 1. LEADERS moderate↔extreme — owns SEPARATION. The endogenous loop's
+    #    elite_gain (leapfrog over the activist tail, Bawn et al. 2012) co-scaled
+    #    with elite_ceiling (the saturating bound). Pushing gain<1/low-ceiling at
+    #    the low end and gain~4.5/ceiling~1.3 at the high end defeats the tanh
+    #    squash, so the camps fly apart EVENLY across the whole slider (sweep-
+    #    verified 2025 sep ≈ 0.74 → 0.92 → 1.10 → 1.26 → 1.41, steps ~0.18/0.18/
+    #    0.16/0.14). Center = the adopted E4 ABC point (== the shipped arc).
+    "leaders":    [{"elite_gain": g, "elite_ceiling": c} for g, c in
+                   ((0.55, 0.50), (1.05, 0.66), (1.7689, 0.8237), (3.0, 1.05), (4.5, 1.30))],
+    # 2. IDENTITIES cross-cutting↔stacked — owns MEGA-IDENTITY (alignment). Mason
+    #    mega-identity via IdentityToIdeologyPull strength (×0.0–3.0 of the shipped
+    #    0.02/0.04). Re-pointed to OWN alignment (the diagonal collapse) so it no
+    #    longer collides with leaders on sep. Center ×1.0 == the arc.
+    "identities": [
         {"tier_c_identity_pull_x": 0.02 * f, "tier_c_identity_pull_y": 0.04 * f}
         for f in (0.0, 0.5, 1.0, 2.0, 3.0)
     ],
-    # elite divergence → elite_gain + elite_ceiling co-scaled (emergence-recovery
-    # E5: elite_lead_factor is INERT on the endogenous path). The live carrier is
-    # the ActivistEliteCue loop: elite_gain = the elite leapfrog over the activist
-    # tail (Bawn et al. 2012), elite_ceiling = the saturating bound on elite
-    # extremity. gain ALONE saturates above the shipped point (the tanh ceiling
-    # caps it), so the two are co-scaled to keep "Elite extremism" responsive
-    # across the whole slider (verified monotone: 2025 sep 0.92→1.04→1.10→1.13→1.20).
-    # Center = the adopted E4 ABC point so the center cell == the shipped arc.
-    "elite":     [{"elite_gain": g, "elite_ceiling": c} for g, c in
-                  ((1.0, 0.65), (1.4, 0.74), (1.7689, 0.8237), (2.1, 0.88), (2.5, 0.93))],
-    # open-mindedness = confidence radius ε co-scaled with influence strength —
-    # the REAL Hegselmann-Krause open-mindedness (closed → open). Depolarizes.
-    "openness":  [
-        {"tier_c_bc_epsilon": 0.15, "tier_c_bc_strength": 0.0},
-        {"tier_c_bc_epsilon": 0.40, "tier_c_bc_strength": 0.03},    # arc (S2 BC wake)
-        {"tier_c_bc_epsilon": 0.70, "tier_c_bc_strength": 0.07},
-        {"tier_c_bc_epsilon": 1.20, "tier_c_bc_strength": 0.13},
-        {"tier_c_bc_epsilon": 3.00, "tier_c_bc_strength": 0.20},
+    # 3. DAILY LIFE segregated↔mixed — owns ANIMUS (affect). TWO-SIDED: left of
+    #    center raises parasocial animus (sandbox_animus_mult — colder/segregated),
+    #    right raises cooperative contact (sandbox_contact — warmer/mixed). Center =
+    #    the arc (animus_mult 0.655, contact 0.0). Sweep: aff ≈ -0.86 → -0.79 →
+    #    -0.655 → -0.59 → -0.51 (sep/spread/align stay flat — clean ownership).
+    "dailylife":  [
+        {"sandbox_animus_mult": 1.6,   "sandbox_contact": 0.0},
+        {"sandbox_animus_mult": 1.1,   "sandbox_contact": 0.0},
+        {"sandbox_animus_mult": 0.655, "sandbox_contact": 0.0},   # arc
+        {"sandbox_animus_mult": 0.655, "sandbox_contact": 0.5},
+        {"sandbox_animus_mult": 0.655, "sandbox_contact": 1.0},
     ],
-    # contact / mixing → cooperative-share floor (Pettigrew-Tropp). Warms affect.
-    "contact":   [{"sandbox_contact": v} for v in (0.0, 0.25, 0.5, 0.75, 1.0)],
-    # within-party diversity → GaussianNoise σ (lockstep → free-thinking).
-    # Center (idx 1) re-pinned to the S4 fitted within-party σ (0.0478).
-    "diversity": [{"sandbox_diversity": v} for v in (0.02, 0.0478, 0.08, 0.15, 0.25)],
+    # 4. WITHIN each party lockstep↔free-thinking — owns WITHIN-PARTY SPREAD. Merges
+    #    the two broken v4 dials (kills the σ dead-zone AND retires the perverse
+    #    "Open-mindedness" label): attack spread from BOTH ends — lockstep = low
+    #    GaussianNoise σ + high BC conformity (converge to the party mean); free =
+    #    high σ + zero BC conformity. ε stays 0.40 (within-party, never the cross-
+    #    party-merge regime). Sweep: spread ≈ 0.23 → 0.26 → 0.285 → 0.30 → 0.36.
+    "within":     [
+        {"sandbox_diversity": 0.004,  "tier_c_bc_strength": 0.22, "tier_c_bc_epsilon": 0.40},
+        {"sandbox_diversity": 0.022,  "tier_c_bc_strength": 0.09, "tier_c_bc_epsilon": 0.40},
+        {"sandbox_diversity": 0.0478, "tier_c_bc_strength": 0.03, "tier_c_bc_epsilon": 0.40},  # arc
+        {"sandbox_diversity": 0.105,  "tier_c_bc_strength": 0.01, "tier_c_bc_epsilon": 0.40},
+        {"sandbox_diversity": 0.205,  "tier_c_bc_strength": 0.0,  "tier_c_bc_epsilon": 0.40},
+    ],
+    # 5. SOCIAL TIES open↔echo-chambered — owns ECHO CHAMBERS (modularity). The new
+    #    dial for the orphaned network readout: sandbox_rewire_mult scales the
+    #    homophilous TieRewiring rate (0.03 × mult). Left = ties stay mixed (low
+    #    modularity), right = rewiring builds clusters. Sweep: modularity ≈ 0.05 →
+    #    0.11 → 0.19 → 0.26 → 0.32 (even, full span). Requires `modularity` exported
+    #    in _macro (added below). The most visually fun — the cloud literally clusters.
+    "ties":       [{"sandbox_rewire_mult": v} for v in (0.0, 0.5, 1.0, 2.25, 4.0)],
 }
-# center detent per knob = the shipped arc value (so the center cell == the arc):
-# identity ×1.0 (0.02/0.04), elite_gain 1.7689, ε0.40/0.03, contact 0.0, σ0.0478.
-CENTER_IDX = {"identity": 2, "elite": 2, "openness": 1, "contact": 0, "diversity": 1}
+# Center detent of EVERY knob = idx 2 = the shipped arc, so the center cell
+# (all-centered) is bit-identical to the calibrated 1980→2025 baseline.
+CENTER_IDX = {"leaders": 2, "identities": 2, "dailylife": 2, "within": 2, "ties": 2}
 KNOB_LABELS = {
-    "identity": "Mega-identity", "elite": "Elite extremism",
-    "openness": "Open-mindedness", "contact": "Contact & mixing",
-    "diversity": "Within-party diversity",
+    "leaders": "Leaders", "identities": "Identities",
+    "dailylife": "Daily life", "within": "Within each party",
+    "ties": "Social ties",
 }
 
 END = 135
@@ -164,6 +187,9 @@ def _macro(eng, measure_all):
         "aff": round(float(m["affect"]), 3),
         "spread": round(float(np.mean(spreads)) if spreads else 0.0, 3),
         "align": round(float(np.mean(aligns)) if aligns else 0.0, 3),
+        # grid v5: the echo-chamber readout the new `ties` dial owns. measure_all
+        # already computes party_modularity; it just was never exported here.
+        "mod": round(float(m["modularity"]), 3),
     }
 
 

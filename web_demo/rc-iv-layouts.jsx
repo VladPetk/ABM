@@ -643,9 +643,10 @@ function SandboxTimeline({ play }) {
   );
 }
 
-// bottom band for the sandbox: transport in the gutter + the four live outcome
-// READOUTS at the playhead (causes are the dials; these are what they produce —
-// animus & spread are hard to read off the cloud) ABOVE a 1980→2025 scrubber.
+// bottom band for the sandbox: transport in the gutter + the five live outcome
+// READOUTS at the playhead — one per dial (causes are the dials; these are what
+// they produce — animus, spread & echo-chambers are hard to read off the cloud)
+// ABOVE a 1980→2025 scrubber.
 function SandboxBand({ iv, play }) {
   const t = play ? play.tick : window.LAST;
   const m = play && play.macro ? play.macro[Math.max(0, Math.min(window.LAST, Math.round(t)))] : null;
@@ -661,6 +662,7 @@ function SandboxBand({ iv, play }) {
           <SandboxMetric label="Out-party animus" value={m ? -m.aff : null} color={CC.r} />
           <SandboxMetric label="Within-party spread" value={m ? m.spread : null} color={CC.ink2} />
           <SandboxMetric label="Mega-identity" value={m ? m.align : null} color={CC.ink2} />
+          <SandboxMetric label="Echo chambers" value={m ? m.mod : null} color={CC.ink2} />
         </div>
         {play && <SandboxTimeline play={play} />}
       </div>

@@ -228,6 +228,28 @@ function MethodsPage() {
         exception: 87% is the model’s own animus dynamics, with empirical input adjusting only ~13%.
       </Prose>
 
+      <H2>Why only a third? — the saturation ratchet</H2>
+      <Prose>
+        Is that ~38% a weakness we should engineer away? We checked, and the answer is no — it’s telling us something
+        real. Ask the cleanest possible version of the question: take the actual 1980 electorate, freeze where everyone
+        stands on the issues, and just <em>re-label</em> who’s a Democrat and who’s a Republican to pull the two camps as
+        far apart as the 1980 public will allow. That best-case re-sorting reaches separation <strong style={{ color: CC.ink }}>0.66</strong>
+        — but 2025 is <strong style={{ color: CC.ink }}>1.11</strong>. So roughly <strong style={{ color: CC.ink }}>60% of the
+        rise sits above the ceiling of anything you can do by re-arranging the 1980 world</strong> — almost exactly the
+        ~62% the calibrated forcing carries. <strong style={{ color: CC.ink }}>1980 was genuinely calm:</strong> reaching the
+        modern split required real, slow change — elites repositioning, a generation turning over — and the timing of that
+        change is set by history, not by the starting conditions.
+      </Prose>
+      <Prose>
+        Put plainly: <strong style={{ color: CC.ink }}>the model supplies the mechanism; history supplies the timing.</strong>
+        About 38% of the 1980→2025 rise was already latent in the 1980 electorate and emerges from the loop on its own; the
+        rest required 45 years of real change whose timing no model can author from initial conditions. (And the model’s own
+        spontaneous loop already recovers most of that latent 0.66 — there’s no hidden reservoir of “missing” emergence to
+        unlock.) The one channel that <em>does</em> run away on its own is the emotional one — animus has no anchor pulling it
+        back, so it self-amplifies; issue positions are sticky and have to be moved. That 87%-vs-38% gap isn’t a bug; it’s the
+        model faithfully reproducing how the two actually behaved.
+      </Prose>
+
       <H2>Does it hold up out of sample — the holdout</H2>
       <Prose>
         A fit that only reproduces what it was shown proves nothing. So the calibration is checked against data

@@ -161,35 +161,39 @@ function sandboxFromTinker(v) {
   };
 }
 
-// ── sandbox: the 5-knob pre-rendered grid (build_sandbox_data.py) ─────────────
-// Each knob has 5 detents; the values MUST match GRID in build_sandbox_data.py.
-// Data-driven (scripts/sandbox_knob_screen.py): each owns a distinct axis.
-// All five are CAUSES you set; the readouts below (separation, animus, spread,
-// mega-identity) are OUTCOMES you watch. Order MUST match KNOB_ORDER in
-// scripts/build_sandbox_data.py — the cell key is the detent indices joined.
+// ── sandbox: the 5-dial pre-rendered grid (build_sandbox_data.py grid v5) ─────
+// Each dial has 5 detents; the values + ORDER MUST match GRID/KNOB_ORDER in
+// scripts/build_sandbox_data.py (the cell key is the detent indices joined).
+// grid v5 (emergence-recovery v1 polish): each dial OWNS ONE distinct readout,
+// is TWO-SIDED around the arc, and its center detent (idx 2) == the shipped arc,
+// so "all centered" is the calibrated baseline. Owned readouts shown in the
+// bottom band: separation←leaders · mega-identity←identities · animus←dailylife ·
+// within-party spread←within · echo chambers (modularity)←ties.
 const SANDBOX_KNOBS = [
-  { key: 'identity',  name: 'Mega-identity',          stops: ['off', '½×', '1×', '2×', '3×'],          owns: 'how much race, religion & lifestyle line up with party' },
-  { key: 'elite',     name: 'Elite extremism',        stops: ['none', 'low', 'mid', 'high', 'max'],    owns: 'how far apart the party leaders pull' },
-  { key: 'openness',  name: 'Open-mindedness',        stops: ['closed', 'low', 'mid', 'high', 'open'], owns: 'how widely people will hear the other side' },
-  { key: 'contact',   name: 'Contact & mixing',       stops: ['none', 'some', 'lots', 'high', 'max'],  owns: 'how much the two sides mix in daily life' },
-  { key: 'diversity', name: 'Within-party diversity', stops: ['lockstep', 'low', 'mid', 'high', 'free'], owns: 'free-thinking individuals vs marching in lockstep' },
+  { key: 'leaders',    name: 'Leaders',          stops: ['moderate', 'mild', 'arc', 'strong', 'extreme'],     owns: 'moderate ↔ extreme — how far apart the party leaders pull → separation' },
+  { key: 'identities', name: 'Identities',       stops: ['cross-cutting', 'mixed', 'arc', 'aligned', 'stacked'], owns: 'cross-cutting ↔ stacked — how much race, religion & lifestyle line up with party → mega-identity' },
+  { key: 'dailylife',  name: 'Daily life',       stops: ['segregated', 'apart', 'arc', 'mixing', 'integrated'], owns: 'segregated ↔ mixed — how much the two sides share daily life → animus' },
+  { key: 'within',     name: 'Within each party', stops: ['lockstep', 'tight', 'arc', 'loose', 'free'],        owns: 'lockstep ↔ free-thinking — marching in step vs thinking for themselves → within-party spread' },
+  { key: 'ties',       name: 'Social ties',      stops: ['open', 'mixed', 'arc', 'clustered', 'echo'],         owns: 'open ↔ echo-chambered — mixed networks vs sealed echo chambers → modularity' },
 ];
-const SANDBOX_CENTER = [2, 2, 1, 0, 1];   // the shipped arc (center cell of the grid)
-// Presets = named knob-vectors (indices into each knob's stops, in KNOB_ORDER).
+const SANDBOX_CENTER = [2, 2, 2, 2, 2];   // the shipped arc (center detent of every dial)
+// Presets = named dial-vectors (indices into each dial's stops, in KNOB_ORDER).
 // Each preset emulates a recognizable scenario; `note` says WHAT it models.
 const SANDBOX_PRESETS = [
-  { name: 'The shipped arc', vec: [2, 2, 1, 0, 1],
-    note: 'What actually happened — the calibrated 1980→2025 baseline. The center of the grid.' },
-  { name: 'Great Sorting', vec: [4, 4, 0, 0, 0],
-    note: 'Identity stacked, elites maxed, minds closed, no mixing, lockstep ranks — the two camps slam into opposite corners.' },
-  { name: 'Depolarized', vec: [0, 0, 4, 4, 2],
-    note: 'Open minds and real mixing, with identity and elite divergence dialed away — the camps merge into one warmer cloud.' },
-  { name: 'Mega-identity', vec: [4, 2, 1, 0, 1],
+  { name: 'The shipped arc', vec: [2, 2, 2, 2, 2],
+    note: 'What actually happened — the calibrated 1980→2025 baseline. Every dial centered.' },
+  { name: 'Great Sorting', vec: [4, 4, 0, 0, 4],
+    note: 'Extreme leaders, stacked identity, segregated lives, lockstep ranks and sealed echo chambers — the two camps slam into opposite corners.' },
+  { name: 'Depolarized', vec: [0, 0, 4, 4, 0],
+    note: 'Moderate leaders, cross-cutting identities, mixed daily life, free-thinking individuals and open networks — the camps merge into one warmer cloud.' },
+  { name: 'Mega-identity', vec: [2, 4, 2, 2, 2],
     note: 'Race, religion and lifestyle all line up with party — Mason’s mega-identity end-state (the diagonal collapse).' },
-  { name: 'The Great Mixing', vec: [2, 2, 1, 4, 1],
-    note: 'The real arc, but the two sides mix everywhere — they warm to each other even while still disagreeing on the issues.' },
-  { name: 'Free Thinkers', vec: [2, 2, 1, 0, 4],
+  { name: 'The Great Mixing', vec: [2, 2, 4, 2, 2],
+    note: 'The real arc, but the two sides share daily life everywhere — they warm to each other even while still disagreeing on the issues.' },
+  { name: 'Free Thinkers', vec: [2, 2, 2, 4, 2],
     note: 'The real arc, but everyone thinks for themselves — the party clouds blur and the hard edges soften.' },
+  { name: 'Echo Chambers', vec: [2, 2, 2, 2, 4],
+    note: 'The real arc, but social ties seal into homophilous clusters — the network fractures into separate worlds.' },
 ];
 
 // ── shared state ─────────────────────────────────────────────────────────────
