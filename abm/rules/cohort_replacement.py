@@ -171,6 +171,12 @@ class CohortReplacement:
                     a, cohort, env, rng, by_party_affect_mean,
                     by_party_identity_mean,
                 )
+            # reality-validation: stamp the entrant's birth_year so the
+            # common-mode channel's m(t) declines as young cohorts enter.
+            # Drawn after the reseed so the reseed draws are unperturbed.
+            if env.attrs.get("cultural_common_mode"):
+                from .cultural_common_mode import replacement_birth_year
+                a.state.attrs["birth_year"] = replacement_birth_year(tick, rng)
             if replacement_log is not None:
                 replacement_log.append([int(tick), int(a.id)])
 

@@ -43,6 +43,9 @@ from ..core.state import AgentState
 from ..rules.affective_update import AffectiveUpdate
 from ..rules.mediated_animus import MediatedAnimus
 from ..rules.cohort_replacement import CohortReplacement
+from ..rules.cultural_common_mode import (
+    CommonModeCulture, sample_initial_birth_years,
+)
 from ..rules.elite_drift import EliteDrift
 from ..rules.faction_anchor import FactionAnchor
 from ..rules.identity_prime import IdentityPrimeExpiry
@@ -640,6 +643,21 @@ def build_engine(
     # Any non-1.0 value emits a DeprecationWarning and is ignored — the
     # shipped 1.6 is folded into PARTY_CUE_SIGMA_HISTORICAL_ANES.
     tier_d_anes_sigma_pc_multiplier: float = 1.0,
+    # reality-validation workstream (branch model-reality-validation) —
+    # CommonModeCulture: the society-wide cultural baseline channel. The engine
+    # had only a differential (sorting) channel on the cultural axis, pinning the
+    # cultural center near 0; the ANES+GSS validation showed the partisan center
+    # of mass sits ~0.1-0.2 too progressive mid-period (validation/REPORT.md).
+    # When True, agents carry a birth_year and the cultural common mode m(t) =
+    # mean generational baseline emerges from cohort turnover (see
+    # abm/rules/cultural_common_mode.py). Default False → channel not installed,
+    # no birth_year seeded → bit-identical to head.
+    cultural_common_mode: bool = False,
+    # Optional override of the cohort replacement rate (default
+    # COHORT_REPLACEMENT_RATE = 0.003). The common-mode channel needs
+    # demographically realistic turnover (~0.006-0.008) for m(t) to move enough;
+    # None keeps the historical rate (bit-identical).
+    cohort_replacement_rate: float | None = None,
     # Phase 9 §11.7-C — IdentityToIdeologyPull strengths (Mason 2018
     # mega-identity → ideology channel). Default 0.0 → bit-identical
     # no-op. The rule is in the pipeline unconditionally but it skips
@@ -1437,6 +1455,17 @@ def build_engine(
         gingrich_drift_asymmetric = None
 
     party_centers = {pid: c.copy() for pid, c in party_centers_active.items()}
+
+    # reality-validation: seed each agent's birth_year for the common-mode
+    # cultural channel. Dedicated rng so the main stream (and thus the default
+    # path) is untouched. Initial population = the 1980 adult electorate, centered
+    # so the mean generational baseline ≈ ANES 1986 partisan cult (+0.10).
+    if cultural_common_mode:
+        _by_rng = np.random.default_rng(20_000_003 + seed)
+        _births = sample_initial_birth_years(len(agents), _by_rng)
+        for _a, _b in zip(agents, _births):
+            _a.state.attrs["birth_year"] = float(_b)
+
     env = Environment(attrs={
         # Step 1 (web_demo evidence re-grade) — master gate + derived
         # params. Read by the social-media events, the Gingrich-1994 /
@@ -1564,6 +1593,10 @@ def build_engine(
         "tier_d_cohort_y_signs_fix": bool(
             tier_d_axis_balance and tier_d_cohort_y_signs_fix
         ),
+        # reality-validation: common-mode cultural channel. Read by
+        # CohortReplacement (to stamp birth_year on entrants) and by
+        # CommonModeCulture. False → no birth_year, channel absent, bit-identical.
+        "cultural_common_mode": bool(cultural_common_mode),
         # Step 5 (web_demo jumpiness): opinion-momentum coefficient read
         # by Engine.step. 0.0 → off (bit-identical). Demo preset: 0.4.
         "momentum": float(momentum),
@@ -1852,7 +1885,10 @@ def build_engine(
         ResidentialMigration(
             migration_rate=RESIDENTIAL_MIGRATION_RATE_DEFAULT,
         ),
-        CohortReplacement(replacement_rate=COHORT_REPLACEMENT_RATE),
+        CohortReplacement(
+            replacement_rate=(COHORT_REPLACEMENT_RATE
+                              if cohort_replacement_rate is None
+                              else float(cohort_replacement_rate))),
         # web_demo Step 2 companion: lets immune (do_not_replace)
         # characters convert party by sustained ideological drift. Strict
         # no-op when no agent is protected → bit-identical for pillars +
@@ -1894,6 +1930,13 @@ def build_engine(
     # bit-identical. It self-gates on an empty ledger regardless.
     if exogenous_shocks:
         env_rules.append(ShockRelaxation())
+
+    # reality-validation: the common-mode cultural channel. Runs LAST in the env
+    # phase (after the elite cue updates the centroids) so the rigid frame shift
+    # carries positions, anchors, cues and elite centroids together. Absent on
+    # the default path → bit-identical.
+    if cultural_common_mode:
+        env_rules.append(CommonModeCulture())
 
     # Sanity: at most one instance per class.
     seen: set[str] = set()

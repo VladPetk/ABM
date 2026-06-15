@@ -1964,6 +1964,70 @@ mild 2010 overshoot + marginally tight late within-party spread; emergence lags
 ANES at 1994; late timing not out-of-sample predictable (holdout cut 1 +
 dark-matter spontaneous floor).
 
+### 5.30 reality-validation — the common-mode cultural channel (2026-06)
+
+An **independent** validation harness (`validation/`, built from scratch against
+**raw** ANES + GSS, deliberately not reusing `tests/` or the arc golden tests)
+re-checked the shipped arc against real-world survey data, ten stylized facts
+graded year-by-year. It first reproduced the existing ANES derivation **exactly**
+(`validation/anes_from_raw.py`, max diff 0.0000 vs `party_centroids.csv`), so the
+anchor is trustworthy, then found one real failure concentrated entirely on the
+**cultural axis**: the partisan **center of mass** sat ~0.10–0.20 too progressive
+in the mid-period (worst ~1996–2000), even though party *separation*, axis
+*correlation*, affect *shape*, and within-party *spread* all passed. Real voters
+were culturally **traditional** in the 80s/90s (ANES partisan cult +0.10→+0.22;
+GSS public traditionalism z +0.2) and liberalized only in the 2010s. The endpoint
+(2020s) matched — which is why the endpoint-anchored §11 band gates were blind to
+it (and why the four-cut temporal holdout fails). The visible symptom was the
+Republican cloud's lower-left tail spilling into the progressive-redistributive
+quadrant (model R-in-LL @2000 ≈ 15% vs ANES 8%).
+
+**Diagnosis (mechanism, not parameter).** The engine had a *differential*
+(party-sorting) channel but **no common-mode** channel on the cultural axis: the
+symmetric endogenous elite loop (§5.29) keeps the two elites' midpoint ≈ 0 and
+`PartyPull` drags the mass to track it, so cultural position was effectively
+collapsed onto party. The literature's dominant driver of secular cultural change
+— **cohort replacement** (~69% per a GSS 1972–2024 age–period decomposition;
+Firebaugh & Davis 1988, Brooks & Bolzendahl 2004, Baunach 2012; the remaining
+~31% is within-cohort period drift) — could not register: an experiment steepening
+the existing (already correctly-signed) cohort gradient moved the center by
+**nothing**, because party pull washes out generational signal at the historical
+turnover rate.
+
+**The fix (`abm/rules/cultural_common_mode.py`, gated `cultural_common_mode`).**
+Each agent carries a `birth_year`; its cultural baseline follows the **measured
+ANES birth-cohort gradient** (born 1910s ≈ +0.17 traditional → born 2000s ≈ −0.29
+progressive, ≈ −0.044 compass/decade). The society-wide common mode `m(t)` = the
+population-mean baseline declines **emergently** as traditional cohorts turn over
+(turnover raised to 0.007/tick ≈ 2.1%/yr, demographically realistic; mean-birth
+advance ~0.95/yr vs the real ~0.85). It is expressed as a rigid shift of the **7D
+issue vector** — `ideology` is re-projected from `issues` every tick (engine.step),
+so an `ideology`-only shift would be cosmetic; and since `project(lift([0,d]))≡[0,d]`
+the shift is an exact, **sorting-invariant** rigid cultural translation. **Only two
+demographic primitives are fed** — the generational gradient (a measured per-cohort
+fact) and the turnover rate — never the aggregate trajectory, which emerges.
+Provenance: **L** (cohort-replacement mechanism) + **N** (the common-mode
+expression). Pre-fix config preserved as `ANES_FULL_ENDOGENOUS_KWARGS`; canonical
+is now `ANES_FULL_COMMONMODE_KWARGS`.
+
+**Results (measure-then-bless).** New battery 6 FAIL+1 WARN → **3 FAIL+7 PASS**
+(F1 R-traditionalism, F3 econ-separation, F4 cultural-back-loading, F6
+axis-correlation all flip to PASS; F0/F2 downgraded CRITICAL→HIGH). Sorting is
+**preserved or improved** (party_sep @2000 0.45→0.52, @2024 1.09→1.05; corr @2024
+0.77→0.81). The established gates are **neutral**: pytest suite green (the band
+guards are too loose to even register the cultural center — itself a finding);
+ANES scorecard 17/24 (was 18, the one cell is the orthogonal pre-existing
+affect-too-cold issue; issue-constraint cells improved 3/4→4/4); **phase10
+intervention buckets unchanged** (X1 backfire / X6 affect-real / X5 null-null /
+rest null — the library is robust to the fix). **Honest residual:** the three
+remaining HIGHs (F0/F2/F5) are because the battery targets the ANES partisan
+center, which carries a mid-90s "+0.22 hump" that **GSS does not corroborate**
+(GSS partisan ≈ +0.07 at 1996, which the fix matches almost exactly). Pushing the
+common mode higher to "pass" those cells would over-fit a non-robust ANES
+item-composition artifact — refused under measure-then-bless. Full trail:
+[`validation/REPORT.md`](../validation/REPORT.md) +
+[`validation/FIX_INVESTIGATION.md`](../validation/FIX_INVESTIGATION.md).
+
 ---
 
 ## 6. What the model is for

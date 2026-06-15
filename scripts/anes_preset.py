@@ -179,11 +179,31 @@ ANES_FULL_ENDOGENOUS_KWARGS = {
 }
 
 
-# === E5 CANONICAL FLIP ===================================================
-# The shipped/measured config is now the ENDOGENOUS loop. Every consumer
-# (publish_web_data, phase10_measure, phase9_anes_score, realism_battery,
-# build_sandbox_data, conftest, audit_lib, ...) imports ANES_FULL_KWARGS, so
-# this single alias flips them all. To REVERT the entire E5 flip, point this
-# back at ANES_FULL_FED_KWARGS (and re-bless). FED-mechanism guards that must
-# keep testing the fed channels import ANES_FULL_FED_KWARGS directly.
-ANES_FULL_KWARGS = ANES_FULL_ENDOGENOUS_KWARGS
+# === reality-validation: COMMON-MODE CULTURAL CHANNEL ===================
+# The from-scratch ANES+GSS battery (validation/) found the engine's only real
+# failure was the cultural axis: no society-wide common-mode channel, so the
+# partisan cultural center of mass sat ~0.1-0.2 too progressive mid-period (the
+# Republican-cloud-in-the-progressive-quadrant artefact). The fix adds an EMERGENT
+# common mode — agents carry a birth_year; the cultural baseline m(t) = mean
+# generational gradient (measured ANES birth-cohort fact) declines as traditional
+# cohorts turn over (the dominant real driver, ~69% per GSS APC decomposition).
+# Only demographic primitives are fed (gradient + turnover rate); the trajectory
+# emerges. Turnover 0.007 ≈ 2.1%/yr (mean-birth advance ~0.95/yr, near the real
+# ~0.85). Battery: 6 FAIL+1 WARN -> 3 FAIL (all downgraded)+7 PASS; sorting
+# preserved/improved. See abm/rules/cultural_common_mode.py + validation/.
+# The pre-fix endogenous config is preserved as ANES_FULL_ENDOGENOUS_KWARGS.
+ANES_FULL_COMMONMODE_KWARGS = {
+    **ANES_FULL_ENDOGENOUS_KWARGS,
+    "cultural_common_mode": True,
+    "cohort_replacement_rate": 0.007,
+}
+
+
+# === CANONICAL FLIP =====================================================
+# The shipped/measured config. Every consumer (publish_web_data, phase10_measure,
+# phase9_anes_score, realism_battery, build_sandbox_data, conftest, audit_lib,
+# ...) imports ANES_FULL_KWARGS, so this single alias flips them all. To REVERT,
+# point this back at ANES_FULL_ENDOGENOUS_KWARGS (the pre-common-mode E5 config)
+# or ANES_FULL_FED_KWARGS (pre-E5). FED-mechanism guards import
+# ANES_FULL_FED_KWARGS directly.
+ANES_FULL_KWARGS = ANES_FULL_COMMONMODE_KWARGS

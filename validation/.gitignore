@@ -1,0 +1,6 @@
+# Large/intermediate run dumps and logs — regenerable, not part of the harness.
+*.log
+run_baseline.json
+run_emergent.json
+phase10_commonmode.json
+exp_cohort_results.json

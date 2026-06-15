@@ -1,9 +1,21 @@
 # Phase 10 — Landing Summary
 
 *Status: shipped. Intervention library (X1–X7) redesigned against
-the Phase 9 ANES-recalibrated engine. Last updated 2026-06-14
-(emergence-recovery E5.5 — re-measured on the ENDOGENOUS canonical config).*
+the Phase 9 ANES-recalibrated engine. Last updated 2026-06-15
+(reality-validation — re-measured on the COMMON-MODE canonical config).*
 
+> **✅ reality-validation — RE-MEASURED on the common-mode canonical config
+> (2026-06-15; methods §5.30).** The reality-validation workstream added an
+> emergent common-mode cultural channel (`ANES_FULL_COMMONMODE_KWARGS`,
+> `cultural_common_mode=True`, turnover 0.007) that fixes the mid-period cultural
+> center-of-mass error. X1–X7 were re-measured (9 seeds × 4 release decades, 288
+> runs). **Every bucket is UNCHANGED** — the library is robust to the cultural fix:
+> **X1 backfire** (Δsep +0.13→+0.22 across decades), **X6 affect real**
+> (Δaff partial@1990 → real@2000/2010/2020, +0.11→+0.22), **X5 null/null**,
+> **X2/X3/X4/X7 null**. No tag moved. Falsification: same pre-existing X7 misses
+> (now 1990/2000/2020 — the known "perception-correction too weak" limitation,
+> not a tag change). The §2 scoreboard remains valid.
+>
 > **✅ emergence-recovery E5.5 — RE-MEASURED on the endogenous canonical config
 > (2026-06-14).** After the E5 canonical flip (positional sorting now EMERGES
 > from the activist→elite→mass loop instead of replaying fed centroids —

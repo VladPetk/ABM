@@ -348,7 +348,16 @@ replacement); Phillips 2022 (*Political Behavior*), Stoker 2020, Boxell,
 Gentzkow & Shapiro 2017/2021 — three independent APC studies converging that
 **affective polarization is a period effect** (out-party warmth fell across all
 cohorts at once, fastest among the oldest/least-online); Firebaugh (linear
-decomposition method).
+decomposition method). **Reality-validation workstream (2026-06):** the
+*cultural*-attitude liberalization was re-measured from raw GSS 1972–2024
+(`validation/gss_cohort.py`, WTSSALL-weighted homosex/premarsx/abany/fefam/grass
+z-index) — a Firebaugh-style birth-year × survey-year decomposition attributes
+**~69% to cohort replacement, ~31% to within-cohort period drift** (consistent
+with Baunach's ~⅓). The companion **ANES birth-cohort cultural gradient**
+(`validation/`, born 1910s ≈ +0.17 traditional → born 2000s ≈ −0.29 progressive,
+≈ −0.044 compass-units/decade) is the demographic primitive fed to the engine's
+common-mode cultural channel (`abm/rules/cultural_common_mode.py`; the aggregate
+secular trend emerges from turnover, not from a fed trajectory — methods §5.30).
 
 **Top-down elite→mass chain.** McCarty, Poole & Rosenthal *Polarized America*;
 Hacker & Pierson "Confronting Asymmetric Polarization"; Mann & Ornstein;
