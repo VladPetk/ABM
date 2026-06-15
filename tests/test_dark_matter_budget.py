@@ -86,20 +86,29 @@ def budget_fractions() -> dict[str, float]:
     return out
 
 
-# emergence-recovery E5.7 — the all-frozen-no-events floor is the SPONTANEOUS
-# floor (the loop at 1980 mobilization, every schedule + event frozen). On the
-# endogenous config positional sorting is the AMPLIFICATION of an exogenous,
-# event-timed activist-mobilization forcing (the force-calibration diagnostic
-# proved a constant-drive loop cannot produce the accelerating ANES shape at any
-# strength), so freezing that forcing leaves only ~0.38 of party_sep / ~0.34 of
-# identity_alignment (honesty_budget.json `free_flowing`; the SAME finding
-# the holdout temporal cut exposes — docs/results/e5_holdout.md). The 0.60 floor
-# is NOT met for these two. We do NOT silently lower it: the escape hatch
-# requires a holdout-VALIDATED fit, and the endogenous holdout fails 1/3. So this
-# is recorded as a documented xfail (methods §5.29 / blindspot #7), pending the
-# time-evolving-direction refinement. affect (its own mechanism, ~0.87) still
-# hard-asserts. xfail is non-strict so an improved fit that clears the floor
-# surfaces as XPASS rather than masking a regression.
+# emergence-recovery — the all-frozen-no-events floor is the SPONTANEOUS floor
+# (the loop at 1980 mobilization, every schedule + event frozen). On the endogenous
+# config positional sorting is the AMPLIFICATION of an exogenous, event-timed
+# activist-mobilization forcing (the force-calibration diagnostic proved a
+# constant-drive loop cannot produce the accelerating ANES shape at any strength),
+# so freezing that forcing leaves only ~0.38 of party_sep / ~0.34 of
+# identity_alignment (honesty_budget.json `free_flowing`; the SAME finding the
+# holdout temporal cut exposes — docs/results/e5_holdout.md). The 0.60 floor is NOT
+# met for these two.
+#
+# This xfail is a DOCUMENTED FINDING, not an open failure (the saturation-ratchet
+# finding, methods §5.29.1 / blindspot #7). The 62% forcing-dependence was
+# pressure-tested and is a PROPERTY of mass polarization at this layer, not a
+# refinable shortcut: the optimal re-label of the fixed 1980 seed tops out at
+# party_sep 0.66 ≪ the 1.11 end-state, so ~60% of the rise provably exceeds what
+# any re-arrangement of the calibrated 1980 world can yield (≈ the 62% forcing
+# share). Reproduce: scripts/audit/latent_separation.py
+# (docs/results/latent_separation.md). The DECISION is to keep the endogenous flip
+# and document the finding, NOT to chase the floor — so we do NOT silently lower the
+# 0.60 bar (its escape hatch requires a holdout-VALIDATED fit, which this is not).
+# affect (its own mechanism, ~0.87) still hard-asserts. xfail is non-strict so an
+# improved fit that clears the floor surfaces as XPASS rather than masking a
+# regression.
 _FORCING_CARRIED = {"party_sep", "identity_alignment"}
 
 
@@ -109,9 +118,11 @@ def test_dark_matter_floor(budget_fractions, metric):
     if metric in _FORCING_CARRIED and frac < FLOORS[metric]:
         pytest.xfail(
             f"{metric}: endogenous spontaneous floor {frac:.2f} < {FLOORS[metric]:.2f} "
-            "— positional sorting amplifies an exogenous mobilization forcing; "
-            "documented limitation (methods §5.29, e5_holdout.md), not a silent "
-            "floor change."
+            "— documented saturation-ratchet FINDING, not an open failure: positional "
+            "sorting amplifies an exogenous mobilization forcing because ~60% of the "
+            "rise provably exceeds the 0.66 latent re-label ceiling of the calibrated "
+            "1980 seed (methods §5.29.1, latent_separation.md, e5_holdout.md). "
+            "Decision: keep + document, not a silent floor change."
         )
     assert frac >= FLOORS[metric], (
         f"{metric}: only {frac:.2f} of the 1980->2025 change survives the "

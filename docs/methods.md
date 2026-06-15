@@ -1848,17 +1848,115 @@ by feeding the centroid trajectory, whereas the endogenous late-period **timing*
 rides the exogenously-calibrated mobilization schedule and is *not* predictable
 from early dynamics (consistent with the budget: only ~38% of `party_sep` is the
 spontaneous loop floor; ~62% is the fitted forcing). **The model explains the
-mechanism but not the timing.** A failed band is a finding, not a retune (the E4
-point is fixed); the **time-evolving / balanced realignment direction** is the
-logged refinement candidate (would lower the 2010 overshoot, the axis
-over-correlation, and possibly the temporal gap).
+mechanism but not the timing** — which §5.29.1 shows is a property of mass
+polarization at this layer, not a fixable shortcoming. A failed band is a finding,
+not a retune (the E4 point is fixed). Two candidate refinements were pressure-tested
+and **declined for v1** (`docs/internal/` honesty memos): a *time-evolving* `align_u`
+that interpolates the per-wave ANES party-gap direction is a **fed answer** (the axis
+rotation *is* the realignment the model should explain) and additionally circular with
+the measurement axis — refused; only a *static balanced two-axis* loop is defensible,
+and it would address the corr(x,y) over-correlation as a **realism** change (a second
+fixed exogenous direction + a second mobilization schedule) that adds fitted forcing
+and does **not** fix the timing. Both are deferred, not adopted.
 
 The same forcing-dependence trips the **dark-matter floor** gate
 (`tests/test_dark_matter_budget.py`): the all-frozen-no-events *spontaneous*
 floor is 0.38 (party_sep) / 0.34 (identity_alignment), below the 0.60 bar
 (affect 0.87 clears it). This is **not** silently lowered — the floor's escape
 hatch requires a holdout-validated fit, which this is not — so those two metrics
-are recorded as documented **xfails** pointing here, pending the refinement.
+are recorded as documented **xfails** pointing here.
+
+#### 5.29.1 The saturation-ratchet finding (the I4 dark-matter decision: keep, document)
+
+The 38% spontaneous floor reads, at first, like a defect to refine away — for a
+model whose headline is *emergence*, the majority of `party_sep` riding a fitted
+forcing is the soft spot. We pressure-tested whether it is refinable and concluded
+it is a **measurement of a real property, not a modeling shortcut**. The decision
+is therefore to **keep the endogenous flip and document this as the result** — *not*
+to keep refining the loop toward a bigger emergent number. The reasoning, with the
+load-bearing numbers measured offline (positions fixed, real seeded 1980 IC,
+canonical endogenous config; `scripts/audit/latent_separation.py`,
+[`docs/results/latent_separation.md`](results/latent_separation.md)):
+
+The honest question is whether the 62% is a *framing artifact*: the model routes
+all positional sorting through `PartyPull` (agents **move**) and omits endogenous
+party **re-sorting** (agents keep their sticky FJ-anchored positions but **re-label**
+their party — the empirically central "great sort"). If much separation were already
+latent in the 1980 seed, recoverable by re-labeling alone, the forcing would be
+absorbing share an emergent re-sorting channel should carry. So we **measured the
+ceiling of that latent pool:**
+
+| quantity | party_sep | share of 1980→2025 rise |
+|---|---|---|
+| engine 1980 baseline (as built) | 0.36 | — (≈ ANES 1980) |
+| **optimal re-label** (positions fixed, D/R counts preserved, best direction) | **0.66** ± 0.03 | **+40%** |
+| realistic re-label (½–¾ of cross-pressured sort) | 0.60–0.65 | +32–38% |
+| spontaneous loop, mobilization ramp OFF | 0.55–0.57 | +21–28% |
+| **full arc (with the fitted forcing)** | **1.11** | **+100%** |
+| ANES 2025 target | 1.11 | +100% |
+
+The prize **collapses**, three ways:
+
+1. **Re-labeling cannot reach the end-state.** The optimal re-label of the fixed
+   1980 distribution tops out at **0.66**, while 2025 is **1.11**: **~60% of the
+   1980→2025 rise sits *above* the absolute ceiling** of any re-labeling of the 1980
+   positions — almost exactly the **62% fitted-forcing share**. The part re-sorting
+   provably *cannot* make (positions more separated than 1980's ever were) is the
+   part the forcing makes. Forcing-dependence is therefore **not** a modeling
+   shortcut; it is the share of the rise that provably exceeds what re-arranging the
+   1980 world can yield. **1980 was genuinely calm** (latent ceiling 0.66 ≪ 1.11), so
+   reaching 2025 required real positional/compositional change whose timing is
+   externally paced.
+2. **The dynamics already extract most of the latent structure.** The spontaneous
+   loop (mobilization ramp off) already reaches ~0.55, i.e. **~83–86% of the 0.66
+   re-sort ceiling** — so an explicit re-sorting channel's *incremental* headroom over
+   what the model already does spontaneously is small (and hard-capped at 0.66).
+3. **The latent prize ≈ the emergent floor we already report.** The re-sort ceiling
+   as a share of the rise (~37–40%) lands right on the **~38% spontaneous floor** the
+   budget quotes: the model's spontaneous emergence already ≈ the latent re-sortable
+   separation in the 1980 seed. There is no hidden un-extracted pool for re-sorting to
+   convert.
+
+**Direction check (no fed-axis artifact).** The latent separation lies on the
+population's **own** principal axis (PC re-label **0.659**) which is essentially
+identical to the fed `align_u` re-label (**0.658**) and the plain economic x-axis
+(**0.643**); the angle-sweep maximum (0.660 at ~22°) sits between `align_u` (~17°)
+and the emergent PC (~26°). The unlockable structure is robustly the **economic
+cleavage**, recovered the same way whether by the population's own axis or the fed
+axis — we are **not** re-measuring the answer we fed.
+
+**The affect (87%) vs party_sep (38%) asymmetry is a FEATURE, not an artifact.**
+Affect has three structural properties positions lack, and they are *empirically*
+correct: (i) **no anchor** — affect deltas accumulate with no FJ/stubbornness damping
+and no pull to a baseline, while every position-moving rule is multiplied by
+`(1−stubbornness)` and FJ-anchored to 1980 (positions are sticky — Converse — *that's
+why FJ is there*); (ii) a **monotone cooling floor** — every out-party encounter cools
+by at least `baseline`, a one-way ratchet positions have no equivalent of; (iii)
+**self-amplification** — animus scales with disagreement × own alignment × threat and
+feeds back through affect-weighted tie-rewiring. So affect free-runs and self-organizes
+while issue positions are sticky and externally paced. The 87/38 gap is the model
+**faithfully reproducing a real asymmetry** (affect polarized autonomously and ran
+away; positions sorted slowly under elite/institutional pacing + turnover) — and it is
+the strongest single piece of evidence that the 38% is real.
+
+**The honest residual mechanism (realism, not emergence).** Endogenous party
+re-sorting *is* a genuine missing mechanism (the mass party label is fixed at build;
+`ProtectedPartyRealignment` is gated to spotlight characters only). It is worth
+building **later, for realism** — it faithfully renders the great sort and is
+FJ-compatible — but it is **not** an emergence-floor lever and must not be sold as
+one: it raises the emergent fraction of the *magnitude* not the *timing*, so it
+**will not fix the temporal holdout (cut 1)**; its emergence is emergence-*of-sorting*,
+not of-extremity; and it is **hard-capped at 0.66 ≪ 1.11**. (The bistable-loop and
+time-evolving-axis refinements were separately pressure-tested and rejected as either
+empirically unwarranted at the scored mass layer or as fed-answer/forcing-inflating —
+see [`docs/internal/`](internal/) memos; the axis decouple is a scoring-only no-op on
+this rotation-invariant metric.)
+
+**Headline framing (for the docs and the web honesty panel):** *The model supplies
+the mechanism; history supplies the timing. ~38% of the 1980→2025 rise was already
+latent in the 1980 electorate and emerges from the loop on its own; the rest required
+45 years of real change whose timing no model can author from initial conditions.*
+"Explains the mechanism, not the timing" is the **result**, not an open to-do.
 
 **Residuals carried (documented, not hidden):** early over-animus (blindspot #1,
 unchanged); axis over-correlation corr(x,y)~0.78 (the single-axis loop's cost);

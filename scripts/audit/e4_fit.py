@@ -14,8 +14,18 @@ the 2010s acceleration + the endpoint), on `endogenous_elite=True` with events:
 ABC-rejection: sample the prior, simulate (multi-seed), score vs the ANES bands
 (s4_targets), keep the best acceptance fraction, report the median posterior + the
 single best point + its trajectory. Reuses the committed targets + the parallel
-runner. SBC/ridge is NOT run here (ABC point + shrinkage only — a documented
-simplification vs s4_fit's NPE machinery); the four-cut holdout is E4's validation.
+runner.
+
+**v1 KNOWN SHORTCUT (parked — emergence-recovery v1 polish, outstanding item #2).**
+SBC/ridge is NOT run here: this is an ABC point + shrinkage only, a documented
+simplification vs `s4_fit`'s NPE+SBC+coverage machinery. The endogenous E4 fit is
+validated by the four-cut holdout (`e5_holdout.md`), not by a full simulation-based
+calibration check. A proper NPE + SBC-uniformity + coverage pass on the endogenous
+loop is a deliberately deferred v1 limitation — the fitted point is one defensible
+point, its posterior uncertainty / identifiability are not characterized here. This
+does not affect the emergent/forcing budget or the saturation-ratchet finding
+(methods §5.29), which are freeze-decomposition measurements independent of the fit's
+uncertainty quantification.
 
 Run (spawn-safe — file, never stdin):
   PYTHONPATH=. .venv/Scripts/python.exe scripts/audit/e4_fit.py --draws 1500 --seeds 3

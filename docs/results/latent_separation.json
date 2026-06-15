@@ -1,0 +1,75 @@
+{
+  "_provenance": "Emergence-recovery v1 polish \u2014 latent-separation diagnostic on the ENDOGENOUS canonical config (ANES_FULL_KWARGS). Static re-label over 8 seeds (IC only); dynamic over 3 seeds (full arc). Reproduce: PYTHONPATH=. python scripts/audit/latent_separation.py. Compared against docs/internal/emergence_floor_levers_menu.md.",
+  "static_seeds": 8,
+  "dynamic_seeds": 3,
+  "summary": {
+    "baseline_1980": 0.3566,
+    "optimal_ceiling": 0.6597,
+    "optimal_ceiling_share_of_rise": 0.4023,
+    "spontaneous_ramp_off": 0.5654,
+    "spontaneous_share_of_rise": 0.2772,
+    "full_arc": 1.1077,
+    "full_arc_share_of_rise": 0.9969,
+    "anes_2025_target": 1.11,
+    "above_ceiling_share_of_rise": 0.5977,
+    "spontaneous_pct_of_ceiling": 0.8572
+  },
+  "static": {
+    "baseline": [
+      0.35655076368364536,
+      0.049646450965930226
+    ],
+    "optimal": [
+      0.6596524318032229,
+      0.031072685826741497
+    ],
+    "optimal_angle_deg": [
+      21.875,
+      3.6206870894900596
+    ],
+    "realistic_half": [
+      0.5997212128513956,
+      0.03102678724868275
+    ],
+    "realistic_threequarter": [
+      0.6452508173608205,
+      0.030342457786610155
+    ],
+    "cross_pressured_share": [
+      0.3102272727272727,
+      0.04051259879539976
+    ],
+    "direction_check": {
+      "principal_axis": [
+        0.6591337408577972,
+        0.030982058752716545
+      ],
+      "principal_axis_angle_deg": [
+        26.363958802821216,
+        2.6765553189422673
+      ],
+      "fed_align_u": [
+        0.6579914481637166,
+        0.03080054281876805
+      ],
+      "fed_align_u_angle_deg": [
+        16.775300221562784,
+        0.0
+      ],
+      "economic_x_axis": [
+        0.6432566245061639,
+        0.02770818339091115
+      ]
+    }
+  },
+  "dynamic": {
+    "spontaneous_ramp_off": [
+      0.565426613810366,
+      0.1328746808071431
+    ],
+    "full_arc": [
+      1.1076895899984838,
+      0.060967382627760684
+    ]
+  }
+}

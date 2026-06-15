@@ -131,12 +131,6 @@ PARTY_CENTERS_PRE_REAGAN_ANES = {
     0: np.array([-0.05, +0.05]),
     1: np.array([+0.18, +0.10]),
 }
-# ANES 1986-88 measured centroids — kept for documentation / target
-# verification. Engine should drift to roughly these values by tick 21.
-PARTY_CENTERS_1986_ANES = {
-    0: np.array([-0.09, +0.05]),
-    1: np.array([+0.27, +0.23]),
-}
 # Backward-compat alias (still consumed by the cohort_anchor code path
 # and other §11.7-B/C/D helpers as the "active centroid").
 PARTY_CENTERS_1980_ANES = PARTY_CENTERS_PRE_REAGAN_ANES
@@ -2562,16 +2556,6 @@ def _combined(*funcs):
         for f in funcs:
             f(engine)
     return fn
-
-
-# Tick layout.
-DECADE_BOUNDARIES = {
-    1990: 30,
-    2000: 60,
-    2010: 90,
-    2020: 120,
-    2025: 135,
-}
 
 
 def initial_tick() -> int:
