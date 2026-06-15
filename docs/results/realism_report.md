@@ -32,10 +32,14 @@ Reproduce: `.venv/Scripts/python.exe scripts/audit/realism_battery.py --seeds 9`
 
 **Positional sorting now EMERGES and the model stays substantially realistic.**
 The whole point of E5: party separation and identity alignment are produced by
-the endogenous loop, not replayed from fed centroids — the honesty budget
-(`honesty_budget.json`, E5.2) puts `party_sep` at **1.00 loop-attributable**
-(was ~0 emergent / 1.06 input-carried) and `identity_alignment` at **0.95** (was
-~0.02). Freezing the loop collapses `party_sep` to the 1980 seed.
+the endogenous loop, not replayed from fed centroids. Freezing the loop collapses
+`party_sep` to the 1980 seed (so the loop is the generative mechanism), and the
+fed-POSITION channel is ~0 (was ~1.0 input-carried). But the loop's pace is set
+by an ANES-calibrated mobilization forcing, so the honest budget
+(`honesty_budget.json`, E5.8) splits each rise into free-flowing vs empirical
+input: `party_sep` **0.38 free-flowing / 0.62 empirical**, `identity_alignment`
+**0.34 / 0.66**, `affect` **0.87 / 0.13**. The panel does not claim "wholly
+emergent" — the mechanism is the model's, the timing is calibrated.
 
 The realism **cost** of dropping the fed answer is real, modest, and documented:
 the §11 scorecard goes **21/24 → 18/24** (still PASS ≥18), the joint-distribution

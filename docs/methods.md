@@ -1807,13 +1807,23 @@ weighted tail mean, leapfrog gain, `tanh` ceiling, the mobilization schedule
 shape) **[N]**. The eight magnitudes and the compounded arc **[E]**.
 
 **Re-bless cascade (measure-then-bless, all on the endogenous config).**
-- **Honesty budget (the WIN)** — `party_sep` emergent **1.00** (loop-attributable;
-  freezing the loop collapses sep to the 1980 seed), input ~0; `identity_alignment`
-  emergent **0.95**, input ~0; `affect` 0.87 emergent (own mechanism, unchanged).
-  Was −0.04 / 0.02 emergent, ~1.0 input-carried. `honesty_budget.json`,
-  `scripts/audit/t35_budget_brake.py` (added the `endogenous_loop` freeze handle;
-  "emergent" reframed to loop-attributable for sep/identity, spontaneous-floor
-  for affect).
+- **Honesty budget (the WIN, with the honest empirical-input split — E5.8).** The
+  fed-POSITION channel is gone: `fed_positions` ~0 for every metric (was ~1.0
+  input-carried for sep/identity — the "feed the answer" channel). Freezing the
+  whole loop collapses sep to the 1980 seed (`loop_attributable` 1.00 / identity
+  0.95), so the loop is the generative mechanism. BUT the panel does **not** claim
+  "wholly emergent / 0 empirical input": the loop's pace is set by an ANES-
+  calibrated mobilization forcing, so the honest two-way split of each rise is
+  **free_flowing** (mechanism with every empirical/external driver removed) vs
+  **empirical_input** = `(rise_with − rise_sans)/rise_with` (how much the
+  calibrated forcing — mobilization timing + dated events + media — adjusts it).
+  Measured (6 seeds, rise-based): `party_sep` free-flowing **0.38** / empirical
+  input **0.62**; `identity_alignment` **0.34 / 0.66**; `affect` **0.87 / 0.13**
+  (its own mechanism). The empirical input is **timing/intensity, not positions**
+  (legitimate forcing) — but it is real and shown, not rounded to zero.
+  `honesty_budget.json`, `scripts/audit/t35_budget_brake.py` (the `endogenous_loop`
+  freeze handle gives `loop_attributable`; `value`-based empirical input is a
+  cross-check field).
 - **ANES §11 scorecard** — 17/24 (6 seeds) / 18/24 (9 seeds, realism battery) vs
   FED 18/24: a wash. The endogenous config **fixes** the FED 2025-sep undershoot
   and the 1980 init overshoots but adds a mild **2010 overshoot** (sep 0.96 /

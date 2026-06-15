@@ -92,7 +92,7 @@ def budget_fractions() -> dict[str, float]:
 # event-timed activist-mobilization forcing (the force-calibration diagnostic
 # proved a constant-drive loop cannot produce the accelerating ANES shape at any
 # strength), so freezing that forcing leaves only ~0.38 of party_sep / ~0.34 of
-# identity_alignment (honesty_budget.json `spontaneous_floor`; the SAME finding
+# identity_alignment (honesty_budget.json `free_flowing`; the SAME finding
 # the holdout temporal cut exposes — docs/results/e5_holdout.md). The 0.60 floor
 # is NOT met for these two. We do NOT silently lower it: the escape hatch
 # requires a holdout-VALIDATED fit, and the endogenous holdout fails 1/3. So this

@@ -72,26 +72,28 @@ function MethodRow({ k, children }) {
 }
 
 // ── honesty budget ───────────────────────────────────────────────────────────
-// Measured fractions are blessed in docs/results/honesty_budget.json (re-measured
-// on the ENDOGENOUS canonical config at emergence-recovery E5.2, 6 seeds; methods
-// §5.28). The shipped config no longer feeds party positions: positional sorting
-// EMERGES from an activist→elite→mass feedback loop. "emergent" is the
-// loop-attributable share — how much of the 1980→2025 rise COLLAPSES when the
-// loop is frozen (loop-off counterfactual); for affect, whose mechanism is
-// loop-independent, it is the all-frozen spontaneous floor. "input" is the
-// data-fed-answer instrument — now ~0 for every metric (nothing positional fed).
-// The residual is the small non-loop drift; the loop's PACE is set by an
-// exogenous event-timed mobilization schedule (timing, not positions — disclosed
-// in the prose). Display widths are honest roundings that sum to 100; raw values
-// live in the JSON.
-const BUDGET_C = { emergent: '#3f7d54', input: CC.d, residual: '#c47a2c' };
+// Measured fractions are blessed in docs/results/honesty_budget.json (endogenous
+// canonical config, 6 seeds; methods §5.29; scripts/audit/t35_budget_brake.py).
+// Two honest slices of each metric's 1980→2025 rise:
+//   free_flowing    = the mechanism with every EMPIRICAL/external driver removed
+//                     (mobilization frozen at 1980, no events, no media) — the loop's
+//                     own dynamics from the 1980 seed.
+//   empirical_input = (rise_with − rise_sans)/rise_with — how much the ANES-calibrated
+//                     forcing (mobilization timing + dated events + media) ADJUSTS that
+//                     free-flowing mechanism (= 1 − free_flowing). This is forcing /
+//                     timing, NOT fed positions: the data-fed-POSITION channel is ~0
+//                     (fed_positions in the JSON) — the model is told WHEN activists
+//                     mobilized, not WHERE the parties ended up. We do NOT claim "0
+//                     empirical input": the calibration genuinely moves the result.
+// Widths are honest roundings of the blessed fractions (rise-based).
+const BUDGET_C = { emergent: '#3f7d54', empirical: CC.d };
 const BUDGET = [
-  { k: 'Party separation', emergent: 100, input: 0, residual: 0, grounded: 100,
-    note: 'Now produced by the model itself: freeze the activist→elite→mass loop and the sorting collapses to its 1980 starting point. Nothing positional is fed — earlier versions replayed the ANES party-centroid data (this was ~100% input-carried). The loop’s pace is set by an exogenous, event-timed mobilization schedule.' },
-  { k: 'Affective polarization', emergent: 87, input: 0, residual: 13, grounded: 87,
-    note: 'Driven by the model’s own animus dynamics: 87% of the collapse in out-party warmth is emergent, produced by the affect rules themselves — unchanged, and independent of the positional loop.' },
-  { k: 'Identity alignment', emergent: 95, input: 0, residual: 5, grounded: 95,
-    note: 'Now self-organised: identity tracks the emergent party positions, so 95% is loop-attributable (was ~2% — it used to follow the same data-fed party series).' },
+  { k: 'Party separation', emergent: 38, empirical: 62,
+    note: 'The model supplies the mechanism, the data supplies the timing. Freeze the activist→elite→mass loop and the sorting collapses to its 1980 seed — so it’s the loop, not fed positions, that produces the sorting (earlier versions replayed the ANES centroids outright). But left to itself the loop only makes ~38% of the rise; the other ~62% is the loop amplified by an ANES-calibrated mobilization schedule. Calibrated forcing, not fed answers — but real empirical input.' },
+  { k: 'Affective polarization', emergent: 87, empirical: 13,
+    note: 'Mostly the model’s own animus dynamics (87%); empirical input — dated media/events — adjusts only ~13%. Independent of the positional loop.' },
+  { k: 'Identity alignment', emergent: 34, empirical: 66,
+    note: 'Identity tracks the emergent party positions, so the loop carries it (was ~2% — it used to follow the same data-fed party series). Like separation, ~66% of the rise rides the empirically-calibrated forcing.' },
 ];
 
 function BudgetBar({ row }) {
@@ -102,14 +104,13 @@ function BudgetBar({ row }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
         <span style={{ fontFamily: SANS, fontSize: DS.type.small, fontWeight: 600, color: CC.ink }}>{row.k}</span>
         <span style={{ fontFamily: SANS, fontSize: DS.type.small, color: CC.ink3 }}>
-          <strong style={{ color: CC.ink }}>{row.grounded}% grounded</strong>
-          <span style={{ color: CC.ink4 }}> · {row.residual}% hand-drawn</span>
+          <strong style={{ color: CC.ink }}>{row.emergent}% free-flowing</strong>
+          <span style={{ color: CC.ink4 }}> · {row.empirical}% empirical</span>
         </span>
       </div>
       <div style={{ display: 'flex', height: 10, borderRadius: DS.rad.pill, overflow: 'hidden', background: CC.bg2 }}>
-        {seg(row.emergent, BUDGET_C.emergent, `${row.emergent}% emergent`)}
-        {seg(row.input, BUDGET_C.input, `${row.input}% empirical input`)}
-        {seg(row.residual, BUDGET_C.residual, `${row.residual}% hand-drawn`)}
+        {seg(row.emergent, BUDGET_C.emergent, `${row.emergent}% free-flowing`)}
+        {seg(row.empirical, BUDGET_C.empirical, `${row.empirical}% empirical input`)}
       </div>
       <p style={{ margin: '8px 0 0', fontSize: DS.type.micro, lineHeight: 1.5, color: CC.ink3, maxWidth: '40em' }}>{row.note}</p>
     </div>
@@ -125,9 +126,8 @@ function BudgetLegend() {
   );
   return (
     <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginBottom: 4 }}>
-      {dot(BUDGET_C.emergent, 'Emergent — the loop’s own dynamics')}
-      {dot(BUDGET_C.input, 'Empirical input — data-fed positions (now ~0)')}
-      {dot(BUDGET_C.residual, 'Residual — drift + event timing')}
+      {dot(BUDGET_C.emergent, 'Free-flowing — the loop’s own dynamics')}
+      {dot(BUDGET_C.empirical, 'Empirical input — ANES-calibrated forcing (timing, not positions)')}
     </div>
   );
 }
@@ -205,27 +205,27 @@ function MethodsPage() {
         A fair question for any simulation: how much of the 1980→2025 arc is the model genuinely producing, versus
         numbers we fed in? We measure it, rather than assert it. The model does <em>not</em> feed in where the parties
         went — positional sorting <strong style={{ color: CC.ink }}>emerges</strong> from a feedback loop: each party’s
-        activists pull its elite outward, the elite cue pulls the rank-and-file, and the cycle ratchets. To see how much
-        the loop is really doing, we freeze it and re-run the 45 years: what <em>collapses</em> is the loop’s doing —
-        <strong style={{ color: CC.ink }}> emergent</strong>. What a data-fed series would add back is
-        <strong style={{ color: CC.ink }}> empirical input</strong> — now ~0, because nothing positional is fed. The rest
-        is <strong style={{ color: CC.ink }}>residual</strong> drift.
+        activists pull its elite outward, the elite cue pulls the rank-and-file, and the cycle ratchets. We split each
+        arc two ways. Run the loop with every external driver stripped out and you get the
+        <strong style={{ color: CC.ink }}> free-flowing</strong> mechanism — the model’s own dynamics. Switch the real
+        ANES-calibrated forcing back on (when activists mobilized, the dated shocks, media reach) and the gap it adds is
+        the <strong style={{ color: CC.ink }}>empirical input</strong> — measured as how much that forcing moves the
+        result. Crucially, that input is <em>timing and intensity</em>, never the party positions themselves (the
+        old “feed the answer” channel is ~0).
       </Prose>
       <div style={{ marginTop: 24 }}>
         <BudgetLegend />
         {BUDGET.map((row) => <BudgetBar key={row.k} row={row} />)}
       </div>
       <Prose>
-        This is the big change from earlier versions, and we'd rather show it than bury it. <strong style={{ color: CC.ink }}>Party
-        separation</strong> and <strong style={{ color: CC.ink }}>identity alignment</strong> used to be replayed almost
-        entirely from the ANES party-position data — the model tracked where the survey said the parties went without
-        inventing the sorting. Now both <em>emerge</em>: freeze the loop and the sorting falls back to its 1980 starting
-        point (party separation 100% loop-attributable, identity alignment 95%, both ~0% fed). The
-        <strong style={{ color: CC.ink }}> emotional</strong> arc is produced by its own animus dynamics, as before (87%
-        emergent). One honest caveat: the loop’s <em>pace</em> is set by an exogenous, event-timed “mobilization” schedule
-        — that’s calibrated timing, not fed positions, so the model <em>amplifies</em> a real historical forcing rather
-        than inventing the timeline from nothing (with the loop forced only at its 1980 level, about a third of the
-        separation still emerges on its own).
+        So we won’t claim it’s “wholly emergent.” The honest read: <strong style={{ color: CC.ink }}>the model supplies
+        the mechanism, the data supplies the timing.</strong> Freeze the loop and party separation collapses to its 1980
+        seed — so the sorting is the loop’s doing, not fed positions (earlier versions replayed the ANES centroids
+        outright; that channel is now ~0). But left entirely to itself the loop only makes about a third of the rise;
+        the rest is the loop <em>amplified</em> by an ANES-calibrated mobilization schedule — so ~62% of separation and
+        ~66% of identity alignment is empirical input. That’s calibrated forcing, not fed answers, but it’s real, and we’d
+        rather show it than round it to zero. The <strong style={{ color: CC.ink }}>emotional</strong> arc is the
+        exception: 87% is the model’s own animus dynamics, with empirical input adjusting only ~13%.
       </Prose>
 
       <H2>Does it hold up out of sample — the holdout</H2>
