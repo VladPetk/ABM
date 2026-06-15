@@ -52,8 +52,11 @@ Constants for the canonical run: **`n_agents = 250`**, **`n_ticks = 136`**
 | `ticks_per_year` | float | `3.0` |
 | `axes` | object | `{x:{label,lo,hi}, y:{label,lo,hi}}` — economic (x) / cultural (y) |
 | `release_years` | object | `{"<tick>": <year>}` for the 8 counterfactual release ticks |
-| `characters` | string[] | `["linda","bob","maria","james"]` |
 | `affect_scale` | object | affect conventions — see below |
+
+> **Retired:** `meta.characters` was dropped (named characters were retired;
+> the bundle ships `chars: {}` and mounts no character UI). Older bundles may
+> still carry it; it is not part of the live contract.
 
 ### `meta.affect_scale`
 
@@ -218,13 +221,11 @@ Release ticks/years: 15/1985, 30/1990, 45/1995, 60/2000, 75/2005, 90/2010,
 
 ---
 
-## `chars` (~3 KB)
+## `chars` (empty)
 
-The 4 named characters (`linda`, `bob`, `maria`, `james`). v1 ships the data
-but mounts **no** character UI (society-level only; characters deferred per
-roadmap §1). Each: `{name, agent_index, job, city, issues, bio, beats}`,
-where `beats` is `[{tick, prose}]`. The agent's full per-tick series live in
-`runs.baseline` at `agent_index` (and in `charAffect`/`charFaction`).
+Named characters were **retired**. The bundle ships `chars: {}` and mounts no
+character UI — the demo is society-level only. (Earlier v1 builds shipped four
+named composites here; that surface was removed, not deferred.)
 
 ---
 

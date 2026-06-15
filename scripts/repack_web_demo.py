@@ -216,7 +216,8 @@ def build_meta(manifest: dict) -> dict:
         "ticks_per_year": manifest["ticks_per_year"],
         "axes": manifest["ideology_axes"],
         "release_years": manifest["release_years"],
-        "characters": manifest["characters"],
+        # NOTE: meta.characters was dropped — named characters were retired
+        # (chars ships empty; no character UI). See web_data_contract.md §-characters.
         # Affect conventions (contract v1, §8). The engine produces only
         # the OUT-party series; the in-party line is an external overlay.
         "affect_scale": {

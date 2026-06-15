@@ -109,21 +109,6 @@ function decadeVaries(id) {
   return set.size > 1;
 }
 
-// ── sandbox (illustrative ONLY — never engine-measured) ──────────────────────
-// Walled off on its own surface. These map to real engine knobs cranked past
-// anything we'd calibrate; the field response is a cosmetic spread, not a run.
-const SB_SCENARIOS = [
-  { id: 'W1', name: 'Ban a media channel', spread: -0.16, take: 'Zero an outlet’s weight in every diet. The field visibly re-merges — but this is fantasy policy.' },
-  { id: 'W2', name: 'Make elites super-extreme', spread: 0.31, take: 'Crank elite drift 3×→8×. The two camps fly apart — the model responds dramatically.' },
-  { id: 'W3', name: 'Wipe everyone’s priors', spread: -0.40, take: 'Reset every agent toward the origin. Watch sorting collapse — then re-emerge, or not.' },
-  { id: 'W4', name: 'Echo-chamber world', spread: 0.36, take: 'Drop open-mindedness, raise clustering. Maximal sorting — the worst case, made visible.' },
-];
-const SB_SLIDERS = [
-  { key: 'elite', name: 'Elite extremity', stops: ['realistic', '2×', '5×', '8×'], def: 0 },
-  { key: 'open', name: 'Open-mindedness', stops: ['closed', 'low', 'realistic', 'open'], def: 2 },
-  { key: 'media', name: 'Media power', stops: ['off', 'realistic', 'high', 'max'], def: 1 },
-];
-
 // outcome → tone in the shared Tag system. Only "backfire" borrows oxblood.
 const OUTCOME = {
   null:     { label: 'no effect',   tone: 'soft' },
@@ -147,19 +132,6 @@ const VERB = {
 const _clampN = (lo, hi, v) => Math.max(lo, Math.min(hi, v));
 const _mark = (v) => (_clampN(-0.6, 1, v) - (-0.6)) / 1.6 * 100;
 const _bucketCol = (b) => b === 'backfire' ? CC.r : b === 'null' ? CC.ink4 : '#3f7d54';
-
-// sandbox effect from the four what-if presets / the three sliders (cosmetic)
-function sandboxFromScenario(sc) {
-  return { name: sc.name, take: sc.take, mult: _clampN(0.45, 1.62, 1 + sc.spread), spread: sc.spread, custom: false };
-}
-function sandboxFromTinker(v) {
-  const spread = v.elite * 0.13 + (2 - v.open) * 0.1 + (v.media - 1) * 0.1;
-  return {
-    name: 'Custom scenario', mult: _clampN(0.5, 1.62, 1 + spread), spread, custom: true,
-    take: Math.abs(spread) < 0.04 ? 'At these settings the field sits at its calibrated baseline.'
-      : spread > 0 ? 'Cranking these knobs pushes the camps further apart.' : 'Dialing these down pulls the camps back toward the centre.',
-  };
-}
 
 // ── sandbox: the 5-dial pre-rendered grid (build_sandbox_data.py grid v5) ─────
 // Each dial has 5 detents; the values + ORDER MUST match GRID/KNOB_ORDER in
@@ -526,54 +498,7 @@ function ProvBadge({ prov }) {
 
 // ── RIGHT RAIL ────────────────────────────────────────────────────────────────
 function IvRail({ iv }) {
-  const { eff, o, baseGap, nowGap, active, predicting, showResult, guess, correct, isSandbox, sbEff } = iv;
-
-  // ── SANDBOX surface — visually walled off, never a finding ──
-  if (isSandbox) {
-    return (
-      <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%' }}>
-        <div style={{ flex: 1, overflow: 'auto', padding: `${DS.sp.lg - 6}px ${DS.sp.lg - 2}px` }}>
-          <div style={{ padding: '10px 13px', borderRadius: DS.rad.inset, background: 'rgba(196,122,44,.08)', border: '1px dashed rgba(196,122,44,.4)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 13 }}>{'⚠︎'}</span>
-              <span style={{ fontFamily: SANS, fontSize: DS.type.small, fontWeight: 700, color: '#8a6d1f', letterSpacing: '.04em', textTransform: 'uppercase' }}>Sandbox — not a finding</span>
-            </div>
-            <p style={{ margin: '7px 0 0', fontSize: DS.type.micro, lineHeight: 1.5, color: CC.ink2 }}>
-              These scenarios crank the model’s own knobs past anything we’d calibrate. The field response is <strong>illustrative</strong> — it changes the model, not a real-world policy, and owes the X1–X7 re-bless gate before it could be called measured.
-            </p>
-          </div>
-
-          <Eyebrow style={{ marginTop: 22, display: 'block' }}>What-if scenarios</Eyebrow>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 10 }}>
-            {SB_SCENARIOS.map((s) => {
-              const on = iv.sbId === s.id;
-              return (
-                <button key={s.id} onClick={() => iv.pickScenario(s.id)} style={{
-                  textAlign: 'left', width: '100%', padding: '9px 12px', cursor: 'pointer', fontFamily: SANS,
-                  background: on ? CC.surface : 'transparent', borderRadius: DS.rad.inset,
-                  border: `1px solid ${on ? CC.borderS : 'transparent'}`,
-                  fontSize: DS.type.small, fontWeight: on ? 600 : 450, color: on ? CC.ink : CC.ink2,
-                }}>{s.name}</button>
-              );
-            })}
-          </div>
-
-          <Eyebrow style={{ marginTop: 22, display: 'block' }}>Or tinker freely</Eyebrow>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 15, marginTop: 12 }}>
-            {SB_SLIDERS.map((s) => <Detent key={s.key} s={s} value={iv.tv[s.key]} onChange={(k) => iv.setKnob(s.key, k)} />)}
-          </div>
-
-          {sbEff && (
-            <div style={{ marginTop: 22, paddingTop: 18, borderTop: `1px solid ${CC.border}` }}>
-              <h3 style={{ margin: 0, fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.subhead }}>{sbEff.name}</h3>
-              <p style={{ margin: '8px 0 0', fontSize: DS.type.body, lineHeight: 1.55, color: CC.ink }}>{sbEff.take}</p>
-              <Caption style={{ display: 'block', marginTop: 10 }}>Illustrative spread — not an engine measurement.</Caption>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+  const { eff, o, baseGap, nowGap, active, predicting, showResult, guess, correct } = iv;
 
   // ── empty state ──
   if (!active) {

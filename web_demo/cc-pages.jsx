@@ -140,8 +140,8 @@ function BudgetLegend() {
 const HOLDOUT = [
   { cut: 'Temporal', q: 'Fit on ≤2000 only, then predict 2010 / 2020 / 2025', v: 'FAIL',
     why: 'The late-2010s acceleration isn’t predictable from the early decades alone — it rides an exogenously-calibrated mobilization schedule. (The old data-fed version passed this only by replaying the answer.)' },
-  { cut: 'Instrument', q: 'Shipped model vs a held-out survey (GSS) it was never fit to', v: 'MIXED',
-    why: 'Partisan-sorting slope lands inside the GSS band; the issue-to-issue correlation grows ~1.6× too fast (the compass axes over-align).' },
+  { cut: 'Instrument', q: 'Shipped model vs a held-out survey (GSS) it was never fit to', v: 'FAIL',
+    why: 'Partisan-sorting slope lands inside the GSS band, but the issue-to-issue correlation grows ~1.6× too fast (the compass axes over-align) — so the cut fails on balance.' },
   { cut: 'Statistic', q: 'Fit separation / affect / spread, then predict issue constraint', v: 'PASS',
     why: 'Issue constraint is predicted from the other three statistics across all six decades.' },
 ];
@@ -151,6 +151,11 @@ const HOLDOUT_C = { PASS: '#3f7d54', MIXED: '#c47a2c', FAIL: '#b04a3a' };
 function HoldoutScorecard() {
   return (
     <div style={{ marginTop: 18, border: `1px solid ${CC.border}`, borderRadius: DS.rad.inset, overflow: 'hidden' }}>
+      <div style={{ padding: '11px 16px', background: CC.bg, borderBottom: `1px solid ${CC.border}`,
+        display: 'flex', alignItems: 'baseline', gap: 10 }}>
+        <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 700, letterSpacing: '.06em', color: CC.ink }}>1 OF 3 CUTS PASS</span>
+        <span style={{ fontSize: DS.type.micro, color: CC.ink3 }}>bands written down before the fit — a failed band is a finding, not a retune</span>
+      </div>
       {HOLDOUT.map((h, i) => (
         <div key={h.cut} style={{ padding: '13px 16px',
           borderTop: i ? `1px solid ${CC.border}` : 'none', background: CC.surface }}>
@@ -276,23 +281,21 @@ function MethodsPage() {
       <div style={{ marginTop: 18 }}>
         <MethodRow k="Realistic">
           Calibrated to published field experiments — Bail (2018) on cross-party exposure, Allcott et&nbsp;al. (2020) on
-          quitting social media, Levy (2021) on news diets. The honest finding: most barely move the needle, and some
-          backfire. One intervention, the perception-gap correction, is a <em>live counterfactual run</em> of the full
-          engine rather than an illustrative estimate.
+          quitting social media. The honest finding: most barely move the needle, and some backfire. All seven are
+          <em>live counterfactual runs</em> of the full engine, not illustrative estimates.
         </MethodRow>
-        <MethodRow k="Beyond realism">
-          Mechanism-driven but hypothetical — each maps to a real engine cause (mega-identity, elite extremism,
-          open-mindedness, contact &amp; mixing, within-party diversity) cranked far past anything we'd calibrate. Useful
-          for seeing how the system <em>can</em> respond; not a claim about how it <em>would</em>.
+        <MethodRow k="Beyond realism — the Sandbox">
+          Mechanism-driven but hypothetical — five dials, each mapping to a real engine cause (party leaders’ extremism,
+          identity stacking, shared daily life, within-party conformity, and echo-chamber ties) cranked far past anything
+          we'd calibrate. Useful for seeing how the system <em>can</em> respond; not a claim about how it <em>would</em>.
         </MethodRow>
       </div>
 
       <H2>Limits</H2>
       <Prose>
         A simulation calibrated to a handful of experiments is a tool for intuition, not prediction. Agent positions are
-        synthetic; the four named characters are illustrative composites; the "beyond realism" effects are deliberately
-        un-calibrated. Read the modeled effects as <em>directional</em> — which way a lever pushes, and roughly how hard —
-        not as forecasts.
+        synthetic; the "beyond realism" effects are deliberately un-calibrated. Read the modeled effects as
+        <em>directional</em> — which way a lever pushes, and roughly how hard — not as forecasts.
       </Prose>
     </PageShell>
   );

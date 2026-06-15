@@ -265,7 +265,7 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
         <div style={scrollWrap}>
           <Eyebrow>The story · 1980 → 2025</Eyebrow>
           <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, lineHeight: 1.05, letterSpacing: '-.015em' }}>Now drive it yourself.</h2>
-          <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2 }}>Forty-five years, two hardening camps, a middle that thinned — and an out-party warmth that fell from the high-40s to the mid-20s.</p>
+          <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2 }}>Forty-five years, two hardening camps, a middle that thinned — and an out-party warmth that fell from the high-50s to the high-20s.</p>
           <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>You’ve watched the model reproduce the real arc. Two ways to take the wheel: try the things researchers have actually tested, or turn the dials freely.</p>
         </div>
         <div style={{ ...footer, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start' }}>

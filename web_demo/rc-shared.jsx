@@ -99,8 +99,8 @@ function coldnessAt(tick) {
 }
 // Out-party warmth in ANES-style degrees, on the ABSOLUTE 0–100 thermometer —
 // the contract mapping deg = (1 + aff)*50 + 12 (coldness = −aff), NOT the
-// normalized ramp. Runs ~50° (1980) → ~24° (2025), matching the literature's
-// high-40s→mid-20s out-party collapse, and shares a scale with the in-party
+// normalized ramp. Runs ~57° (1980) → ~28° (2025), matching the literature's
+// high-50s→high-20s out-party collapse, and shares a scale with the in-party
 // ANES overlay so the two can be drawn as one honest "scissors".
 function outPartyDeg(tick) {return (1 + macroAt(D.runs.baseline, tick, 'aff')) * 50 + 12;}
 // In-party warmth (degrees) — EXTERNAL ANES overlay, NOT engine (contract §2).
@@ -528,7 +528,7 @@ const TL_EVENTS = [
 { tick: 60, fn: false, full: '2000' },
 { tick: 84, fn: true, major: true, short: 'Social media', full: 'Social media adoption + Obama (2008)' },
 { tick: 87, fn: true, short: 'Tea Party', full: 'Tea Party emergence (2009)' },
-{ tick: 90, fn: true, short: 'Citizens United', full: 'Citizens United (2010) — doubles elite drift' },
+{ tick: 90, fn: true, short: 'Citizens United', full: 'Citizens United (2010) — era marker, not a cause' },
 { tick: 96, fn: true, short: 'Social media peak', full: 'Social media adoption peak (2012)' },
 { tick: 105, fn: true, short: 'MAGA', full: 'MAGA emergence (2015)' },
 { tick: 108, fn: true, major: true, short: 'Trump', full: 'Trump + status-threat spike (2016)' },
