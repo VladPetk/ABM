@@ -103,55 +103,6 @@ function genAgents(year, seed = 7, n = 240) {
   return out;
 }
 
-// Linda — the headline character. Hand-authored trajectory: centrist
-// Democrat in the mid-80s, drifts to a Republican partisan by 2016+.
-const LINDA_KEYS = [
-  { y: 1985, x: -0.16, y2:  0.02, party: 'D' },
-  { y: 1996, x: -0.05, y2:  0.10, party: 'D' },
-  { y: 2001, x:  0.10, y2:  0.14, party: 'I' },
-  { y: 2008, x:  0.24, y2:  0.22, party: 'I' },
-  { y: 2016, x:  0.46, y2:  0.40, party: 'R' },
-  { y: 2025, x:  0.58, y2:  0.50, party: 'R' },
-];
-function lindaAt(year) {
-  const k = LINDA_KEYS;
-  if (year <= k[0].y) return { x: k[0].x, y: k[0].y2, party: k[0].party };
-  if (year >= k[k.length - 1].y) { const l = k[k.length - 1]; return { x: l.x, y: l.y2, party: l.party }; }
-  for (let i = 0; i < k.length - 1; i++) {
-    if (year >= k[i].y && year <= k[i + 1].y) {
-      const t = (year - k[i].y) / (k[i + 1].y - k[i].y);
-      return {
-        x: k[i].x + (k[i + 1].x - k[i].x) * t,
-        y: k[i].y2 + (k[i + 1].y2 - k[i].y2) * t,
-        party: t < 0.5 ? k[i].party : k[i + 1].party,
-      };
-    }
-  }
-  return { x: k[0].x, y: k[0].y2, party: 'D' };
-}
-
-// Linda's ego network at a given year — homogenises over time.
-// Returns ~8 neighbours as offsets around her, with party.
-function lindaNetwork(year) {
-  const rng = ccRng(99);
-  const yf = yearToFrac(year);
-  const rOut = lindaAt(year).party === 'R';
-  // fraction of neighbours that match her party grows over time
-  const matchFrac = 0.45 + 0.5 * yf;
-  const nodes = [];
-  const N = 9;
-  for (let i = 0; i < N; i++) {
-    const ang = (i / N) * Math.PI * 2 + rng() * 0.5;
-    const rad = 0.10 + rng() * 0.13;
-    const matches = rng() < matchFrac;
-    let party;
-    if (matches) party = rOut ? 'R' : 'D';
-    else party = rng() < 0.4 ? 'I' : (rOut ? 'D' : 'R');
-    nodes.push({ dx: Math.cos(ang) * rad, dy: Math.sin(ang) * rad, party, i });
-  }
-  return nodes;
-}
-
 // ── Historical events ────────────────────────────────────────────────────
 const EVENTS = [
   { id: 'reagan',  year: 1981.0, label: 'Reagan inaugurated', short: 'Reagan' },
@@ -248,7 +199,7 @@ function PartySwatch({ party, size = 8 }) {
 Object.assign(window, {
   CC, SANS, MONO, SERIF, BODY_SERIF, PROSE, TNUM, ccRng,
   YEAR0, YEAR1, yearToFrac, separationAt,
-  genAgents, lindaAt, lindaNetwork, POLE_D, POLE_R,
+  genAgents, POLE_D, POLE_R,
   EVENTS, macroSeries, seriesPath,
   Logo, InfoDot, Eyebrow, FloatCard, PartySwatch,
 });
