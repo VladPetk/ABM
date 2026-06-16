@@ -13,13 +13,26 @@ ROOT = Path(__file__).resolve().parent.parent
 BASE = ROOT / "web/data/baseline"
 PARTY = {"D": 0, "R": 1, "I": 2}
 
-# When MODEL_JSON is set, seed 0 loads from that file (used to grade fresh
-# baseline/emergent runs instead of the possibly-stale shipped seed_0.json).
+# When MODEL_JSON is set, the canonical seed loads from that file (used to grade
+# fresh baseline/emergent runs instead of the shipped canonical baseline).
 _OVERRIDE = os.environ.get("MODEL_JSON")
 
 
+def _canonical_seed():
+    """The shipped canonical baseline seed (the only FULL per-tick export). Read
+    from the manifest so this tracks the publish CANONICAL_SEED (was 0; the
+    representative-seed presentation fix moved it to 1). Falls back to 0."""
+    try:
+        return int(json.load(open(BASE.parent / "manifest.json"))["canonical_seed"])
+    except Exception:
+        return 0
+
+
+CANON_SEED = _canonical_seed()
+
+
 def _load(seed):
-    if _OVERRIDE and seed == 0:
+    if _OVERRIDE and seed == CANON_SEED:
         return json.load(open(_OVERRIDE))
     return json.load(open(BASE / f"seed_{seed}.json"))
 
@@ -74,7 +87,7 @@ def model_band(years, seeds=None):
     Monte-Carlo noise. A centroid-difference SE ~ sqrt(2)*that; a shift of 0.2 is
     many SE and not noise.
     """
-    canon = metrics_for_seed(0, years)
+    canon = metrics_for_seed(CANON_SEED, years)
     noise = {}
     for yr, row in canon.items():
         ses = []
