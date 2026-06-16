@@ -2098,6 +2098,17 @@ blindspot (#1) plus mild 2010 sep/constraint overshoots — a separate workstrea
 refused-not-chased here. Full trail:
 [`validation/FIX_INVESTIGATION_ECON.md`](../validation/FIX_INVESTIGATION_ECON.md).
 
+**Open follow-on (sorting *gap*, not level).** With the common-mode *levels* fixed
+(§5.30/§5.31), a root-cause of the partisan *separation* curve found the one
+remaining divergence is a **cultural-axis timing error**: the model front-loads
+cultural sorting (over-separates 1986–90) and misses the real 2012–2020 cultural
+acceleration (back-loaded in reality). Economics is fine (within 1–2σ). This is
+registered as blindspot **#10** with the full empirical study, the causal-literature
+synthesis (the "Great Awokening" contributing set + the unresolved direction/artifact
+debates), and the honest HYBRID fix direction in
+[`docs/results/cultural_sorting_analysis.md`](results/cultural_sorting_analysis.md).
+Not yet built.
+
 ---
 
 ## 6. What the model is for
