@@ -2028,6 +2028,76 @@ item-composition artifact — refused under measure-then-bless. Full trail:
 [`validation/REPORT.md`](../validation/REPORT.md) +
 [`validation/FIX_INVESTIGATION.md`](../validation/FIX_INVESTIGATION.md).
 
+### 5.31 reality-validation — the common-mode **economic** channel (2026-06)
+
+After §5.30 fixed the cultural axis, the same from-scratch battery exposed the
+**identical architecture gap on the economic axis**: only a *differential*
+(party-sorting) channel, so the partisan economic **center of mass** is pinned
+≈ 0 the whole arc, while ANES rises to ~+0.15 (rightward) in the mid-90s and
+declines to ~−0.05 by 2024. Decomposing the 1996 Republican-econ residual (−0.19):
+**center-of-mass LEVEL error −0.16 (≈84 %)**, party half-GAP error −0.04 (≈16 %)
+— a common-mode level error, not a sorting-gap error. Visible symptom: the econ
+half of the same Republican lower-left (progressive-redistributive) tail as §5.30.
+
+**Why a fed forcing here, not emergent.** The cultural common mode is *emergent*
+(mean of a measured birth-cohort gradient; cohort replacement is monotone and
+generates the monotone cultural decline). The economic tide is **non-monotone**
+(rightward to the mid-90s, then leftward), so a monotone demographic primitive
+cannot generate it. The mechanism is the **thermostatic policy mood**
+(Erikson–MacKuen–Stimson, *The Macro Polity*; Wlezien's thermostat): econ policy
+preference moves rightward under the Reagan→Clinton "end of big government" era
+(welfare reform / Gingrich 1994–96) and leftward in the post-2008 reaction. This
+is an **exogenous forcing** — an input, not the party-sorting answer.
+
+**The fix (`abm/rules/cultural_common_mode.py::CommonModeEconomic`, gated
+`economic_common_mode`).** A new env rule snaps the partisan econ common mode to
+an exogenous mood-offset curve `economic_mood_offset(year)` each tick, via the same
+rigid, **sorting-invariant** issue-vector translation as §5.30 (shared
+`rigid_common_mode_shift`; here `project(lift([d,0]))≡[d,0]`, axis 0). The curve is
+a **parsimonious thermostatic shape** whose inflection *years* are documented
+policy events (1980 Reagan baseline → 1996 welfare-reform peak → post-2008 leftward
+reaction) and whose **single fitted scalar** is the amplitude (`ECON_MOOD_AMPLITUDE
+= 0.09`, the robust GSS-corroborated mid-90s level). Provenance: **L** (thermostatic
+common-mode mechanism) + **N** (curve functional form) + **E** (amplitude/shape
+extrapolated). Canonical is now `ANES_FULL_COMMONMODE_ECON_KWARGS`; the pre-econ
+config is preserved as `ANES_FULL_COMMONMODE_KWARGS`.
+
+**The honesty crux — corroborated, not replayed.** The real **Stimson Annual Policy
+Mood** index was downloaded (`stimson.web.unc.edu` → `Mood5224.xlsx` →
+`validation/data/stimson_mood_annual.json`) and used to *corroborate* the curve's
+direction (mood conservative into the mid-90s 69→59, liberal through the 2010s
+54→66) — **not** as the literal tick-by-tick driver. Fed literally, Stimson injects
+a spurious **+0.20 econ spike at 2012** (the Tea-Party *government-spending* mood
+swing that economic *self-placement* refused; r≈0.38 contemporaneous, secular
+component wrong-signed) — falsified in `validation/exp_econ_commonmode.py`. The
+target arc is **triply confirmed** — ANES econ COM, GSS `helppoor`+`eqwlth` (mid-90s
++0.106 → late-2010s −0.057, `validation/gss_econ_check.py`), and Stimson — so
+matching it is not ANES over-fitting; but the engine is *told* the mood, it does not
+derive it. This is a **weaker honesty claim than §5.30** (a fed forcing), documented
+as such (blindspot #9).
+
+**Results (measure-then-bless; the full re-bless cascade ran on the flip).**
+Econ-COM error over 1986–2024 cut **64 %** (mean|err| 0.084→0.030); 1996 econ
+center −0.018→**+0.088**; the Republican wrong-quadrant (LL) tail improves every
+measured year (e.g. 2000 0.120→0.093 = ANES 0.082), regresses none. The **cultural
+axis is bit-identical** (the channel is orthogonal) and the **default path is
+bit-identical to head** (canonical-arc SHA-256 unchanged with the gate off). Sorting
+is preserved/improved (party_sep@135 1.056→1.065). Established gates on the flip:
+**phase10 intervention buckets UNCHANGED** (X1 backfire / X6 affect partial→real /
+X2–X5,X7 null — library robust to the econ fix too); **ANES §11 scorecard 17/24**
+(unchanged — the scorecard grades party_sep/variance/SD/constraint/affect, not the
+econ center, and a rigid translation is invariant to all of them); **pytest green**.
+The validation battery tags are unchanged (F0/F2/F5 HIGH, F3 MEDIUM): F0/F2 are
+*cultural* (untouched) and the F5 residual is the early-period cultural center, not
+econ. **Realism battery: 15/24** — the econ channel is realism-**neutral** (15/24
+identical with the gate off, same cells/values; the channel does not move a single
+realism cell). The drop from the previously-reported 18/24 is **not** the econ flip:
+that 18/24 was a stale figure not re-measured on the shipped §5.30 cultural config
+(turnover 0.007), whose true realism is 15/24, dominated by the known affect-too-cold
+blindspot (#1) plus mild 2010 sep/constraint overshoots — a separate workstream,
+refused-not-chased here. Full trail:
+[`validation/FIX_INVESTIGATION_ECON.md`](../validation/FIX_INVESTIGATION_ECON.md).
+
 ---
 
 ## 6. What the model is for

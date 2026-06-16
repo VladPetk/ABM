@@ -81,8 +81,29 @@ residual excess is the early-period *cultural* center still being too progressiv
 not econ. The econ fix did its job on the econ axis; the residual is the unfixed
 cultural-channel limitation (out of scope for this change).
 
-## Status
-Implemented GATED, default off = bit-identical. **NOT** flipped to canonical and
-**NOT** re-blessed (phase10 / web export / docs) — awaiting user sign-off, per the
-session mandate. To flip later: set `economic_common_mode=True` (+ amplitude) in
-`ANES_FULL_KWARGS` and run the re-bless cascade.
+## Status — FLIPPED + RE-BLESSED (2026-06-16, user-approved)
+Canonical flipped: `ANES_FULL_KWARGS = ANES_FULL_COMMONMODE_ECON_KWARGS`
+(`economic_common_mode=True`, amplitude 0.09). Pre-econ config preserved as
+`ANES_FULL_COMMONMODE_KWARGS`. Full measure-then-bless cascade ran:
+
+- **phase10 intervention buckets: UNCHANGED** (X1 backfire / X6 affect partial→real /
+  X2–X5,X7 null; magnitudes ≈ identical). No tag moved — the econ channel is a rigid
+  sorting-invariant translation, so Δsep/Δaff are unaffected.
+- **ANES §11 scorecard: 17/24** — unchanged (the scorecard grades party_sep /
+  variance / SD / constraint / affect, none of which a rigid econ translation moves).
+- **Web export re-run** (`web/data/` + `web_demo/cc-data.js`) on the econ-on config.
+- **Realism battery: 15/24** — the econ channel is realism-NEUTRAL (15/24 identical
+  with the gate off, same cells/values). The drop from the previously-reported 18/24
+  is a STALE figure: 18/24 was never re-measured on the shipped cultural config
+  (turnover 0.007), whose true realism is 15/24 (dominated by the affect-too-cold
+  blindspot #1 + mild 2010 overshoots). Not the econ flip; no band loosened.
+- **Honesty budget re-blessed** (first re-bless since the cultural fix): `party_sep`
+  free-flowing 0.38→0.28, driven by the cultural fix's turnover, NOT the econ channel
+  (both common-mode channels are sorting-invariant level shifts outside the differential
+  metrics the budget tracks).
+- **pytest: green** (the gate tests flipped: canonical now asserts econ-on).
+- **validation battery (from-scratch): econ-COM err 0.084→0.030 (−64%)**, F5 improves,
+  cultural axis + sorting preserved; tags unchanged (F0/F2/F5 HIGH, F3 MEDIUM — the
+  residual is the cultural center + affect blindspot, not econ).
+
+To REVERT: point `ANES_FULL_KWARGS` back at `ANES_FULL_COMMONMODE_KWARGS`.

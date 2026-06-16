@@ -21,9 +21,10 @@ from abm.rules.cultural_common_mode import economic_mood_offset, ECON_MOOD_AMPLI
 
 
 def _run(econ_on):
+    # ANES_FULL_KWARGS now ships with the econ channel ON (canonical flip). Build
+    # the OFF arm explicitly off the pre-econ config so the gate contrast holds.
     kw = dict(ANES_FULL_KWARGS)
-    if econ_on:
-        kw["economic_common_mode"] = True
+    kw["economic_common_mode"] = bool(econ_on)
     eng = build_engine(seed=0, **kw)
     sched = build_schedule(
         factional_seeding=kw.get("factional_seeding", False),
@@ -66,10 +67,11 @@ def test_mood_curve_shape():
     assert economic_mood_offset(2024.0) < 0 < economic_mood_offset(2008.0)
 
 
-def test_default_canonical_has_econ_channel_off():
-    """The shipped preset must NOT yet carry the econ channel (gate off until the
-    user-approved flip). Guards against an accidental early canonical flip."""
-    assert ANES_FULL_KWARGS.get("economic_common_mode") in (None, False)
+def test_canonical_has_econ_channel_on():
+    """Post-flip: the shipped preset carries the econ common-mode channel at the
+    blessed amplitude 0.09."""
+    assert ANES_FULL_KWARGS.get("economic_common_mode") is True
+    assert ANES_FULL_KWARGS.get("economic_common_mode_amplitude") == 0.09
 
 
 def test_gate_off_econ_center_pinned(off_snaps):
