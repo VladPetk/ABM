@@ -147,5 +147,33 @@ Provenance **L** (elite-cue mechanism) + **E** (exogenously-timed driver) + **N*
 hand-drawn cultural forcing (it routes through a real mechanism) but **not** genuine
 spontaneous emergence, and should not be sold as such. Any cultural re-pacing must be
 **paired with lowering the early (1986–90) cultural differential**, or it overshoots.
-The empirical falsify-first test of this hybrid is in `validation/exp_cultural_hybrid.py`
-(see its header / the methods note for the verdict).
+The empirical falsify-first test of this hybrid is in `validation/exp_cultural_hybrid.py`.
+
+## 7. Falsify-first test of the cue-route hybrid — **FALSIFIED on H1** (2026-06)
+
+Prototyped (sandbox, no engine change) a cultural-axis accelerant whose timing is set
+by documented events (early pre-great-sort suppression + a Ferguson-2014/2015-anchored
+2012–2020 release), routed through the **existing** cultural cue channel (`party_cue`
+→ PartyPull), paired with an early-differential dampener; 2 fitted amplitudes, econ
+untouched. Seeds 0–2. Figure: `validation/figures/cultural_hybrid_falsified.png`.
+
+- **H1 (raise & re-time the 2012–2020 cultural surge): FAIL.** The 2020 cult gap stays
+  0.67–0.73 (real 0.783; div −0.05…−0.11), the lift is within seed noise, and **the
+  model still peaks at 2016, not 2020** — the event-locked surge *timing* is not
+  reproduced.
+- **H2 (remove early over-separation): PARTIAL.** The dampener reliably cuts the
+  1986–90 over-sep ~40% across seeds, but over-corrects the mid-period (1996–2008 turns
+  slightly under) — a side-effect, not a clean fix.
+- **H3 (no harm): PASS.** Econ untouched (|Δ| ≤ 0.010), no party_sep overshoot
+  (sep@2020 ~1.0–1.05 < real 1.147), cultural common-mode center preserved, affect ok.
+
+**Why it falsifies (the deeper root cause):** the activist→elite→mass loop amplifies
+along a **fixed 2D direction** (fixed econ:cult ratio; `activist_elite.py`), so the
+cultural gap's *timing* is structurally **bound to economics'**. A differential
+cultural cue — even event-timed and routed through the real channel — can shift the
+cultural *level* modestly but **cannot decouple/re-time** it (and PartyPull/FJ damp it
+heavily). **Genuinely fixing the mis-pacing requires a STRUCTURAL change** — an
+axis-specific mobilization/amplification direction in the loop, or a second
+cultural-only loop — which is well beyond a hand-drawn cue. **Recommendation:** keep
+#10 as a documented known miss; do **not** ship the cue-schedule hybrid; treat the
+loop-decoupling as a separate, larger design question if pursued.
