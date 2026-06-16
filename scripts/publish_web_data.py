@@ -85,6 +85,15 @@ from scripts.anes_preset import ANES_FULL_KWARGS
 # gap to real ANES (sep@2020 ~0.96 vs 1.147) is the model's genuine under-separation
 # (blindspot #10), which presentation must not paper over. Selection trail:
 # validation/sorting_overlay.log-style per-seed published measurements.
+#
+# NOTE (ensemble-static convention, 2026-06): this single representative seed drives
+# the web ANIMATION only (per-agent trajectory continuity + characters + ghost-fade
+# are not poolable across seeds). The STATIC reference compass + headline aggregate
+# metrics (centroids/gaps/sep/R-in-LL) use the model's ENSEMBLE — agents pooled across
+# clean seeds 0-7 (validation/render_ensemble_compass.py; docs/results/
+# blindspot_priority.md Part 1b) — so the reference numbers reflect the model's center
+# (R-in-LL@1996 ~12% vs seed 1's high 18.7%), not one realization. cc-data.js is left
+# internally self-consistent (cloud + macro both seed 1); no ensemble/seed mismatch.
 CANONICAL_SEED = 1
 TICKS_PER_YEAR = 3.0
 TICK_0_YEAR = 1980.0

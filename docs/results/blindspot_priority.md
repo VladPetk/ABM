@@ -43,6 +43,36 @@ spilling more mass into the redistributive quadrant. Ensemble econ@1996 0.40 vs 
 0.445 is within ~1.5σ — consistent with "econ matches arc-wide" (#10); this is a small
 mid-90s residual, not a structural miss. Figure: `overlap_1996_model_vs_anes.png`.
 
+### Part 1b — Ensemble static-compass convention (presentation-only; abm/ unchanged)
+
+Because seed 1 sits at the high end of the model's R-in-LL range (a single
+realization), the **static/reference compass and the headline overlap/separation
+numbers now use the model's ENSEMBLE**: agents **pooled across clean seeds 0-7 into one
+representative density** (a legitimate object - the model's own mixture distribution;
+the pooled centroids / gaps / R-in-LL share equal the multi-seed ensemble center). The
+web **animation keeps representative seed 1** - per-agent trajectory continuity,
+characters, and ghost-fade are **not poolable across seeds**, so `cc-data.js` is
+unchanged and stays internally self-consistent. This is **representativeness, not
+warming toward ANES** - every ensemble metric lands on the model's own center and stays
+short of ANES. Reproduce: `validation/render_ensemble_compass.py`; figure
+`validation/figures/ensemble_compass_1996_2020.png`.
+
+| year | metric | seed 1 (animation) | **ensemble (static)** | ANES |
+|---|---|---|---|---|
+| 1996 | econ-gap | 0.378 | **0.401** | 0.445 |
+| 1996 | cult-gap | 0.293 | **0.274** | 0.307 |
+| 1996 | sep | 0.478 | **0.485** | 0.540 |
+| 1996 | **R-in-LL** | 18.7% | **12.4%** | 6.8% |
+| 2020 | econ-gap | 0.707 | **0.767** | 0.838 |
+| 2020 | cult-gap | 0.645 | **0.637** | 0.783 |
+| 2020 | sep | 0.957 | **0.997** | 1.147 |
+| 2020 | R-in-LL | 3.6% | **3.7%** | 7.1% |
+
+The ensemble matches the model's true center measured earlier (econ@1996 ~0.40,
+R-in-LL ~12.3%, sep@2020 ~0.999): the 1996 R-in-LL drops 18.7% -> **12.4%** (removing
+seed 1's high realization) yet stays **well above ANES 6.8%** - the model's genuine
+mid-90s econ residual is preserved, not papered over.
+
 ---
 
 ## Part 2 — Blindspots ranked by consequence × tractability
