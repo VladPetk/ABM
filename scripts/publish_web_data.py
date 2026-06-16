@@ -71,30 +71,14 @@ import numpy as np
 # intervention scoreboard must be measured against the shipped baseline).
 from scripts.anes_preset import ANES_FULL_KWARGS
 
-# Presentation fix (2026-06): the published baseline displays ONE realization, and
-# seed 0 was an unrepresentative COLD one — its protected-baseline build (the 4
-# do_not_replace characters perturb the cohort-replacement RNG stream) landed the
-# mid-90s economic gap at the cold edge of the ensemble (published econ@1996 0.307
-# vs the model's clean multi-seed ensemble mean 0.397; the user's "looks
-# under-separated" complaint). This is NOT a model-dynamics issue — abm/ is
-# untouched — only WHICH realization we publish. Seed 1 is the most REPRESENTATIVE:
-# its published trajectory is closest to the model's own ensemble center across the
-# arc (econ@1996 0.378, sep@2020 0.957; dist-to-center 0.061 vs seed 0's 0.117), and
-# it is deliberately NOT the warmest seed (seeds 4/5 over-state vs the center) — we
-# match the model's faithful center, we do not cherry-pick toward ANES. The residual
-# gap to real ANES (sep@2020 ~0.96 vs 1.147) is the model's genuine under-separation
-# (blindspot #10), which presentation must not paper over. Selection trail:
-# validation/sorting_overlay.log-style per-seed published measurements.
-#
-# NOTE (ensemble-static convention, 2026-06): this single representative seed drives
-# the web ANIMATION only (per-agent trajectory continuity + characters + ghost-fade
-# are not poolable across seeds). The STATIC reference compass + headline aggregate
-# metrics (centroids/gaps/sep/R-in-LL) use the model's ENSEMBLE — agents pooled across
-# clean seeds 0-7 (validation/render_ensemble_compass.py; docs/results/
-# blindspot_priority.md Part 1b) — so the reference numbers reflect the model's center
-# (R-in-LL@1996 ~12% vs seed 1's high 18.7%), not one realization. cc-data.js is left
-# internally self-consistent (cloud + macro both seed 1); no ensemble/seed mismatch.
-CANONICAL_SEED = 1
+# Published baseline representation (2026-06): the model's faithful ENSEMBLE CENTER,
+# NOT a single seed. We pool K=8 clean seeds and draw a reproducible uniform 250-agent
+# cross-seed subsample (scripts/methodb_baseline.py; validated against per-index
+# averaging in docs/results/method_ab_verdict.md / commit 411de22). This preserves the
+# model's true within-party DISPERSION and sits at the ensemble center (R-in-LL@1996
+# ~12%, sep@2020 ~1.0), and it removes the old cold-seed/protected-baseline artifact
+# AT SOURCE (no protection, no characters). abm/ is untouched — only the published
+# representation changed. The single-seed canonical-seed convention is retired.
 TICKS_PER_YEAR = 3.0
 TICK_0_YEAR = 1980.0
 END_TICK = 135  # tick 135 ≈ end of 2025
@@ -373,7 +357,6 @@ def run_trajectory(
     end_tick: int = END_TICK,
     snapshot_ticks: list[int] | None = None,
     capture_agents: bool = True,
-    protected_agent_ids=None,
 ) -> dict:
     """Build engine, run to end_tick, capture per-tick state.
 
@@ -405,9 +388,6 @@ def run_trajectory(
     kwargs = dict(ANES_FULL_KWARGS)
     if n_agents is not None:
         kwargs["n_agents"] = int(n_agents)
-    if protected_agent_ids is not None:
-        # Step 2: spotlighted characters are immune to cohort replacement.
-        kwargs["protected_agent_ids"] = set(int(i) for i in protected_agent_ids)
 
     eng = build_engine(seed=seed, **kwargs)
     sched = build_schedule(
@@ -484,325 +464,6 @@ def run_trajectory(
         # viz can ghost-fade on each slot reuse (party-flipping or not).
         "replacement_events": list(eng.env.attrs.get("replacement_events", [])),
     }
-
-
-# --- Character selection ----------------------------------------------
-
-CHARACTER_ARCHETYPES = {
-    "linda": {
-        "name": "Linda",
-        "bio_template": (
-            "Linda is a school district administrator in suburban Ohio. "
-            "Married, two kids, voted Democrat through the 80s and 90s. "
-            "Drifted right over the years — by 2025 she's a steady "
-            "Republican voter who watches both MSNBC and Fox and trusts "
-            "neither completely."
-        ),
-        "issues_priority": ["education", "healthcare", "taxes"],
-        "demographics": {"city_template": "suburban Ohio", "occupation": "school administrator"},
-        # Scoring: starts D (party=0), ends R (party=1), moderate position drift.
-        "score_fn": "linda",
-    },
-    "james": {
-        "name": "James",
-        "bio_template": (
-            "James is a software engineer who came up in Seattle. "
-            "Lifelong Democrat. His positions barely budged over forty "
-            "years — but his warmth toward Republicans collapsed after "
-            "2008. By 2020 he'd cooled completely. Same beliefs, "
-            "different temperature."
-        ),
-        "issues_priority": ["climate", "tech regulation", "civil liberties"],
-        "demographics": {"city_template": "Seattle", "occupation": "software engineer"},
-        # Scoring: stable D, position barely moves, affect collapses.
-        "score_fn": "james",
-    },
-    "maria": {
-        "name": "Maria",
-        "bio_template": (
-            "Maria works as a nurse in Phoenix. Independent through "
-            "the 90s, leaned Democrat through Obama, found her politics "
-            "after 2016 — she's been part of the DSA-aligned left since "
-            "2018. The Bernie campaigns radicalized her where the "
-            "Clintons hadn't."
-        ),
-        "issues_priority": ["healthcare", "wages", "housing"],
-        "demographics": {"city_template": "Phoenix", "occupation": "nurse"},
-        # Scoring: starts Independent or moderate D, drifts left (negative x), DSA-ish.
-        "score_fn": "maria",
-    },
-    "bob": {
-        "name": "Bob",
-        "bio_template": (
-            "Bob runs a small construction business in Alabama. "
-            "Lifelong Republican. Voted Reagan, Bush, Bush, McCain — "
-            "got pulled into the Tea Party in 2009 and never left. "
-            "MAGA from the 2015 primary on. Doesn't talk politics with "
-            "his old college roommates anymore."
-        ),
-        "issues_priority": ["taxes", "immigration", "guns"],
-        "demographics": {"city_template": "Alabama", "occupation": "small business owner"},
-        # Scoring: starts R, factional movement (Tea Party / MAGA), drifts further right.
-        "score_fn": "bob",
-    },
-}
-
-
-def _score_agent_for_archetype(
-    archetype: str, idx: int, baseline: dict
-) -> float:
-    """Score a candidate agent index against an archetype. Higher = better fit.
-
-    Reads the canonical baseline trajectory and computes simple
-    aggregate signals (initial vs final party, position drift,
-    affect collapse, faction membership history).
-    """
-    n_ticks = baseline["n_ticks"]
-    ticks = baseline["ticks"]
-    static = baseline["agent_static"][idx]
-
-    # Party trajectory
-    party_series = [tick_data["party"][idx] for tick_data in ticks]
-    initial_party = party_series[0]
-    final_party = party_series[-1]
-
-    # Position trajectory
-    pos_series = np.array([tick_data["positions"][idx] for tick_data in ticks])
-    initial_pos = pos_series[0]
-    final_pos = pos_series[-1]
-    position_drift = float(np.linalg.norm(final_pos - initial_pos))
-    x_drift = float(final_pos[0] - initial_pos[0])
-    y_drift = float(final_pos[1] - initial_pos[1])
-
-    # Affect trajectory
-    affect_series = np.array([tick_data["affect"][idx] for tick_data in ticks])
-    initial_affect = float(affect_series[0])
-    final_affect = float(affect_series[-1])
-    affect_collapse = initial_affect - final_affect  # positive = cooled
-
-    # Faction history
-    faction_history = [tick_data["faction"][idx] for tick_data in ticks]
-    factions_visited = set(f for f in faction_history if f)
-
-    if archetype == "linda":
-        # Centrist D → R swing — a MODEST crosser, not a corner-to-corner
-        # odyssey. The old scorer rewarded `rightward * 2.0`, i.e. it
-        # cherry-picked the single most extreme traveler (net drift 1.24,
-        # top ~3% of all agents) — implausible for one continuous person.
-        # Now: require the D→R flip, then reward a gentle journey from
-        # ~center-left to ~center-right with SMALL total displacement.
-        if initial_party != 0 or final_party != 1:
-            return -1.0
-        if initial_pos[0] > -0.1:              # must start clearly left
-            return -1.0
-        if final_pos[0] < 0.1:                 # must end clearly right (real crossing)
-            return -1.0
-        # Target a MODERATE journey (~0.7 units) — penalize both a static
-        # label-flip (net≈0) and a corner-to-corner odyssey (net>1).
-        journey_fit = 1.0 - min(1.0, abs(position_drift - 0.7) / 0.6)
-        end_moderation = 1.0 - min(1.0, max(0.0, abs(final_pos[0]) - 0.5))  # not far corner
-        return journey_fit * 2.0 + end_moderation
-    if archetype == "james":
-        # Stable D, low position drift, high affect collapse
-        if initial_party != 0 or final_party != 0:
-            return -1.0
-        stability = 1.0 - min(1.0, position_drift)
-        cooling = max(0.0, affect_collapse)
-        return stability * 1.5 + cooling * 2.0
-    if archetype == "maria":
-        # Independent or D, drifts left (negative x), DSA-ish
-        if initial_party not in (0, 2):
-            return -1.0
-        leftward = max(0.0, -x_drift)
-        dsa_fit = 1.0 if "DSA" in factions_visited or "Bernie_Progressives" in factions_visited else 0.0
-        return leftward * 1.5 + dsa_fit * 2.0
-    if archetype == "bob":
-        # Stable R, factional involvement, rightward drift
-        if initial_party != 1 or final_party != 1:
-            return -1.0
-        rightward = max(0.0, x_drift)
-        factional = 1.0 if (
-            "Tea_Party" in factions_visited or "MAGA" in factions_visited
-        ) else 0.0
-        return rightward * 1.0 + factional * 3.0
-    return 0.0
-
-
-def select_character_indices(baseline: dict) -> dict[str, int]:
-    """Score every agent against each archetype on the given baseline and
-    return ``{archetype_id: agent_index}`` for the best non-overlapping fit.
-
-    Step 2 (web_demo jumpiness): this runs on an UNPROTECTED baseline so
-    archetype fit is judged on the natural dynamics; the chosen indices
-    are then flagged `do_not_replace` for the published (protected) runs.
-    """
-    n_agents = baseline["n_agents"]
-    chosen: dict[str, int] = {}
-    used: set[int] = set()
-    for archetype in ("linda", "bob", "maria", "james"):
-        scored = []
-        for idx in range(n_agents):
-            if idx in used:
-                continue
-            score = _score_agent_for_archetype(archetype, idx, baseline)
-            if score > 0:
-                scored.append((score, idx))
-        scored.sort(reverse=True)
-        if not scored:
-            print(f"  WARNING: no agent matched archetype {archetype!r} — skipping")
-            continue
-        _, idx = scored[0]
-        used.add(idx)
-        chosen[archetype] = idx
-    return chosen
-
-
-def build_character_payload(
-    archetype: str, idx: int, baseline: dict
-) -> dict:
-    """Build the per-character export dict (trajectory summary + beats)
-    for a known agent index, read off the given (published) baseline."""
-    meta = CHARACTER_ARCHETYPES[archetype]
-    trajectory = []
-    for t in range(baseline["n_ticks"]):
-        td = baseline["ticks"][t]
-        trajectory.append({
-            "tick": t,
-            "position": td["positions"][idx],
-            "party": td["party"][idx],
-            "affect": td["affect"][idx],
-            "threat": td["threat"][idx],
-            "faction": td["faction"][idx],
-        })
-    # Derive narrative beats — light procedural annotation. Real
-    # hand-written beats can replace this once an author reads the
-    # trajectory.
-    beats = _build_narrative_beats(archetype, trajectory)
-    return {
-        "id": archetype,
-        "name": meta["name"],
-        "agent_index": idx,
-        "bio": meta["bio_template"],
-        "issues_priority": meta["issues_priority"],
-        "demographics": meta["demographics"],
-        "narrative_beats": beats,
-        "trajectory_summary": _summarize_trajectory(trajectory),
-    }
-
-
-def _summarize_trajectory(trajectory: list[dict]) -> dict:
-    """Compact summary stats for the FE to render at-a-glance."""
-    initial = trajectory[0]
-    final = trajectory[-1]
-    party_switches = sum(
-        1 for i in range(1, len(trajectory))
-        if trajectory[i]["party"] != trajectory[i - 1]["party"]
-    )
-    factions_visited = sorted({
-        t["faction"] for t in trajectory if t["faction"]
-    })
-    return {
-        "initial_party": initial["party"],
-        "final_party": final["party"],
-        "initial_position": initial["position"],
-        "final_position": final["position"],
-        "initial_affect": initial["affect"],
-        "final_affect": final["affect"],
-        "party_switches": party_switches,
-        "factions_visited": factions_visited,
-    }
-
-
-def _build_narrative_beats(archetype: str, trajectory: list[dict]) -> list[dict]:
-    """Procedural narrative beats keyed off the agent's per-tick state.
-
-    These are placeholders an author should rewrite for the public
-    demo. The structure is what the FE consumes: an ordered list of
-    {tick, year, text} entries.
-    """
-    beats = []
-    # Beat 1: 1985 baseline
-    t15 = trajectory[15] if len(trajectory) > 15 else trajectory[-1]
-    beats.append({
-        "tick": 15,
-        "year": 1985,
-        "text": _beat_1985(archetype, t15),
-    })
-    # Beat 2: 1996 / 2000 transition
-    t60 = trajectory[60] if len(trajectory) > 60 else trajectory[-1]
-    beats.append({
-        "tick": 60,
-        "year": 2000,
-        "text": _beat_2000(archetype, t60),
-    })
-    # Beat 3: 2009 / Tea Party era
-    t87 = trajectory[87] if len(trajectory) > 87 else trajectory[-1]
-    beats.append({
-        "tick": 87,
-        "year": 2009,
-        "text": _beat_2009(archetype, t87),
-    })
-    # Beat 4: 2016 / Trump
-    t108 = trajectory[108] if len(trajectory) > 108 else trajectory[-1]
-    beats.append({
-        "tick": 108,
-        "year": 2016,
-        "text": _beat_2016(archetype, t108),
-    })
-    # Beat 5: 2025 endpoint
-    tend = trajectory[-1]
-    beats.append({
-        "tick": tend["tick"],
-        "year": int(TICK_0_YEAR + tend["tick"] / TICKS_PER_YEAR),
-        "text": _beat_endpoint(archetype, tend),
-    })
-    return beats
-
-
-def _party_word(p):
-    return {0: "Democratic", 1: "Republican", 2: "Independent"}.get(int(p), "?")
-
-
-def _beat_1985(archetype, state):
-    return (
-        f"In 1985, {CHARACTER_ARCHETYPES[archetype]['name']} is voting "
-        f"{_party_word(state['party'])}. Out-party warmth: {state['affect']:+.2f}."
-    )
-
-
-def _beat_2000(archetype, state):
-    return (
-        f"By 2000, position has shifted to ({state['position'][0]:+.2f}, "
-        f"{state['position'][1]:+.2f}). Still {_party_word(state['party'])}."
-    )
-
-
-def _beat_2009(archetype, state):
-    faction = state["faction"]
-    if faction:
-        return f"By 2009, joined the {faction.replace('_', ' ')} cluster. Position ({state['position'][0]:+.2f}, {state['position'][1]:+.2f})."
-    return (
-        f"In the Tea Party era. Still {_party_word(state['party'])}; "
-        f"warmth at {state['affect']:+.2f}."
-    )
-
-
-def _beat_2016(archetype, state):
-    faction = state["faction"]
-    threat = state["threat"]
-    extra = f" Faction: {faction.replace('_', ' ')}." if faction else ""
-    return (
-        f"Trump election. {_party_word(state['party'])}; warmth "
-        f"{state['affect']:+.2f}; threat level {threat:.2f}.{extra}"
-    )
-
-
-def _beat_endpoint(archetype, state):
-    return (
-        f"At end of 2025: {_party_word(state['party'])}, position "
-        f"({state['position'][0]:+.2f}, {state['position'][1]:+.2f}), "
-        f"warmth {state['affect']:+.2f}."
-    )
 
 
 # --- Manifest + metadata builders --------------------------------------
@@ -955,8 +616,10 @@ def build_manifest(
     release_ticks: list[int],
     intervention_ids: list[str],
     variance_seeds: list[int],
-    character_ids: list[str],
     end_tick: int,
+    subsample_rng_seed: int,
+    ensemble_seeds: list[int],
+    intervention_seed: int,
 ) -> dict:
     return {
         "version": 1,
@@ -967,7 +630,14 @@ def build_manifest(
         "tick_0_year": TICK_0_YEAR,
         "ticks_per_year": TICKS_PER_YEAR,
         "end_tick": int(end_tick),
-        "canonical_seed": CANONICAL_SEED,
+        # Method-B published baseline (commit 411de22): the model's faithful
+        # ensemble center — K clean seeds pooled, a reproducible uniform 250-agent
+        # cross-seed subsample (deterministic given subsample_rng_seed). There is
+        # no single canonical seed any more.
+        "baseline_file": "baseline/baseline.json",
+        "subsample_rng_seed": int(subsample_rng_seed),
+        "ensemble_seeds": [int(s) for s in ensemble_seeds],
+        "intervention_seed": int(intervention_seed),
         "variance_band_seeds": [int(s) for s in variance_seeds],
         "release_ticks": [int(t) for t in release_ticks],
         "release_years": {
@@ -975,7 +645,6 @@ def build_manifest(
             for t in release_ticks
         },
         "interventions": list(intervention_ids),
-        "characters": list(character_ids),
         "ideology_axes": {
             "x": {"label": "Economic", "lo": "Redistributive", "hi": "Laissez-faire"},
             "y": {"label": "Cultural", "lo": "Progressive", "hi": "Traditional"},
@@ -984,9 +653,8 @@ def build_manifest(
             "events": "events.json",
             "intervention_metadata": "intervention_metadata.json",
             "entities": "entities.json",
-            "baseline": "baseline/seed_{seed}.json",
+            "baseline": "baseline/baseline.json",
             "intervention": "interventions/{intervention_id}_at_{year}.json",
-            "character": "characters/{character_id}.json",
         },
     }
 
@@ -1021,7 +689,6 @@ def _publish_worker(args: tuple) -> dict:
         capture_agents,      # bool
         end_tick,            # int
         snapshot_ticks,      # list[int] | None
-        protected_agent_ids, # list[int] | None
     )
 
     Returns ``{"path", "elapsed_s", "size_bytes", "intervention_id",
@@ -1032,7 +699,6 @@ def _publish_worker(args: tuple) -> dict:
     (
         out_path_str, seed, intervention_id, release_tick,
         n_agents, capture_agents, end_tick, snapshot_ticks,
-        protected_agent_ids,
     ) = args
     t0 = _time.time()
     traj = run_trajectory(
@@ -1043,7 +709,6 @@ def _publish_worker(args: tuple) -> dict:
         end_tick=end_tick,
         snapshot_ticks=snapshot_ticks,
         capture_agents=capture_agents,
-        protected_agent_ids=protected_agent_ids,
     )
     out_path = Path(out_path_str)
     write_json(out_path, traj)
@@ -1199,26 +864,21 @@ def main():
         n_agents = args.n_agents or 80
         intervention_ids = ["X1_show_other_side", "X5_deprogramming", "X6_shared_institutions"]
         release_ticks = args.release_ticks or [90]
-        variance_seeds: list[int] = []
     else:
         n_agents = args.n_agents
         intervention_ids = resolve_intervention_ids(args.interventions)
         release_ticks = args.release_ticks or DEFAULT_RELEASE_TICKS
-        if args.skip_variance:
-            variance_seeds = []
-        else:
-            variance_seeds = args.variance_seeds or list(range(0, 9))
-            # never let a variance run overwrite the full canonical baseline file
-            variance_seeds = [s for s in variance_seeds if s != CANONICAL_SEED]
+    # The variance band is now written (macro-only) from the same ENSEMBLE_SEEDS
+    # runs that build the Method-B baseline; --variance-seeds / --skip-variance are
+    # accepted for compatibility but no longer drive separate runs.
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "baseline").mkdir(exist_ok=True)
     (out_dir / "interventions").mkdir(exist_ok=True)
-    (out_dir / "characters").mkdir(exist_ok=True)
 
-    # Resolve process count for the parallel phase.
-    n_jobs_parallel = len(variance_seeds) + len(intervention_ids) * len(release_ticks)
+    # Process count for the parallel intervention phase.
+    n_jobs_parallel = len(intervention_ids) * len(release_ticks)
     if args.serial:
         n_processes = 1
     elif args.processes is not None:
@@ -1232,64 +892,39 @@ def main():
     print(f"  n_agents:        {n_agents or 'default (250)'}")
     print(f"  interventions:   {intervention_ids}")
     print(f"  release_ticks:   {release_ticks}")
-    print(f"  variance_seeds:  {variance_seeds or 'none (canonical only)'}")
     print(f"  end_tick:        {END_TICK}")
     print(f"  parallel:        {n_processes} worker process(es) for {n_jobs_parallel} job(s)")
     print("=" * 78)
 
     t_start = time.time()
 
-    # --- 1. Character selection pass (ALL agents protected) ------------
-    # Step 2 (web_demo jumpiness): archetype fit must be scored on the
-    # SAME dynamics the characters will ship under — continuous lives
-    # (no cohort-replacement relay) whose party follows sustained
-    # ideological position (ProtectedPartyRealignment). So we score on a
-    # run where EVERY agent is protected: party then tracks position, and
-    # the party-keyed archetype scores (stable-D, D→R swing, …) become
-    # position-coherent automatically. The 4 chosen indices are then the
-    # only ones protected in the published runs.
-    n_eff = int(n_agents) if n_agents else ANES_FULL_KWARGS["n_agents"]
-    print(f"\n[1] Character-selection pass (seed={CANONICAL_SEED}, all protected) …")
-    t0 = time.time()
-    scoring_baseline = run_trajectory(
-        seed=CANONICAL_SEED,
-        intervention_id=None,
-        release_tick=None,
-        n_agents=n_agents,
-        end_tick=END_TICK,
-        capture_agents=True,
-        protected_agent_ids=range(n_eff),
+    # --- 1. Method-B published baseline (ensemble subsample; commit 411de22) ---
+    # The faithful representation: K clean seeds pooled, a reproducible uniform
+    # 250-agent cross-seed subsample. No protection, no characters. The K ensemble
+    # seeds are run (full capture) serially so the parent can pool them; the
+    # interventions parallelize below.
+    from scripts.methodb_baseline import (
+        build_methodb_baseline, ENSEMBLE_SEEDS, SUBSAMPLE_RNG_SEED,
     )
-    chosen_indices = select_character_indices(scoring_baseline)
-    protected_ids = sorted(set(chosen_indices.values()))
-    print(f"     ↳ {time.time() - t0:.1f}s  chosen={chosen_indices}  protected={protected_ids}")
-
-    # --- 2. Published canonical baseline (protected) -------------------
-    print(f"\n[2] Canonical baseline (seed={CANONICAL_SEED}, protected) …")
-    t0 = time.time()
-    baseline = run_trajectory(
-        seed=CANONICAL_SEED,
-        intervention_id=None,
-        release_tick=None,
-        n_agents=n_agents,
-        end_tick=END_TICK,
-        capture_agents=True,
-        protected_agent_ids=protected_ids,
-    )
-    print(
-        f"     ↳ {time.time() - t0:.1f}s  "
-        f"({len(baseline['replacement_events'])} cohort replacements)"
-    )
-    write_json(out_dir / "baseline" / f"seed_{CANONICAL_SEED}.json", baseline)
-
-    # Characters derived from the PUBLISHED (protected) baseline so beats
-    # / summaries reflect the continuous-life trajectory the demo shows.
-    characters = {
-        arch: build_character_payload(arch, idx, baseline)
-        for arch, idx in chosen_indices.items()
-    }
-    for char_id, char_data in characters.items():
-        write_json(out_dir / "characters" / f"{char_id}.json", char_data, indent=2)
+    intervention_seed = int(ENSEMBLE_SEEDS[0])
+    print(f"\n[1] Ensemble baseline: {len(ENSEMBLE_SEEDS)} clean seeds (full capture) ...")
+    ens_trajs = []
+    for s_ in ENSEMBLE_SEEDS:
+        t0 = time.time()
+        ens_trajs.append(run_trajectory(
+            seed=int(s_), intervention_id=None, release_tick=None,
+            n_agents=n_agents, end_tick=END_TICK, capture_agents=True))
+        print(f"     - seed {s_}: {time.time() - t0:.1f}s")
+    baseline = build_methodb_baseline(ens_trajs)
+    write_json(out_dir / "baseline" / "baseline.json", baseline)
+    print(f"     - Method-B subsample built ({len(baseline['replacement_events'])} "
+          f"ghost-fade events; subsample_rng_seed {SUBSAMPLE_RNG_SEED})")
+    for s_, tr in zip(ENSEMBLE_SEEDS, ens_trajs):
+        write_json(out_dir / "baseline" / f"seed_{int(s_)}.json", {
+            "n_agents": tr["n_agents"], "n_ticks": tr["n_ticks"], "seed": int(s_),
+            "tick_0_year": tr["tick_0_year"], "ticks_per_year": tr["ticks_per_year"],
+            "ticks": None, "macro": tr["macro"],
+        })
 
     # --- 3 + 4 in parallel. Build one work list for both ---------------
     # Each work item is a tuple consumed by _publish_worker. We batch
@@ -1303,22 +938,10 @@ def main():
 
     work_items: list[tuple] = []
 
-    # Variance-band baseline jobs.
-    for seed in variance_seeds:
-        out_path = out_dir / "baseline" / f"seed_{seed}.json"
-        work_items.append((
-            str(out_path),
-            int(seed),
-            None,         # intervention_id
-            None,         # release_tick
-            n_agents,
-            False,        # capture_agents = False (macro-only)
-            END_TICK,
-            DEFAULT_NETWORK_SNAPSHOT_TICKS,
-            protected_ids,
-        ))
-
-    # Intervention × release-tick jobs.
+    # Variance bands already written (macro-only) from the ensemble runs above.
+    # Intervention × release-tick jobs — SINGLE seed (intervention_seed); the Δ is
+    # differenced in the front-end against baseline.macro_ctrl (the same single
+    # seed), so the blessed phase10 buckets are preserved. Un-protected.
     for iv_id in intervention_ids:
         for rt in release_ticks:
             year = int(TICK_0_YEAR + rt / TICKS_PER_YEAR)
@@ -1326,14 +949,13 @@ def main():
             out_path = out_dir / "interventions" / fname
             work_items.append((
                 str(out_path),
-                CANONICAL_SEED,
+                intervention_seed,
                 iv_id,
                 int(rt),
                 n_agents,
                 True,         # capture_agents = True (full)
                 END_TICK,
                 DEFAULT_NETWORK_SNAPSHOT_TICKS,
-                protected_ids,
             ))
 
     if work_items:
@@ -1365,9 +987,11 @@ def main():
         n_agents=baseline["n_agents"],
         release_ticks=release_ticks,
         intervention_ids=intervention_ids,
-        variance_seeds=variance_seeds,
-        character_ids=list(characters.keys()),
+        variance_seeds=list(ENSEMBLE_SEEDS),
         end_tick=END_TICK,
+        subsample_rng_seed=SUBSAMPLE_RNG_SEED,
+        ensemble_seeds=list(ENSEMBLE_SEEDS),
+        intervention_seed=intervention_seed,
     )
     write_json(out_dir / "manifest.json", manifest, indent=2)
 

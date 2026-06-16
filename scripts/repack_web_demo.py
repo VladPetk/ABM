@@ -105,7 +105,7 @@ def _in_party_warmth(t: int, n_ticks: int) -> float:
     return round(deg, 2)
 
 
-def build_run(traj: dict, char_indices: list[int]) -> dict:
+def build_run(traj: dict) -> dict:
     """Convert a full publish_web_data trajectory into the prototype's
     compact baseline Run shape (web_data_contract.md)."""
     ticks = traj["ticks"]
@@ -148,31 +148,29 @@ def build_run(traj: dict, char_indices: list[int]) -> dict:
         str(t): list(ticks[t]["faction"]) for t in sparse_ticks
     }
 
-    # Per-character affect + faction series, keyed by agent index (the
-    # deferred character layer; cheap to keep for a later version).
-    char_affect: dict[str, list] = {}
-    char_faction: dict[str, list] = {}
-    for idx in char_indices:
-        char_affect[str(idx)] = [
-            round(float(td["affect"][idx]), 4) for td in ticks
-        ]
-        char_faction[str(idx)] = [td["faction"][idx] for td in ticks]
-
-    return {
+    run = {
         "release_tick": traj.get("release_tick"),
         "pos": pos,
         "party": party,
         "affect": affect,
         "macro": macro,
         "faction": faction,
-        "charAffect": char_affect,
-        "charFaction": char_faction,
         # Step 1 (web_demo jumpiness): [tick, agent_id] of every cohort
         # replacement so the viz can ghost-fade on each slot reuse.
         "replacement_events": [
             [int(t), int(a)] for t, a in traj.get("replacement_events", [])
         ],
     }
+    # Method-B baseline: the single-seed control macro the intervention Δ is
+    # differenced against in the front-end (cf − macro_ctrl), so the blessed
+    # phase10 buckets are preserved even though the displayed `macro` above is the
+    # ensemble mean. Only present on the ensemble baseline.
+    if traj.get("macro_ctrl") is not None:
+        run["macro_ctrl"] = [
+            {k: float(m[src]) for k, src in MACRO_KEY_MAP.items()}
+            for m in traj["macro_ctrl"]
+        ]
+    return run
 
 
 def build_counterfactuals(data: Path) -> dict:
@@ -283,26 +281,6 @@ def build_interventions(iv_meta: dict) -> dict:
     return out
 
 
-def build_chars(char_files: dict[str, dict]) -> dict:
-    out = {}
-    for char_id, c in char_files.items():
-        demo = c.get("demographics", {})
-        beats = [
-            {"tick": b["tick"], "prose": b.get("text", b.get("prose", ""))}
-            for b in c.get("narrative_beats", [])
-        ]
-        out[char_id] = {
-            "name": c["name"],
-            "agent_index": c["agent_index"],
-            "job": demo.get("occupation", ""),
-            "city": demo.get("city_template", ""),
-            "issues": c.get("issues_priority", []),
-            "bio": c.get("bio", ""),
-            "beats": beats,
-        }
-    return out
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", default=str(_PROJECT_ROOT / "web" / "data"))
@@ -319,22 +297,11 @@ def main():
         (data / "entities.json").read_text(encoding="utf-8")
     )
 
-    # Characters are RETIRED from the shipped web (MHV S5 T5.1 — the character
-    # panel is unmounted in cc-unified.jsx). They are stripped from the bundle
-    # (`chars: {}` below) and no per-character series are sliced into the run.
-    # Loading stays tolerant so this works whether or not publish still emits the
-    # (now-unused) character files.
-    char_files: dict[str, dict] = {}
-    for char_id in manifest.get("characters", []):
-        p = data / "characters" / f"{char_id}.json"
-        if p.exists():
-            char_files[char_id] = json.loads(p.read_text(encoding="utf-8"))
-    char_indices: list[int] = []   # no per-character slicing (characters retired)
-
-    # Baseline run (the only full per-tick run shipped; the old X7
-    # single-intervention full-run path is dropped — interventions now
-    # ship LEAN via counterfactuals, contract v1 §3).
-    baseline_path = data / "baseline" / f"seed_{manifest['canonical_seed']}.json"
+    # Baseline run — the Method-B ensemble subsample (the only full per-tick run
+    # shipped; interventions ship LEAN via counterfactuals, contract v1 §3).
+    # Characters are RETIRED — no character files, no per-character slicing.
+    baseline_path = data / manifest.get(
+        "baseline_file", "baseline/baseline.json")
     baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
 
     counterfactuals = build_counterfactuals(data)
@@ -346,10 +313,9 @@ def main():
         "interventions": build_interventions(iv_meta),
         "entities": entities_json,
         "runs": {
-            "baseline": build_run(baseline, char_indices),
+            "baseline": build_run(baseline),
         },
         "counterfactuals": counterfactuals,
-        "chars": {},   # MHV S5 T5.1 — characters retired; stripped from the bundle.
     }
 
     payload = json.dumps(bundle, separators=(",", ":"), ensure_ascii=False)
@@ -360,7 +326,9 @@ def main():
     size_mb = out_path.stat().st_size / 1024 / 1024
     n_cf = sum(len(v) for v in counterfactuals.values())
     print(f"wrote {out_path}  ({size_mb:.2f} MB)")
-    print(f"  characters: {[ (k, v['agent_index']) for k,v in char_files.items() ]}")
+    print(f"  baseline: Method-B ensemble subsample "
+          f"({len(baseline['ticks'][0]['positions'])} agents, "
+          f"subsample_rng_seed {manifest.get('subsample_rng_seed')})")
     print(f"  baseline replacements: {len(baseline.get('replacement_events', []))}")
     print(f"  counterfactuals: {n_cf} ({len(counterfactuals)} interventions)")
     print(f"  entities: {len(entities_json['factions_1980'])} founding / "

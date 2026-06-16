@@ -27,9 +27,8 @@ window.CC_DATA = {
   events,            // timeline event records
   interventions,     // per-intervention metadata (all 7)
   entities,          // engine-derived entity layer (factions + outlets)
-  runs,              // { baseline } — the only full per-tick run
+  runs,              // { baseline } — the only full per-tick run (Method-B subsample)
   counterfactuals,   // all 56 intervention runs, LEAN
-  chars,             // 4 deferred-character bios (v1 ships data, no UI)
 }
 ```
 
@@ -54,9 +53,21 @@ Constants for the canonical run: **`n_agents = 250`**, **`n_ticks = 136`**
 | `release_years` | object | `{"<tick>": <year>}` for the 8 counterfactual release ticks |
 | `affect_scale` | object | affect conventions — see below |
 
-> **Retired:** `meta.characters` was dropped (named characters were retired;
-> the bundle ships `chars: {}` and mounts no character UI). Older bundles may
-> still carry it; it is not part of the live contract.
+> **Retired:** named characters were retired; as of the Method-B baseline
+> (2026-06) the `chars` top-level key and the `charAffect` / `charFaction`
+> per-run keys are **removed entirely** (not just empty), along with the publish
+> character-selection + agent-protection machinery. Older bundles may still carry
+> them; they are not part of the live contract.
+>
+> **Baseline representation (2026-06):** `runs.baseline` is the model's faithful
+> **ensemble center** — K=8 clean seeds pooled, a reproducible uniform 250-agent
+> cross-seed subsample (deterministic given `meta`/manifest `subsample_rng_seed`).
+> It preserves the model's true within-party dispersion (validated vs per-index
+> averaging: `docs/results/method_ab_verdict.md`). `runs.baseline.macro` is the
+> **ensemble mean**; `runs.baseline.macro_ctrl` is the single-seed
+> (`intervention_seed`) macro the **single-seed intervention Δ is differenced
+> against** (so the blessed phase10 buckets are preserved). The
+> single-canonical-seed convention is retired.
 
 ### `meta.affect_scale`
 
@@ -168,9 +179,8 @@ now ship LEAN via `counterfactuals`.)
 | `affect` | array | `[136][250]` | float 3dp | ~209 KB | **§1** full-crowd out-party warmth ∈ [-1,1] (`aff_out`) |
 | `macro` | array | `[136]` | object | ~25 KB | per-tick macro metrics — see below |
 | `faction` | object | `{tick: [250]}` | string\|null | ~8 KB | **§6** SPARSE crowd faction labels |
-| `charAffect` | object | `{idx: [136]}` | float 4dp | ~4 KB | per-character affect (deferred layer) |
-| `charFaction` | object | `{idx: [136]}` | string\|null | ~3 KB | per-character faction (deferred layer) |
-| `replacement_events` | array | `[N][2]` | int | ~1 KB | `[tick, agent_id]` of every cohort replacement |
+| `macro_ctrl` | array | `[136]` | object | ~25 KB | single-seed (`intervention_seed`) macro — the control the intervention Δ is differenced against (buckets preserved). Baseline only. |
+| `replacement_events` | array | `[N][2]` | int | ~1 KB | `[tick, agent_id]` of every cohort replacement (ghost-fade) |
 
 **Dropped in v1:** `net` (network snapshots, ~218 KB) — no v1 society-level
 view consumes them.
@@ -221,21 +231,12 @@ Release ticks/years: 15/1985, 30/1990, 45/1995, 60/2000, 75/2005, 90/2010,
 
 ---
 
-## `chars` (empty)
-
-Named characters were **retired**. The bundle ships `chars: {}` and mounts no
-character UI — the demo is society-level only. (Earlier v1 builds shipped four
-named composites here; that surface was removed, not deferred.)
-
----
-
 ## Provenance summary (what is and isn't the engine)
 
 | Series | Provenance |
 |---|---|
-| `pos`, `party`, `affect`, `macro.{sep,aff,varr,mod,xc,pc0,pc1}`, `faction`, `replacement_events`, all `counterfactuals` | **engine** (phase10 / anes_full / seed 0) |
+| `pos`, `party`, `affect`, `macro.{sep,aff,varr,mod,xc,pc0,pc1}`, `macro_ctrl`, `faction`, `replacement_events`, all `counterfactuals` | **engine** (phase10 / anes_full; baseline = Method-B 8-seed ensemble subsample; interventions = `intervention_seed`) |
 | `entities.factions_1980`, `entities.outlets` | **engine constants** (`HISTORICAL_FACTIONS_1980`, `US_MEDIA_OUTLETS_2024_ANES`) |
 | `entities.factions_emergent` | **engine-mirroring constants** (hardcoded from the ANES-knob emergence handlers) |
 | `macro.aff_in_empirical` | **EXTERNAL ANES overlay — not engine** |
 | `meta.affect_scale.degrees_note` mapping | **display-only**, not an engine metric |
-| `chars.*.beats` | procedural placeholders, pending an authoring pass |

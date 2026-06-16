@@ -1,5 +1,5 @@
 """Re-render the 1996 + 2020 compass from the CORRECTED published export
-(web/data/baseline/seed_1.json — the representative canonical seed). Confirms the
+(web/data/baseline/baseline.json — the representative canonical seed). Confirms the
 separation the demo now shows. Compass style matches scripts/anes_2d_compass.py."""
 import json
 from pathlib import Path
@@ -20,7 +20,7 @@ BW = 0.28
 ANES = {1996: {0: (-0.070, 0.067), 1: (0.375, 0.374)},
         2020: {0: (-0.418, -0.420), 1: (0.420, 0.363)}}
 
-d = json.load(open(ROOT / "web/data/baseline/seed_1.json"))
+d = json.load(open(ROOT / "web/data/baseline/baseline.json"))
 
 
 def at(yr):
@@ -67,7 +67,7 @@ legend = [Line2D([0], [0], color=PARTY_COLORS[0], lw=2, label="Democrats"),
           Line2D([0], [0], marker="o", color="w", markerfacecolor="#444", markersize=8, label="model centroid"),
           Line2D([0], [0], marker="*", color="w", markeredgecolor="#444", markerfacecolor="none", markersize=14, label="ANES centroid")]
 fig.legend(handles=legend, loc="lower center", ncol=4, fontsize=9, frameon=False, bbox_to_anchor=(0.5, -0.02))
-fig.suptitle("Corrected published export (representative seed 1) — 1996 & 2020 compass", fontsize=12)
+fig.suptitle("Corrected published export (Method-B ensemble subsample) — 1996 & 2020 compass", fontsize=12)
 fig.tight_layout(rect=[0, 0.05, 1, 0.96])
-p = OUT / "export_compass_seed1_1996_2020.png"; fig.savefig(p, dpi=150); plt.close(fig)
+p = OUT / "methodb_published_1996_2020.png"; fig.savefig(p, dpi=150); plt.close(fig)
 print("WROTE", p)

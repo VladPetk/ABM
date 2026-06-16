@@ -49,6 +49,11 @@ const HORIZON = 30; // phase10 measurement window (clipped to available length)
 const IVMETA = D.interventions;
 const CF = D.counterfactuals;
 const BASE_MACRO = D.runs.baseline.macro;
+// Intervention Δ control: the interventions are a single seed, so their Δ is
+// differenced against that SAME seed's baseline macro (macro_ctrl), NOT the
+// ensemble-mean display macro — this preserves the blessed phase10 buckets.
+// Falls back to macro if a bundle predates the Method-B baseline.
+const BASE_MACRO_CTRL = D.runs.baseline.macro_ctrl || D.runs.baseline.macro;
 const BASE_POS_LAST = D.runs.baseline.pos[LAST];
 const BASE_PARTY_LAST = D.runs.baseline.party[LAST];
 
@@ -79,8 +84,8 @@ function deltasAt(id, year) {
   const bt = rt + k;
   return {
     cf, releaseTick: rt,
-    dSep: cf.sep[k] - BASE_MACRO[bt].sep,
-    dAff: cf.aff[k] - BASE_MACRO[bt].aff, // out-party warmth Δ: positive = warmer = helpful
+    dSep: cf.sep[k] - BASE_MACRO_CTRL[bt].sep,
+    dAff: cf.aff[k] - BASE_MACRO_CTRL[bt].aff, // out-party warmth Δ: positive = warmer = helpful
   };
 }
 // Headline bucket for an intervention at a release year (drives the live tag).

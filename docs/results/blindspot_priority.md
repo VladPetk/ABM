@@ -45,6 +45,13 @@ mid-90s residual, not a structural miss. Figure: `overlap_1996_model_vs_anes.png
 
 ### Part 1b — Ensemble static-compass convention (presentation-only; abm/ unchanged)
 
+> **SUPERSEDED (2026-06):** the seed-1-animation / ensemble-static split below was
+> replaced by the **Method-B published baseline** — the web ANIMATION itself is now
+> the ensemble (8 seeds pooled → reproducible uniform 250-agent cross-seed subsample;
+> `docs/results/method_ab_verdict.md`, `scripts/methodb_baseline.py`), with the
+> character/protection scaffolding removed at source. No more single high-realization
+> seed; the published cloud carries the model's true dispersion AND ensemble center.
+
 Because seed 1 sits at the high end of the model's R-in-LL range (a single
 realization), the **static/reference compass and the headline overlap/separation
 numbers now use the model's ENSEMBLE**: agents **pooled across clean seeds 0-7 into one
