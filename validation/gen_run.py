@@ -17,6 +17,11 @@ kw = dict(ANES_FULL_KWARGS)
 if mode == "emergent":
     kw["cultural_common_mode"] = True
     kw["cohort_replacement_rate"] = 0.007
+elif mode == "econ_on":
+    # canonical (cultural common-mode already on) + the economic common-mode channel
+    kw["economic_common_mode"] = True
+elif mode == "canonical":
+    pass  # the shipped ANES_FULL_KWARGS as-is (cultural on, econ off)
 
 eng = build_engine(seed=0, **kw)
 sched = build_schedule(

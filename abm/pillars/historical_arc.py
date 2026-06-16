@@ -44,7 +44,8 @@ from ..rules.affective_update import AffectiveUpdate
 from ..rules.mediated_animus import MediatedAnimus
 from ..rules.cohort_replacement import CohortReplacement
 from ..rules.cultural_common_mode import (
-    CommonModeCulture, sample_initial_birth_years,
+    CommonModeCulture, CommonModeEconomic, ECON_MOOD_AMPLITUDE,
+    sample_initial_birth_years,
 )
 from ..rules.elite_drift import EliteDrift
 from ..rules.faction_anchor import FactionAnchor
@@ -658,6 +659,21 @@ def build_engine(
     # demographically realistic turnover (~0.006-0.008) for m(t) to move enough;
     # None keeps the historical rate (bit-identical).
     cohort_replacement_rate: float | None = None,
+    # reality-validation (branch econ-common-mode-mood) — CommonModeEconomic: the
+    # society-wide ECONOMIC baseline channel. Same architecture gap the cultural
+    # channel fixed, but on the econ axis: the partisan econ center of mass is
+    # pinned ≈0 the whole arc while ANES (cross-checked by GSS) rises to ~+0.15
+    # mid-90s then declines to ~−0.05 by 2024 (non-monotone). Cohort replacement
+    # (monotone) cannot make this, so the channel is driven by an EXOGENOUS
+    # thermostatic policy-mood forcing (Stimson/Wlezien; see
+    # abm/rules/cultural_common_mode.py::economic_mood_offset). When True, a
+    # CommonModeEconomic env rule snaps the econ common mode to m_econ(t) each
+    # tick (rigid, sorting-invariant). Independent of cultural_common_mode (no
+    # birth_year needed). Default False → channel not installed → bit-identical.
+    economic_common_mode: bool = False,
+    # Optional override of the econ mood-curve peak amplitude (compass units at the
+    # 1996 welfare-reform peak). None → ECON_MOOD_AMPLITUDE (0.09, the fitted value).
+    economic_common_mode_amplitude: float | None = None,
     # Phase 9 §11.7-C — IdentityToIdeologyPull strengths (Mason 2018
     # mega-identity → ideology channel). Default 0.0 → bit-identical
     # no-op. The rule is in the pipeline unconditionally but it skips
@@ -1597,6 +1613,10 @@ def build_engine(
         # CohortReplacement (to stamp birth_year on entrants) and by
         # CommonModeCulture. False → no birth_year, channel absent, bit-identical.
         "cultural_common_mode": bool(cultural_common_mode),
+        # reality-validation: economic common-mode cultural channel gate (read for
+        # introspection/export parity). The rule itself is appended to env_rules
+        # only when economic_common_mode=True. False → bit-identical.
+        "economic_common_mode": bool(economic_common_mode),
         # Step 5 (web_demo jumpiness): opinion-momentum coefficient read
         # by Engine.step. 0.0 → off (bit-identical). Demo preset: 0.4.
         "momentum": float(momentum),
@@ -1937,6 +1957,18 @@ def build_engine(
     # the default path → bit-identical.
     if cultural_common_mode:
         env_rules.append(CommonModeCulture())
+
+    # reality-validation: the economic common-mode channel (exogenous thermostatic
+    # policy-mood forcing). Runs LAST in the env phase (after the elite cue + the
+    # cultural common mode) so the rigid econ-axis frame shift carries positions,
+    # anchors, cues and elite centroids together. Absent on the default path →
+    # bit-identical. Independent of cultural_common_mode.
+    if economic_common_mode:
+        _econ_amp = (
+            ECON_MOOD_AMPLITUDE if economic_common_mode_amplitude is None
+            else float(economic_common_mode_amplitude)
+        )
+        env_rules.append(CommonModeEconomic(amplitude=_econ_amp))
 
     # Sanity: at most one instance per class.
     seen: set[str] = set()
