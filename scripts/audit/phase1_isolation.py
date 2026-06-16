@@ -51,7 +51,6 @@ from abm.rules.identity_alignment import IdentityAlignment
 from abm.rules.repulsion import BacklashRepulsion
 from abm.rules.tie_rewiring import TieRewiring
 from abm.rules.perception_update import PerceptionUpdate
-from abm.rules.party_realignment import ProtectedPartyRealignment
 from abm.rules.faction_anchor import FactionAnchor
 from abm.rules.cohort_replacement import CohortReplacement
 
@@ -329,21 +328,6 @@ def b_perception(val, seed):
     return float(np.mean(es))
 
 
-def b_protected_realign(val, seed):
-    n = 100
-    agents = []
-    for i in range(n):
-        agents.append(Agent(id=i, state=AgentState(
-            ideology=np.array([0.5, 0.0]),
-            attrs={"party": 0, "do_not_replace": True, "affect": {1: -0.3},
-                   "party_cue": np.array([-0.5, 0.0])})))
-    eng = _engine(agents, [ProtectedPartyRealignment(x_threshold=val, sustain_ticks=6)], [],
-                  {"network": Network.complete(range(n)),
-                   "parties": {0: np.array([-0.5, 0.0]), 1: np.array([0.5, 0.0])}}, seed)
-    eng.run(20)
-    return float(sum(1 for a in eng.agents if a.state.attrs["party"] == 1))
-
-
 _FACTION_CENTER = np.array([0.7, 0.4])
 
 
@@ -414,8 +398,6 @@ REGISTRY = {
         "inc", "party modularity"),
     "PerceptionUpdate.correction_rate": (b_perception, [0.0, 0.01, 0.05, 0.1, 0.3],
         "dec", "perception error"),
-    "ProtectedPartyRealignment.x_threshold": (b_protected_realign, [0.05, 0.12, 0.3, 0.6],
-        "dec", "# party flips"),
     "FactionAnchor.strength": (b_faction_anchor, [0.0, 0.02, 0.05, 0.1, 0.25],
         "dec", "distance to faction center"),
     "CohortReplacement.replacement_rate": (b_cohort, [0.0, 0.001, 0.003, 0.01, 0.03],

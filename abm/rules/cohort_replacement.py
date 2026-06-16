@@ -151,15 +151,6 @@ class CohortReplacement:
         for a in agents:
             if rng.random() > self.replacement_rate:
                 continue
-            # Step 2 (web_demo jumpiness): spotlighted characters carry
-            # `do_not_replace` so each is one continuous life rather than
-            # a slot reused by 2-3 different people stitched together by
-            # id. The rng.random() draw above is consumed first so the
-            # stream is unaffected up to this point; skipping the actual
-            # replacement does diverge the run from the unprotected one
-            # (intended — protection is opt-in, not bit-identical).
-            if a.state.attrs.get("do_not_replace"):
-                continue
             # Phase 8d: preserve party=2 (Independent) status across
             # cohort replacement. Empirically, people don't switch
             # partisan/Independent identity at the population-

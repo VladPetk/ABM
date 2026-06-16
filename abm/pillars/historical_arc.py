@@ -63,7 +63,6 @@ from ..rules.influence import BoundedConfidenceInfluence
 from ..rules.media_consumption import MediaConsumption
 from ..rules.noise import GaussianNoise
 from ..rules.party_pull import PartyPull
-from ..rules.party_realignment import ProtectedPartyRealignment
 from ..rules.perception_update import PerceptionUpdate
 from ..rules.repulsion import BacklashRepulsion
 from ..rules.residential_migration import ResidentialMigration
@@ -723,14 +722,6 @@ def build_engine(
     # `momentum` × previous applied step into each tick's delta (see
     # Engine.step). 0.0 → off. The demo preset uses 0.4.
     momentum: float = 0.0,
-    # Step 2 — character immunity. Agent ids in this set get
-    # `do_not_replace=True` so CohortReplacement skips them and each
-    # spotlighted character is one continuous life rather than a relay
-    # of slot-reused people. None / empty → no agent flagged. When set,
-    # ProtectedPartyRealignment also lets these agents convert party by
-    # sustained ideological drift (party otherwise only changes via
-    # replacement, which they're now immune to).
-    protected_agent_ids=None,
     # Step 4 — tighten the free-mover tail. Scales the Friedkin-Johnsen
     # anchor pull (per-agent fj_alpha base 0.05 and the env default) so
     # low-stubbornness agents decay toward their innate position instead
@@ -1331,14 +1322,6 @@ def build_engine(
             -1.0, 1.0,
         ))
 
-    # Step 2 (web_demo jumpiness): flag spotlighted characters as immune
-    # to cohort replacement. Empty / None → no flag set → bit-identical.
-    if protected_agent_ids:
-        _protected = {int(i) for i in protected_agent_ids}
-        for a in agents:
-            if a.id in _protected:
-                a.state.attrs["do_not_replace"] = True
-
     # MHV S2 T2.3/T2.4 — the emergent-constraint master flag, needed from
     # seeding onward (T2.4: the alignment state is seeded MEASURED on this
     # path, after the issue vectors exist).
@@ -1909,12 +1892,6 @@ def build_engine(
             replacement_rate=(COHORT_REPLACEMENT_RATE
                               if cohort_replacement_rate is None
                               else float(cohort_replacement_rate))),
-        # web_demo Step 2 companion: lets immune (do_not_replace)
-        # characters convert party by sustained ideological drift. Strict
-        # no-op when no agent is protected → bit-identical for pillars +
-        # Phase 8/9. Runs after CohortReplacement so a just-replaced slot
-        # (never protected) is never realigned the same tick.
-        ProtectedPartyRealignment(),
         # Phase 8c §4 I4: clears X4 shared-identity-prime overrides
         # at the configured expiry tick. Inert until X4 fires.
         IdentityPrimeExpiry(),

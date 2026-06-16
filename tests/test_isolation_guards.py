@@ -32,7 +32,6 @@ from abm.rules.identity_to_position import IdentityToIdeologyPull
 from abm.rules.identity_alignment import IdentityAlignment
 from abm.rules.mediated_animus import MediatedAnimus
 from abm.rules.perception_update import PerceptionUpdate
-from abm.rules.party_realignment import ProtectedPartyRealignment
 from abm.rules.faction_anchor import FactionAnchor
 
 from abm.metrics.affective import affective_polarization, sorting_index
@@ -273,50 +272,6 @@ def test_perception_update_shrinks_error_monotonically():
     mid = _avg_over_seeds(lambda s: _perception_error(0.05, s))
     hi = _avg_over_seeds(lambda s: _perception_error(0.3, s))
     assert hi < mid < lo, (lo, mid, hi)
-
-
-# --- ProtectedPartyRealignment --------------------------------------------
-
-def test_protected_realignment_flips_only_sustained_crossers():
-    """A protected agent parked across the divide for >= sustain_ticks
-    converts party; one held inside its own half never flips."""
-    # Group A: party-0 agents sitting at x=+0.5 (clear other side).
-    # Group B: party-0 agents at x=-0.5 (own side) — must NOT flip.
-    n = 40
-    agents = []
-    for i in range(n):
-        x = 0.5 if i < n // 2 else -0.5
-        agents.append(Agent(id=i, state=AgentState(
-            ideology=np.array([x, 0.0]),
-            attrs={"party": 0, "do_not_replace": True, "affect": {1: -0.3},
-                   "party_cue": np.array([-0.5, 0.0])})))
-    eng = _engine(agents, [ProtectedPartyRealignment(x_threshold=0.12, sustain_ticks=6)],
-                  [], {"network": Network.complete(range(n)),
-                       "parties": {0: np.array([-0.5, 0.0]), 1: np.array([0.5, 0.0])}}, 0)
-    eng.run(10)
-    crossers = [a for a in eng.agents if a.state.attrs.get("_orig_x", a.state.ideology[0]) > 0]
-    flipped_cross = sum(1 for a in eng.agents[: n // 2] if a.state.attrs["party"] == 1)
-    flipped_own = sum(1 for a in eng.agents[n // 2:] if a.state.attrs["party"] == 1)
-    assert flipped_cross == n // 2, flipped_cross  # all sustained crossers flip
-    assert flipped_own == 0, flipped_own           # none on own side flip
-
-
-def test_protected_realignment_threshold_gates_flips():
-    """Raising x_threshold above the crosser's displacement suppresses the
-    flip — the sustain/threshold gate is load-bearing, not cosmetic."""
-    def flips(thr):
-        n = 30
-        agents = [Agent(id=i, state=AgentState(
-            ideology=np.array([0.4, 0.0]),
-            attrs={"party": 0, "do_not_replace": True, "affect": {1: -0.3},
-                   "party_cue": np.array([-0.5, 0.0])})) for i in range(n)]
-        eng = _engine(agents, [ProtectedPartyRealignment(x_threshold=thr, sustain_ticks=6)],
-                      [], {"network": Network.complete(range(n)),
-                           "parties": {0: np.array([-0.5, 0.0]), 1: np.array([0.5, 0.0])}}, 0)
-        eng.run(12)
-        return sum(1 for a in eng.agents if a.state.attrs["party"] == 1)
-    assert flips(0.2) == 30   # 0.4 > 0.2 -> all flip
-    assert flips(0.6) == 0    # 0.4 < 0.6 -> none flip
 
 
 # --- FactionAnchor --------------------------------------------------------
