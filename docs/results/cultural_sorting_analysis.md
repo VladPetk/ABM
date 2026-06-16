@@ -177,3 +177,13 @@ axis-specific mobilization/amplification direction in the loop, or a second
 cultural-only loop — which is well beyond a hand-drawn cue. **Recommendation:** keep
 #10 as a documented known miss; do **not** ship the cue-schedule hybrid; treat the
 loop-decoupling as a separate, larger design question if pursued.
+
+**⏸ PARKED next step (the planned fix; see blindspot #10).** The only honest fix is
+**structural**: give the activist→elite→mass loop an **axis-specific amplification
+direction** (decouple the fixed econ:cultural ratio in `party_axis`) or add a
+**second cultural-only loop**, so an **event-timed cultural driver** (Ferguson-2014 /
+Great-Awokening salience, timed by documented events) can re-time the cultural axis
+**independently of economics**. It is an **architecture change, not a forcing**, and
+warrants its own spec + measure-then-bless cycle. The cue-schedule hybrid is already
+falsified (§7, commit `ee10451`) — no forcing routed through the single fixed-direction
+loop can work, so the decoupling must be in the loop's structure.
