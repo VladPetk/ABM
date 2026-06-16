@@ -2,9 +2,27 @@
 
 **Measure-then-bless REPORT** (not a CI gate). Canonical shipped config
 (`ANES_FULL_KWARGS` — since emergence-recovery E5 the **endogenous** activist→
-elite→mass loop), **9 seeds**, **live per-tick party labels** throughout.
+elite→mass loop, since reality-validation the **common-mode cultural + economic
+channels**), **9 seeds**, **live per-tick party labels** throughout.
 Reproduce: `.venv/Scripts/python.exe scripts/audit/realism_battery.py --seeds 9`
 → `docs/results/realism_measurement.json`. Spec: `docs/internal/realism_check_spec.md`.
+
+> **⚠ re-blessed on the COMMON-MODE canonical config (2026-06; methods §5.30/§5.31).**
+> The §11 ANES band scorecard now measures **15/24** (11/20 mainframe + 4/4 IC), not
+> the 18/24 quoted in the E5.8 body below. **This is NOT the econ flip:** the econ
+> common-mode channel is realism-**neutral** — 15/24 is identical with the channel
+> off (same cells, same values to 3 dp; a rigid econ translation moves no realism
+> cell). The drop from 18/24 is a **stale figure** — 18/24 was never re-measured on
+> the shipped §5.30 cultural config (turnover 0.007); the true realism of that config
+> is 15/24. The misses are dominated by the **affect-too-cold blindspot (#1)** (now
+> 1990/2000/2010/2020/2025 affect all below band) plus mild 2010 sep/constraint
+> overshoots and 1990 constraint / 2000 sep just below band; within-party SD, formerly
+> a miss, is now **in band**. No band was loosened. Chasing the affect coldness is a
+> separate workstream (#1). Honesty-budget fractions also re-blessed: `party_sep`
+> **0.28 free-flowing / 0.72 empirical**, `identity_alignment` **0.28 / 0.72**,
+> `affect` **0.94 / 0.06** (vs E5.8 0.38/0.34/0.87 — the shift is the cultural fix's
+> raised turnover, not the econ channel; both common-mode channels are sorting-
+> invariant level shifts that do not enter these differential metrics).
 
 ### Read this first — four caveats that frame every number
 
@@ -58,7 +76,7 @@ external Pew overlap-collapse curve.
 | ID | Check | Result (9 seeds, endogenous) | Verdict |
 |----|-------|------------------------------|---------|
 | **A1** | per-party centroid endpoints vs ANES voter centroids (±0.07) | **2025 Dem d=(−0.01,+0.03)✓, Rep d=(+0.05,+0.02)✓** (emergent cloud lands on the ANES voters); **1994 Dem & Rep both miss** (sim less separated than ANES early — the loop is still climbing) | **2/4** — late on-target, early lag |
-| **A2** | §11 ANES band scorecard (≥18/24) | **18/24 PASS** (14/20 mainframe + 4/4 IC). Out: 1990/2000 affect (too cold), 2010 constraint 0.732 + sep 0.960 (mild overshoot), 2020/2025 within_sd 0.276 (<0.28 floor by 0.004) | **PASS** (with named misses) |
+| **A2** | §11 ANES band scorecard (≥18/24) | **15/24** (11/20 mainframe + 4/4 IC) on the common-mode canonical config (re-bless banner above; was a stale 18/24, NOT the econ flip — econ-neutral). Out: 1990/2000/2010/2020/2025 affect (too cold, blindspot #1), 1990 constraint 0.362, 2000 sep 0.585, 2010 constraint 0.729 + sep 0.953 (mild overshoot). within_sd now **in band** | **FAIL ≥18 (with named misses)** — affect blindspot dominates; no band loosened |
 | **A3** | per-decade 2D Wasserstein-2 vs ANES pointcloud | per-decade 0.165–0.211, **w2_total 0.92** (was 0.73 fed; achievable floor ~0.20/decade) | **still below floor** — looser than fed |
 | **A4** | out-party affect vs ANES thermometer | 1990 −0.268 / 2000 −0.355 **too cold** (band miss); 2010/2020/2025 in band | **early over-animus** (known blindspot) |
 | **A5** | sorting faster than constraint vs **held-out GSS** | partisan-align slope +0.0140/yr (GSS +0.0085); issue-corr slope +0.0101/yr (GSS +0.0057); sorting > constraint ✓ | **PASS** (both slopes a touch hot) |

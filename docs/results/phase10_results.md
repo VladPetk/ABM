@@ -1,9 +1,22 @@
 # Phase 10 — Landing Summary
 
 *Status: shipped. Intervention library (X1–X7) redesigned against
-the Phase 9 ANES-recalibrated engine. Last updated 2026-06-15
-(reality-validation — re-measured on the COMMON-MODE canonical config).*
+the Phase 9 ANES-recalibrated engine. Last updated 2026-06-16
+(reality-validation — re-measured on the COMMON-MODE + ECON canonical config).*
 
+> **✅ reality-validation ECON common-mode — RE-MEASURED on the econ-channel canonical
+> config (2026-06-16; methods §5.31).** The reality-validation workstream added a
+> second common-mode channel — an **economic** one driven by an exogenous thermostatic
+> policy-mood forcing (`ANES_FULL_COMMONMODE_ECON_KWARGS`, `economic_common_mode=True`,
+> amplitude 0.09) that fixes the mid-period econ center-of-mass error. X1–X7 were
+> re-measured (9 seeds × 4 release decades). **Every bucket is UNCHANGED** — the
+> library is robust to the econ fix too: **X1 backfire** (Δsep +0.14→+0.23 across
+> decades), **X6 affect partial@1990 → real@2000/2010/2020** (Δaff +0.11→+0.21),
+> **X5 null/null**, **X2/X3/X4/X7 null**. No tag moved (the econ channel is a rigid,
+> sorting-invariant translation, so intervention Δsep/Δaff are unaffected).
+> Falsification: same pre-existing X7 misses (1990/2000/2020). The §2 scoreboard
+> remains valid.
+>
 > **✅ reality-validation — RE-MEASURED on the common-mode canonical config
 > (2026-06-15; methods §5.30).** The reality-validation workstream added an
 > emergent common-mode cultural channel (`ANES_FULL_COMMONMODE_KWARGS`,

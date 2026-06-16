@@ -121,17 +121,25 @@ def main() -> None:
           f"by {noev_sep-base_sep:+.3f}")
 
     OUT_JSON.write_text(json.dumps({
-        "_provenance": "Emergence-recovery E5.8 honesty budget — measure-then-bless on "
-                       "the ENDOGENOUS canonical config (ANES_FULL_KWARGS, "
-                       "endogenous_elite, the adopted E4 ABC point), 6 seeds. "
-                       "'free_flowing' = the mechanism with every empirical/external "
-                       "driver removed (all-frozen-no-events floor); 'empirical_input' = "
-                       "(rise_with - rise_sans)/rise_with = how much the ANES-calibrated "
-                       "forcing (mobilization timing + dated events + media) adjusts it "
-                       "(= 1 - free_flowing). 'fed_positions' = the retired data-fed-"
-                       "POSITION instrument (~0; the 'feeding the answer' channel, gone). "
-                       "'loop_attributable'/'forcing' are diagnostics. Reproduce: "
-                       "PYTHONPATH=. python scripts/audit/t35_budget_brake.py",
+        "_provenance": "reality-validation econ-common-mode re-bless — measure-then-bless "
+                       "on the COMMON-MODE canonical config (ANES_FULL_KWARGS = "
+                       "ANES_FULL_COMMONMODE_ECON_KWARGS: endogenous_elite + the adopted E4 "
+                       "ABC point + cultural_common_mode (turnover 0.007, methods §5.30) + "
+                       "economic_common_mode (amplitude 0.09, methods §5.31)), 6 seeds. This "
+                       "is the FIRST budget re-bless since the cultural fix shipped; vs the "
+                       "pre-common-mode E5.8 endogenous numbers party_sep free_flowing fell "
+                       "0.38->0.28 (empirical_input 0.62->0.72), driven by the cultural fix's "
+                       "raised turnover, NOT the econ channel: both common-mode channels are "
+                       "rigid sorting-INVARIANT level shifts that do not enter party_sep / "
+                       "affect / identity_alignment (all differential metrics). The econ "
+                       "channel is a FED forcing (methods §5.31, blindspot #9) on the econ "
+                       "center-of-mass, which this budget does not track. 'free_flowing' = the "
+                       "mechanism with every empirical/external driver removed "
+                       "(all-frozen-no-events floor); 'empirical_input' = (rise_with - "
+                       "rise_sans)/rise_with (= 1 - free_flowing). 'fed_positions' = the "
+                       "retired data-fed-POSITION instrument (~0). 'loop_attributable'/"
+                       "'forcing' are diagnostics. Reproduce: PYTHONPATH=. python "
+                       "scripts/audit/t35_budget_brake.py",
         "seeds": len(SEEDS),
         "metrics": metrics_out,
         "events_brake": {"full_arc": round(base_sep, 4), "no_events": round(noev_sep, 4),

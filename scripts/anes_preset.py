@@ -199,11 +199,40 @@ ANES_FULL_COMMONMODE_KWARGS = {
 }
 
 
+# === reality-validation: ECONOMIC common-mode channel (branch econ-common-mode-mood) ===
+# The cultural-common-mode config above with the ECONOMIC common-mode channel added.
+# Same architecture gap, econ axis: the from-scratch ANES+GSS battery (validation/)
+# showed the partisan economic center of mass pinned ~0 the whole arc while ANES
+# (cross-checked by GSS helppoor+eqwlth AND Stimson Policy Mood) rises to ~+0.15
+# (rightward) mid-90s then declines to ~-0.05 by 2024. ~84% of the 1996 Republican
+# econ residual is this common-mode LEVEL error, not a sorting-gap error.
+#
+# The econ tide is NON-MONOTONE, so a monotone demographic primitive cannot make it
+# (unlike the emergent cultural channel). It is driven by an EXOGENOUS thermostatic
+# policy-mood forcing (Erikson-MacKuen-Stimson, The Macro Polity; Wlezien's
+# thermostat): a parsimonious event-anchored curve (1980 Reagan baseline -> 1996
+# welfare-reform peak -> post-2008 leftward reaction) with a single fitted amplitude
+# (0.09, the robust GSS-corroborated mid-90s level). The real Stimson series was
+# downloaded and used to CORROBORATE the curve's direction, NOT replayed literally
+# (fed literally it injects a spurious +0.20 Tea-Party 2012 spike: govt-spending
+# mood != economic self-placement; falsified in validation/exp_econ_commonmode.py).
+# Provenance L (thermostatic mechanism) + N (curve form) + E (amplitude). This is a
+# FED forcing -- a weaker honesty claim than the emergent cultural channel, documented
+# as such (methods econ-common-mode section; model_blindspots #6/#9). The pre-econ
+# config is preserved as ANES_FULL_COMMONMODE_KWARGS.
+# See abm/rules/cultural_common_mode.py::CommonModeEconomic + validation/.
+ANES_FULL_COMMONMODE_ECON_KWARGS = {
+    **ANES_FULL_COMMONMODE_KWARGS,
+    "economic_common_mode": True,
+    "economic_common_mode_amplitude": 0.09,
+}
+
+
 # === CANONICAL FLIP =====================================================
 # The shipped/measured config. Every consumer (publish_web_data, phase10_measure,
 # phase9_anes_score, realism_battery, build_sandbox_data, conftest, audit_lib,
 # ...) imports ANES_FULL_KWARGS, so this single alias flips them all. To REVERT,
-# point this back at ANES_FULL_ENDOGENOUS_KWARGS (the pre-common-mode E5 config)
-# or ANES_FULL_FED_KWARGS (pre-E5). FED-mechanism guards import
-# ANES_FULL_FED_KWARGS directly.
-ANES_FULL_KWARGS = ANES_FULL_COMMONMODE_KWARGS
+# point this back at ANES_FULL_COMMONMODE_KWARGS (pre-econ-common-mode),
+# ANES_FULL_ENDOGENOUS_KWARGS (pre-cultural-common-mode E5), or ANES_FULL_FED_KWARGS
+# (pre-E5). FED-mechanism guards import ANES_FULL_FED_KWARGS directly.
+ANES_FULL_KWARGS = ANES_FULL_COMMONMODE_ECON_KWARGS

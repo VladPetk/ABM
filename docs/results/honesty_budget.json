@@ -1,41 +1,41 @@
 {
-  "_provenance": "Emergence-recovery E5.8 honesty budget \u2014 measure-then-bless on the ENDOGENOUS canonical config (ANES_FULL_KWARGS, endogenous_elite, the adopted E4 ABC point), 6 seeds. 'free_flowing' = the mechanism with every empirical/external driver removed (all-frozen-no-events floor); 'empirical_input' = (rise_with - rise_sans)/rise_with = how much the ANES-calibrated forcing (mobilization timing + dated events + media) adjusts it (= 1 - free_flowing). 'fed_positions' = the retired data-fed-POSITION instrument (~0; the 'feeding the answer' channel, gone). 'loop_attributable'/'forcing' are diagnostics. Reproduce: PYTHONPATH=. python scripts/audit/t35_budget_brake.py",
+  "_provenance": "reality-validation econ-common-mode re-bless \u2014 measure-then-bless on the COMMON-MODE canonical config (ANES_FULL_KWARGS = ANES_FULL_COMMONMODE_ECON_KWARGS: endogenous_elite + the adopted E4 ABC point + cultural_common_mode (turnover 0.007, methods \u00a75.30) + economic_common_mode (amplitude 0.09, methods \u00a75.31)), 6 seeds. This is the FIRST budget re-bless since the cultural fix shipped; vs the pre-common-mode E5.8 endogenous numbers party_sep free_flowing fell 0.38->0.28 (empirical_input 0.62->0.72), driven by the cultural fix's raised turnover, NOT the econ channel: both common-mode channels are rigid sorting-INVARIANT level shifts that do not enter party_sep / affect / identity_alignment (all differential metrics). The econ channel is a FED forcing (methods \u00a75.31, blindspot #9) on the econ center-of-mass, which this budget does not track. 'free_flowing' = the mechanism with every empirical/external driver removed (all-frozen-no-events floor); 'empirical_input' = (rise_with - rise_sans)/rise_with (= 1 - free_flowing). 'fed_positions' = the retired data-fed-POSITION instrument (~0). 'loop_attributable'/'forcing' are diagnostics. Reproduce: PYTHONPATH=. python scripts/audit/t35_budget_brake.py",
   "seeds": 6,
   "metrics": {
     "party_sep": {
       "b0": 0.3427,
-      "b1": 1.1155,
-      "free_flowing": 0.3815,
-      "empirical_input": 0.6185,
-      "empirical_input_value": 0.4285,
-      "fed_positions": -0.2025,
-      "loop_attributable": 1.0021,
-      "forcing": -0.0354
+      "b1": 1.0843,
+      "free_flowing": 0.2793,
+      "empirical_input": 0.7207,
+      "empirical_input_value": 0.4929,
+      "fed_positions": -0.1721,
+      "loop_attributable": 1.0587,
+      "forcing": -0.0424
     },
     "affect": {
       "b0": -0.0909,
-      "b1": -0.6558,
-      "free_flowing": 0.8659,
-      "empirical_input": 0.1341,
-      "empirical_input_value": 0.1155,
-      "fed_positions": -0.056,
-      "loop_attributable": 0.0931,
-      "forcing": 0.1519
+      "b1": -0.8092,
+      "free_flowing": 0.9414,
+      "empirical_input": 0.0586,
+      "empirical_input_value": 0.052,
+      "fed_positions": -0.0345,
+      "loop_attributable": 0.0402,
+      "forcing": 0.0689
     },
     "identity_alignment": {
       "b0": 0.2089,
-      "b1": 0.3409,
-      "free_flowing": 0.3354,
-      "empirical_input": 0.6646,
-      "empirical_input_value": 0.2573,
-      "fed_positions": -0.1361,
-      "loop_attributable": 0.9498,
-      "forcing": 0.0344
+      "b1": 0.3381,
+      "free_flowing": 0.2836,
+      "empirical_input": 0.7164,
+      "empirical_input_value": 0.2736,
+      "fed_positions": -0.1101,
+      "loop_attributable": 0.9619,
+      "forcing": 0.0323
     }
   },
   "events_brake": {
-    "full_arc": 1.1155,
-    "no_events": 1.1428,
+    "full_arc": 1.0843,
+    "no_events": 1.1157,
     "survives": true
   }
 }
