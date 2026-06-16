@@ -36,14 +36,8 @@ function agentPosAt(run, f, idx) {
   const A = run.pos[t0][idx], B = run.pos[t1][idx];
   return [A[0] + (B[0] - A[0]) * a, A[1] + (B[1] - A[1]) * a];
 }
-// party / faction are step values — take the nearest integer tick
+// party is a step value — take the nearest integer tick
 const partyAt = (run, f, idx) => run.party[Math.round(f)][idx];
-const factionAt = (run, f, idx) => run.charFaction[idx] ? run.charFaction[idx][Math.round(f)] : null;
-function affectAt(run, f, idx) {
-  const s = run.charAffect[idx]; if (!s) return null;
-  const t0 = Math.max(0, Math.min(LAST, Math.floor(f))), t1 = Math.min(LAST, t0 + 1), a = f - t0;
-  return s[t0] + (s[t1] - s[t0]) * a;
-}
 // macro metric interpolation
 function macroAt(run, f, key) {
   const t0 = Math.max(0, Math.min(LAST, Math.floor(f))), t1 = Math.min(LAST, t0 + 1), a = f - t0;
@@ -184,7 +178,7 @@ function usePlayhead({ initial = 0, autoplay = true, baseTicksPerSec = 6, storag
 
 Object.assign(window, {
   D, NT, TPY, Y0, LAST, tickToYear, yearToTick, PARTY_CH, partyColor, partyName,
-  posAt, agentPosAt, partyAt, factionAt, affectAt, macroAt,
+  posAt, agentPosAt, partyAt, macroAt,
   netSnapshotKey, egoEdges, METRICS, usePlayhead,
   loadBranch, stitchBranch, loadSandbox,
 });
