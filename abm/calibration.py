@@ -9,7 +9,11 @@ fall from ~48° (1978) to ~20° (2020) — a 28-point drop over 42 years
 Phase 5 (Δ ≈ -0.85 over 200 ticks) projects to roughly -0.53 over a
 42-year window — within ~5% of the ANES headline of -0.56 on the
 model's [-1, 1] axis. Pinning this gives **one tick ≈ 0.33 years**;
-rounded to a clean integer fraction, **1 year = 3 ticks**.
+rounded to a clean integer fraction, **1 year = 3 ticks**. (This "~5%"
+is a PILLAR-trajectory projection used to pin the tick-to-year scalar
+only; it is NOT a fidelity claim about the shipped arc's affect, which
+is currently out of the grounded ANES bands — see methods.md §3.1 and
+blindspot #1.)
 
 The single scalar ``TICKS_PER_YEAR = 3.0`` is the project's public,
 defensible mapping. Every metric and intervention can be reported in
@@ -28,6 +32,8 @@ from __future__ import annotations
 # [-1, 1] axis]). The pillar's measured Δaff over the same window is
 # ~-0.53 — within ~5% of the empirical anchor. Rounded to a clean
 # integer: 1 year = 3 ticks; 1 tick ≈ 4 months.
+# (The "~5%" pins the tick scalar off the PILLAR trajectory; it is not a
+# claim about the shipped arc's affect — see the docstring caveat above.)
 TICKS_PER_YEAR: float = 3.0
 
 
@@ -58,7 +64,12 @@ EMPIRICAL_ANCHORS = {
             "pillar S0→S3 measured Δaffective_polarization ≈ -0.85 over "
             "200 ticks; restricted to a 42-year window at "
             "TICKS_PER_YEAR=3 (126 ticks) projects to ~-0.53 — within "
-            "~5% of the ANES anchor."
+            "~5% of the ANES anchor. NOTE (2026-06 peer-review audit, F3/F16): "
+            "this is a PILLAR-trajectory projection used only to pin the "
+            "tick-to-year scalar; it is NOT a fidelity claim about the "
+            "SHIPPED ARC's affect, which is currently OUT of the grounded "
+            "ANES bands at all five decades (too cold) — see methods.md §3.1 "
+            "and blindspot #1. Do not cite this as arc affect validation."
         ),
     },
     "dw_nominate_divergence": {

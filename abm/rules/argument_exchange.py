@@ -1,4 +1,12 @@
 """
+DEPRECATED — unused in both shipped tracks (pillar and arc).
+This rule is not wired into `calm_to_camps.py` or `historical_arc.py`, and no
+test instantiates it; the bi-polarization role it would play is covered by
+`ConstraintOp` / `MeasuredAlignment` (pillar) and the activist→elite→mass loop
+(arc). It is retained only because it is still re-exported from
+`abm/rules/__init__.py`; safe to delete once that export is removed. (Flagged by
+the 2026-06 peer-review audit, F16.)
+
 Argument exchange — simplified Mäs-Flache ACTB (2013).
 
 Each tick, the agent picks one homophilous neighbor (within `homophily_radius`)

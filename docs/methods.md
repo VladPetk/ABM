@@ -79,6 +79,19 @@ L / N / E throughout:
   logistic filter (Phase 4 F2 at `temperature > 0`) departs from
   canonical HK at the operational T.
 
+> **Bounded-confidence honesty note (2026-06 peer-review audit, P7).** Two things
+> are easy to over-read about `BoundedConfidenceInfluence`. (1) **Its per-tick
+> contribution in the *shipped arc* is small — ~3%.** Turning BC off changes 2025
+> `party_sep` by only ~+0.014; BC is **load-bearing only in the pillar's S1
+> isolation stage** (the composition control), not in the empirical build the web
+> serves. (2) **The literature-pinned reduction test covers only the
+> `temperature = 0` path.** The shipped arc runs the **graded + affect-modulated**
+> BC path at `temperature = 0.05`, which is an **N/E extension** of
+> Hegselmann–Krause; the canonical test (`test_canonical.py` / `compass_basic`)
+> only verifies the exact HK recovery at the hard-cutoff `temperature = 0`, so the
+> graded path's behavior is *not* directly literature-pinned. (See the isolation-
+> layer caveat in `CLAUDE.md` / `ENGINE_OVERVIEW.md`.)
+
 When this distinction matters for a section's calibration, the tag
 is stated inline.
 
@@ -864,6 +877,18 @@ drifts to 1986 centroids by tick 21.
 as a secondary band-based regression gate. Both old (Levendusky-
 derived) and new (ANES-derived) band sets are scored side-by-side
 by `scripts/phase9_anes_score.py` — see
+
+> **These are recovery checks, not validation (peer-review audit P2 / F2,
+> F11).** Both the §11 cell tally and the Wasserstein `w2_total` are scored
+> against the *same* ANES recode (`respondent_coordinates.csv`) that set the
+> knobs **and** defines the bands **and** defines the W₂ target. They measure
+> goodness-of-fit / calibration recovery, **not** independent validation — by
+> construction they cannot falsify the model. The genuinely held-out checks
+> carry the validation claim: the GSS instrument cut, the temporal holdout
+> (`docs/results/e5_holdout.md` — which **fails on `party_sep`**, the late
+> timing rides a fitted forcing), the Pew 2014 overlap, and the per-issue
+> trajectory. See `docs/results/phase9_results.md` and `realism_report.md`
+> caveat #1. (Continued —)
 `ANES_PRIMARY_TARGETS` / `ANES_INITIAL_TARGETS_1980` in
 `scripts/phase8f_lib.py`. The ANES bands consistently relax the
 upper edge of `within_party_sd` and `party_sep` by ~0.10, which
@@ -1104,6 +1129,25 @@ adoption/penetration series, this attribution must be re-checked — the
 brake should survive re-expression or the S3 change is wrong (spec
 requirement). Full tables:
 `docs/internal/audit/events_brake_bisection.{json,md}`.
+
+> **Media framing — read this when presenting "partisan media polarizes" (peer-review
+> audit P6 / F6, F13).** State it plainly: in this engine, on the **position axis**,
+> partisan media is currently modeled as **centripetal (de-polarizing)**, the
+> *opposite* of the cited polarizing-media literature (Levendusky 2013;
+> DellaVigna & Kaplan 2007; Martin & Yurukoglu 2017). The mechanical reason is the
+> calibrated outlet roster: the media-diet **targets sit *inward* of the party
+> centroids** (e.g. the Democratic diet target radius ≈0.18 vs the party centroid
+> ≈0.31), so `MediaConsumption` pulls the mass *toward the center*, not apart —
+> confirmed by ablation (media ON `party_sep` ≈0.64 vs OFF ≈0.84). The model's
+> **polarizing-media effect therefore lives entirely on the AFFECT channel**
+> (`MediatedAnimus`, parasocial out-party animus via identity × media-exposure
+> ramp), **not** on positions. Relatedly, the **dated historical events net-BRAKE
+> separation** — removing them *raises* final `party_sep` (no-events ≈1.12 vs
+> full-arc ≈1.08; `honesty_budget.json` `events_brake`), so the demo's
+> event-driven narrative diverges from the engine's actual position-axis driver
+> (the smooth mobilization curve). Both are flagged for the **R-phase (R5)** as
+> items to reconcile (re-orient the position-axis media channel to match the
+> literature, or document the split explicitly). Cross-reference: audit **F6/F13**.
 
 ### 5.15 MHV T0.4 — demo-physics knob adjudication (2026-06)
 
@@ -1718,7 +1762,8 @@ emergently track ANES (gap 0.22→0.73, never fit; `build_anes_item_means.py`);
 overlap collapse near-exact to **Pew 2014** (Republicans-more-liberal-than-median-
 Democrat 23%→4% vs sim 21%→2.4%); 21/24 on the §11 scorecard. Three documented
 gaps: early over-animus, axes over-correlate late (corr 0.75 vs Treier-Hillygus
-~0.21), 1980 variance slightly high.
+~0.21 **(verify — audit F16 reads the paper's figure as ≈0.30)**), 1980 variance
+slightly high.
 
 **T-UNDER — the "2025 `party_sep` undershoot" was a band artifact, not a model
 miss.** The 9-seed 2025 sep (1.056) sat ~1 SE below the old ANES floor 1.08. But
@@ -2016,8 +2061,21 @@ so an `ideology`-only shift would be cosmetic; and since `project(lift([0,d]))�
 the shift is an exact, **sorting-invariant** rigid cultural translation. **Only two
 demographic primitives are fed** — the generational gradient (a measured per-cohort
 fact) and the turnover rate — never the aggregate trajectory, which emerges.
-Provenance: **L** (cohort-replacement mechanism) + **N** (the common-mode
-expression). Pre-fix config preserved as `ANES_FULL_ENDOGENOUS_KWARGS`; canonical
+Provenance: **L** (the cohort-replacement mechanism and the *direction* of secular
+cultural liberalization) + **N** (the common-mode expression **and the magnitude**).
+
+> **The "~69%" magnitude is N, not L (P4 / F12).** The "~69% per a GSS 1972–2024
+> age–period decomposition" that licenses the cohort channel's weight is the
+> **model's own, non-identified APC self-computation** (`validation/gss_cohort.py`):
+> the OLS design `X = [1, birth_year, survey_year]` **omits age**, which is exactly
+> collinear with `survey_year − birth_year`, so the cohort/period split is
+> not identified and the 69% is a property of that arbitrary specification, not a
+> measured fact. The *cited* literature reports a much lower cohort share —
+> **≈33% (Baunach 2012)** to **≈55% (Brooks & Bolzendahl 2004)**. So the
+> *direction/mechanism* stays **L**, but the *magnitude* (and the turnover rate
+> calibrated to it, 0.007/tick) is **N** — the engine's choice, not a cited finding.
+
+Pre-fix config preserved as `ANES_FULL_ENDOGENOUS_KWARGS`; canonical
 is now `ANES_FULL_COMMONMODE_KWARGS`.
 
 **Results (measure-then-bless).** New battery 6 FAIL+1 WARN → **3 FAIL+7 PASS**
@@ -2067,10 +2125,24 @@ rigid, **sorting-invariant** issue-vector translation as §5.30 (shared
 a **parsimonious thermostatic shape** whose inflection *years* are documented
 policy events (1980 Reagan baseline → 1996 welfare-reform peak → post-2008 leftward
 reaction) and whose **single fitted scalar** is the amplitude (`ECON_MOOD_AMPLITUDE
-= 0.09`, the robust GSS-corroborated mid-90s level). Provenance: **L** (thermostatic
-common-mode mechanism) + **N** (curve functional form) + **E** (amplitude/shape
-extrapolated). Canonical is now `ANES_FULL_COMMONMODE_ECON_KWARGS`; the pre-econ
+= 0.09`, the robust GSS-corroborated mid-90s level). Provenance (corrected per the
+2026-06 peer-review audit, P4 / F7): the *channel as shipped* is **N** (a fed,
+hand-specified forcing curve) + **E** (amplitude/shape extrapolated); only the
+abstract *idea* of a thermostatic common mode is L (Erikson–MacKuen–Stimson). It is
+**not** an L-supported emergent mechanism — the engine is **told** the mood, it does
+not derive it. Canonical is now `ANES_FULL_COMMONMODE_ECON_KWARGS`; the pre-econ
 config is preserved as `ANES_FULL_COMMONMODE_KWARGS`.
+
+> **This channel is a ~100%-fed rigid snap (P4 / F7).** `CommonModeEconomic`
+> snaps the partisan econ common mode to its target curve each tick (relax = 1.0):
+> the channel **output ≈ its target to ~3 dp every tick**, so blindspot #9's "64%
+> error cut" is a **mechanical** consequence of feeding the right level, **not** an
+> emergent result. Because it is a rigid, sorting-invariant *level* shift on the
+> issue vector, it does not enter any differential metric (`party_sep`, `affect`,
+> `identity_alignment`) and is therefore **excluded from the honesty budget**
+> (`honesty_budget.json` `_provenance`: "this budget does not track" the econ COM).
+> The budget's emergent-fraction headline thus **omits the most directly-fed
+> result** in the model — read it alongside this caveat.
 
 **The honesty crux — corroborated, not replayed.** The real **Stimson Annual Policy
 Mood** index was downloaded (`stimson.web.unc.edu` → `Mood5224.xlsx` →

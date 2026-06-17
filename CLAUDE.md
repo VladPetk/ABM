@@ -132,11 +132,12 @@ because it has the same rules with no exogenous shocks. That's why it can't fold
 into the per-rule suite (single-rule ≠ composition) and why new mechanisms
 shouldn't pile into it — they belong in the *isolation* layer.
 
-**Two honest caveats.** (1) The isolation layer is incomplete — a few *active*
-rules have no behavioral drift-guard, notably **`IdentityAlignment`** (it ships
-in the web build and emits the `identity_alignment` metric), plus
-`IdentityToIdeologyPull` and `ProtectedPartyRealignment`. The fix is a per-rule
-isolation suite (the `compass_basic` pattern), not adding them to the pillar.
+**Two honest caveats.** (1) The isolation layer is incomplete — several *active*
+rules lack a behavioral drift-guard (notably `IdentityToIdeologyPull` and the
+emergent-path alignment operators). The fix is a per-rule isolation suite (the
+`compass_basic` pattern), not adding them to the pillar. (`ProtectedPartyRealignment`
+was removed in the 2026-06 character-machinery cleanup, commit c61cda5; the new
+R-phase rules ship *with* isolation tests, partly closing this gap.)
 (2) The pillar's original teaching/narrative role has largely **migrated to the
 arc** now that the arc is what ships; its live justification today is this test
 role alone. If the arc's own golden tests were judged sufficient and bisecting

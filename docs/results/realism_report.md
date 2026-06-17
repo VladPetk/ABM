@@ -30,6 +30,9 @@ Reproduce: `.venv/Scripts/python.exe scripts/audit/realism_battery.py --seeds 9`
    *calibrated on* — that's goodness-of-fit, not independent confirmation.
    Tier B (external maps never fit to) is the independent part, and only
    **scale-free / trajectory-shape** comparisons survive (never absolute coords).
+   This includes the §11 cell tally and `w2_total`: scored against the same recode
+   that set the knobs, they are calibration-recovery, not validation — and the one
+   genuinely held-out *temporal* cut **fails on `party_sep`** (`e5_holdout.md`).
 2. **Positions are now EMERGENT, not fed.** Until E5 the party attractors were the
    ANES **voter** centroids × 1.798, replayed into the agents (positional sorting
    was input-carried — blindspot #7). Since E5 the party positions **emerge** from

@@ -194,7 +194,15 @@ Malhotra 2016; Martin & Yurukoglu 2017. Broockman & Kalla 2024
 `EliteDrift`, the centrifugal partisan-cable removal is mostly
 washed out. Direction is consistent with Phase 6's finding (and
 with the model's diet-target-inward-of-centroids artefact) but
-the magnitude lives in the null bucket.
+the magnitude lives in the null bucket. **Honest framing (2026-06
+peer-review audit, P6 / F6):** because the diet targets sit *inward*
+of the party centroids, `MediaConsumption` is **centripetal on the
+position axis** — the opposite sign of the Levendusky 2013 /
+DellaVigna-Kaplan / Martin-Yurukoglu polarizing-media literature, so
+*removing* cable nudges separation *up* (the backfire-direction trend),
+not down. The model's polarizing-media effect lives only on the
+**affect** channel (`MediatedAnimus`). This sign-mismatch is flagged
+for R-phase (R5) reconciliation.
 
 ### 4.4 X4 — Bipartisan dialogue programs
 

@@ -88,6 +88,23 @@ bands are concentrated on `within_party_sd` (every decade) and
 Gelman bands silently compressed both quantities below what real
 ANES measures.
 
+> **Calibration-recovery, not validation (peer-review audit P2 / F2, F11).**
+> The §11 cell tally and the Wasserstein-2 `w2_total` are **goodness-of-fit /
+> calibration-recovery** numbers: they are scored against the *same* ANES recode
+> (`data/phase9_empirical/derived/respondent_coordinates.csv`) that set the
+> knobs and that defines the bands and the W₂ target — so they cannot, by
+> construction, *falsify* the model. Do not present them as independent
+> validation. The genuinely held-out checks carry the validation claim: the
+> **GSS instrument cut** (sorting outpaces constraint), the **temporal holdout**
+> (`docs/results/e5_holdout.md`), the **Pew 2014 overlap** benchmark, and the
+> **per-issue trajectory** (incl. the racial item, never fit). Note honestly
+> that the temporal holdout **fails on `party_sep`** — the late-period timing
+> rides an exogenously-calibrated mobilization forcing and is not out-of-sample
+> predictable (`e5_holdout.md`, blindspot #7). The 18/24 figure above is the
+> Phase-9 landing on the 9-seed ANES bands; the *current shipped common-mode
+> config* reads **17/24** (5-seed scorecard) / **15/24** (9-seed realism
+> battery) — both below the project's own ≥18/24 target (methods §5.30/§5.31).
+
 ---
 
 ## 3. Architectural changes shipped
