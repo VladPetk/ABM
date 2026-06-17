@@ -1,0 +1,53 @@
+# FINDINGS TABLE (compact)
+
+id | stream | severity | conf | verify | corrected | title
+ 5 | MECHANISM FAITHFULNESS — party / i | critical | 0.90 | confirmed  | major    | Shipped engine over-produces out-party animus: 0/5 affect decades in the grounded ANES ban
+22 | FORCING LEDGER — is the fit earned | critical | 0.90 | confirmed  | critical | party_sep's late magnitude is fed: the activist-mobilization schedule is ABC-fit to the AN
+28 | DATA SOURCES, PROCESSING & LEAKAGE | critical | 0.95 | confirmed  | major    | Circular calibrate-and-score: one ANES recode tunes the knobs AND defines the bands AND th
+40 | LOGICAL / CODE-CORRECTNESS SWEEP   | critical | 0.90 | confirmed  | major    | Economic-axis 'validation' is circular: the partisan econ center is hard-snapped to the fi
+45 | INDEPENDENT FIT BATTERY (COMPUTE)  | critical | 0.93 | confirmed  | major    | Out-party affect is colder than ANES at EVERY decade (1980-2020), contradicting the realis
+ 0 | MECHANISM FAITHFULNESS — convergen | major    | 0.90 | partial    | minor    | BoundedConfidenceInfluence is effectively inert in the canonical build — yet carries the h
+ 1 | MECHANISM FAITHFULNESS — convergen | major    | 0.85 | confirmed  | major    | MediaConsumption is net DE-polarizing (centripetal) in the canonical build, contradicting 
+ 6 | MECHANISM FAITHFULNESS — party / i | major    | 0.88 | confirmed  | major    | The cultural common-mode channel silently broke the affect calibration (uncalibrated cross
+ 7 | MECHANISM FAITHFULNESS — party / i | major    | 0.97 | partial    | minor    | Audited divergence rules (IdentitySorting, IdentityAlignment, dyadic identity term, Backla
+10 | MECHANISM FAITHFULNESS — network / | major    | 0.90 | partial    | observation | Endogenous loop's realignment DIRECTION is exogenously fed from ANES, not emergent
+11 | MECHANISM FAITHFULNESS — network / | major    | 0.92 | confirmed  | major    | ~72% of the party_sep rise rides an ANES-fit mobilization forcing; only ~28% is the loop's
+12 | MECHANISM FAITHFULNESS — network / | major    | 0.95 | confirmed  | major    | methods.md cites stale honesty-budget numbers that understate the fed share by ~10 points
+17 | CITATION / LIT-GROUNDING VERIFICAT | major    | 0.80 | confirmed  | major    | "~69% cohort replacement" — the magnitude licensing the cultural common-mode channel's L/e
+23 | FORCING LEDGER — is the fit earned | major    | 0.95 | confirmed  | major    | The economic center-of-mass is ~100% fed (rigid snap to a curve each tick), and the honest
+24 | FORCING LEDGER — is the fit earned | major    | 0.95 | confirmed  | major    | Top-level project status (CLAUDE.md) advertises 18/24 scorecard & 18/24 realism; the shipp
+25 | FORCING LEDGER — is the fit earned | major    | 0.85 | confirmed  | major    | Blindspot #7 'RESOLVED' headline says party_sep emergent 1.00 while the honest budget says
+29 | DATA SOURCES, PROCESSING & LEAKAGE | major    | 0.97 | confirmed  | major    | The 'independent from-raw' validation harness re-uses the calibration recode (reproduces i
+30 | DATA SOURCES, PROCESSING & LEAKAGE | major    | 0.85 | partial    | minor    | Engine 'CULTURAL_BIRTH_GRADIENT' is mis-attributed to ANES; it is a GSS z-product, and its
+31 | DATA SOURCES, PROCESSING & LEAKAGE | major    | 0.90 | partial    | minor    | The model's '1980' baseline is built from post-Reagan 1986-1988 ANES waves, then hand-over
+34 | STRUCTURAL BLINDSPOTS              | major    | 0.88 | confirmed  | major    | The shipped model is a structural one-way ratchet: only one endogenous convergence force, 
+35 | STRUCTURAL BLINDSPOTS              | major    | 0.90 | confirmed  | major    | Out-party affect can only cool in the baseline: the warming path is dead code unless an in
+36 | STRUCTURAL BLINDSPOTS              | major    | 0.85 | partial    | major    | Depolarization exists only as externally-imposed resets (X5/X6), never as endogenous recov
+37 | STRUCTURAL BLINDSPOTS              | major    | 0.86 | confirmed  | major    | The 'positional sorting now emerges' headline is contradicted by the live honesty budget: 
+38 | STRUCTURAL BLINDSPOTS              | major    | 0.80 | partial    | major    | Party polarization is forced to be symmetric and single-direction by the loop's frozen axi
+41 | LOGICAL / CODE-CORRECTNESS SWEEP   | major    | 0.95 | confirmed  | minor    | Common-mode channels bypass FJ/stubbornness entirely, contradicting the stated damping dis
+42 | LOGICAL / CODE-CORRECTNESS SWEEP   | major    | 0.95 | confirmed  | major    | I3 ('no direct outcome writes') is asserted but the test only lints arc event handlers, no
+46 | INDEPENDENT FIT BATTERY (COMPUTE)  | major    | 0.95 | confirmed  | major    | Raw out-party affect overflows the [-1,1] warmth floor (-1.27) and is hidden by a clip-on-
+47 | INDEPENDENT FIT BATTERY (COMPUTE)  | major    | 0.85 | confirmed  | major    | Model over-produces CULTURAL-axis separation relative to ECONOMIC: cult/econ ratio ~1.0 vs
+48 | INDEPENDENT FIT BATTERY (COMPUTE)  | major    | 0.80 | refuted    | minor    | Single-axis activist-elite loop over-couples the two compass axes (corr 0.48->0.82), which
+ 2 | MECHANISM FAITHFULNESS — convergen | minor    | 0.90 | unverified |          | The literature-pinned HK replication test validates a path the canonical build does not us
+ 3 | MECHANISM FAITHFULNESS — convergen | minor    | 0.95 | unverified |          | ArgumentExchange is a documented, citation-tagged rule that no shipped scenario uses, and 
+ 8 | MECHANISM FAITHFULNESS — party / i | minor    | 0.75 | unverified |          | identity_alignment is applied to affect through two parallel channels (align_factor + Medi
+ 9 | MECHANISM FAITHFULNESS — party / i | minor    | 0.70 | unverified |          | MediatedAnimus deliberately has NO saturation, guaranteeing the affect floor is hit late —
+13 | MECHANISM FAITHFULNESS — network / | minor    | 0.85 | unverified |          | Dated historical events do not net-drive separation; removing them RAISES final party_sep
+14 | MECHANISM FAITHFULNESS — network / | minor    | 0.88 | unverified |          | Cohort replacement leaks the prior occupant's social_coord onto the new person
+18 | CITATION / LIT-GROUNDING VERIFICAT | minor    | 0.72 | unverified |          | Treier & Hillygus 2009 axis correlation is miscited as ~0.21; the paper's figure is ~0.30 
+19 | CITATION / LIT-GROUNDING VERIFICAT | minor    | 0.70 | unverified |          | "Thermostatic policy mood (Erikson–MacKuen–Stimson)" is used to dignify a hand-drawn, sing
+20 | CITATION / LIT-GROUNDING VERIFICAT | minor    | 0.85 | unverified |          | calibration.py EMPIRICAL_ANCHORS still asserts the ANES-thermometer 'within ~5% of the ANE
+26 | FORCING LEDGER — is the fit earned | minor    | 0.80 | unverified |          | The cultural center-of-mass 'emergent' claim rests on an ANES-measured gradient plus a tur
+32 | DATA SOURCES, PROCESSING & LEAKAGE | minor    | 0.90 | unverified |          | Thin and form-split waves carry whole decade buckets; 51% listwise retention biases the ta
+33 | DATA SOURCES, PROCESSING & LEAKAGE | minor    | 0.80 | unverified |          | Headline scorecard numbers are presented as fidelity despite the report's own 'fit != vali
+39 | STRUCTURAL BLINDSPOTS              | minor    | 0.78 | unverified |          | Real-world drivers a polarization model should arguably have are absent, and two registere
+43 | LOGICAL / CODE-CORRECTNESS SWEEP   | minor    | 0.85 | unverified |          | Common-mode shift is not exactly sorting-invariant and silently drags Independents who are
+44 | LOGICAL / CODE-CORRECTNESS SWEEP   | minor    | 0.80 | unverified |          | Method-B published baseline shows an ensemble-mean macro over a cross-seed-subsample cloud
+49 | INDEPENDENT FIT BATTERY (COMPUTE)  | minor    | 0.60 | unverified |          | Model under-produces party-cloud overlap and only becomes bimodal in the very late period;
+ 4 | MECHANISM FAITHFULNESS — convergen | observation | 0.80 | unverified |          | ConstraintOp is faithfully implemented but its dispersion noise outweighs its constraint f
+15 | MECHANISM FAITHFULNESS — network / | observation | 0.70 | unverified |          | Elite leapfrog gain is large enough that the elite is governed by the saturating tanh ceil
+16 | MECHANISM FAITHFULNESS — network / | observation | 0.90 | unverified |          | Protected-agent machinery removal is clean and RNG-stream-safe; CLAUDE.md still lists the 
+21 | CITATION / LIT-GROUNDING VERIFICAT | observation | 0.90 | unverified |          | Verified-sound anchors (reported for completeness, no silent gaps): Pettigrew-Tropp, DW-NO
+27 | FORCING LEDGER — is the fit earned | observation | 0.75 | unverified |          | data_fed_media penetration curves: correctly classified as a legitimate forcing, but the s
