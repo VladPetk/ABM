@@ -85,6 +85,7 @@ class AffectiveUpdate:
         coop_positive_magnitude: float = 0.05,
         threat_amplification: float = 1.0,
         saturation: float = 0.0,
+        xpressure_affect_damp: float = 0.0,
     ):
         # `radius` is the issue-distance normalisation scale (the
         # divisor in `d_iss / self.radius`). It is **not** a query
@@ -139,6 +140,12 @@ class AffectiveUpdate:
         # Mason 2018 ch. 6 ceiling effect). The accumulating clip at
         # ±1 still applies as the hard backstop.
         self.saturation = float(saturation)
+        # R-phase R2 — cross-pressure damping on negative (cooling) valence.
+        # Cross-pressured agents (low `identity_alignment` = cross-cutting
+        # identities not stacked with party) resist out-party cooling
+        # (Lipset & Rokkan 1967; Mutz 2002; Mason 2018). 0.0 → no-op →
+        # bit-identical (pillar agents carry no identity_alignment anyway).
+        self.xpressure_affect_damp = float(xpressure_affect_damp)
 
     def apply(
         self,
@@ -240,6 +247,16 @@ class AffectiveUpdate:
         else:
             align_factor = 1.0
 
+        # R-phase R2 — cross-pressure mute on negative valence (computed once
+        # per agent, parallel to align_factor). Default damp 0.0 → xp_mute 1.0.
+        if self.xpressure_affect_damp > 0.0:
+            _xp = 1.0 - float(
+                np.clip(agent.state.attrs.get("identity_alignment", 0.0), 0.0, 1.0)
+            )
+            xp_mute = max(0.0, 1.0 - self.xpressure_affect_damp * _xp)
+        else:
+            xp_mute = 1.0
+
         # Phase 8c §2 E2: cooperative-positive path. The network is
         # consulted only for the positive-path trigger now; pre-Phase-8c
         # `cooperative_mute != 1.0` short-circuit is replaced by a
@@ -339,7 +356,7 @@ class AffectiveUpdate:
                 # amplified.
                 valence = (
                     -(disagreement + self.baseline)
-                    * neg_mute * threat_factor * align_factor
+                    * neg_mute * threat_factor * align_factor * xp_mute
                 )
 
             # Phase 9 §11.7-G — soft saturation: per-encounter delta

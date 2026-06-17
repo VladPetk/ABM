@@ -212,6 +212,37 @@ def generate_involuntary_edges(
     return placed
 
 
+def mark_cross_party_cooperative(network: "Network", agents, rng, frac: float) -> int:
+    """R-phase R1 — mark a fraction of existing CROSS-PARTY edges as
+    ``cooperative`` so the (otherwise dead) positive-going warming path in
+    ``AffectiveUpdate`` can fire (Allport 1954; Pettigrew & Tropp 2006 —
+    equal-status contact via shared institutions; cross-party kin/workplace
+    ties are the empirically cooperative stratum, Mutz & Mondak 2006).
+
+    GATED: only called from ``build_engine`` when ``contact_warming=True``.
+    When off it is never called, so the network — and the ``net_rng`` stream —
+    are byte-identical to head. Deterministic given ``rng`` (pass the build's
+    ``net_rng``). Returns the number of edges marked cooperative.
+    """
+    if frac <= 0.0:
+        return 0
+    party = {a.id: a.state.attrs.get("party") for a in agents}
+    cross = [
+        (i, j) for (i, j) in network.edges()
+        if party.get(i) in (0, 1) and party.get(j) in (0, 1)
+        and party[i] != party[j]
+    ]
+    if not cross:
+        return 0
+    cross.sort()
+    k = min(len(cross), max(1, int(round(float(frac) * len(cross)))))
+    idx = np.atleast_1d(rng.choice(len(cross), size=k, replace=False))
+    for t in idx:
+        i, j = cross[int(t)]
+        network.add_edge(i, j, cooperative=True)
+    return k
+
+
 def neighbor_agents(agent, space, env):
     """An agent's network neighbours as ``Agent`` objects, ascending id order.
 

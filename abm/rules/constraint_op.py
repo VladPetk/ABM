@@ -55,9 +55,17 @@ from ..core.state import StateDelta
 
 
 class ConstraintOp:
-    def __init__(self, rate: float = 0.0, resid_sigma: float = 0.0):
+    def __init__(self, rate: float = 0.0, resid_sigma: float = 0.0,
+                 xpressure_damp: float = 0.0):
         self.rate = float(rate)
         self.resid_sigma = float(resid_sigma)
+        # R-phase R2 — cross-pressure damping. Cross-cutting agents (low
+        # identity_alignment = identities not stacked with party) resist
+        # sorting (Lipset & Rokkan 1967; Mutz 2002; Mason 2018). Default
+        # 0.0 → no-op → every legacy/canonical path bit-identical. Reads
+        # only the agent's own `identity_alignment` scalar — no party /
+        # centroid reference, so the anti-confound AST guard still holds.
+        self.xpressure_damp = float(xpressure_damp)
 
     def apply(
         self,
@@ -85,6 +93,14 @@ class ConstraintOp:
                     u = m / nrm
                     proj = float(v @ u) * u
                     d = self.rate * (proj - v)
+                    # R-phase R2 — cross-pressure damping (self-limiting: as
+                    # mega-identity stacking rises, identity_alignment rises and
+                    # the cross-pressured pool shrinks, so sorting dominates late).
+                    if self.xpressure_damp > 0.0:
+                        _xp = 1.0 - float(np.clip(
+                            agent.state.attrs.get("identity_alignment", 0.0),
+                            0.0, 1.0))
+                        d = d * max(0.0, 1.0 - self.xpressure_damp * _xp)
 
         if self.resid_sigma > 0.0 and D > 2:
             from ..core.issues import lift, project1

@@ -31,7 +31,9 @@ import numpy as np
 from ..core.agent import Agent
 from ..core.engine import Engine
 from ..core.environment import Environment
-from ..core.network import Network, generate_involuntary_edges
+from ..core.network import (
+    Network, generate_involuntary_edges, mark_cross_party_cooperative,
+)
 from ..core.outlets import (
     US_MEDIA_OUTLETS_2024,
     US_MEDIA_OUTLETS_2024_ANES,
@@ -812,6 +814,29 @@ def build_engine(
     # prior centered on the B&G/Kozlowski constraint slope.
     constraint_rate: float = 0.0,
     constraint_resid_sigma: float = 0.0,
+    # ── R-phase R1 — contact → affect warming (docs/internal/reversibility_spec.md) ──
+    # Wakes the otherwise-DEAD positive-going (warming) path in AffectiveUpdate
+    # by seeding cooperative cross-party edges (Allport 1954; Pettigrew & Tropp
+    # 2006 — equal-status contact via shared institutions). Default OFF → strict
+    # no-op: no cooperative edges are marked (so net_rng is untouched), the warm
+    # threshold/magnitude keep AffectiveUpdate's own defaults (-0.2 / 0.05), and
+    # the contact-share floor stays 0 → every existing path is bit-identical to
+    # head. SELF-LIMITING by construction: the warming path fires only on a
+    # cooperative edge AND when out-party warmth ≥ contact_warm_threshold, while
+    # TieRewiring erodes voluntary cross-party edges over the arc — so warming
+    # starves as the population sorts (emergent domination, not a tuned cap).
+    contact_warming: bool = False,
+    contact_coop_frac: float = 0.5,      # fraction of cross-party edges → cooperative
+    contact_warm_threshold: float = -0.6,  # override AffectiveUpdate.coop_positive_threshold
+    contact_warm_magnitude: float = 0.05,  # override AffectiveUpdate.coop_positive_magnitude
+    contact_coop_share: float = 0.0,     # population cooperative-share floor (negative-mute)
+    # ── R-phase R2 — cross-pressure damping (docs/internal/reversibility_spec.md) ──
+    # Cross-cutting agents (low identity_alignment) resist sorting (ConstraintOp)
+    # and out-party cooling (AffectiveUpdate). Both default 0.0 → strict no-op →
+    # bit-identical. Self-limiting: the cross-pressured pool shrinks as stacking
+    # rises, so the polarizing forces dominate late-arc endogenously.
+    xpressure_sorting_damp: float = 0.0,
+    xpressure_affect_damp: float = 0.0,
     # ── MHV S3 (T3.2) — data-fed elite/party-position channel ─────────────────
     # When True, the scheduled `EliteDrift` is replaced by a `PartyCentroidSeries`
     # input rule (abm/pillars/inputs.py) that sets env.attrs["parties"][pid] each
@@ -1426,6 +1451,12 @@ def build_engine(
     generate_involuntary_edges(
         network, agents, net_rng, per_agent=INVOLUNTARY_PER_AGENT
     )
+    # R-phase R1 — mark cross-party edges cooperative to wake the warming path.
+    # GATED: skipped entirely (net_rng untouched → bit-identical) when off.
+    if contact_warming and contact_coop_frac > 0.0:
+        mark_cross_party_cooperative(
+            network, agents, net_rng, contact_coop_frac
+        )
 
     # Step 1 (web_demo evidence re-grade) — derive the re-graded params.
     # All take their no-op value when evidence_regrade is False, so the
@@ -1498,7 +1529,9 @@ def build_engine(
             float(tier_c_bc_epsilon) / 0.30
             if tier_c_bc_epsilon is not None else 1.0
         ),
-        "sandbox_contact_share": float(sandbox_contact),
+        "sandbox_contact_share": float(
+            max(sandbox_contact, contact_coop_share if contact_warming else 0.0)
+        ),
         # Phase 9 §11.7-C — exposed so IdentityToIdeologyPull can read
         # the party-identity centroid and compute per-agent deviation.
         "party_identity_centers": {
@@ -1712,6 +1745,16 @@ def build_engine(
             identity_weight=(0.0 if _emergent else 0.5),
             baseline=0.0,   # 8f §1.1: 0.10 → 0.0
             cooperative_mute=COOPERATIVE_MUTE,
+            # R-phase R1 — contact warming. OFF → exactly AffectiveUpdate's own
+            # defaults (-0.2 / 0.05) → bit-identical. ON → lower threshold so the
+            # warming path fires for moderately-cold agents (self-limiting: it
+            # still stops once warmth drops below the threshold late-arc).
+            coop_positive_threshold=(
+                contact_warm_threshold if contact_warming else -0.2
+            ),
+            coop_positive_magnitude=(
+                contact_warm_magnitude if contact_warming else 0.05
+            ),
             # Phase 9 §11.7-G — soft affect saturation. The hard clip
             # at ±1 was producing step-function-like cooling that
             # over-shoots ANES affect bands at every decade. Under ANES
@@ -1725,6 +1768,8 @@ def build_engine(
                 0.0 if evidence_regrade
                 else (1.0 if anes_knobs_active else 0.0)
             ),
+            # R-phase R2 — cross-pressure damping on cooling (0.0 → bit-identical).
+            xpressure_affect_damp=float(xpressure_affect_damp),
         ),
         # Affect re-grade: contact-independent (parasocial) animus channel.
         # No-op unless evidence_regrade (lr>0) AND mediated_animus_weight>0
@@ -1740,7 +1785,8 @@ def build_engine(
         # spine). Off-path (constraint_rate=0) the legacy rule is built
         # exactly as before — bit-identical.
         *((ConstraintOp(rate=float(constraint_rate),
-                        resid_sigma=float(constraint_resid_sigma)),)
+                        resid_sigma=float(constraint_resid_sigma),
+                        xpressure_damp=float(xpressure_sorting_damp)),)
           if _emergent else
           (IdentitySorting(
               # Step 2 (flag-1 fix): scale the initial sort rate by the
