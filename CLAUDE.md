@@ -109,10 +109,12 @@ are bundled and parameterized.
   issue substrate + `ConstraintOp`; methods §5.23). Since **emergence-recovery
   E5** the canonical `ANES_FULL_KWARGS` is the **endogenous** build
   (`endogenous_elite=True`, `data_fed_elite=False`, the adopted E4 ABC point):
-  positional sorting now *emerges* from the activist→elite→mass loop instead of
-  replaying fed centroids (blindspot #7 resolved; methods §5.29). Phase-10 +
-  web are re-blessed on it (E5.5/E5.6). The pre-E5 fed config is preserved as
-  `ANES_FULL_FED_KWARGS`.
+  positional sorting is now *written by* the activist→elite→mass loop instead of
+  replaying fed centroids — but only **~0.28** of the party_sep rise is
+  forcing-free; **~0.72 rides calibrated forcings**, so blindspot #7 is **partly**
+  resolved (mechanism endogenous, timing/magnitude largely forced; methods §5.29,
+  `docs/results/honesty_budget.json`). Phase-10 + web are re-blessed on it
+  (E5.5/E5.6). The pre-E5 fed config is preserved as `ANES_FULL_FED_KWARGS`.
 
 ### How rules are drift-guarded — three test layers
 A rule's behavior is (or should be) pinned at three distinct levels; each
@@ -184,17 +186,24 @@ D=7 build (S2/T2.6). Media coupling is still a **data-fed input series**
 however, is no longer fed: since **emergence-recovery E5** the canonical
 `ANES_FULL_KWARGS` runs the **endogenous activist→elite→mass loop**
 (`endogenous_elite=True`, `data_fed_elite=False`, the adopted E4 ABC point;
-`abm/rules/activist_elite.py`, methods §5.29), so positional sorting **emerges**
-rather than replaying fed ANES voter centroids (**blindspot #7 resolved** — the
-honesty budget flips party_sep to ~1.00 emergent / ~0 input-carried). The whole
-re-bless cascade ran on it (scorecard 18/24, realism 18/24, phase-10 buckets
-unchanged, web re-exported). **Honest open caveat:** the loop's late-period
+`abm/rules/activist_elite.py`, methods §5.29), so positional sorting is **written
+by the loop** rather than replaying fed ANES voter centroids. **Blindspot #7 is
+only partly resolved:** the mechanism is endogenous (no fed-series replay), but
+the honesty budget shows only **~0.28** of the party_sep rise is forcing-free —
+**~0.72 rides calibrated forcings** (the activist-mobilization schedule). The
+~1.00 sometimes quoted is *loop-attributable* (the loop is the proximate writer),
+**not** emergent. The re-bless cascade ran on it (ANES scorecard **17/24**,
+realism battery **15/24** — both below the project's own ≥18/24 target; phase-10
+buckets unchanged, web re-exported). **Honest open caveat:** the loop's late-period
 *timing* is an exogenously-calibrated forcing, not out-of-sample predictable —
 the four-cut holdout fails the temporal + instrument cuts (1/3;
 `docs/results/e5_holdout.md`), and the single-axis loop over-correlates the
 compass axes (corr~0.78). The pre-E5 fed config is preserved as
 `ANES_FULL_FED_KWARGS`. I3 (no direct outcome writes outside the delta pipeline)
-is enforced by test.
+is enforced **only for the arc's event handlers** — the lint AST-walks the
+`_event_*`/`_decade_*` functions; the typed input channels (`shocks.py`,
+`cultural_common_mode.py`) write outcomes directly and are exempt by convention,
+not by test (audit P7).
 
 ### Engine quickstart (Windows PowerShell)
 ```powershell
@@ -297,8 +306,10 @@ engine (Python)
 - [`docs/results/phase10_results.md`](docs/results/phase10_results.md) — the
   authoritative measured intervention buckets (ground truth for the web build).
 - [`docs/model_blindspots.md`](docs/model_blindspots.md) — the register of
-  known structural/empirical blindspots (incl. #7: positional sorting is
-  input-carried, not emergent).
+  known structural/empirical blindspots (incl. #7: the loop *writes* positional
+  sorting, but ~72% of the rise is forcing-carried — partly resolved, not fully
+  emergent; and the one-way-ratchet limitation — no endogenous depolarization,
+  being addressed in the R-phase, `docs/internal/reversibility_spec.md`).
 - [`docs/results/realism_report.md`](docs/results/realism_report.md) +
   [`docs/results/honesty_budget.json`](docs/results/honesty_budget.json) — the
   realism battery and the emergent/input/hand-drawn budget split.

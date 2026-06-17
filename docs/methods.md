@@ -936,13 +936,23 @@ endogenous state rather than a calendar-time rate.
   0.014, media ramp): **N** (the model's calibration, validated 9-seed
   against the grounded bands).
 
-**Result.** At 9 seeds the `anes_full` preset places all five affect
-decades + the 1980 IC in the data-grounded affect bands; the ANES-band
-§11 gate is **15/24** (the remaining fails are the pre-existing
-constraint/within-SD cells, not affect or network). Scorecard:
-`docs/results/phase9_anes_score_anes_full.json`. (The earlier "18/24"
-figure scored a stale preset that predated the Step-1/affect re-grade —
-see `docs/affect_bands_investigation.md`.)
+**Result (CORRECTED 2026-06 per the peer-review audit, finding F3).** The affect
+re-grade did **not** succeed on the shipped config. At 9 seeds the `anes_full`
+preset is **out of the data-grounded affect bands at *all five* decades**
+(1990/2000/2010/2020/2025 all run colder than band — affect contributes **0/5**
+in-band cells), so the earlier "places all five affect decades in band" claim was
+**false** for the canonical config. Affect is the dominant miss in the **15/24**
+ANES-band §11 gate (9-seed realism battery; the 5-seed scorecard reads 17/24) —
+**both below the project's own ≥18/24 target.** Root cause: the §5.30 cultural
+common-mode raised cohort turnover and knocked affect from ~4/5 to 0/5 as an
+uncalibrated cross-axis side-effect that was re-measured but never re-calibrated;
+and `saturation` (the §11.7-G decelerator built precisely to stop affect
+over-shooting "at every decade") is itself **retired** under `evidence_regrade`.
+A feasibility sweep (`validation/audit/affect_recal_verdict.md`) shows a clean
+recalibration (lower `affect_lr` + re-enable `saturation` + trim `MediatedAnimus`)
+restores affect to band with **zero** collateral on the position metrics — folded
+into the R-phase re-bless. Scorecard:
+`docs/results/phase9_anes_score_anes_full.json`.
 
 **Intervention re-bless.** The X1–X7 sweeps were re-run on the
 re-graded engine (`phase10_measure`, 9 seeds). One public bucket moved:

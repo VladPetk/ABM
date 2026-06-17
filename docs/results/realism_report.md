@@ -48,16 +48,18 @@ Reproduce: `.venv/Scripts/python.exe scripts/audit/realism_battery.py --seeds 9`
 
 ## Headline
 
-**Positional sorting now EMERGES and the model stays substantially realistic.**
-The whole point of E5: party separation and identity alignment are produced by
-the endogenous loop, not replayed from fed centroids. Freezing the loop collapses
-`party_sep` to the 1980 seed (so the loop is the generative mechanism), and the
-fed-POSITION channel is ~0 (was ~1.0 input-carried). But the loop's pace is set
-by an ANES-calibrated mobilization forcing, so the honest budget
-(`honesty_budget.json`, E5.8) splits each rise into free-flowing vs empirical
-input: `party_sep` **0.38 free-flowing / 0.62 empirical**, `identity_alignment`
-**0.34 / 0.66**, `affect` **0.87 / 0.13**. The panel does not claim "wholly
-emergent" — the mechanism is the model's, the timing is calibrated.
+**The loop *writes* positional sorting, but the rise is mostly forcing-carried.**
+Party separation and identity alignment are produced by the endogenous loop, not
+replayed from fed centroids — freezing the loop collapses `party_sep` to the 1980
+seed (the loop is the generative mechanism) and the fed-POSITION channel is ~0.
+**But proximate-writing is not emergence:** the loop's pace is set by an
+ANES-calibrated mobilization forcing, so the honest budget (`honesty_budget.json`,
+current common-mode config) splits each rise into free-flowing vs empirical input:
+`party_sep` **0.28 free-flowing / 0.72 empirical**, `identity_alignment`
+**0.28 / 0.72**, `affect` **0.94 / 0.06**. So only **affect** is substantially
+emergent; **~72% of the positional rise rides the forcing** (peer-review audit
+F1/F4). The panel does not claim "wholly emergent" — the mechanism is the model's,
+the timing/magnitude is largely calibrated.
 
 The realism **cost** of dropping the fed answer is real, modest, and documented:
 the §11 scorecard goes **21/24 → 18/24** (still PASS ≥18), the joint-distribution
