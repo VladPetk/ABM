@@ -42,6 +42,7 @@ if SNAPS[-1] != 135:
 # direction fix, when built, will also live here — a correction, not a knob.)
 BASE = dict(
     affect_rest_rate=0.015, affect_rest_anchor=-0.15,  # R7 — affect equilibrium
+    media_centrifugal=0.8,  # R5 part A — media points the right way (polarizing) in all regimes
 )
 
 # RESTORING = regime-varying restoring FORCES (a society can have more/less of
@@ -63,7 +64,8 @@ RESTORING_STRONG = dict(
 # clean "mechanism layer at rest, no external drivers" test: any rise here is
 # INTRINSIC mechanism drift (ConstraintOp / PartyPull / affect), not forcing.
 FORCING_LOW = dict(mob_base=0.0, mob_peak=0.0, mob_backload=0.0,
-                   cultural_common_mode=False, economic_common_mode=False)
+                   cultural_common_mode=False, economic_common_mode=False,
+                   data_fed_media=False)  # media penetration is itself a forcing
 # C4 "Sweden-like": enough early forcing to BUILD a sorted state, weak late, so
 # strong restoring can overcome it -> peak-then-decline (the probe's config).
 FORCING_SWEDEN = dict(mob_peak=0.8, elite_gain=1.0)

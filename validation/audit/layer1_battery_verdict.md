@@ -211,3 +211,39 @@ right mechanisms (R1 warming + R7 rest); clearing its two G1 legs is now a
 The remaining build decision is **R5** (media direction + fed→earned), flagged for
 sign-off, after which the joint re-calibration runs (R5 + P3a + the R-knob fit +
 G2 US-fit + the falsification battery).
+
+---
+
+## Update — after R5 part A (media-direction fix) → media now polarizes position
+
+R5 part A: `diet_for_party` gains a gated `media_centrifugal` knob — sharpens the
+partisan diet onto same-pole outlets so the diet target sits at/beyond the party
+pole, making `MediaConsumption` centrifugal (polarizing) on position, per the
+cited lit (audit F6 fix). A mechanism-direction correction (BASE, on in all
+regimes). Canonical bit-identical (identical rng draws at 0.0); +3 isolation tests.
+
+| Cell | sep (pre-R5 → post-R5) | affect |
+|---|---|---|
+| C1 polarizing | 1.062 → **1.117** | −0.704 |
+| C3 neutral (now no media forcing) | 0.284 → 0.317 (Δ +0.027) | −0.582 |
+| C4 depolarizing | 0.498 → 0.519 | −0.287 |
+
+- **Media is now a genuine polarizing force on position** (C1 sep up to 1.117),
+  matching the literature. C3 still rests (media penetration is itself a forcing,
+  so C3 sets `data_fed_media=False`). C4 still reverses (sep 0.129 ≥ 0.10) — the
+  restoring forces overcome the now-stronger media.
+- **G1 unchanged at 2/4** — R5 is position-axis; the affect legs remain the only
+  fails (the P3a calibration handoff).
+
+**R5 part B (fed→earned) is the re-cal's job:** now that media carries real
+positional sorting, the joint re-cal can *cut the mob_* forcing* and let media +
+the loop carry the rise — raising the emergent fraction (the central honesty goal).
+
+## Status: Layer-1 mechanism set + R5 part A COMPLETE — ready for the joint re-cal
+
+All gated, bit-identical, isolation-tested (49 R-phase tests). Position axis fully
+validates generically; media points the right way; affect has its mechanisms (R1
++ R7) with the magnitude (P3a) deferred to the re-cal. **Next = the joint
+re-calibration** (turn R1–R7 + R5 on; re-fit mob_*/elite/affect-P3a/R-knobs to
+the §11 + affect + per-axis + emergent-fraction targets; G2 US-fit; falsification
+battery; one re-bless cascade) — the big, expensive phase.

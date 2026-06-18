@@ -866,6 +866,15 @@ def build_engine(
     # back. rate 0.0 → bit-identical.
     affect_rest_rate: float = 0.0,
     affect_rest_anchor: float = 0.0,
+    # ── R-phase R5 — media-direction fix (reversibility_spec.md; audit F6) ──
+    # Sharpen the partisan media diet toward same-pole outlets so the diet target
+    # sits at/beyond the party centroid → MediaConsumption becomes centrifugal
+    # (polarizing) on position, matching the cited lit (Levendusky 2013; Martin &
+    # Yurukoglu 2017) instead of the current centripetal direction. A mechanism-
+    # direction CORRECTION (not a regime knob). Part B of R5 — the fed→earned
+    # forcing cut — is the re-cal's job (lower mob_* once media carries sorting).
+    # 0.0 → prior diet formula AND identical rng draws → bit-identical.
+    media_centrifugal: float = 0.0,
     # ── MHV S3 (T3.2) — data-fed elite/party-position channel ─────────────────
     # When True, the scheduled `EliteDrift` is replaced by a `PartyCentroidSeries`
     # input rule (abm/pillars/inputs.py) that sets env.attrs["parties"][pid] each
@@ -1209,7 +1218,8 @@ def build_engine(
             if fac["party"] is not None:
                 party = int(fac["party"])
 
-        diet = diet_for_party(party_centers_active[party], outlets, rng)
+        diet = diet_for_party(party_centers_active[party], outlets, rng,
+                              centrifugal=media_centrifugal)   # R5 (default 0.0)
         identity_strength = float(rng.beta(2.0, 2.0))
         identities = np.clip(
             party_identity_centers[party] + rng.normal(0, 0.3, size=n_identities),
@@ -1621,8 +1631,8 @@ def build_engine(
         # M3 hooks for cohort replacement at runtime.
         "party_cue_sigma_replacement": 0.25,   # symmetric for replacements
         "cohort_diet_factory": (lambda pty, rng_: diet_for_party(
-            party_centers[pty], outlets, rng_
-        )),
+            party_centers[pty], outlets, rng_, centrifugal=media_centrifugal
+        )),   # R5 (default 0.0 → bit-identical)
         # Phase 9 Tier A: deterministic per-build RNG seed for the
         # faction-emergence events. Each event handler builds its own
         # `np.random.default_rng(seed)` from this — keeps the events
