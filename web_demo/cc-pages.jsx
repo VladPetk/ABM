@@ -72,8 +72,8 @@ function MethodRow({ k, children }) {
 }
 
 // ── honesty budget ───────────────────────────────────────────────────────────
-// Measured fractions are blessed in docs/results/honesty_budget.json (endogenous
-// canonical config, 6 seeds; methods §5.29; scripts/audit/t35_budget_brake.py).
+// Measured fractions are blessed in docs/results/honesty_budget.json (R-phase
+// canonical config, 6 seeds; methods §5.32; scripts/audit/t35_budget_brake.py).
 // Two honest slices of each metric's 1980→2025 rise:
 //   free_flowing    = the mechanism with every EMPIRICAL/external driver removed
 //                     (mobilization frozen at 1980, no events, no media) — the loop's
@@ -88,12 +88,12 @@ function MethodRow({ k, children }) {
 // Widths are honest roundings of the blessed fractions (rise-based).
 const BUDGET_C = { emergent: '#3f7d54', empirical: CC.d };
 const BUDGET = [
-  { k: 'Party separation', emergent: 38, empirical: 62,
-    note: 'The model supplies the mechanism, the data supplies the timing. Freeze the activist→elite→mass loop and the sorting collapses to its 1980 seed — so it’s the loop, not fed positions, that produces the sorting (earlier versions replayed the ANES centroids outright). But left to itself the loop only makes ~38% of the rise; the other ~62% is the loop amplified by an ANES-calibrated mobilization schedule. Calibrated forcing, not fed answers — but real empirical input.' },
-  { k: 'Affective polarization', emergent: 87, empirical: 13,
-    note: 'Mostly the model’s own animus dynamics (87%); empirical input — dated media/events — adjusts only ~13%. Independent of the positional loop.' },
-  { k: 'Identity alignment', emergent: 34, empirical: 66,
-    note: 'Identity tracks the emergent party positions, so the loop carries it (was ~2% — it used to follow the same data-fed party series). Like separation, ~66% of the rise rides the empirically-calibrated forcing.' },
+  { k: 'Party separation', emergent: 34, empirical: 66,
+    note: 'The model supplies the mechanism, the data supplies the timing. Freeze the activist→elite→mass loop and the sorting collapses to its 1980 seed — so it’s the loop, not fed positions, that produces the sorting (earlier versions replayed the ANES centroids outright). But left to itself the loop only makes ~34% of the rise; the other ~66% is the loop amplified by an ANES-calibrated mobilization schedule. Calibrated forcing, not fed answers — but real empirical input.' },
+  { k: 'Affective polarization', emergent: 83, empirical: 17,
+    note: 'Mostly the model’s own animus dynamics (83%); empirical input — dated media/events — adjusts only ~17%. Independent of the positional loop.' },
+  { k: 'Identity alignment', emergent: 36, empirical: 64,
+    note: 'Identity tracks the emergent party positions, so the loop carries it (was ~2% — it used to follow the same data-fed party series). Like separation, ~64% of the rise rides the empirically-calibrated forcing.' },
 ];
 
 function BudgetBar({ row }) {
@@ -227,31 +227,31 @@ function MethodsPage() {
         the mechanism, the data supplies the timing.</strong> Freeze the loop and party separation collapses to its 1980
         seed — so the sorting is the loop’s doing, not fed positions (earlier versions replayed the ANES centroids
         outright; that channel is now ~0). But left entirely to itself the loop only makes about a third of the rise;
-        the rest is the loop <em>amplified</em> by an ANES-calibrated mobilization schedule — so ~62% of separation and
-        ~66% of identity alignment is empirical input. That’s calibrated forcing, not fed answers, but it’s real, and we’d
+        the rest is the loop <em>amplified</em> by an ANES-calibrated mobilization schedule — so ~66% of separation and
+        ~64% of identity alignment is empirical input. That’s calibrated forcing, not fed answers, but it’s real, and we’d
         rather show it than round it to zero. The <strong style={{ color: CC.ink }}>emotional</strong> arc is the
-        exception: 87% is the model’s own animus dynamics, with empirical input adjusting only ~13%.
+        exception: 83% is the model’s own animus dynamics, with empirical input adjusting only ~17%.
       </Prose>
 
       <H2>Why only a third? — the saturation ratchet</H2>
       <Prose>
-        Is that ~38% a weakness we should engineer away? We checked, and the answer is no — it’s telling us something
+        Is that ~34% a weakness we should engineer away? We checked, and the answer is no — it’s telling us something
         real. Ask the cleanest possible version of the question: take the actual 1980 electorate, freeze where everyone
         stands on the issues, and just <em>re-label</em> who’s a Democrat and who’s a Republican to pull the two camps as
         far apart as the 1980 public will allow. That best-case re-sorting reaches separation <strong style={{ color: CC.ink }}>0.66</strong>
         — but 2025 is <strong style={{ color: CC.ink }}>1.11</strong>. So roughly <strong style={{ color: CC.ink }}>60% of the
-        rise sits above the ceiling of anything you can do by re-arranging the 1980 world</strong> — almost exactly the
-        ~62% the calibrated forcing carries. <strong style={{ color: CC.ink }}>1980 was genuinely calm:</strong> reaching the
+        rise sits above the ceiling of anything you can do by re-arranging the 1980 world</strong> — close to the
+        ~66% the calibrated forcing carries. <strong style={{ color: CC.ink }}>1980 was genuinely calm:</strong> reaching the
         modern split required real, slow change — elites repositioning, a generation turning over — and the timing of that
         change is set by history, not by the starting conditions.
       </Prose>
       <Prose>
         Put plainly: <strong style={{ color: CC.ink }}>the model supplies the mechanism; history supplies the timing.</strong>
-        About 38% of the 1980→2025 rise was already latent in the 1980 electorate and emerges from the loop on its own; the
+        About 34% of the 1980→2025 rise was already latent in the 1980 electorate and emerges from the loop on its own; the
         rest required 45 years of real change whose timing no model can author from initial conditions. (And the model’s own
         spontaneous loop already recovers most of that latent 0.66 — there’s no hidden reservoir of “missing” emergence to
         unlock.) The one channel that <em>does</em> run away on its own is the emotional one — animus has no anchor pulling it
-        back, so it self-amplifies; issue positions are sticky and have to be moved. That 87%-vs-38% gap isn’t a bug; it’s the
+        back, so it self-amplifies; issue positions are sticky and have to be moved. That 83%-vs-34% gap isn’t a bug; it’s the
         model faithfully reproducing how the two actually behaved.
       </Prose>
 

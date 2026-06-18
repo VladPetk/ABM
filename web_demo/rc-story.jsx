@@ -34,7 +34,7 @@ const STORY_BEATS = [
   {
     tick: 60, title: 'Sorting into mega-identities', short: 'Sorting', layer: 'position',
     lead: 'Party, ideology, religion and region begin to stack into a single identity.',
-    body: 'This is the quiet master mechanism. People mostly keep their party and move their positions to match it — Democrat and Republican come to mean two whole ways of life. As those identities align, the warmth between the camps drains away. The model’s alignment score climbs from about 0.20 to 0.32 over the run — a ~1.6× rise that tracks the animus without, on its own, causing it.',
+    body: 'This is the quiet master mechanism. People mostly keep their party and move their positions to match it — Democrat and Republican come to mean two whole ways of life. As those identities align, the warmth between the camps drains away. The model’s alignment score climbs from about 0.21 to 0.33 over the run — a ~1.6× rise that tracks the animus without, on its own, causing it.',
     metric: (t) => `identity alignment ${_alignAt(t).toFixed(2)} and rising`,
     data: { label: 'Identity alignment', valueAt: _alignAt, fmt: (v) => v.toFixed(2), note: 'stacking rises', color: 'd' },
   },
@@ -62,7 +62,7 @@ const STORY_BEATS = [
   {
     tick: 120, title: 'Two Americas', short: 'Two Americas', layer: 'position',
     lead: 'By the pandemic, the two camps no longer share a map — or a set of facts.',
-    body: 'COVID and January 6th harden the sort into two separate masses. Out-party warmth has fallen from the high-50s to around 30° — more than halved — and is near its floor; there isn’t much colder left to go. Forty years earlier they were one crowd; now they can barely speak.',
+    body: 'COVID and January 6th harden the sort into two separate masses. Out-party warmth has fallen from the high-50s to the mid-30s — down by more than a third. Forty years earlier they were one crowd; now they can barely speak.',
     metric: (t) => `out-party warmth bottoms near ${warmthDegAt(t)}°`,
     data: { label: 'Out-party warmth', valueAt: (t) => warmthDegAt(t), fmt: (v) => `${Math.round(v)}°`, note: 'two camps' },
   },
