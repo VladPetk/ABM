@@ -92,7 +92,7 @@ function GradeMarker({ ex, y, on, g }) {
   return <circle cx={ex} cy={y} r={on ? 3.8 : 2.8} fill={on ? CC.ink : CC.ink2} />;
 }
 
-function ProtoTimeline({ tick, setTick, width = 820, releaseTick = null, showReleases = false, color = CC.ink, altLabels = false }) {
+function ProtoTimeline({ tick, setTick, width = 820, releaseTick = null, showReleases = false, color = CC.ink, altLabels = false, events = true }) {
   const H = altLabels ? 104 : 92, padL = 14, padR = 14, trackY = altLabels ? 38 : 50;
   const decades = [1980, 1990, 2000, 2010, 2020];
   const releaseTicksArr = Object.keys(D.meta.release_years).map(Number);
@@ -128,15 +128,13 @@ function ProtoTimeline({ tick, setTick, width = 820, releaseTick = null, showRel
   // connector line move into a lane. Innermost lanes fill first, alternating
   // below/above, so labels only stack outward where they'd actually collide.
   const labelLayout = React.useMemo(() => {
-    if (!altLabels) return null;
+    if (!altLabels || !events) return null;
     const textW = (s, fs) => s.length * fs * 0.54 + 6; // rough width + breathing room
     const items = [];
     D.events.filter((e) => LABELLED[e.label]).forEach((e) =>
       items.push({ key: e.label, ex: tx(e.tick), text: LABELLED[e.label], italic: false, fs: 10, w: textW(LABELLED[e.label], 10) }));
-    D.events.filter((e) => { const g = gradeOf(e); return g && g.glyph === 'hairline'; }).forEach((e) => {
-      const text = MARKER_NAME[e.label] || e.label;
-      items.push({ key: e.label, ex: tx(e.tick), text, italic: true, fs: 8.5, w: textW(text, 8.5) });
-    });
+    // MARKER / hairline events (Citizens United, Obergefell) are dropped entirely —
+    // no label and no tick (see the minor-events filter below).
     items.sort((a, b) => a.ex - b.ex);
     const lanes = [
       { side: 'below', row: 0 }, { side: 'above', row: 0 },
@@ -175,10 +173,11 @@ function ProtoTimeline({ tick, setTick, width = 820, releaseTick = null, showRel
           )}
         </g>
       ))}
-      {/* minor events: unlabeled ticks. Plain decade boundaries stay hidden, but
-          the MARKER-graded Citizens United still shows — as a faint hairline, so
-          the demotion (present, but non-causal) reads honestly. (Step 5) */}
-      {D.events.filter((e) => (e.kind !== 'decade_boundary' || e.evidence === 'MARKER') && !LABELLED[e.label]).map((e) => {
+      {/* minor events: unlabeled ticks. Decade boundaries stay hidden — including
+          the Citizens United MARKER, dropped from the story entirely (best-
+          identified studies find no polarization effect; it was useless). Only
+          graded non-boundary events show. */}
+      {events && D.events.filter((e) => e.kind !== 'decade_boundary' && !LABELLED[e.label] && !(gradeOf(e) && gradeOf(e).glyph === 'hairline')).map((e) => {
         const g = gradeOf(e);
         const on = hovEvt && hovEvt.label === e.label;
         const ex = tx(e.tick);
@@ -195,7 +194,7 @@ function ProtoTimeline({ tick, setTick, width = 820, releaseTick = null, showRel
         return <circle key={e.label} cx={ex} cy={trackY} r={on ? 3.4 : faint ? 1.8 : 2.2} fill={on ? CC.ink2 : CC.ink4} opacity={faint && !on ? 0.6 : 1} />;
       })}
       {/* major events: short labels. altLabels => alternate below/above the line (C8) */}
-      {D.events.filter((e) => LABELLED[e.label]).map((e, i) => {
+      {events && D.events.filter((e) => LABELLED[e.label]).map((e, i) => {
         const ex = tx(e.tick);
         const on = hovEvt && hovEvt.label === e.label;
         if (altLabels) {
@@ -229,7 +228,7 @@ function ProtoTimeline({ tick, setTick, width = 820, releaseTick = null, showRel
       })}
       {/* generous transparent hit-areas for any event carrying a tooltip
           (evidence_note from the engine, or a fallback hook) */}
-      {D.events.filter((e) => hasTip(e)).map((e) => (
+      {events && D.events.filter((e) => hasTip(e)).map((e) => (
         <rect key={'hit-' + e.label} x={tx(e.tick) - 13} y={0} width={26} height={H}
           fill="transparent" style={{ cursor: 'help' }}
           onMouseEnter={() => setHovEvt(e)} onMouseMove={() => setHovEvt(e)}
