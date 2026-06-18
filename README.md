@@ -7,8 +7,12 @@ literature as the calibration anchor.
 
 The headline finding the model produces: **most depolarization interventions
 people loudly demand don't work in the model.** The seven-intervention library
-(Phase 10) lands one as backfire, two as helpful (one partial, one real on
-affect), and four as null — each null with a documented reason.
+(Phase 10, re-measured on the R-phase canonical) lands one as backfire (X1), one
+as **partial** on affect (X6 shared institutions), and five as null — and **none
+lands as "real"** on either axis. (X6 was the lone "real" lever; on the corrected,
+warmer R-phase baseline a contact intervention has less out-party animus left to
+undo, so it drops to partial — strengthening, not weakening, the "the loudest
+levers are the weakest" message.) Each null carries a documented reason.
 
 ## Where to read
 

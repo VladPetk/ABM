@@ -13,38 +13,38 @@ refit point: elite_gain=1.750, mob_base=0.036, mob_peak=1.653, mob_backload=1.19
 
 | decade.metric | pred band (8 seeds) | widened ANES band | in? |
 |---|---|---|---|
-| 2010.party_sep | [0.390,0.603] | [0.72,1.0] | ** |
-| 2010.affect | [-0.466,-0.381] | [-0.58,-0.34] | OK |
-| 2010.constraint | [0.503,0.647] | [0.51,0.79] | OK |
-| 2010.within_party_sd | [0.216,0.264] | [0.19,0.47] | OK |
-| 2020.party_sep | [0.488,0.711] | [0.97,1.25] | ** |
-| 2020.affect | [-0.564,-0.483] | [-0.73,-0.49] | OK |
-| 2020.constraint | [0.589,0.734] | [0.6,0.87] | OK |
-| 2020.within_party_sd | [0.216,0.256] | [0.21,0.48] | OK |
-| 2025.party_sep | [0.502,0.698] | [0.97,1.25] | ** |
-| 2025.affect | [-0.602,-0.516] | [-0.78,-0.44] | OK |
-| 2025.constraint | [0.576,0.703] | [0.62,0.89] | OK |
-| 2025.within_party_sd | [0.227,0.257] | [0.21,0.48] | OK |
+| 2010.party_sep | [0.435,0.500] | [0.72,1.0] | ** |
+| 2010.affect | [-0.451,-0.410] | [-0.58,-0.34] | OK |
+| 2010.constraint | [0.501,0.567] | [0.51,0.79] | OK |
+| 2010.within_party_sd | [0.234,0.270] | [0.19,0.47] | OK |
+| 2020.party_sep | [0.538,0.629] | [0.97,1.25] | ** |
+| 2020.affect | [-0.513,-0.473] | [-0.73,-0.49] | OK |
+| 2020.constraint | [0.585,0.649] | [0.6,0.87] | OK |
+| 2020.within_party_sd | [0.224,0.262] | [0.21,0.48] | OK |
+| 2025.party_sep | [0.538,0.660] | [0.97,1.25] | ** |
+| 2025.affect | [-0.528,-0.491] | [-0.78,-0.44] | OK |
+| 2025.constraint | [0.593,0.680] | [0.62,0.89] | OK |
+| 2025.within_party_sd | [0.224,0.272] | [0.21,0.48] | OK |
 
 ## Cut 2 — instrument (shipped endogenous point → held-out GSS trends)
 shipped point: elite_gain=1.769, mob_base=0.078, mob_peak=2.484, mob_backload=1.355, mob_asym=0.188, uptake=0.253, fj_alpha_scale=1.780, elite_ceiling=0.824
 
 | trend | engine slope/yr | GSS slope/yr | within +/-50% & sign? |
 |---|---|---|---|
-| partisan align (bg) | +0.01222 | +0.00851 | OK |
-| issue |corr| (constraint_index) | +0.00922 | +0.00568 | ** |
+| partisan align (bg) | +0.01128 | +0.00851 | OK |
+| issue |corr| (constraint_index) | +0.00903 | +0.00568 | ** |
 
 ## Cut 3 — statistic (fit sep/affect/wp_sd → predict constraint)
 refit point: elite_gain=2.032, mob_base=0.050, mob_peak=2.119, mob_backload=0.821, mob_asym=0.076, uptake=0.131, fj_alpha_scale=1.578, elite_ceiling=0.726
 
 | decade | pred constraint band | widened ANES constraint | in? |
 |---|---|---|---|
-| 1980 | [0.211,0.522] | [0.2,0.48] | OK |
-| 1990 | [0.229,0.570] | [0.3,0.58] | OK |
-| 2000 | [0.464,0.678] | [0.39,0.67] | OK |
-| 2010 | [0.661,0.753] | [0.51,0.79] | OK |
-| 2020 | [0.737,0.799] | [0.6,0.87] | OK |
-| 2025 | [0.737,0.800] | [0.62,0.89] | OK |
+| 1980 | [0.265,0.516] | [0.2,0.48] | OK |
+| 1990 | [0.299,0.558] | [0.3,0.58] | OK |
+| 2000 | [0.495,0.637] | [0.39,0.67] | OK |
+| 2010 | [0.677,0.744] | [0.51,0.79] | OK |
+| 2020 | [0.705,0.785] | [0.6,0.87] | OK |
+| 2025 | [0.737,0.785] | [0.62,0.89] | OK |
 
 ## Interpretation — the emergence trade-off (read this)
 
