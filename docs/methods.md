@@ -34,6 +34,41 @@ unchanged, with the canonical replication tests intact.
 `TICKS = 200` represents ~67 years; the pillar's S0→S3 progression
 maps to roughly the 1955-2020 ANES window.
 
+### 1.1 The three-layer architecture (mechanism / forcing / calibration)
+
+The model is built and read as three separable layers. Keeping them distinct
+— and honest about which layer carries each result — is the project's central
+discipline; the provenance tags (§3) and the honesty budget
+([`docs/results/honesty_budget.json`](results/honesty_budget.json)) exist to
+measure exactly this separation.
+
+1. **Mechanism layer** — general, science-faithful rules (bounded confidence,
+   contact, identity sorting, affect dynamics, cross-pressure, thermostatic
+   backlash, …) that, *in coupling*, produce polarization dynamics. This layer
+   is a model of **how polarization works**. It must be valid on its own terms
+   and capable of the full range of real behaviour (polarize *and* depolarize,
+   depending on conditions) — and it should **not** be tuned to any one
+   country. Provenance here is mostly **L** (the mechanism) / **N** (the
+   operator form and rate).
+2. **Forcing layer** — country-specific exogenous drivers (US dated events,
+   media-penetration curves, policy/mood shocks) fed in, but only as *forcings
+   routed through mechanisms* in a correctly mediated way: the input perturbs a
+   mechanism, the mechanism produces the outcome — **never the input writing
+   the outcome directly.** A forcing that writes an outcome is a modelling
+   failure masquerading as a calibration.
+3. **Calibration layer** — knob tuning that *scales* mechanisms to match the US
+   trajectory within the citation envelope. **Tuning, not fabrication.**
+
+The integrity test is that the layers stay separate: the mechanism layer is
+valid *generically* (judged against general counterfactuals, not US fit), every
+Layer-2 input is a mediated forcing rather than the answer, and Layer-3 only
+scales. The honesty budget reports, per metric, how much of the outcome is
+mechanism-emergent (Layer 1) vs forcing-carried (Layer 2). This is an aspiration
+the model is still being brought into line with: as of the 2026-06 audit,
+`party_sep` is ~0.28 emergent / ~0.72 forcing-carried — the central gap the
+R-phase is narrowing (see [`model_blindspots.md`](model_blindspots.md) #7, #11,
+and the fed→earned ambition in `docs/internal/reversibility_spec.md`).
+
 ---
 
 ## 2. The five-stage pillar

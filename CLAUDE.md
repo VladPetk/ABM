@@ -25,6 +25,36 @@ There are two tracks in this repo, and most sessions touch only one:
 
 ---
 
+## The modeling contract — three layers
+
+The model is built and read as **three separable layers**, and the project's
+central discipline is keeping them distinct and being honest about which layer
+carries each result. The provenance tags (L/N/E) and the honesty budget exist
+to measure exactly this separation. (Full statement: [`methods.md` §1.1](docs/methods.md).)
+
+1. **Mechanism layer** — general, science-faithful rules (bounded confidence,
+   contact, identity sorting, affect dynamics, cross-pressure, thermostatic
+   backlash…) that *in coupling* produce polarization dynamics. A model of **how
+   polarization works** — valid on its own terms, capable of the full range
+   (polarize *and* depolarize depending on conditions), and **not tuned to any
+   one country**. Mostly **L** (mechanism) / **N** (operator form).
+2. **Forcing layer** — country-specific exogenous drivers (US events,
+   media-penetration curves, policy/mood shocks) fed in only as *forcings routed
+   through mechanisms*: the input perturbs a mechanism, the mechanism produces
+   the outcome — **never the input writing the outcome.** A forcing that writes
+   an outcome is a modelling failure, not a calibration.
+3. **Calibration layer** — knob tuning that *scales* mechanisms to fit the US
+   trajectory within the citation envelope. **Tuning, not fabrication.**
+
+Integrity test: the mechanism layer is valid *generically* (judged against
+general counterfactuals, not US fit), every Layer-2 input is a mediated forcing
+rather than the answer, and Layer-3 only scales. The honesty budget reports, per
+metric, the mechanism-emergent (L1) vs forcing-carried (L2) split — currently
+`party_sep` ≈ 0.28 emergent / 0.72 forced, the gap the R-phase is narrowing
+(blindspots #7, #11).
+
+---
+
 ## Repo map
 
 ```
