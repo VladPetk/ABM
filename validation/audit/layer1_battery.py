@@ -41,6 +41,7 @@ RESTORING_STRONG = dict(
     contact_warm_magnitude=0.10, contact_coop_share=0.6,
     xpressure_sorting_damp=0.7, xpressure_affect_damp=0.7,
     bridge_rewire=0.5,  # R3 — cross-cutting tie formation (feeds R1, mixes net)
+    bc_affect_weight_floor=0.6,  # R4 — warmth re-opens cross-party BC convergence
 )
 
 # --- Forcing-down: zero the US-specific EXOGENOUS drivers, keep mechanisms. ---

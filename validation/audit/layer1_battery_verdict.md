@@ -116,3 +116,18 @@ cooperative so they feed R1. Canonical bit-identical; +5 isolation tests.
   rest-state fix (mean-reversion mechanism and/or P3a recalibration) is on the
   critical path for G1-reverse, not just G1-flat.** R4/R6 are position-axis and
   won't move this leg.
+
+---
+
+## Update — after R4 (BC affect_weight floor) → G1 2/4 (R4 marginal here, by design)
+
+R4: a floor on BC's affect modulator so warmth re-opens cross-party convergence
+(two-sided: cold→echo, warm→bridge). Canonical bit-identical; +5 isolation tests.
+
+Battery effect is **small** (C4 sep 0.519 → 0.521): the position leg already
+reverses via R2+R3, so R4 is second-order on this gate. Recorded honestly — R4
+is *not* a G1-mover; its value is (a) the audit "BC ~3% no-op" force-fix and (b) a
+live affect-mediated position-convergence channel for the joint US-fit re-cal
+(more emergent-position headroom once the forcing is cut in R5). G1 stays 2/4,
+still blocked only by the **affect** leg (flat + reverse). R6 is also position-
+axis, so the affect rest state remains the gating decision before G1 ≥ 3/4.

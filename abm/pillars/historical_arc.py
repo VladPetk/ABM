@@ -844,6 +844,13 @@ def build_engine(
     # needs + lowers echo-chamber modularity (Mutz & Mondak 2006). Default 0.0 →
     # no bridge AND no extra rng draw → bit-identical.
     bridge_rewire: float = 0.0,
+    # ── R-phase R4 — BC revival (reversibility_spec.md) ──
+    # Floor on BC's affect modulator: warmth re-opens cross-party influence, so
+    # R1/R3 warming converts into depolarizing position convergence. Two-sided
+    # mechanism (cold→echo, warm→bridge), so it is a restoring force only in the
+    # warm regime. Default 0.0 → bit-identical. Requires temperature > 0 (true
+    # on the arc; the hard-cutoff branch would raise).
+    bc_affect_weight_floor: float = 0.0,
     # ── MHV S3 (T3.2) — data-fed elite/party-position channel ─────────────────
     # When True, the scheduled `EliteDrift` is replaced by a `PartyCentroidSeries`
     # input rule (abm/pillars/inputs.py) that sets env.attrs["parties"][pid] each
@@ -1715,6 +1722,7 @@ def build_engine(
                 else 0.08
             ),
             temperature=BC_TEMPERATURE, affect_weight=0.0,
+            affect_weight_floor=float(bc_affect_weight_floor),  # R4 (default 0.0)
         ),
         # Phase 8f §1.1 (combo_JJ): historical-only PartyPull strength
         # 0.04 → 0.07. Pillar default unchanged (calm_to_camps.py uses
