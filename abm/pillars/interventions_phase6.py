@@ -797,7 +797,15 @@ X6_SHARED_INSTITUTIONS = Intervention(
     # mean Δaff +0.172 vs the 0.15 real boundary — it crossed the line
     # it was already sitting on). Move the tag, not the threshold. The
     # full-protocol S4 phase-10 re-measure revisits all tags.
-    effect_buckets={"issue_sorting": "null", "affect": "real"},
+    # R-PHASE re-bless (2026-06-18, audit-surface-fixes): affect tag back to
+    # "partial". On the R-phase canonical the baseline affect is corrected
+    # (R7 rest state + P3a recal) AND already mildly warmed by the shipped R1
+    # contact channel, so a contact-based lever has much less animus left to
+    # undo: 9-seed cross-release Δaff fell +0.172 -> ~+0.07 (range +0.060 to
+    # +0.089), well under the 0.15 "real" floor. Measured, not authored
+    # (phase10_measurement.json). X6 is still the strongest affect lever; the
+    # warmer, more-realistic baseline simply leaves it less headroom.
+    effect_buckets={"issue_sorting": "null", "affect": "partial"},
     citation=(
         "Allport 1954 (The Nature of Prejudice); Pettigrew & Tropp "
         "2006 (JPSP 90:751, meta-analysis r ≈ −0.21 / 515 studies); "
