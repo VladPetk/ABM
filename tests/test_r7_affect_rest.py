@@ -90,3 +90,18 @@ def test_build_on_passes_rest():
     eng = build_engine(seed=0, **k)
     r = _affect_rule(eng)
     assert r.affect_rest_rate == 0.05 and r.affect_rest_anchor == -0.15
+
+
+def _mean_partisan_lr(eng):
+    return float(np.mean([a.state.attrs["affect_lr"] for a in eng.agents
+                          if a.state.attrs.get("party") in (0, 1)]))
+
+
+def test_p3a_affect_lr_scale_linear():
+    """P3a: affect_lr_scale linearly scales the per-agent cooling rate (the floor
+    scales with it, so the reduction is not truncated). 1.0 is the prereq for
+    bit-identity (canonical fingerprint guards that)."""
+    base = _mean_partisan_lr(build_engine(seed=0, **ANES_FULL_KWARGS))
+    k = dict(ANES_FULL_KWARGS); k.update(affect_lr_scale=0.5)
+    half = _mean_partisan_lr(build_engine(seed=0, **k))
+    assert abs(half / base - 0.5) < 0.05, f"expected ~0.5x, got {half / base:.3f}"

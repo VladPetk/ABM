@@ -529,6 +529,7 @@ def _per_agent_heterogeneity(
     identity_strength: float, rng: np.random.Generator,
     fj_alpha_scale: float = 1.0,
     affect_lr_base: float = AFFECT_LR_BASE_DEFAULT,
+    affect_lr_scale: float = 1.0,
 ):
     """Compute per-agent (epsilon, fj_alpha, affect_lr) given
     identity_strength + a small Beta(2, 5)-shaped jitter. Phase 8b
@@ -547,15 +548,20 @@ def _per_agent_heterogeneity(
         1.0 + FJ_HETERO_FACTOR * hetero_term
         + HETERO_JITTER_FACTOR * jitter
     )
-    affect_lr = affect_lr_base * (
+    # R-phase P3a — affect-magnitude recalibration. `affect_lr_scale` reduces the
+    # contact-channel cooling rate (the documented over-cooling blindspot). The
+    # 0.001 clip floor is scaled by the same factor so a strong reduction is not
+    # truncated by the floor (affect_recal_verdict.md). 1.0 → bit-identical.
+    affect_lr = affect_lr_base * affect_lr_scale * (
         1.0 + LR_HETERO_FACTOR * hetero_term
         + HETERO_JITTER_FACTOR * jitter
     )
+    lr_floor = 0.001 * min(1.0, float(affect_lr_scale))
     # Numerical safety clips — keep parameters in defensible ranges.
     return (
         float(np.clip(epsilon, 0.05, 0.60)),
         float(np.clip(fj_alpha, 0.005, 0.15)),
-        float(np.clip(affect_lr, 0.001, 0.03)),
+        float(np.clip(affect_lr, lr_floor, 0.03)),
     )
 
 
@@ -866,6 +872,11 @@ def build_engine(
     # back. rate 0.0 → bit-identical.
     affect_rest_rate: float = 0.0,
     affect_rest_anchor: float = 0.0,
+    # ── R-phase P3a — affect-magnitude recalibration (affect_recal_verdict.md) ──
+    # Scales the per-agent contact-channel affect_lr (the documented over-cooling
+    # blindspot) and its clip floor together. R7 owns the affect EQUILIBRIUM; P3a
+    # owns the cooling RATE. 1.0 → bit-identical.
+    affect_lr_scale: float = 1.0,
     # ── R-phase R5 — media-direction fix (reversibility_spec.md; audit F6) ──
     # Sharpen the partisan media diet toward same-pole outlets so the diet target
     # sits at/beyond the party centroid → MediaConsumption becomes centrifugal
@@ -1234,6 +1245,7 @@ def build_engine(
                 AFFECT_LR_BASE_REGRADE if evidence_regrade
                 else AFFECT_LR_BASE_DEFAULT
             ) * sandbox_animus_mult,   # sandbox dial (1.0 = no-op)
+            affect_lr_scale=affect_lr_scale,   # R-phase P3a (1.0 = bit-identical)
         )
 
         # Per-party party_cue σ (M4 asymmetric).
