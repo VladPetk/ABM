@@ -47,8 +47,26 @@ from ..core.state import StateDelta
 
 
 class PartyPull:
-    def __init__(self, strength: float = 0.05):
+    def __init__(self, strength: float = 0.05, xpressure_damp: float = 0.0):
         self.strength = strength
+        # R-phase R2 (retarget) — cross-pressure damping on the centroid pull.
+        # The probe showed party_sep is PartyPull/loop-driven, not ConstraintOp-
+        # driven, so damping only issue-constraint had no positional traction.
+        # Cross-cutting agents (low identity_alignment = identities not stacked
+        # with party) follow the party cue less (Lipset & Rokkan 1967; Mutz
+        # 2002; Mason 2018). Self-limiting: as mega-identity stacking rises,
+        # identity_alignment rises, the cross-pressured pool shrinks, and the
+        # brake fades — so sorting still dominates late. Default 0.0 → no-op →
+        # every legacy/canonical path bit-identical. Reads only the agent's own
+        # identity_alignment scalar.
+        self.xpressure_damp = float(xpressure_damp)
+
+    def _xp_factor(self, agent: Agent) -> float:
+        if self.xpressure_damp <= 0.0:
+            return 1.0
+        xp = 1.0 - float(np.clip(
+            agent.state.attrs.get("identity_alignment", 0.0), 0.0, 1.0))
+        return max(0.0, 1.0 - self.xpressure_damp * xp)
 
     def apply(
         self,
@@ -89,11 +107,12 @@ class PartyPull:
         # D=2 lift is the identity and the arithmetic matches the 2D
         # path bit-for-bit.
         from ..core.issues import issues_of, lift
+        xpf = self._xp_factor(agent)  # R2 retarget — cross-pressure brake
         v = issues_of(agent, env)
         if v is not None:
             tgt = lift(np.asarray(target, dtype=float), env.attrs["issue_runtime"])
-            d = self.strength * coupling * ident * (tgt - v)
+            d = self.strength * coupling * ident * xpf * (tgt - v)
             return StateDelta(d_attrs={"issues": (1.0 - stubbornness) * d})
-        d = self.strength * coupling * ident * (target - agent.state.ideology)
+        d = self.strength * coupling * ident * xpf * (target - agent.state.ideology)
         # F1: Friedkin-Johnsen scaling — stubborn agents move less.
         return StateDelta(d_ideology=(1.0 - stubbornness) * d)

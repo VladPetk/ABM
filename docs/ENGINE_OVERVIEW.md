@@ -34,6 +34,28 @@ calibrated honesty. The lay framing the eventual product will offer
 is "this is what the empirical literature says, made visible: the
 levers you've heard most about are the weakest."
 
+### 1.1 How to read the model — three layers
+
+Everything below sits in one of three layers, and the discipline of the whole
+project is keeping them separate and honest about which one carries each result:
+
+- **Mechanism layer** — the general, science-faithful rules (bounded
+  confidence, contact, identity sorting, affect dynamics, cross-pressure,
+  thermostatic backlash…) that *in coupling* produce polarization. This is a
+  model of **how polarization works** — it must be valid on its own terms,
+  capable of both polarizing *and* depolarizing depending on conditions, and
+  not tuned to any one country.
+- **Forcing layer** — country-specific exogenous drivers (US events, media
+  penetration, policy shocks) fed in only as *forcings routed through
+  mechanisms*: the input nudges a mechanism, the mechanism produces the
+  outcome. Never the input writing the outcome.
+- **Calibration layer** — knob tuning that *scales* mechanisms to fit the US
+  trajectory within the citation envelope. Tuning, not fabrication.
+
+The honesty budget measures the mechanism-emergent vs forcing-carried split per
+metric; the R-phase work is about making the mechanism layer carry more of the
+load. Full statement and current numbers: [`methods.md` §1.1](methods.md).
+
 ---
 
 ## 2. The state of the project

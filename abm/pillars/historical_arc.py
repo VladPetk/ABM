@@ -31,7 +31,9 @@ import numpy as np
 from ..core.agent import Agent
 from ..core.engine import Engine
 from ..core.environment import Environment
-from ..core.network import Network, generate_involuntary_edges
+from ..core.network import (
+    Network, generate_involuntary_edges, mark_cross_party_cooperative,
+)
 from ..core.outlets import (
     US_MEDIA_OUTLETS_2024,
     US_MEDIA_OUTLETS_2024_ANES,
@@ -527,6 +529,7 @@ def _per_agent_heterogeneity(
     identity_strength: float, rng: np.random.Generator,
     fj_alpha_scale: float = 1.0,
     affect_lr_base: float = AFFECT_LR_BASE_DEFAULT,
+    affect_lr_scale: float = 1.0,
 ):
     """Compute per-agent (epsilon, fj_alpha, affect_lr) given
     identity_strength + a small Beta(2, 5)-shaped jitter. Phase 8b
@@ -545,15 +548,20 @@ def _per_agent_heterogeneity(
         1.0 + FJ_HETERO_FACTOR * hetero_term
         + HETERO_JITTER_FACTOR * jitter
     )
-    affect_lr = affect_lr_base * (
+    # R-phase P3a — affect-magnitude recalibration. `affect_lr_scale` reduces the
+    # contact-channel cooling rate (the documented over-cooling blindspot). The
+    # 0.001 clip floor is scaled by the same factor so a strong reduction is not
+    # truncated by the floor (affect_recal_verdict.md). 1.0 → bit-identical.
+    affect_lr = affect_lr_base * affect_lr_scale * (
         1.0 + LR_HETERO_FACTOR * hetero_term
         + HETERO_JITTER_FACTOR * jitter
     )
+    lr_floor = 0.001 * min(1.0, float(affect_lr_scale))
     # Numerical safety clips — keep parameters in defensible ranges.
     return (
         float(np.clip(epsilon, 0.05, 0.60)),
         float(np.clip(fj_alpha, 0.005, 0.15)),
-        float(np.clip(affect_lr, 0.001, 0.03)),
+        float(np.clip(affect_lr, lr_floor, 0.03)),
     )
 
 
@@ -812,6 +820,85 @@ def build_engine(
     # prior centered on the B&G/Kozlowski constraint slope.
     constraint_rate: float = 0.0,
     constraint_resid_sigma: float = 0.0,
+    # ── R-phase R1 — contact → affect warming (docs/internal/reversibility_spec.md) ──
+    # Wakes the otherwise-DEAD positive-going (warming) path in AffectiveUpdate
+    # by seeding cooperative cross-party edges (Allport 1954; Pettigrew & Tropp
+    # 2006 — equal-status contact via shared institutions). Default OFF → strict
+    # no-op: no cooperative edges are marked (so net_rng is untouched), the warm
+    # threshold/magnitude keep AffectiveUpdate's own defaults (-0.2 / 0.05), and
+    # the contact-share floor stays 0 → every existing path is bit-identical to
+    # head. SELF-LIMITING by construction: the warming path fires only on a
+    # cooperative edge AND when out-party warmth ≥ contact_warm_threshold, while
+    # TieRewiring erodes voluntary cross-party edges over the arc — so warming
+    # starves as the population sorts (emergent domination, not a tuned cap).
+    contact_warming: bool = False,
+    contact_coop_frac: float = 0.5,      # fraction of cross-party edges → cooperative
+    contact_warm_threshold: float = -0.6,  # override AffectiveUpdate.coop_positive_threshold
+    contact_warm_magnitude: float = 0.05,  # override AffectiveUpdate.coop_positive_magnitude
+    contact_coop_share: float = 0.0,     # population cooperative-share floor (negative-mute)
+    # ── R-phase R2 — cross-pressure damping (docs/internal/reversibility_spec.md) ──
+    # Cross-cutting agents (low identity_alignment) resist sorting (ConstraintOp)
+    # and out-party cooling (AffectiveUpdate). Both default 0.0 → strict no-op →
+    # bit-identical. Self-limiting: the cross-pressured pool shrinks as stacking
+    # rises, so the polarizing forces dominate late-arc endogenously.
+    xpressure_sorting_damp: float = 0.0,
+    xpressure_affect_damp: float = 0.0,
+    # ── R-phase R3 — cross-cutting tie formation (reversibility_spec.md) ──
+    # Probability a rewiring agent forms its new tie to a cross-party "bridge"
+    # (closest cross-party candidate, flagged cooperative so R1 warming can fire)
+    # instead of the homophilous closest. Supplies the cross-party ties contact
+    # needs + lowers echo-chamber modularity (Mutz & Mondak 2006). Default 0.0 →
+    # no bridge AND no extra rng draw → bit-identical.
+    bridge_rewire: float = 0.0,
+    # ── R-phase R4 — BC revival (reversibility_spec.md) ──
+    # Floor on BC's affect modulator: warmth re-opens cross-party influence, so
+    # R1/R3 warming converts into depolarizing position convergence. Two-sided
+    # mechanism (cold→echo, warm→bridge), so it is a restoring force only in the
+    # warm regime. Default 0.0 → bit-identical. Requires temperature > 0 (true
+    # on the arc; the hard-cutoff branch would raise).
+    bc_affect_weight_floor: float = 0.0,
+    # ── R-phase R6 — two-signed thermostatic feedback (reversibility_spec.md) ──
+    # Negative feedback on the party-separation overshoot: contracts the two party
+    # clouds toward their midpoint when sep > reference (and apart below it), a
+    # homeostat that preserves within-party spread. Turns the FED econ thermostat
+    # (#9) into a genuine feedback. gain 0.0 → not installed → bit-identical.
+    thermostatic_gain: float = 0.0,
+    thermostatic_reference: float = 0.6,
+    # ── R-phase R7 — affect rest state / mean-reversion (reversibility_spec.md) ──
+    # AffectiveUpdate has no equilibrium (G1 diagnostic): with no drivers affect
+    # spirals to the floor, and under restoring it only plateaus. This relaxes
+    # out-party warmth toward `affect_rest_anchor` at `affect_rest_rate`/tick, so
+    # cooling balances reversion at a finite level and warming can carry affect
+    # back. rate 0.0 → bit-identical.
+    affect_rest_rate: float = 0.0,
+    affect_rest_anchor: float = 0.0,
+    # ── R-phase P3a — affect-magnitude recalibration (affect_recal_verdict.md) ──
+    # Scales the per-agent contact-channel affect_lr (the documented over-cooling
+    # blindspot) and its clip floor together. R7 owns the affect EQUILIBRIUM; P3a
+    # owns the cooling RATE. 1.0 → bit-identical.
+    affect_lr_scale: float = 1.0,
+    # P3a affect-SHAPE: soft saturation (per-encounter delta × (1 − s·w²)). Under
+    # evidence_regrade the build sets saturation 0.0; re-enabling it (the affect
+    # recal found 3/5 needs it for the narrow early-decade bands) requires this
+    # override. None → keep the existing build logic → bit-identical.
+    affect_saturation: float | None = None,
+    # ── R-phase R8 — endogenous mobilization feedback (the genuine fed→earned) ──
+    # The activist→elite→mass loop's leapfrog is gated by the EXOGENOUS mob
+    # schedule (low 1980 → quiescent → low emergent floor). R8 makes mobilization
+    # partly endogenous: a party's sorting feeds its own mobilization (the
+    # polarization spiral), so the loop self-sustains with the fed drivers frozen
+    # — raising the emergent (free_flowing) fraction of party_sep. 0.0 →
+    # bit-identical. Only active on the endogenous_elite path.
+    endo_mob_gain: float = 0.0,
+    # ── R-phase R5 — media-direction fix (reversibility_spec.md; audit F6) ──
+    # Sharpen the partisan media diet toward same-pole outlets so the diet target
+    # sits at/beyond the party centroid → MediaConsumption becomes centrifugal
+    # (polarizing) on position, matching the cited lit (Levendusky 2013; Martin &
+    # Yurukoglu 2017) instead of the current centripetal direction. A mechanism-
+    # direction CORRECTION (not a regime knob). Part B of R5 — the fed→earned
+    # forcing cut — is the re-cal's job (lower mob_* once media carries sorting).
+    # 0.0 → prior diet formula AND identical rng draws → bit-identical.
+    media_centrifugal: float = 0.0,
     # ── MHV S3 (T3.2) — data-fed elite/party-position channel ─────────────────
     # When True, the scheduled `EliteDrift` is replaced by a `PartyCentroidSeries`
     # input rule (abm/pillars/inputs.py) that sets env.attrs["parties"][pid] each
@@ -1155,7 +1242,8 @@ def build_engine(
             if fac["party"] is not None:
                 party = int(fac["party"])
 
-        diet = diet_for_party(party_centers_active[party], outlets, rng)
+        diet = diet_for_party(party_centers_active[party], outlets, rng,
+                              centrifugal=media_centrifugal)   # R5 (default 0.0)
         identity_strength = float(rng.beta(2.0, 2.0))
         identities = np.clip(
             party_identity_centers[party] + rng.normal(0, 0.3, size=n_identities),
@@ -1170,6 +1258,7 @@ def build_engine(
                 AFFECT_LR_BASE_REGRADE if evidence_regrade
                 else AFFECT_LR_BASE_DEFAULT
             ) * sandbox_animus_mult,   # sandbox dial (1.0 = no-op)
+            affect_lr_scale=affect_lr_scale,   # R-phase P3a (1.0 = bit-identical)
         )
 
         # Per-party party_cue σ (M4 asymmetric).
@@ -1426,6 +1515,12 @@ def build_engine(
     generate_involuntary_edges(
         network, agents, net_rng, per_agent=INVOLUNTARY_PER_AGENT
     )
+    # R-phase R1 — mark cross-party edges cooperative to wake the warming path.
+    # GATED: skipped entirely (net_rng untouched → bit-identical) when off.
+    if contact_warming and contact_coop_frac > 0.0:
+        mark_cross_party_cooperative(
+            network, agents, net_rng, contact_coop_frac
+        )
 
     # Step 1 (web_demo evidence re-grade) — derive the re-graded params.
     # All take their no-op value when evidence_regrade is False, so the
@@ -1498,7 +1593,9 @@ def build_engine(
             float(tier_c_bc_epsilon) / 0.30
             if tier_c_bc_epsilon is not None else 1.0
         ),
-        "sandbox_contact_share": float(sandbox_contact),
+        "sandbox_contact_share": float(
+            max(sandbox_contact, contact_coop_share if contact_warming else 0.0)
+        ),
         # Phase 9 §11.7-C — exposed so IdentityToIdeologyPull can read
         # the party-identity centroid and compute per-agent deviation.
         "party_identity_centers": {
@@ -1559,8 +1656,8 @@ def build_engine(
         # M3 hooks for cohort replacement at runtime.
         "party_cue_sigma_replacement": 0.25,   # symmetric for replacements
         "cohort_diet_factory": (lambda pty, rng_: diet_for_party(
-            party_centers[pty], outlets, rng_
-        )),
+            party_centers[pty], outlets, rng_, centrifugal=media_centrifugal
+        )),   # R5 (default 0.0 → bit-identical)
         # Phase 9 Tier A: deterministic per-build RNG seed for the
         # faction-emergence events. Each event handler builds its own
         # `np.random.default_rng(seed)` from this — keeps the events
@@ -1675,6 +1772,7 @@ def build_engine(
                 else 0.08
             ),
             temperature=BC_TEMPERATURE, affect_weight=0.0,
+            affect_weight_floor=float(bc_affect_weight_floor),  # R4 (default 0.0)
         ),
         # Phase 8f §1.1 (combo_JJ): historical-only PartyPull strength
         # 0.04 → 0.07. Pillar default unchanged (calm_to_camps.py uses
@@ -1686,7 +1784,7 @@ def build_engine(
             float(tier_c_party_pull_strength)
             if tier_c_party_pull_strength is not None
             else 0.07
-        )),
+        ), xpressure_damp=float(xpressure_sorting_damp)),
         # Phase 9 Tier C: FactionAnchor — inert until events tag agents.
         # Self-gates on the `faction_center` attr (no-op at t=0 and
         # no-op for any agent without the attr). Placed AFTER PartyPull
@@ -1712,6 +1810,16 @@ def build_engine(
             identity_weight=(0.0 if _emergent else 0.5),
             baseline=0.0,   # 8f §1.1: 0.10 → 0.0
             cooperative_mute=COOPERATIVE_MUTE,
+            # R-phase R1 — contact warming. OFF → exactly AffectiveUpdate's own
+            # defaults (-0.2 / 0.05) → bit-identical. ON → lower threshold so the
+            # warming path fires for moderately-cold agents (self-limiting: it
+            # still stops once warmth drops below the threshold late-arc).
+            coop_positive_threshold=(
+                contact_warm_threshold if contact_warming else -0.2
+            ),
+            coop_positive_magnitude=(
+                contact_warm_magnitude if contact_warming else 0.05
+            ),
             # Phase 9 §11.7-G — soft affect saturation. The hard clip
             # at ±1 was producing step-function-like cooling that
             # over-shoots ANES affect bands at every decade. Under ANES
@@ -1722,9 +1830,15 @@ def build_engine(
             # was a late-decelerator fit to the OLD cold bands and fights the
             # convex collapse the grounded bands want. Off-regrade unchanged.
             saturation=(
-                0.0 if evidence_regrade
-                else (1.0 if anes_knobs_active else 0.0)
+                float(affect_saturation) if affect_saturation is not None
+                else (0.0 if evidence_regrade
+                      else (1.0 if anes_knobs_active else 0.0))
             ),
+            # R-phase R2 — cross-pressure damping on cooling (0.0 → bit-identical).
+            xpressure_affect_damp=float(xpressure_affect_damp),
+            # R-phase R7 — affect rest state (0.0 → bit-identical).
+            affect_rest_rate=float(affect_rest_rate),
+            affect_rest_anchor=float(affect_rest_anchor),
         ),
         # Affect re-grade: contact-independent (parasocial) animus channel.
         # No-op unless evidence_regrade (lr>0) AND mediated_animus_weight>0
@@ -1740,7 +1854,8 @@ def build_engine(
         # spine). Off-path (constraint_rate=0) the legacy rule is built
         # exactly as before — bit-identical.
         *((ConstraintOp(rate=float(constraint_rate),
-                        resid_sigma=float(constraint_resid_sigma)),)
+                        resid_sigma=float(constraint_resid_sigma),
+                        xpressure_damp=float(xpressure_sorting_damp)),)
           if _emergent else
           (IdentitySorting(
               # Step 2 (flag-1 fix): scale the initial sort rate by the
@@ -1834,6 +1949,7 @@ def build_engine(
         from ..rules.activist_elite import ActivistEliteCue
         _elite_channel = ActivistEliteCue(
             tail_q=elite_tail_q, gain=elite_gain, ceiling=elite_ceiling,
+            endo_mob_gain=endo_mob_gain,   # R8 (default 0.0 → bit-identical)
         )
     elif data_fed_elite:
         from .inputs import (
@@ -1884,6 +2000,7 @@ def build_engine(
             # changed, so the pillar drift-guard stays bit-identical.
             rewire_rate=0.03 * sandbox_rewire_mult,   # sandbox dial (1.0 = no-op)
             affect_weight_rewire=TR_AFFECT_WEIGHT_REWIRE,
+            p_bridge_rewire=float(bridge_rewire),   # R3 (default 0.0 = off)
         ),
         ResidentialMigration(
             migration_rate=RESIDENTIAL_MIGRATION_RATE_DEFAULT,
@@ -1946,6 +2063,16 @@ def build_engine(
             else float(economic_common_mode_amplitude)
         )
         env_rules.append(CommonModeEconomic(amplitude=_econ_amp))
+
+    # R-phase R6 — two-signed thermostatic feedback on the party-separation
+    # overshoot (reversibility_spec.md). Runs LAST so it reads the post-loop,
+    # post-common-mode centroids. Installed only when thermostatic_gain > 0 →
+    # otherwise absent from the pipeline → bit-identical.
+    if thermostatic_gain > 0.0:
+        from ..rules.thermostatic_feedback import ThermostaticFeedback
+        env_rules.append(ThermostaticFeedback(
+            gain=float(thermostatic_gain),
+            reference=float(thermostatic_reference)))
 
     # Sanity: at most one instance per class.
     seen: set[str] = set()

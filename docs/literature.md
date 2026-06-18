@@ -114,7 +114,14 @@ are in methods.md's provenance table.
   Per-decade within-party SD targets (Phase 9).
 - **Levendusky, M.** (2013). Why do partisan media polarize viewers? *AJPS*
   57:611. — Partisan-media drift; heavy-diet agents move further
-  (`MediaConsumption`); X3 anchor.
+  (`MediaConsumption`); X3 anchor. **Honest mismatch (2026-06 peer-review audit,
+  P6 / F6):** as *shipped*, `MediaConsumption` is **centripetal on the position
+  axis** (the calibrated outlet roster places diet targets *inward* of the party
+  centroids), the **opposite** of this paper's polarizing-media finding. The
+  literature-consistent polarizing effect is carried only by the **affect** channel
+  (`MediatedAnimus`), not by positions. Flagged for R-phase (R5) reconciliation.
+  Same caveat applies to **DellaVigna & Kaplan 2007** and **Martin & Yurukoglu
+  2017** where cited as position-axis polarizing-media anchors (e.g. X3 below).
 - **Bonica, A.** (2014). Mapping the ideological marketplace. *AJPS* 58:367. —
   Campaign-finance ideal points (CFscores) spanning candidates, donors, and
   officeholders. **Reserved for the MHV S3 elite input series**: a planned
@@ -268,7 +275,9 @@ their engine footprint is the S1 covariance-signature pilot
   (ANES VCF items). **Realism battery (T-RB1):** anchors check **B2** (cross-
   pressured / off-diagonal fraction + econ-on-cultural slope) — the sim's 2004
   off-diagonal 34% sits inside their 30–44% range, but the two axes over-
-  correlate by 2025 (corr 0.75 / slope 0.81 vs their ~0.21): a documented gap.
+  correlate by 2025 (corr 0.75 / slope 0.81 vs their ~0.21 **(verify — the
+  peer-review audit reads the paper's figure as ≈0.30, not 0.21; F16)**):
+  a documented gap.
 - **Realism battery — external face-validity anchors (T-RB1; 2026-06).**
   `scripts/audit/realism_battery.py` → `docs/results/realism_report.md` (+
   `realism_measurement.json`). Checks the shipped config against maps the model
@@ -352,8 +361,14 @@ decomposition method). **Reality-validation workstream (2026-06):** the
 *cultural*-attitude liberalization was re-measured from raw GSS 1972–2024
 (`validation/gss_cohort.py`, WTSSALL-weighted homosex/premarsx/abany/fefam/grass
 z-index) — a Firebaugh-style birth-year × survey-year decomposition attributes
-**~69% to cohort replacement, ~31% to within-cohort period drift** (consistent
-with Baunach's ~⅓). The companion **ANES birth-cohort cultural gradient**
+**~69% to cohort replacement, ~31% to within-cohort period drift**. **Provenance
+note (corrected per the 2026-06 peer-review audit, F12):** this **~69% is the
+model's own, non-identified APC self-estimate**, *not* a cited finding and *not*
+consistent with Baunach — the OLS design omits age (collinear with
+`survey_year − birth_year`), so the cohort/period split is unidentified. The
+*cited* studies report a **lower** cohort share: Baunach 2012 ≈⅓ (≈33%),
+Brooks & Bolzendahl 2004 ≈55%. The direction/mechanism is L-supported; the **69%
+magnitude is N** (the model's choice). The companion **ANES birth-cohort cultural gradient**
 (`validation/`, born 1910s ≈ +0.17 traditional → born 2000s ≈ −0.29 progressive,
 ≈ −0.044 compass-units/decade) is the demographic primitive fed to the engine's
 common-mode cultural channel (`abm/rules/cultural_common_mode.py`; the aggregate

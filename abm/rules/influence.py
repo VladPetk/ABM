@@ -43,6 +43,7 @@ class BoundedConfidenceInfluence:
         strength: float = 0.1,
         temperature: float = 0.0,
         affect_weight: float = 0.0,
+        affect_weight_floor: float = 0.0,
     ):
         self.epsilon = epsilon
         self.strength = strength
@@ -51,6 +52,15 @@ class BoundedConfidenceInfluence:
         # preserves canonical / non-pillar behaviour exactly. The pillar
         # opts in via bundles (BC_AFFECT_WEIGHT in calm_to_camps.py).
         self.affect_weight = affect_weight
+        # R-phase R4 — BC revival. A FLOOR on the affect modulator so that
+        # warmth re-opens cross-party influence (Hegselmann-Krause 2002 graded
+        # ε; affect modulation, Phase 5). The modulator is two-sided: cold
+        # out-party neighbours are down-weighted (echo chamber), WARM ones are
+        # up-weighted (1 + aw·warmth > 1) → cross-party position convergence.
+        # So with the floor on, R1/R3 warming converts into depolarizing BC
+        # convergence on the position axis. Default 0.0 → max(x, 0.0)=x →
+        # bit-identical (only applied when > 0). Requires temperature > 0.
+        self.affect_weight_floor = float(affect_weight_floor)
 
     def apply(
         self,
@@ -69,6 +79,11 @@ class BoundedConfidenceInfluence:
         # social-media adoption curve; absent that key, fall back to the rule's
         # own (event-set) affect_weight → bit-identical for every other path.
         affect_weight = float(env.attrs.get("bc_affect_weight", self.affect_weight))
+        # R4: floor so warmth can re-open cross-party influence even when the
+        # media-driven bc_affect_weight is low. Only applied when > 0 → the
+        # default path is byte-identical.
+        if self.affect_weight_floor > 0.0:
+            affect_weight = max(affect_weight, self.affect_weight_floor)
         # MHV S2 T2.2 — native D-dim path. In live issues mode the rule
         # measures distances and averages targets over the FULL issue
         # vectors (RMS distance convention), emitting d_attrs["issues"].

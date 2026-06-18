@@ -228,11 +228,57 @@ ANES_FULL_COMMONMODE_ECON_KWARGS = {
 }
 
 
+# === R-phase (reversibility / audit-fix) canonical =====================
+# The audit-surface-fixes R-phase config. Adds, on top of the common-mode econ
+# build, the audit-fix CORRECTIONS + the data-supported endogenous-mobilization
+# feedback, all measure-then-blessed (docs/results/engine_peer_review_audit.md;
+# validation/audit/recal_feasibility_verdict.md):
+#   - R5 media-direction fix (media_centrifugal): partisan diet sits at/beyond the
+#     party pole → MediaConsumption is centrifugal (polarizing) on position, per
+#     Levendusky 2013 / Martin-Yurukoglu 2017 (was centripetal — audit F6).
+#   - R7 affect rest state (affect_rest_rate/anchor) + P3a affect-magnitude recal
+#     (affect_lr_scale 0.30 + saturation 1.0): AffectiveUpdate gains an equilibrium
+#     and the over-cooling blindspot is corrected → out-party affect IN band at
+#     2010/2020/2025 (was 0/5; now ~2-3/5) without touching position.
+#   - mild R1 contact warming (contact_*): a small endogenous warming channel.
+#   - R8 endogenous mobilization (endo_mob_gain 0.15): a party's own sorting feeds
+#     its mobilization (the polarization spiral; Mason 2018) → raises the party_sep
+#     emergent fraction 0.33 → ~0.39. This is at the MEASURED CAP: fit-compatible
+#     emergence tops out ~0.39 because US polarization TIMING is event-paced
+#     (Gingrich/Fox/Trump), so a stronger spiral front-loads and breaks the
+#     per-decade §11 fit (blindspot #7 — quantified + explained, not resolved).
+# Measured (5-8 seeds): §11 ANES 18/24 PASS (was 17/24 FAIL), affect ~2-3/5
+# (was 0/5), party_sep in band, emergent ~0.39. Strong position-restoring forces
+# (R2/R3/R4/R6) stay OFF here — they are the depolarization CAPACITY proven in the
+# G1 generic battery (validation/audit/layer1_battery.py), not shipped brakes (the
+# US polarized). Provenance: mechanisms L; magnitudes N (the model's). The pre-
+# R-phase config is preserved as ANES_FULL_COMMONMODE_ECON_KWARGS.
+ANES_FULL_RPHASE_KWARGS = {
+    **ANES_FULL_COMMONMODE_ECON_KWARGS,
+    # R5 — media direction (centrifugal partisan diet)
+    "media_centrifugal": 0.7,
+    # R7 — affect rest state + P3a affect-magnitude recalibration
+    "affect_rest_rate": 0.02,
+    "affect_rest_anchor": -0.30,
+    "affect_lr_scale": 0.30,
+    "affect_saturation": 1.0,
+    # R1 — mild contact→affect warming
+    "contact_warming": True,
+    "contact_coop_frac": 0.3,
+    "contact_warm_threshold": -0.6,
+    "contact_warm_magnitude": 0.04,
+    "contact_coop_share": 0.15,
+    # R8 — endogenous mobilization feedback (emergent fraction 0.33→0.39, at cap)
+    "endo_mob_gain": 0.15,
+}
+
+
 # === CANONICAL FLIP =====================================================
 # The shipped/measured config. Every consumer (publish_web_data, phase10_measure,
 # phase9_anes_score, realism_battery, build_sandbox_data, conftest, audit_lib,
 # ...) imports ANES_FULL_KWARGS, so this single alias flips them all. To REVERT,
-# point this back at ANES_FULL_COMMONMODE_KWARGS (pre-econ-common-mode),
-# ANES_FULL_ENDOGENOUS_KWARGS (pre-cultural-common-mode E5), or ANES_FULL_FED_KWARGS
-# (pre-E5). FED-mechanism guards import ANES_FULL_FED_KWARGS directly.
-ANES_FULL_KWARGS = ANES_FULL_COMMONMODE_ECON_KWARGS
+# point this back at ANES_FULL_COMMONMODE_ECON_KWARGS (pre-R-phase),
+# ANES_FULL_COMMONMODE_KWARGS (pre-econ-common-mode), ANES_FULL_ENDOGENOUS_KWARGS
+# (pre-cultural-common-mode E5), or ANES_FULL_FED_KWARGS (pre-E5). FED-mechanism
+# guards import ANES_FULL_FED_KWARGS directly.
+ANES_FULL_KWARGS = ANES_FULL_RPHASE_KWARGS

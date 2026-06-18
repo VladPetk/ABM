@@ -23,7 +23,9 @@ where:
   - `mediated_animus_weight` ∈ env.attrs is the dated media-exposure level
     (cable/Fox → social-media adoption ramp; 0.0 default),
   - `identity_alignment` ∈ agent.attrs is the Mason mega-identity stock
-    (already accelerates 0.21→0.41 over the arc).
+    (rises over the arc, ~0.21→0.34 on the shipped config; the earlier
+    "0.21→0.41" figure was stale — cf. honesty_budget.json identity_alignment
+    b0≈0.21 / b1≈0.34, peer-review audit F16).
 
 Both `mediated_animus_weight` and `identity_alignment` rise over the arc, so the
 product accelerates — convexity EMERGES from endogenous state + a dated driver,

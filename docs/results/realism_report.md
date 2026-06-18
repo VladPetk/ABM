@@ -7,22 +7,24 @@ channels**), **9 seeds**, **live per-tick party labels** throughout.
 Reproduce: `.venv/Scripts/python.exe scripts/audit/realism_battery.py --seeds 9`
 → `docs/results/realism_measurement.json`. Spec: `docs/internal/realism_check_spec.md`.
 
-> **⚠ re-blessed on the COMMON-MODE canonical config (2026-06; methods §5.30/§5.31).**
-> The §11 ANES band scorecard now measures **15/24** (11/20 mainframe + 4/4 IC), not
-> the 18/24 quoted in the E5.8 body below. **This is NOT the econ flip:** the econ
-> common-mode channel is realism-**neutral** — 15/24 is identical with the channel
-> off (same cells, same values to 3 dp; a rigid econ translation moves no realism
-> cell). The drop from 18/24 is a **stale figure** — 18/24 was never re-measured on
-> the shipped §5.30 cultural config (turnover 0.007); the true realism of that config
-> is 15/24. The misses are dominated by the **affect-too-cold blindspot (#1)** (now
-> 1990/2000/2010/2020/2025 affect all below band) plus mild 2010 sep/constraint
-> overshoots and 1990 constraint / 2000 sep just below band; within-party SD, formerly
-> a miss, is now **in band**. No band was loosened. Chasing the affect coldness is a
-> separate workstream (#1). Honesty-budget fractions also re-blessed: `party_sep`
-> **0.28 free-flowing / 0.72 empirical**, `identity_alignment` **0.28 / 0.72**,
-> `affect` **0.94 / 0.06** (vs E5.8 0.38/0.34/0.87 — the shift is the cultural fix's
-> raised turnover, not the econ channel; both common-mode channels are sorting-
-> invariant level shifts that do not enter these differential metrics).
+> **⚠ RE-BLESSED on the R-PHASE canonical config (2026-06-18; methods §5.32).**
+> `ANES_FULL_KWARGS` is now `ANES_FULL_RPHASE_KWARGS` (the common-mode-econ build +
+> R5 media-direction + R7 affect rest state + P3a affect recal + mild R1 contact +
+> R8 endogenous mobilization). The §11 ANES band scorecard now measures **18/24**
+> (15/20 mainframe + 3/4 IC) — a **PASS** (≥18), up from the **15/24 FAIL** on the
+> pre-R-phase common-mode config. The gain is the **affect fix** (R7 rest state +
+> P3a recal + re-enabled saturation): out-party affect now lands **in band at 2010
+> and 2025** (2025 −0.57 vs band [−0.71,−0.51]); 1990/2000/2020 are still a touch
+> out (affect ~2/5 strict realism cells, ~3/5 on the 5-seed scorecard — the narrow
+> early-decade bands bind, the long-standing blindspot #1 residual). No band was
+> loosened. Honesty-budget fractions re-blessed on this config (`honesty_budget.json`,
+> 6 seeds): `party_sep` **0.34 free-flowing / 0.66 empirical** (up from 0.28/0.72 —
+> R8 endogenous mobilization; fit-compatible emergence is capped ~0.39–0.56
+> depending on the per-decade fit tolerance, because US polarization timing is
+> event-paced — see methods §5.32 / blindspot #7), `identity_alignment` **0.36 /
+> 0.64**, `affect` **0.83 / 0.17**. The 5-seed `phase9_anes_score` reads 19/24 (it
+> and the 9-seed realism A2 differ by ~1 cell from seed sampling; both PASS). Numbers
+> in the body below predate the R-phase — read this box as the current state.
 
 ### Read this first — four caveats that frame every number
 
@@ -30,6 +32,9 @@ Reproduce: `.venv/Scripts/python.exe scripts/audit/realism_battery.py --seeds 9`
    *calibrated on* — that's goodness-of-fit, not independent confirmation.
    Tier B (external maps never fit to) is the independent part, and only
    **scale-free / trajectory-shape** comparisons survive (never absolute coords).
+   This includes the §11 cell tally and `w2_total`: scored against the same recode
+   that set the knobs, they are calibration-recovery, not validation — and the one
+   genuinely held-out *temporal* cut **fails on `party_sep`** (`e5_holdout.md`).
 2. **Positions are now EMERGENT, not fed.** Until E5 the party attractors were the
    ANES **voter** centroids × 1.798, replayed into the agents (positional sorting
    was input-carried — blindspot #7). Since E5 the party positions **emerge** from
@@ -48,16 +53,18 @@ Reproduce: `.venv/Scripts/python.exe scripts/audit/realism_battery.py --seeds 9`
 
 ## Headline
 
-**Positional sorting now EMERGES and the model stays substantially realistic.**
-The whole point of E5: party separation and identity alignment are produced by
-the endogenous loop, not replayed from fed centroids. Freezing the loop collapses
-`party_sep` to the 1980 seed (so the loop is the generative mechanism), and the
-fed-POSITION channel is ~0 (was ~1.0 input-carried). But the loop's pace is set
-by an ANES-calibrated mobilization forcing, so the honest budget
-(`honesty_budget.json`, E5.8) splits each rise into free-flowing vs empirical
-input: `party_sep` **0.38 free-flowing / 0.62 empirical**, `identity_alignment`
-**0.34 / 0.66**, `affect` **0.87 / 0.13**. The panel does not claim "wholly
-emergent" — the mechanism is the model's, the timing is calibrated.
+**The loop *writes* positional sorting, but the rise is mostly forcing-carried.**
+Party separation and identity alignment are produced by the endogenous loop, not
+replayed from fed centroids — freezing the loop collapses `party_sep` to the 1980
+seed (the loop is the generative mechanism) and the fed-POSITION channel is ~0.
+**But proximate-writing is not emergence:** the loop's pace is set by an
+ANES-calibrated mobilization forcing, so the honest budget (`honesty_budget.json`,
+current common-mode config) splits each rise into free-flowing vs empirical input:
+`party_sep` **0.28 free-flowing / 0.72 empirical**, `identity_alignment`
+**0.28 / 0.72**, `affect` **0.94 / 0.06**. So only **affect** is substantially
+emergent; **~72% of the positional rise rides the forcing** (peer-review audit
+F1/F4). The panel does not claim "wholly emergent" — the mechanism is the model's,
+the timing/magnitude is largely calibrated.
 
 The realism **cost** of dropping the fed answer is real, modest, and documented:
 the §11 scorecard goes **21/24 → 18/24** (still PASS ≥18), the joint-distribution

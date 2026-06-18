@@ -51,17 +51,33 @@ US_MEDIA_OUTLETS_2024_ANES = [
 ]
 
 
-def diet_for_party(party_pos: np.ndarray, outlets: list[MediaOutlet], rng) -> dict[int, float]:
+def diet_for_party(party_pos: np.ndarray, outlets: list[MediaOutlet], rng,
+                   centrifugal: float = 0.0) -> dict[int, float]:
     """
     Generate a starting media diet for an agent given their party's position.
     Outlets closer (in ideology) to the agent's party get higher weights,
     softened by exp falloff so people don't get a 100%-aligned diet by default.
     Adds small noise so two same-party agents have slightly different diets.
+
+    R-phase R5 (media-direction fix, audit F6). The default diet gives every
+    outlet a uniform noise floor `U(0, 0.25)`, so the weighted-mean target is
+    pulled toward the CENTRE / opposite pole — making MediaConsumption
+    *centripetal* on position, opposite the cited literature (Levendusky 2013;
+    Martin & Yurukoglu 2017). `centrifugal > 0` sharpens the exp falloff (so the
+    diet concentrates on the agent's *same-pole* outlets, whose positions sit at
+    or beyond the party pole) and fades the center/cross noise floor — so the
+    diet target sits at/beyond the party centroid and media becomes a genuine
+    polarizing force on position. `centrifugal = 0.0` is exactly the prior
+    formula AND consumes the identical rng draws (noise_scale stays 0.25) →
+    byte-identical.
     """
+    c = max(0.0, min(1.0, float(centrifugal)))
+    falloff = 1.6 + 4.0 * c              # sharper concentration on aligned outlets
+    noise_scale = 0.25 * (1.0 - c)       # fade the center/cross noise floor
     weights = {}
     for o in outlets:
         d = float(np.linalg.norm(o.position - party_pos))
-        w = float(np.exp(-d * 1.6)) + float(rng.uniform(0, 0.25))
+        w = float(np.exp(-d * falloff)) + float(rng.uniform(0, noise_scale))
         weights[o.id] = w
     total = sum(weights.values()) or 1.0
     return {k: v / total for k, v in weights.items()}

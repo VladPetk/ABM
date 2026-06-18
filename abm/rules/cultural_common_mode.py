@@ -12,12 +12,17 @@ mid-period (1990s–2000s), when real voters were culturally TRADITIONAL, even
 though the 2020s endpoint matches (so band tests were blind to it). This is the
 society-wide secular cultural trend the engine could not represent.
 
-THE MECHANISM (emergent, not fed). Secular cultural liberalization is, in the
-data, ~69 % **cohort replacement** and ~31 % within-cohort period drift (GSS
-1972–2024 age–period decomposition; cf. Firebaugh & Davis 1988; Brooks &
-Bolzendahl 2004; Baunach 2012). We model the dominant driver directly: each agent
-carries a ``birth_year``; its cultural baseline follows the **measured ANES
-birth-cohort gradient** (older cohorts traditional, younger progressive). The
+THE MECHANISM (emergent, not fed). Secular cultural liberalization is dominated
+by **cohort replacement** (vs within-cohort period drift). NOTE (peer-review audit
+F12): the "~69 %" split this rule was tuned to is the MODEL'S OWN non-identified
+APC self-estimate (``validation/gss_cohort.py`` OLS omits age, collinear with
+year−birth) — NOT a cited finding; cited papers report a lower cohort share,
+≈33 % (Baunach 2012) to ≈55 % (Brooks & Bolzendahl 2004). The cohort-replacement
+*direction/mechanism* is literature-supported (L; cf. Firebaugh & Davis 1988); the
+*magnitude* is the model's (N). We model the dominant driver directly: each agent
+carries a ``birth_year``; its cultural baseline follows the measured birth-cohort
+gradient ``CULTURAL_BIRTH_GRADIENT`` (older cohorts traditional, younger
+progressive; provenance corrected below — GSS-derived, not ANES). The
 society-wide common mode ``m(t)`` is the population mean of that baseline, and it
 declines **emergently** as traditional cohorts are replaced by progressive ones.
 This rule expresses ``m(t)`` as a rigid common-mode shift of the cultural frame
@@ -39,9 +44,15 @@ from __future__ import annotations
 
 import numpy as np
 
-# Measured ANES cultural mean by birth decade, compass units (+ = traditional);
-# validation/anes_from_raw.py over the cumulative file. Born 1910s ≈ +0.17 →
-# born 2000s ≈ -0.29; ≈ -0.044 compass-units per decade of birth.
+# Cultural-traditionalism mean by birth decade, compass units (+ = traditional).
+# Born 1910s ≈ +0.17 → born 2000s ≈ -0.29; ≈ -0.044 compass-units per decade.
+# PROVENANCE CORRECTION (2026-06 peer-review audit, F16 / "DATA SOURCES" finding):
+# the old comment credited `validation/anes_from_raw.py`, but that script reads
+# only the 7 ideology items + YEAR/PARTY/WEIGHT/THERM (NO age/cohort columns), so
+# it cannot have produced a per-birth-decade gradient. The cohort gradient is a
+# GSS z-product (`validation/gss_cohort.py` → `gss_cohort_gradient.json`), here
+# rescaled into ANES compass units. The exact compass-unit rescaling step is not
+# pinned to a committed script — (verify) before treating these as ANES-measured.
 CULTURAL_BIRTH_GRADIENT = {
     1900: 0.169, 1910: 0.165, 1920: 0.142, 1930: 0.157, 1940: 0.103,
     1950: 0.056, 1960: 0.046, 1970: -0.009, 1980: -0.084, 1990: -0.201,

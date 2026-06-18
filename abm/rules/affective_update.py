@@ -85,6 +85,9 @@ class AffectiveUpdate:
         coop_positive_magnitude: float = 0.05,
         threat_amplification: float = 1.0,
         saturation: float = 0.0,
+        xpressure_affect_damp: float = 0.0,
+        affect_rest_rate: float = 0.0,
+        affect_rest_anchor: float = 0.0,
     ):
         # `radius` is the issue-distance normalisation scale (the
         # divisor in `d_iss / self.radius`). It is **not** a query
@@ -139,6 +142,25 @@ class AffectiveUpdate:
         # Mason 2018 ch. 6 ceiling effect). The accumulating clip at
         # ±1 still applies as the hard backstop.
         self.saturation = float(saturation)
+        # R-phase R2 — cross-pressure damping on negative (cooling) valence.
+        # Cross-pressured agents (low `identity_alignment` = cross-cutting
+        # identities not stacked with party) resist out-party cooling
+        # (Lipset & Rokkan 1967; Mutz 2002; Mason 2018). 0.0 → no-op →
+        # bit-identical (pillar agents carry no identity_alignment anyway).
+        self.xpressure_affect_damp = float(xpressure_affect_damp)
+        # R-phase R7 — affect REST STATE (mean-reversion). The G1 generic gate
+        # showed AffectiveUpdate has no equilibrium: with zero drivers it cools
+        # to ~the floor (G1-flat fail) and under restoring it can only plateau,
+        # not reverse (G1-reverse affect leg). This term relaxes each out-party
+        # warmth toward `affect_rest_anchor` at `affect_rest_rate` each tick
+        # (analogous to the FJ ideology anchor / ThreatDecay), so cooling forces
+        # balance against reversion at a finite level and warming can carry
+        # affect back toward the anchor when drivers weaken (Iyengar et al. 2019
+        # — animus is sustained by ongoing exposure, not permanent). Rate 0.0 →
+        # term skipped → bit-identical. Provenance: N (the rest-state term) / L
+        # (decay-to-baseline is the standard affect-dynamics form).
+        self.affect_rest_rate = float(affect_rest_rate)
+        self.affect_rest_anchor = float(affect_rest_anchor)
 
     def apply(
         self,
@@ -240,6 +262,16 @@ class AffectiveUpdate:
         else:
             align_factor = 1.0
 
+        # R-phase R2 — cross-pressure mute on negative valence (computed once
+        # per agent, parallel to align_factor). Default damp 0.0 → xp_mute 1.0.
+        if self.xpressure_affect_damp > 0.0:
+            _xp = 1.0 - float(
+                np.clip(agent.state.attrs.get("identity_alignment", 0.0), 0.0, 1.0)
+            )
+            xp_mute = max(0.0, 1.0 - self.xpressure_affect_damp * _xp)
+        else:
+            xp_mute = 1.0
+
         # Phase 8c §2 E2: cooperative-positive path. The network is
         # consulted only for the positive-path trigger now; pre-Phase-8c
         # `cooperative_mute != 1.0` short-circuit is replaced by a
@@ -339,7 +371,7 @@ class AffectiveUpdate:
                 # amplified.
                 valence = (
                     -(disagreement + self.baseline)
-                    * neg_mute * threat_factor * align_factor
+                    * neg_mute * threat_factor * align_factor * xp_mute
                 )
 
             # Phase 9 §11.7-G — soft saturation: per-encounter delta
@@ -358,6 +390,18 @@ class AffectiveUpdate:
             affect_delta[other_party] = (
                 affect_delta.get(other_party, 0.0) + step
             )
+
+        # R-phase R7 — affect rest state. Relax each out-party warmth toward the
+        # anchor (applied AFTER this tick's encounter deltas, on the post-cooling
+        # value). Gated: rate 0.0 → skipped → bit-identical.
+        if self.affect_rest_rate > 0.0:
+            for op, w in own_affect.items():
+                if op == agent_party or op == 2:
+                    continue
+                w_now = float(np.clip(w, -1.0, 1.0)) + affect_delta.get(op, 0.0)
+                affect_delta[op] = affect_delta.get(op, 0.0) + (
+                    self.affect_rest_rate * (self.affect_rest_anchor - w_now)
+                )
 
         if not affect_delta:
             return StateDelta()

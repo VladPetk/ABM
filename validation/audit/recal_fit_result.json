@@ -1,0 +1,90 @@
+{
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "rows": [
+    {
+      "n24": 19,
+      "n45": 15,
+      "ninit": 4,
+      "affect": 2,
+      "sep": 3,
+      "sep2025": 1.0489294425444677,
+      "aff2025": -0.568087164602596,
+      "cut": 0.6,
+      "lr": 0.3
+    },
+    {
+      "n24": 20,
+      "n45": 16,
+      "ninit": 4,
+      "affect": 2,
+      "sep": 4,
+      "sep2025": 1.0718552752460029,
+      "aff2025": -0.571423980560762,
+      "cut": 0.7,
+      "lr": 0.3
+    },
+    {
+      "n24": 20,
+      "n45": 16,
+      "ninit": 4,
+      "affect": 2,
+      "sep": 4,
+      "sep2025": 1.0920235995718994,
+      "aff2025": -0.5739637638853522,
+      "cut": 0.8,
+      "lr": 0.3
+    },
+    {
+      "n24": 19,
+      "n45": 15,
+      "ninit": 4,
+      "affect": 2,
+      "sep": 4,
+      "sep2025": 1.102995377367226,
+      "aff2025": -0.574906830500753,
+      "cut": 0.9,
+      "lr": 0.3
+    },
+    {
+      "n24": 20,
+      "n45": 16,
+      "ninit": 4,
+      "affect": 3,
+      "sep": 4,
+      "sep2025": 1.1165779114546428,
+      "aff2025": -0.5764622307713803,
+      "cut": 1.0,
+      "lr": 0.3
+    }
+  ],
+  "selected": {
+    "n24": 20,
+    "n45": 16,
+    "ninit": 4,
+    "affect": 3,
+    "sep": 4,
+    "sep2025": 1.1165779114546428,
+    "aff2025": -0.5764622307713803,
+    "cut": 1.0,
+    "lr": 0.3
+  },
+  "adopted_overrides": {
+    "media_centrifugal": 0.7,
+    "affect_rest_rate": 0.02,
+    "affect_rest_anchor": -0.3,
+    "affect_saturation": 1.0,
+    "contact_warming": true,
+    "contact_coop_frac": 0.3,
+    "contact_warm_threshold": -0.6,
+    "contact_warm_magnitude": 0.04,
+    "contact_coop_share": 0.15,
+    "mob_peak": 2.4838,
+    "affect_lr_scale": 0.3
+  }
+}
