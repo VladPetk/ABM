@@ -18,6 +18,7 @@ from abm.core.state import AgentState
 from abm.pillars.historical_arc import build_engine
 from abm.rules.activist_elite import ActivistEliteCue
 from scripts.anes_preset import ANES_FULL_KWARGS
+from scripts.anes_preset import ANES_FULL_COMMONMODE_ECON_KWARGS as OFF_KW
 
 
 def _world():
@@ -69,8 +70,10 @@ def _loop(eng):
 
 
 def test_build_off_endo_zero():
-    eng = build_engine(seed=0, **ANES_FULL_KWARGS)
+    eng = build_engine(seed=0, **OFF_KW)
     assert _loop(eng).endo_mob_gain == 0.0
+    # …and ON in the shipped R-phase canonical.
+    assert _loop(build_engine(seed=0, **ANES_FULL_KWARGS)).endo_mob_gain > 0.0
 
 
 def test_build_on_passes_endo():

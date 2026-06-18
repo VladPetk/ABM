@@ -17,6 +17,9 @@ from abm.core.state import AgentState
 from abm.pillars.historical_arc import build_engine
 from abm.rules.affective_update import AffectiveUpdate
 from scripts.anes_preset import ANES_FULL_KWARGS
+# Pre-R-phase canonical (mechanisms OFF) — the baseline for "default/off" checks,
+# since ANES_FULL_KWARGS is now the R-phase config (these mechanisms ON).
+from scripts.anes_preset import ANES_FULL_COMMONMODE_ECON_KWARGS as OFF_KW
 
 
 def _delta(warmth, rate, anchor=0.0):
@@ -80,8 +83,10 @@ def _affect_rule(eng):
 
 
 def test_build_off_rest_zero():
-    eng = build_engine(seed=0, **ANES_FULL_KWARGS)
+    eng = build_engine(seed=0, **OFF_KW)
     assert _affect_rule(eng).affect_rest_rate == 0.0
+    # …and ON in the shipped R-phase canonical.
+    assert _affect_rule(build_engine(seed=0, **ANES_FULL_KWARGS)).affect_rest_rate > 0.0
 
 
 def test_build_on_passes_rest():
@@ -101,8 +106,8 @@ def test_p3a_affect_lr_scale_linear():
     """P3a: affect_lr_scale linearly scales the per-agent cooling rate (the floor
     scales with it, so the reduction is not truncated). 1.0 is the prereq for
     bit-identity (canonical fingerprint guards that)."""
-    base = _mean_partisan_lr(build_engine(seed=0, **ANES_FULL_KWARGS))
-    k = dict(ANES_FULL_KWARGS); k.update(affect_lr_scale=0.5)
+    base = _mean_partisan_lr(build_engine(seed=0, **OFF_KW))
+    k = dict(OFF_KW); k.update(affect_lr_scale=0.5)
     half = _mean_partisan_lr(build_engine(seed=0, **k))
     assert abs(half / base - 0.5) < 0.05, f"expected ~0.5x, got {half / base:.3f}"
 
@@ -110,8 +115,8 @@ def test_p3a_affect_lr_scale_linear():
 def test_p3a_affect_saturation_override():
     """P3a affect-shape: affect_saturation overrides the build's saturation (which
     is 0.0 under evidence_regrade). None → keep build logic → bit-identical."""
-    base = _affect_rule(build_engine(seed=0, **ANES_FULL_KWARGS))
-    assert base.saturation == 0.0   # evidence_regrade default
-    k = dict(ANES_FULL_KWARGS); k.update(affect_saturation=1.0)
+    base = _affect_rule(build_engine(seed=0, **OFF_KW))
+    assert base.saturation == 0.0   # evidence_regrade default (pre-R-phase)
+    k = dict(OFF_KW); k.update(affect_saturation=1.0)
     on = _affect_rule(build_engine(seed=0, **k))
     assert on.saturation == 1.0

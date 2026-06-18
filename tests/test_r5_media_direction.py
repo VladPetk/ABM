@@ -16,6 +16,8 @@ from abm.core.outlets import (
 )
 from abm.pillars.historical_arc import build_engine
 from scripts.anes_preset import ANES_FULL_KWARGS
+# Pre-R-phase canonical (media_centrifugal OFF) — baseline for the off comparison.
+from scripts.anes_preset import ANES_FULL_COMMONMODE_ECON_KWARGS as OFF_KW
 
 _BY_ID = {o.id: o for o in US_MEDIA_OUTLETS_2024_ANES}
 
@@ -64,7 +66,10 @@ def _mean_partisan_target(eng):
 def test_build_wires_centrifugal():
     """build_engine threads media_centrifugal into the partisan diets — the mean
     partisan diet-target magnitude is larger when the fix is on."""
-    base = build_engine(seed=0, **ANES_FULL_KWARGS)
-    k = dict(ANES_FULL_KWARGS); k.update(media_centrifugal=0.8)
+    base = build_engine(seed=0, **OFF_KW)   # media_centrifugal off (pre-R-phase)
+    k = dict(OFF_KW); k.update(media_centrifugal=0.8)
     fixed = build_engine(seed=0, **k)
     assert _mean_partisan_target(fixed) > _mean_partisan_target(base)
+    # the shipped R-phase canonical is also centrifugal (> the off baseline).
+    assert _mean_partisan_target(build_engine(seed=0, **ANES_FULL_KWARGS)) > \
+        _mean_partisan_target(base)
