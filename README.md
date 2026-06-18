@@ -6,13 +6,17 @@ what real depolarization interventions actually do**, with the empirical
 literature as the calibration anchor.
 
 The headline finding the model produces: **most depolarization interventions
-people loudly demand don't work in the model.** The seven-intervention library
-(Phase 10, re-measured on the R-phase canonical) lands one as backfire (X1), one
-as **partial** on affect (X6 shared institutions), and five as null — and **none
-lands as "real"** on either axis. (X6 was the lone "real" lever; on the corrected,
-warmer R-phase baseline a contact intervention has less out-party animus left to
-undo, so it drops to partial — strengthening, not weakening, the "the loudest
-levers are the weakest" message.) Each null carries a documented reason.
+people loudly demand don't move the macro picture in the model.** Of the
+seven-intervention library (re-measured on the R-phase canonical after the
+2026-06 intervention-faithfulness pass), **six land null** and one — shared
+neighborhoods and workplaces (X6) — lands a **durable partial** on affect; **none
+lands "real."** Even cross-party exposure (X1), the lever most feared to
+*backfire*, is **null on average**: its backfire is threat-gated, surfacing only
+where exposure lands during active identity threat (faithful to the contested
+evidence — Bail 2018 found backfire; Guess & Coppock 2020 found none on average).
+Each verdict is reached through a mechanism the engine can show — and each null
+carries a documented reason. (Workstream record:
+[`docs/INTERVENTIONS_OVERVIEW.md`](docs/INTERVENTIONS_OVERVIEW.md).)
 
 ## Where to read
 

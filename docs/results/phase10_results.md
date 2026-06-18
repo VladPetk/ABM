@@ -2,7 +2,33 @@
 
 *Status: shipped. Intervention library (X1–X7) redesigned against
 the Phase 9 ANES-recalibrated engine. Last updated 2026-06-18
-(R-phase — re-measured on the R-PHASE canonical config).*
+(intervention-faithfulness pass R-A…R-D — see the top banner).*
+
+> **✅ R-A…R-D INTERVENTION-FAITHFULNESS PASS (2026-06-18) — current shipped state.**
+> A from-scratch audit (`docs/internal/intervention_durability_findings.md`) found the
+> library reached its verdicts through *unfaithful* routes; four levers were re-blessed
+> on the R-phase canonical (9-seed `phase10_measurement.json`; `test_phase6` green; full
+> suite 365 pass / 2 xfail). **The library now has ZERO unconditional backfires.**
+> - **X1 backfire → null (decade-varying).** The Phase-10 backfire came from an
+>   effectively *unconditional* affect gate (~95% of partisans fire). Added opt-in
+>   `BacklashRepulsion.threat_gated`; X1 now fires only for the threatened subset
+>   (Mutz 2018 / Combs 2023; Guess & Coppock 2020 null-on-average), strength re-anchored
+>   0.055→0.20. Δsep per release **0.000 / 0.000 / +0.078 / +0.026** (1990/2000/2010/2020,
+>   9-seed) — null on average, a Bail-magnitude **conditional backfire only at the 2010
+>   release** whose window overlaps the 2016 status-threat spike.
+> - **X2 → earned null.** Was a dead knob (set `BC.affect_weight`, shadowed by the
+>   data-fed `env["bc_affect_weight"]`). Now zeroes the live channel → still ~null
+>   (the algorithmic channel is deliberately weak — media paradox / Meta-2020) but the
+>   null is now *earned* (deltas track social-media adoption).
+> - **X6 → durable partial.** Was a one-shot dose that decayed to ~9% retained by 2025.
+>   Added a sustained, cohort-proof cooperative-share floor (Pettigrew "halving" anchor):
+>   Δaff **+0.096 / +0.123 / +0.140 / +0.166** (partial; only 2020 tips "real"), and the
+>   **2025 durable Δaff is now ~+0.078** (was ~+0.017) — the branch no longer re-converges.
+> - **X3 / X4 / X7 → confirmed already-LIVE earned nulls** (state-change triage; no
+>   engine change). **X5 → deprogramming null/null** (unchanged).
+>
+> The §2 scoreboard and §3 prose below predate this pass (and earlier ones) — read this
+> banner as the current shipped state. Full detail: `docs/INTERVENTIONS_OVERVIEW.md`.
 
 > **✅ R-PHASE — RE-MEASURED on the R-phase canonical config (2026-06-18; methods §5.32).**
 > `ANES_FULL_KWARGS` = `ANES_FULL_RPHASE_KWARGS` (common-mode-econ + R5 media-direction
