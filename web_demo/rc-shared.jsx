@@ -99,8 +99,8 @@ function coldnessAt(tick) {
 }
 // Out-party warmth in ANES-style degrees, on the ABSOLUTE 0–100 thermometer —
 // the contract mapping deg = (1 + aff)*50 + 12 (coldness = −aff), NOT the
-// normalized ramp. Runs ~57° (1980) → ~28° (2025), matching the literature's
-// high-50s→high-20s out-party collapse, and shares a scale with the in-party
+// normalized ramp. Runs ~57° (1980) → ~33° (2025), matching the literature's
+// high-50s→low-30s out-party collapse, and shares a scale with the in-party
 // ANES overlay so the two can be drawn as one honest "scissors".
 function outPartyDeg(tick) {return (1 + macroAt(D.runs.baseline, tick, 'aff')) * 50 + 12;}
 // In-party warmth (degrees) — EXTERNAL ANES overlay, NOT engine (contract §2).

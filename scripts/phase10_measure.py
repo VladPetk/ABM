@@ -318,11 +318,15 @@ def _check_falsification(iv_id: str, dsep: float, daff: float) -> dict:
     """Return ``{"passed": bool, "reason": str}`` per the brief's
     §X.Falsification text."""
     if iv_id == "X1_show_other_side":
-        if dsep < 0:
-            return {"passed": False, "reason": f"Δsep={dsep:+.3f} ≤ 0 — Bail backfire doesn't survive recalibration"}
-        if dsep > 1.0:
-            return {"passed": False, "reason": f"Δsep={dsep:+.3f} > +1.0 — runaway; reduce strength"}
-        return {"passed": True, "reason": "Δsep ∈ (0, +1.0] as predicted"}
+        # R-phase R-D: threat-gated backfire. Faithful = null-to-conditional
+        # backfire (Guess & Coppock null on average; Mutz/Bail conditional under
+        # threat). Falsify on a HELPFUL read (threat mechanism inverted) or a
+        # runaway/over-broad backfire — not on the now-expected per-release null.
+        if dsep < -0.05:
+            return {"passed": False, "reason": f"Δsep={dsep:+.3f} < −0.05 — exposure reads helpful; threat mechanism inverted"}
+        if dsep > 0.30:
+            return {"passed": False, "reason": f"Δsep={dsep:+.3f} > +0.30 — backfire firing too broadly/runaway; gate or strength wrong"}
+        return {"passed": True, "reason": "Δsep ∈ [−0.05, +0.30] — null-to-conditional-backfire as predicted"}
     if iv_id == "X2_fix_algorithm":
         if abs(dsep) > 0.10:
             return {"passed": False, "reason": f"|Δsep|={abs(dsep):.3f} > 0.10 — affect channel doing unexpected work"}

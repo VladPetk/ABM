@@ -27,10 +27,10 @@ const beatIndexAt = (t) => {let k = 0;for (let i = 0; i < BEATS.length; i++) if 
 // component type on every render, so React remounted the buttons each frame
 // while the intro's ambient loop ran, eating every click (mousedown/mouseup
 // never hit the same node). Hoisted = stable type = clickable.
-function HeaderNavLink({ id, page, setPage, children }) {
-  const on = page === id;
+function HeaderNavLink({ id, page, setPage, children, target, active }) {
+  const on = active != null ? active : page === id;
   return (
-    <button onClick={() => setPage(id)} style={{
+    <button onClick={() => setPage(target || id)} style={{
       fontFamily: SANS, fontSize: DS.type.small, fontWeight: on ? 600 : 500, color: on ? CC.ink : CC.ink3,
       background: 'none', border: 'none', cursor: 'pointer', padding: '6px 2px', position: 'relative'
     }}>
@@ -50,7 +50,7 @@ function SiteHeader({ page, setPage }) {
       <span style={{ flex: 1 }} />
       <nav style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
         <HeaderNavLink id="model" page={page} setPage={setPage}>The Model</HeaderNavLink>
-        <HeaderNavLink id="story" page={page} setPage={setPage}>The Story</HeaderNavLink>
+        <HeaderNavLink id="story" target="prologue" active={page === 'prologue' || page === 'story'} page={page} setPage={setPage}>The Story</HeaderNavLink>
         <HeaderNavLink id="playground" page={page} setPage={setPage}>Playground</HeaderNavLink>
         <HeaderNavLink id="methods" page={page} setPage={setPage}>Methods</HeaderNavLink>
         <HeaderNavLink id="about" page={page} setPage={setPage}>About</HeaderNavLink>
@@ -265,7 +265,7 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
         <div style={scrollWrap}>
           <Eyebrow>The story · 1980 → 2025</Eyebrow>
           <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, lineHeight: 1.05, letterSpacing: '-.015em' }}>Now drive it yourself.</h2>
-          <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2 }}>Forty-five years, two hardening camps, a middle that thinned — and an out-party warmth that fell from the high-50s to the high-20s.</p>
+          <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2 }}>Forty-five years, two hardening camps, a middle that thinned — and an out-party warmth that fell from the high-50s to the low-30s.</p>
           <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>You’ve watched the model reproduce the real arc. Two ways to take the wheel: try the things researchers have actually tested, or turn the dials freely.</p>
         </div>
         <div style={{ ...footer, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start' }}>
@@ -429,7 +429,7 @@ function BarTransport({ playing, toggle, setTick, speed, setSpeed }) {
 
 }
 
-function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, beatI, onPickBeat, ended }) {
+function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, beatI, onPickBeat, ended, beats = BEATS, events = true }) {
   const year = Math.floor(tickToYear(tick));
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const monthLabel = `${months[Math.min(11, Math.floor((tickToYear(tick) - year) * 12))]} ${year}`;
@@ -445,7 +445,7 @@ function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, be
         <div style={{ marginTop: 4, position: 'relative' }}>
           {/* chapter rail for Watch — labeled, click-to-jump diamonds; the active
               chapter carries its name as the "you are here" marker */}
-          {mode === 'watch' && BEATS.map((b, k) => {
+          {(mode === 'watch' || mode === 'prologue') && beats.map((b, k) => {
             const on = k === beatI && !ended;
             const left = `calc(14px + ${b.tick / LAST} * (100% - 28px))`;
             return (
@@ -462,7 +462,7 @@ function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, be
               </React.Fragment>);
 
           })}
-          <ProtoTimeline tick={tick} setTick={setTick} color={accent} altLabels />
+          <ProtoTimeline tick={tick} setTick={setTick} color={accent} altLabels events={events} />
         </div>
       </div>
     </div>);
@@ -471,8 +471,8 @@ function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, be
 
 // hash ↔ page mapping (deep links; review amendment #8). '#model' is the
 // canonical landing hash; unknown hashes fall back to the intro.
-const HASH2PAGE = { '#model': 'model', '#story': 'story', '#playground': 'playground', '#methods': 'methods', '#about': 'about', '#3d': 'agents' };
-const PAGE2HASH = { model: '#model', story: '#story', playground: '#playground', methods: '#methods', about: '#about', agents: '#3d' };
+const HASH2PAGE = { '#model': 'model', '#prologue': 'prologue', '#story': 'story', '#playground': 'playground', '#methods': 'methods', '#about': 'about', '#3d': 'agents' };
+const PAGE2HASH = { model: '#model', prologue: '#prologue', story: '#story', playground: '#playground', methods: '#methods', about: '#about', agents: '#3d' };
 
 function Unified() {
   const ph = useTick({ start: 0, autoplay: false, base: 2.25 });
@@ -572,11 +572,12 @@ function Unified() {
     return () => {cancelAnimationFrame(raf);clearTimeout(to);};
   }, [settling]);
 
-  // entering the story drops the reader at orientation (the staged map-build),
-  // paused at 1980 — they then scroll, or press ▶, to move through time.
-  const enterOrientation = () => {
-    setStarted(true);setOrientStep(0);setOrientSeen(false);setBeatI(0);
-    setTick(0);setPaused(true);setPlaying(false);setEnded(false);setHintSeen(false);
+  // entering the story drops the reader at 1980, paused — the prologue already
+  // taught the map, so there is NO staged orientation (orientSeen=true => the
+  // staged-orient rail never shows). They scroll, or press ▶, to move through time.
+  const enterStory = () => {
+    setStarted(true);setOrientStep(ORIENT_LAYERS.length - 1);setOrientSeen(true);setBeatI(0);
+    setTick(0);setPaused(false);setPlaying(false);setEnded(false);setHintSeen(false);
   };
   // Back / Continue step discretely between chapters (for readers who'd rather
   // click than scroll); the wheel and ▶ remain the primary ways through.
@@ -586,7 +587,7 @@ function Unified() {
     if (dir > 0 && k >= BEATS.length) {setTick(LAST);return;}
     setTick(BEATS[Math.max(0, Math.min(BEATS.length - 1, k))].tick + 0.001);
   };
-  const railContinue = () => {phase === 'intro' ? enterOrientation() : stepBeat(1);};
+  const railContinue = () => {phase === 'intro' ? enterStory() : stepBeat(1);};
   const pickBeat = (k) => {setHintSeen(true);setPlaying(false);setEnded(false);setTick(BEATS[k].tick + 0.001);};
   // finishing the guided story hands the controls over ON THE SAME canvas
   // (no separate Explore tab) — free scrub on the position field, parties toggle.
@@ -600,7 +601,7 @@ function Unified() {
   // nudged path (the intro's "Watch the story"). ──
   const goPage = (p) => {
     if (morphingIntro) return;                 // ignore nav during the handoff
-    if (p === 'story' && !started) {setCcFlag(CC_INTRO_SEEN);enterOrientation();}
+    if (p === 'story' && !started) {setCcFlag(CC_INTRO_SEEN);enterStory();}
     // clicking The Story while free-scrubbing relocks to the chaptered story
     // (the end-card effect re-derives `ended` from the current tick).
     if (p === 'story' && unlocked) {setUnlocked(false);setPlaying(false);}
@@ -615,6 +616,14 @@ function Unified() {
   };
   // the nudged path: ambient dots ease back to 1980 and dissolve into the
   // density clouds, then the staged orientation takes over (same canvas).
+  // the prologue ("the engine with America switched off") plays before the
+  // guided story; its closing CTA routes into the story via goPage('story').
+  const startPrologue = () => {
+    if (morphingIntro) return;
+    setCcFlag(CC_INTRO_SEEN);
+    setPlaying(false);
+    setPage('prologue');
+  };
   const watchStory = () => {
     if (morphingIntro) return;
     setCcFlag(CC_INTRO_SEEN);
@@ -623,7 +632,7 @@ function Unified() {
       onDone: () => {
         morphCancel.current = null;
         setSettling(true);setSettleIn(false);
-        enterOrientation();
+        enterStory();
         setIntroMorphT(null);
         setPage('story');
       },
@@ -659,6 +668,17 @@ function Unified() {
       onClick={(e) => {const g = e.target.closest('[data-goto]');if (g) {e.preventDefault();goPage(g.getAttribute('data-goto'));}}}>
         <SiteHeader page={page} setPage={goPage} />
         {page === 'about' ? <AboutPage /> : page === 'agents' ? <Agents3DPage /> : <MethodsPage />}
+      </div>);
+
+  }
+
+  // ── Prologue — "the engine with America switched off" (plays before the
+  // guided story; hands off to it). A separate surface from the sim canvas. ──
+  if (page === 'prologue') {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}>
+        <SiteHeader page={page} setPage={goPage} />
+        <ProloguePage onToStory={() => goPage('story')} onSkip={() => goPage('story')} />
       </div>);
 
   }
@@ -712,7 +732,7 @@ function Unified() {
           {/* floating narrative — a centered editorial block on the left */}
           <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(54%, 820px)', display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3 }}>
             {isIntro &&
-              <IntroRail tick={introTick} storyDone={storyDone} onWatch={watchStory}
+              <IntroRail tick={introTick} storyDone={storyDone} onWatch={startPrologue}
                 onSandbox={() => goPlayground('sandbox')} onAbout={() => goPage('about')} on3D={() => goPage('agents')} />}
             {isWatch && (stagedOrient ?
               <OrientRail step={orientStep} onPrev={orientPrev} onNext={orientNext} onContinue={finishOrient} /> :

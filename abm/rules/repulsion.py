@@ -47,6 +47,7 @@ class BacklashRepulsion:
         affect_threshold: float = -0.3,
         threat_amplification: float = 1.0,
         asymmetric: dict[int, float] | None = None,
+        threat_gated: bool = False,
     ):
         self.epsilon = epsilon
         self.max_range = max_range
@@ -76,6 +77,19 @@ class BacklashRepulsion:
         # more susceptible to cross-cutting backfire); X1 setup sets
         # the same asymmetric dict on the rule when it fires.
         self.asymmetric = asymmetric
+        # R-phase R-D — threat-GATED backfire (opt-in; default False →
+        # bit-identical, so the pillar backlash tests and every default path are
+        # unchanged). The warmth gate (`affect_threshold`) is effectively
+        # unconditional in the polarized era (~95% of partisans sit below −0.3),
+        # so the backfire fired near-universally — which cannot express the
+        # CONDITIONAL, threat-moderated backfire the literature debates (Mutz
+        # 2018: status threat is the *carrier*; Combs 2023: anonymous exposure
+        # with no identity threat *helps*; Guess & Coppock 2020: null on average).
+        # When True, the push is scaled by `threat_amplification × perceived_threat`
+        # instead of `1 + threat_amplification × perceived_threat`, so it is ZERO
+        # for unthreatened agents and fires only for the threatened subset (the
+        # engine's post-2016 status-threat population). X1 opts in.
+        self.threat_gated = bool(threat_gated)
 
     def apply(
         self,
@@ -144,7 +158,13 @@ class BacklashRepulsion:
         threat = float(
             np.clip(agent.state.attrs.get("perceived_threat", 0.0), 0.0, 1.0)
         )
-        threat_factor = 1.0 + self.threat_amplification * threat
+        # R-phase R-D: threat-gated → push ∝ threat (zero for unthreatened
+        # agents, conditional backfire). Default → the additive amplifier
+        # (bit-identical to every pre-R-D path).
+        if self.threat_gated:
+            threat_factor = self.threat_amplification * threat
+        else:
+            threat_factor = 1.0 + self.threat_amplification * threat
         # Phase 8c §6 E6.1: per-party asymmetric multiplier. Pillar
         # default (None) → factor 1.0 → bit-identical to §5.
         if self.asymmetric is not None:

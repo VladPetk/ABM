@@ -14,21 +14,6 @@ const _ivD = window.CC_DATA;
 const BUCKET_COL = { null: CC.ink4, partial: '#c47a2c', real: '#3f7d54', backfire: CC.r };
 
 // ── shared furniture ─────────────────────────────────────────────────────────
-// black "Try Sandbox" pill that sits beside the heading
-function SandboxPill({ iv }) {
-  const open = iv.isSandbox;
-  return (
-    <button onClick={open ? iv.closeSandbox : iv.openSandbox} style={{
-      flexShrink: 0, cursor: 'pointer', fontFamily: SANS, fontSize: DS.type.small, fontWeight: 500,
-      color: open ? CC.ink : '#fff', background: open ? 'transparent' : CC.ink,
-      border: `1px solid ${CC.ink}`, borderRadius: DS.rad.pill, padding: '8px 16px',
-      display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap',
-    }}>
-      {open ? 'Close sandbox' : 'Try Sandbox'}
-    </button>
-  );
-}
-
 // the lever row used by Narrative — hairline rows, status dot
 // (hollow = not run · fills with outcome colour once run), hover reveals the
 // naive expectation.
@@ -216,6 +201,23 @@ function DeltaReadout({ label, v, helpfulSign, side = 'l' }) {
   );
 }
 
+// The guess verdict — the payoff of placing a bet, kept deliberately minimal: a
+// single editorial line where the colour does the work. Green = right, oxblood =
+// wrong, so it reads at a glance; the outcome phrase reuses the exact wording of
+// the bet buttons ("It backfires" / "No effect" / "It helps"). No box, no chip,
+// no tint — it carries the bucket too, so the header pill is dropped as redundant.
+function GuessVerdict({ iv }) {
+  const { eff, guess, correct } = iv;
+  if (!eff || guess == null) return null;
+  const outcome = window.GUESS[window.bucketToBet(eff.bucket)].label;  // "It backfires" / …
+  return (
+    <div style={{ marginBottom: 13, fontFamily: SANS, fontSize: DS.type.body, lineHeight: 1.3 }}>
+      <span style={{ fontWeight: 700, color: correct ? '#3f7d54' : CC.r }}>{correct ? 'Right.' : 'Wrong.'}</span>
+      <span style={{ color: CC.ink2, fontWeight: 500 }}> {outcome}.</span>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 //  DIRECTION — NARRATIVE  (the Story-aligned rethink)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -228,12 +230,9 @@ function NarrativeDetail({ iv }) {
   if (iv.predicting) {
     return (
       <React.Fragment>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-          <div>
-            <Eyebrow>Your call · before the run</Eyebrow>
-            <h2 style={{ margin: '10px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, lineHeight: 1.06, letterSpacing: '-.015em', color: CC.ink }}>{iv.active.label}</h2>
-          </div>
-          <SandboxPill iv={iv} />
+        <div>
+          <Eyebrow>Your call · before the run</Eyebrow>
+          <h2 style={{ margin: '10px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, lineHeight: 1.06, letterSpacing: '-.015em', color: CC.ink }}>{iv.active.label}</h2>
         </div>
         {varies && (
           <div style={{ marginTop: 20, paddingTop: 18, borderTop: `1px solid ${CC.border}` }}>
@@ -252,19 +251,11 @@ function NarrativeDetail({ iv }) {
   }
 
   // revealed result
-  const eff = iv.eff, o = iv.o;
+  const eff = iv.eff;
   return (
     <React.Fragment>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <Eyebrow>Modeled effect · released {iv.releaseYear}</Eyebrow>
-            {o && <Tag tone={o.tone}>{o.label}</Tag>}
-          </div>
-          <h2 style={{ margin: '10px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, lineHeight: 1.06, letterSpacing: '-.015em', color: CC.ink }}>{eff.name}</h2>
-        </div>
-        <SandboxPill iv={iv} />
-      </div>
+      <GuessVerdict iv={iv} />
+      <h2 style={{ margin: 0, fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, lineHeight: 1.06, letterSpacing: '-.015em', color: CC.ink }}>{eff.name}</h2>
 
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink }}>{eff.take}</p>
       {eff.caveat && (
@@ -325,8 +316,9 @@ function BackToList({ onClick }) {
 
 // The sandbox as the FINAL row of the lever list — deliberately black with a
 // light font so it reads as a different kind of thing (it changes the model, not
-// a policy; "not a finding"). On the individual intervention screens the sandbox
-// stays a pill (SandboxPill) instead.
+// a policy; "not a finding"). On the individual intervention screens there's no
+// sandbox affordance; the Playground's mode bar (Interventions | Sandbox) is the
+// way across.
 function SandboxRow({ iv }) {
   const [hov, setHov] = React.useState(false);
   return (
@@ -579,66 +571,66 @@ function SandboxPanel({ iv }) {
   );
 }
 
-// one live outcome metric in the sandbox bottom band — a clean number readout
-// (no magnitude bar; the timeline below is the only horizontal line).
-function SandboxMetric({ label, value, color }) {
-  return (
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: DS.type.micro, color: CC.ink3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
-      <div style={{ marginTop: 4 }}>
-        <MonoVal size={24} color={color} weight={600}>{value == null ? '—' : value.toFixed(2)}</MonoVal>
-      </div>
-    </div>
-  );
-}
-
-// 1980→2025 scrubber for the sandbox — matches the Story page's ProtoTimeline
-// look (1.5px track, MONO 4-digit decade labels with ticks, hollow playhead),
-// but WITHOUT the real-history event markers (this is an alternate history).
-function SandboxTimeline({ play }) {
+// Out-party animus over the alternate 1980→2025 — the one outcome you CAN'T read
+// off the position cloud (separation, within-party spread, mega-identity and
+// echo-chambers are all visible in the field itself). Copies the interventions
+// TwoFutures chart's look: ink line, decade gridlines, dashed playhead, a dot at
+// the playhead, decade labels, drag-to-scrub. The y-domain is FIXED to the global
+// animus range across the whole sandbox grid (~0.05–0.85), so cranking a dial
+// visibly MOVES the line instead of auto-rescaling it away. animus = -affect.
+const _SB_ANIMUS_LO = 0.05, _SB_ANIMUS_HI = 0.85;
+function SandboxAnimusChart({ play }) {
   const ref = React.useRef(null);
-  const [w, setW] = React.useState(820);
+  const [w, setW] = React.useState(720);
   React.useEffect(() => {
-    const el = ref.current; if (!el) return;
-    const upd = () => setW(Math.max(320, el.clientWidth || 820));
-    upd(); const ro = new ResizeObserver(upd); ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  const LAST = window.LAST, H = 40, padL = 8, padR = 8, trackY = 13;
-  const x0 = padL, x1 = w - padR;
-  const tx = (t) => x0 + (t / LAST) * (x1 - x0);
-  const playX = tx(play.tick);
-  const decades = [1980, 1990, 2000, 2010, 2020, 2025];
-  const scrub = (cx) => {
     if (!ref.current) return;
-    const r = ref.current.getBoundingClientRect();
-    play.pause();
-    play.setTick(Math.max(0, Math.min(LAST, ((cx - r.left) / r.width) * LAST)));
-  };
-  const onDown = (e) => {
-    scrub(e.clientX);
-    const mv = (ev) => scrub(ev.clientX);
+    const ro = new ResizeObserver((e) => { for (const en of e) setW(en.contentRect.width); });
+    ro.observe(ref.current); return () => ro.disconnect();
+  }, []);
+  const LAST = window.LAST;
+  const animus = play.macro.map((m) => -m.aff);
+  const lo = _SB_ANIMUS_LO, hi = _SB_ANIMUS_HI;
+  const H = 150, padL = 16, padR = 16, padT = 14, padB = 26;
+  const W = Math.max(360, w);
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const X = (t) => padL + (t / LAST) * plotW;
+  const Y = (v) => padT + plotH - ((Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo)) * plotH;
+  const ti = Math.max(0, Math.min(LAST, Math.round(play.tick)));
+  const cur = animus[ti];
+  const linePath = animus.map((v, t) => `${t ? 'L' : 'M'}${X(t).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+  const DECADES = [['1990', 30], ['2000', 60], ['2010', 90], ['2020', 120]];
+  const onScrubDown = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const toTick = (cx) => Math.max(0, Math.min(LAST, ((((cx - r.left) * (W / r.width)) - padL) / plotW) * LAST));
+    play.pause(); play.setTick(toTick(e.clientX));
+    const mv = (ev) => play.setTick(toTick(ev.clientX));
     const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); };
     window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
   };
   return (
-    <div ref={ref}>
-      <svg viewBox={`0 0 ${w} ${H}`} width="100%" height={H} preserveAspectRatio="xMidYMid meet"
-        onPointerDown={onDown} style={{ display: 'block', cursor: 'pointer', touchAction: 'none' }}>
-        <line x1={x0} y1={trackY} x2={x1} y2={trackY} stroke={CC.borderS} strokeWidth="1.5" />
-        <line x1={x0} y1={trackY} x2={playX} y2={trackY} stroke={CC.ink} strokeWidth="1.5" />
-        {decades.map((y) => {
-          const X = tx(window.yearToTick(y));
-          return (
-            <g key={y}>
-              <line x1={X} y1={H - 16} x2={X} y2={H - 12} stroke={CC.ink4} strokeWidth="1" />
-              <text x={X} y={H - 3} textAnchor="middle" style={{ fontFamily: MONO, fontSize: 10.5, fill: CC.ink4, ...TNUM }}>{y}</text>
-            </g>
-          );
-        })}
-        <line x1={playX} y1={trackY - 5} x2={playX} y2={trackY + 5} stroke={CC.ink} strokeWidth="2" />
-        <circle cx={playX} cy={trackY} r="6.5" fill={CC.surface} stroke={CC.ink} strokeWidth="2" />
+    <div ref={ref} style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none"
+        onPointerDown={onScrubDown} style={{ display: 'block', cursor: 'ew-resize', touchAction: 'none' }}>
+        {DECADES.map(([lab, t]) => (
+          <line key={t} x1={X(t)} y1={padT} x2={X(t)} y2={padT + plotH} stroke={CC.border} strokeWidth="1" strokeDasharray="2 4" opacity="0.5" vectorEffect="non-scaling-stroke" />
+        ))}
+        <line x1={padL} y1={padT + plotH} x2={W - padR} y2={padT + plotH} stroke={CC.borderS} strokeWidth="1" vectorEffect="non-scaling-stroke" />
+        <path d={linePath} fill="none" stroke={CC.ink2} strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        <line x1={X(ti)} y1={padT} x2={X(ti)} y2={padT + plotH} stroke={CC.ink3} strokeWidth="1" strokeDasharray="2 3" opacity="0.7" vectorEffect="non-scaling-stroke" />
+        <circle cx={X(ti)} cy={Y(animus[ti])} r="3.6" fill={CC.ink} stroke={CC.surface} strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
       </svg>
+      {/* readout overlaid top-left, where the (rising) animus line leaves room */}
+      <div style={{ position: 'absolute', left: padL + 2, top: 16, pointerEvents: 'none' }}>
+        <div style={{ fontFamily: SANS, fontSize: DS.type.micro, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: CC.ink3 }}>Out-party animus</div>
+        <div style={{ marginTop: 3 }}><MonoVal size={19} color={CC.ink} weight={600}>{cur.toFixed(2)}</MonoVal></div>
+      </div>
+      <div style={{ position: 'absolute', left: padL, right: padR, bottom: 4, height: padB - 6, pointerEvents: 'none' }}>
+        {DECADES.map(([lab, t]) => (
+          <span key={t} style={{ position: 'absolute', left: `${(t / LAST) * 100}%`, transform: 'translateX(-50%)', bottom: 0, fontFamily: MONO, fontSize: 9.5, color: CC.ink4, ...TNUM }}>{lab}</span>
+        ))}
+        <span style={{ position: 'absolute', left: 0, bottom: 0, fontFamily: SANS, fontSize: 9.5, color: CC.ink4 }}>1980</span>
+        <span style={{ position: 'absolute', right: 0, bottom: 0, fontFamily: SANS, fontSize: 9.5, color: CC.ink4 }}>2025</span>
+      </div>
     </div>
   );
 }
@@ -648,24 +640,13 @@ function SandboxTimeline({ play }) {
 // they produce — animus, spread & echo-chambers are hard to read off the cloud)
 // ABOVE a 1980→2025 scrubber.
 function SandboxBand({ iv, play }) {
-  const t = play ? play.tick : window.LAST;
-  const m = play && play.macro ? play.macro[Math.max(0, Math.min(window.LAST, Math.round(t)))] : null;
   return (
     <div style={{ display: 'flex', alignItems: 'stretch', height: '100%', width: '100%' }}>
-      <div style={{ width: 224, flexShrink: 0, padding: '14px 0 14px 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 9, borderRight: `1px solid ${CC.border}` }}>
+      <div style={{ width: 224, flexShrink: 0, padding: '16px 0 16px 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, borderRight: `1px solid ${CC.border}` }}>
         {play ? <IvTransport play={play} /> : <Eyebrow style={{ color: CC.ink3 }}>Sandbox</Eyebrow>}
         <div style={{ fontSize: DS.type.micro, color: CC.ink4 }}>Alternate 1980 → 2025 · illustrative</div>
       </div>
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 12, padding: '0 8px 0 28px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'clamp(14px,2.4vw,38px)' }}>
-          <SandboxMetric label="Party separation" value={m ? m.sep : null} color={CC.ink} />
-          <SandboxMetric label="Out-party animus" value={m ? -m.aff : null} color={CC.r} />
-          <SandboxMetric label="Within-party spread" value={m ? m.spread : null} color={CC.ink2} />
-          <SandboxMetric label="Mega-identity" value={m ? m.align : null} color={CC.ink2} />
-          <SandboxMetric label="Echo chambers" value={m ? m.mod : null} color={CC.ink2} />
-        </div>
-        {play && <SandboxTimeline play={play} />}
-      </div>
+      {play ? <SandboxAnimusChart play={play} /> : <div style={{ flex: 1 }} />}
     </div>
   );
 }

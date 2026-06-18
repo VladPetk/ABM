@@ -11,58 +11,54 @@ const _alignAt = (t) => macroAt(D.runs.baseline, t, 'identity_alignment');
 // 2016 (status threat, CONTESTED). Copy is truthful to
 // docs/polarization_causal_model.md — no "social media caused it", no "CU drove
 // it", and identity alignment is framed as co-rising with animus, not its cause.
+// The story chapters are the EXTERNAL forces that drove the US ABOVE where the
+// bare engine stalls (see the prologue). Each is graded to the literature
+// (docs/polarization_causal_model.md): elite drift + cable are well-evidenced;
+// the activist ratchet is a mechanism; 2016 status-threat and social-media-as-
+// cause are CONTESTED and worded as such; there is no single cause. No
+// orientation beat (the prologue covers it); mega-identity dropped (a co-rising
+// consequence, ~0.36 emergent, not an independent driver); Citizens United
+// dropped (best-identified studies: null).
 const STORY_BEATS = [
   {
-    tick: 0, title: 'What you’re looking at', short: 'Orientation', layer: 'position', orient: true, landmarks: true,
-    lead: 'Every point on this map is one American.',
-    body: 'Left to right is the economy: who should hold the money and the power. Top to bottom is culture: how fast the country should change. In 1980 — the parties only just beginning to sort along the old racial and regional lines — almost everyone still piles into a single warm cluster near the middle.',
-  },
-  {
-    tick: 42, title: 'The parties pull apart at the top', short: 'Elite drift', layer: 'position',
-    lead: 'The split starts with the politicians, not the public.',
-    body: 'Newt Gingrich’s 1994 takeover hardens Congress into two disciplined teams — and the Republican side moves right faster than Democrats move left. Voters haven’t budged yet; their leaders have. This asymmetric elite drift is the best-evidenced first cause.',
+    tick: 42, title: 'The leaders break first', short: 'Elite drift', layer: 'position',
+    lead: 'The split starts at the top — with the politicians, not the public.',
+    body: 'For more than a decade after 1980 the parties barely move. Then the elites pull apart — Newt Gingrich’s 1994 takeover the sharpest inflection — and the Republican side moves right faster than Democrats move left. This asymmetric elite drift is the best-evidenced first cause. Note what it isn’t: voters don’t so much radicalize as sort — they keep their party and bring their positions into line behind its leaders. It’s the outward shove the engine, left to itself, never produced.',
     metric: (t) => `party separation at ${_sepAt(t).toFixed(2)} — elites lead`,
     data: { label: 'Party separation', valueAt: _sepAt, fmt: (v) => v.toFixed(2), note: 'elites lead', color: 'd' },
   },
   {
-    tick: 48, title: 'Cable picks a side', short: 'Cable', layer: 'position',
+    tick: 48, title: 'A media you never leave', short: 'Cable', layer: 'position',
     lead: 'For the first time, you can build a news diet that never disagrees with you.',
-    body: 'Fox News launches; talk radio is already loud. Nobody’s opinions move overnight — the country just quietly learns to sort itself by what it watches. Of all the media stories, this one carries the strongest causal evidence.',
+    body: 'Talk radio is already loud, the Fairness Doctrine was repealed in 1987, and Fox News launches in 1996. Of all the media stories, partisan cable carries the strongest causal evidence — but it works as an amplifier on people already sorting, deepening the divide rather than starting it. Through the 2000s the sort grinds on quietly: party, ideology, religion and region slowly stack into the same identity.',
     metric: (t) => `out-party warmth still near ${warmthDegAt(t)}°`,
     data: { label: 'Out-party warmth', valueAt: (t) => warmthDegAt(t), fmt: (v) => `${Math.round(v)}°`, note: 'still warm' },
   },
   {
-    tick: 60, title: 'Sorting into mega-identities', short: 'Sorting', layer: 'position',
-    lead: 'Party, ideology, religion and region begin to stack into a single identity.',
-    body: 'This is the quiet master mechanism. People mostly keep their party and move their positions to match it — Democrat and Republican come to mean two whole ways of life. As those identities align, the warmth between the camps drains away. The model’s alignment score climbs from about 0.20 to 0.32 over the run — a ~1.6× rise that tracks the animus without, on its own, causing it.',
-    metric: (t) => `identity alignment ${_alignAt(t).toFixed(2)} and rising`,
-    data: { label: 'Identity alignment', valueAt: _alignAt, fmt: (v) => v.toFixed(2), note: 'stacking rises', color: 'd' },
-  },
-  {
     tick: 84, title: 'The feed everyone blames', short: 'The feed', layer: 'position',
     lead: 'Social media reaches almost everyone — and gets the blame for everything after.',
-    body: 'It’s the famous suspect the data won’t convict: polarization rose fastest among the oldest, least-online Americans, and the big deactivation experiments came back near zero. In this model social media is only a small, contested accelerant — not the cause.',
+    body: 'It’s the famous suspect the data won’t convict. Affective polarization rose fastest among the oldest, least-online Americans — the opposite of what a social-media story predicts — and the big deactivation experiments came back near zero. Here, as in the evidence, the feed is at most a weak, contested accelerant — not the cause.',
     metric: (t) => `party separation at ${_sepAt(t).toFixed(2)} — contested driver`,
     data: { label: 'Party separation', valueAt: _sepAt, fmt: (v) => v.toFixed(2), note: 'contested', color: 'd' },
   },
   {
-    tick: 90, title: 'The base hardens', short: 'The base', layer: 'position',
+    tick: 90, title: 'The base takes the wheel', short: 'The base', layer: 'position',
     lead: 'The activists, not the donors, drag each party toward its edge.',
-    body: 'Primary challenges and a newly-organized base pull the parties outward — the Tea Party hardens the right first. Citizens United lands the same year and gets the credit, but the best-identified studies find no clear polarization effect; here it is only an era marker. The middle keeps thinning.',
+    body: 'Primary challenges and a newly-organized base pull the parties outward — the Tea Party hardens the right first. It works as a ratchet: the most intense activists decide who survives a primary, so officials answer to the edges and the parties keep drifting apart. The middle keeps thinning.',
     metric: (t) => `party separation at ${_sepAt(t).toFixed(2)} — edges harden`,
     data: { label: 'Party separation', valueAt: _sepAt, fmt: (v) => v.toFixed(2), note: 'edges harden', color: 'd' },
   },
   {
     tick: 108, title: 'It stops being about policy', short: 'Animus', layer: 'position',
-    lead: 'A status-threat shock lands, and the middle stops feeling safe to stand in.',
-    body: 'Americans still haven’t moved far apart on the issues — but now they dislike each other, and that matters more than the issues do. The trigger is a contested one: Mutz reads 2016 as status threat; Morgan argues economics mattered too. Either way, the feeling curdles.',
+    lead: 'Dislike, not distance, takes over — and the middle stops feeling safe to stand in.',
+    body: 'Americans still haven’t moved far apart on the issues — but now they dislike each other, and that matters more than the issues do. What lit the 2016 fuse is genuinely contested: Mutz reads it as status threat — high-status groups feeling displaced — while Morgan, re-analyzing the same data, finds economic interests mattered at least as much. Either way, the feeling curdles.',
     metric: (t) => `out-party warmth down to ${warmthDegAt(t)}° — coldest yet`,
     data: { label: 'Out-party warmth', valueAt: (t) => warmthDegAt(t), fmt: (v) => `${Math.round(v)}°`, note: 'coldest yet' },
   },
   {
     tick: 120, title: 'Two Americas', short: 'Two Americas', layer: 'position',
     lead: 'By the pandemic, the two camps no longer share a map — or a set of facts.',
-    body: 'COVID and January 6th harden the sort into two separate masses. Out-party warmth has fallen from the high-50s to around 30° — more than halved — and is near its floor; there isn’t much colder left to go. Forty years earlier they were one crowd; now they can barely speak.',
+    body: 'COVID and January 6th harden the sort into two separate masses. Out-party warmth has fallen from the high-50s to the mid-30s — down by more than a third. Forty years earlier they were one crowd; now they can barely speak.',
     metric: (t) => `out-party warmth bottoms near ${warmthDegAt(t)}°`,
     data: { label: 'Out-party warmth', valueAt: (t) => warmthDegAt(t), fmt: (v) => `${Math.round(v)}°`, note: 'two camps' },
   },

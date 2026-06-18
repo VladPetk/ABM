@@ -101,7 +101,17 @@ _PHASE10_EMPTY_BUNDLE: tuple = ()
 # 0.5 → 0.6 (Combs 2023 direction; conservative magnitude). The
 # asymmetric={0:0.7,1:1.3} from Phase 6 is dropped — Phase 9's post-2016
 # threat-event already encodes the asymmetry endogenously.
-X1_BACKLASH_STRENGTH_BOOSTED = 0.055  # third-pass tuning — there's a sharp non-linearity between 0.05 (Δsep ≈ +0.02 null) and 0.06 (Δsep ≈ +0.35 backfire) caused by the affect-threshold cascade feedback. 0.055 sits in the threshold transition region; measurement establishes whether it lands at clear-but-modest backfire.
+# R-phase R-D (2026-06-18) — re-anchored 0.055 → 0.20 for the THREAT-GATED gate
+# (see `_x1_setup`). The old 0.055 was tuned for the unconditional affect gate
+# (which fired for ~95% of partisans — `x1_gate_probe.py`) and sat in a sharp
+# cascade non-linearity. With threat-gating only the post-2016 threatened subset
+# (~28%) fires, the cascade is tame (smooth strength→Δsep), and the literature
+# wants a NULL aggregate (Guess & Coppock 2020) with a Bail-magnitude CONDITIONAL
+# backfire under active threat (Mutz 2018; Bail 2018). 0.20 lands exactly that:
+# 1990/2000 null (no threat), 2010 release ≈ +0.077 (partial backfire — its window
+# catches the fresh 2016 threat spike), 2020 ≈ +0.025 (threat decayed). Cross-
+# release mean ≈ +0.026 → null. Measured, not authored.
+X1_BACKLASH_STRENGTH_BOOSTED = 0.20
 X1_THREAT_AMPLIFICATION_BOOSTED = 1.5
 X1_IDENTITY_WEIGHT_BOOSTED = 0.6
 X1_EXPOSURE_DURATION_TICKS = 60  # sustained for the counterfactual window
@@ -136,6 +146,21 @@ X4_DIALOGUE_RNG_SEED = 42
 # intervention envelope.
 X6_NEW_INVOLUNTARY_PER_AGENT = 1
 X6_INSTITUTIONS_RNG_SEED = 43
+# R-phase R-C (2026-06-18) — SUSTAINED-institutions durability channel.
+# "Shared neighborhoods and workplaces" are PERSISTENT structural features, so
+# the contact effect must be sustained, not a one-shot dose. The Phase-6 ties +
+# affect/threat reset (above) model the INITIAL contact warming; on their own
+# they decayed to ~9% of the +10y effect by 2025 (R7 affect rest-state +
+# cohort turnover — docs/internal/intervention_durability_findings.md). This is
+# the missing durable channel: a cohort-proof, population-wide cooperative-share
+# FLOOR (env `sandbox_contact_share`) held for the rest of the run, so ongoing
+# shared life keeps muting out-party cooling rather than letting it reassert.
+# Value 1.0 → AffectiveUpdate neg_mute = `cooperative_mute` = 0.5 = the
+# Pettigrew & Tropp 2006 "contact halves prejudice" meta-analytic anchor (NOT a
+# free knob). Measured (5-seed, release 2000): Δaff +10y +0.125 / 2025 +0.078 —
+# DURABLE partial (was +0.079 / +0.017 faded), Δsep ~null. Within the Pettigrew-
+# Tropp envelope (< the +0.30 cap).
+X6_SUSTAINED_CONTACT_FLOOR = 1.0
 
 # X7 — sustained perception-correction campaign (Lees & Cikara 2020;
 # Druckman et al. 2022; Voelkel 2024). Phase 10 third-pass revision:
@@ -213,13 +238,18 @@ def _set_rule_attr(engine, cls_name: str, attr: str, value) -> None:
 def _x1_setup(engine):
     """Phase 10 X1 — cross-partisan exposure environment.
 
-    Turns BacklashRepulsion on at strength 0.05 (Bail 2018 magnitude
-    — both Phase 6 and Phase 10 use this value), boosts
-    `threat_amplification` 1.0 → 1.5 (Combs 2023 mechanism), boosts
-    `AffectiveUpdate.identity_weight` 0.5 → 0.6 (Combs 2023 direction)
-    for ``X1_EXPOSURE_DURATION_TICKS`` ticks. Stores the prior values
-    in ``env.attrs["x1_revert"]`` so ``X1ExposureExpiry`` restores
-    them when the window elapses.
+    R-phase R-D (2026-06-18): the backfire is now THREAT-GATED and re-anchored.
+    Turns BacklashRepulsion on at strength ``X1_BACKLASH_STRENGTH_BOOSTED`` (0.20),
+    boosts `threat_amplification` 1.0 → 1.5 (Combs 2023 mechanism), and sets
+    ``threat_gated = True`` so the backfire fires ONLY for the threatened subset
+    (push ∝ perceived_threat) rather than for the ~95% of partisans who are merely
+    cold (the old unconditional affect gate — `x1_gate_probe.py`). This makes X1
+    faithful to the literature: NULL on average (Guess & Coppock 2020) with a
+    CONDITIONAL Bail-style backfire under active identity/status threat (Mutz
+    2018; Bail 2018), which in the engine means the post-2016 status-threat
+    population — so the backfire is visible only when the exposure window overlaps
+    the 2016 spike (the 2010 release). Prior values are stored in
+    ``env.attrs["x1_revert"]`` so ``X1ExposureExpiry`` restores them at expiry.
 
     ``BacklashRepulsion.strength`` MUST be set to a non-zero value:
     the rule short-circuits at ``if self.strength == 0: return
@@ -252,6 +282,13 @@ def _x1_setup(engine):
             backlash.threat_amplification = float(
                 X1_THREAT_AMPLIFICATION_BOOSTED
             )
+        # R-phase R-D: make the backfire CONDITIONAL on threat (Mutz 2018 /
+        # Combs 2023) — it fires only for the threatened subset, not the ~95%
+        # of partisans who are merely cold. Without this the affect gate is
+        # effectively unconditional in the polarized era (x1_gate_probe.py).
+        if hasattr(backlash, "threat_gated"):
+            reverts.append((backlash, "threat_gated", bool(backlash.threat_gated)))
+            backlash.threat_gated = True
     # MHV S2 T2.4: the dyadic identity-distance valence term is retired on
     # the emergent-constraint path (identity_weight built at 0.0 — identity
     # reaches affect only through the measured alignment). Boosting it to
@@ -277,22 +314,30 @@ X1_SHOW_OTHER_SIDE = Intervention(
     description=(
         "Cross-partisan exposure: programs and feeds that surface "
         "opposing voices, on the theory that seeing the other side "
-        "will humanise them. Phase 10 redesign: drops the Phase 6 "
-        "hard-coded `asymmetric={0:0.7, 1:1.3}` (Phase 9's "
-        "post-2016 threat event already encodes the asymmetry via "
-        "the engine's `threat_amplification` channel — hard-coding "
-        "the dict on top double-counts). During the 4-tick exposure "
-        "window, boosts `BacklashRepulsion.threat_amplification` "
-        "(1.0 → 1.5; Combs 2023 mechanism) and "
-        "`AffectiveUpdate.identity_weight` (0.5 → 0.6; Combs 2023 "
-        "direction) to model exposure activating identity threat."
+        "will humanise them. R-phase redesign: the backfire is "
+        "THREAT-GATED (`BacklashRepulsion.threat_gated`) — it fires "
+        "only for the threatened subset, not every cold partisan — so "
+        "X1 is null on average (Guess & Coppock 2020) with a Bail-"
+        "magnitude conditional backfire under active identity/status "
+        "threat (Mutz 2018; Combs 2023). In the engine that means the "
+        "post-2016 status-threat population, so the backfire is visible "
+        "only when the sustained exposure window overlaps the 2016 "
+        "spike (the 2010 release). Also boosts "
+        "`threat_amplification` 1.0 → 1.5 (Combs 2023). Strength re-"
+        "anchored 0.055 → 0.20 for the gated mechanism."
     ),
     label_kind="intervention",
-    # Phase 10 placeholder — re-bless after measurement against the
-    # Phase 9 ANES-recalibrated engine. Phase 6 bucket preserved
-    # for schema validity; the consolidated bucket test will fail
-    # until re-measurement.
-    effect_buckets={"issue_sorting": "backfire", "affect": "null"},
+    # R-phase R-D re-bless (2026-06-18): backfire → NULL on issue_sorting.
+    # The Phase-10 "backfire" tag came from an UNCONDITIONAL affect gate that
+    # fired for ~95% of partisans — over-claiming Bail 2018 against the scholarly
+    # consensus (Guess & Coppock 2020 found no general backlash; Wood & Porter
+    # 2019 "elusive"). With threat-gating (`_x1_setup`) the backfire is CONDITIONAL
+    # on the post-2016 status-threat population (Mutz 2018; Combs 2023): null on
+    # average — Δsep cross-release ≈ +0.026 (5-seed: 0.000/0.000/+0.077/+0.025 at
+    # 1990/2000/2010/2020) — with a Bail-magnitude PARTIAL backfire visible only at
+    # the 2010 release whose window catches the fresh 2016 threat spike (decade-
+    # varying, like X5). Affect stays null. Measured, not authored.
+    effect_buckets={"issue_sorting": "null", "affect": "null"},
     citation=(
         "Bail et al. 2018 (PNAS 115:9216, cross-partisan Twitter "
         "exposure → ~0.10-0.12 SD shift, asymmetric R-biased); "
@@ -308,12 +353,14 @@ X1_SHOW_OTHER_SIDE = Intervention(
         "party hostility — bringing the camps closer together."
     ),
     predicted_effect=(
-        "Phase 10 hypothesis: Δsep ↑ (backfire), likely larger than "
-        "Phase 6 because repulsion now interacts with "
-        "`IdentityToIdeologyPull`. Δaff ↓ (warmth falls), modulated "
-        "by Phase 9 `saturation=1.0` floor. Falsification: Δsep < 0 "
-        "or Δsep > +1.0 → mechanism reading wrong (Bail effect "
-        "either doesn't survive recalibration, or runaway)."
+        "R-phase hypothesis (threat-gated): Δsep ≈ 0 on average (null — "
+        "Guess & Coppock 2020), with a conditional partial backfire "
+        "(Δsep up to ~+0.10) at the release whose window overlaps the "
+        "2016 threat spike (Mutz 2018 / Bail 2018). Δaff ≈ null. "
+        "Falsification: Δsep cross-release > +0.10 → the gate is still "
+        "firing too broadly; Δsep < −0.05 → exposure reads as helpful "
+        "(threat mechanism inverted); per-release 2010 backfire absent "
+        "→ the threat coupling isn't reaching repulsion."
     ),
     param_bundle=_PHASE10_EMPTY_BUNDLE,  # rule-attr boosts applied in setup
     setup=_x1_setup,
@@ -323,9 +370,35 @@ X1_SHOW_OTHER_SIDE = Intervention(
 # --- X2 — "Fix the algorithm" -----------------------------------------
 
 def _x2_setup(engine):
-    """Phase 10 X2 — zero the algorithmic affect modulator on
-    BoundedConfidenceInfluence. Canonical null lever (Meta-2020 /
-    Guess et al. 2023). No-op if the rule isn't in the pipeline."""
+    """Phase 10 X2 — "fix the algorithm": remove the social-media-driven
+    homophilous affect amplifier on BoundedConfidenceInfluence.
+
+    R-phase faithfulness fix (2026-06-18). On the canonical ``data_fed_media``
+    path the LIVE affect modulator is ``env.attrs["bc_affect_weight"]``, written
+    every tick by ``MediaPenetrationSeries`` from the social-media penetration
+    curve (``inputs.py``); ``BoundedConfidenceInfluence`` reads that env value in
+    *preference* to its own ``.affect_weight`` (``influence.py`` L81). So the
+    Phase-6 lever (set ``self.affect_weight = 0``) was **shadowed** — a complete
+    no-op on the shipped engine (measured exactly 0.000 at every release/horizon;
+    docs/internal/intervention_durability_findings.md). The faithful lever zeroes
+    the *live* channel:
+
+      - ``MediaPenetrationSeries.bc_aw_per_adoption = 0`` → the series writes
+        ``bc_affect_weight = 0`` every tick from release onward (durable, no
+        expiry — a chronological feed is a permanent platform change);
+      - ``env.attrs["bc_affect_weight"] = 0`` for the release tick itself; and
+      - ``self.affect_weight = 0`` for the no-series fallback (pillar parity:
+        ``_find_rule`` no-ops when the series isn't installed and the rule then
+        reads ``self.affect_weight`` — bit-identical to Phase 6 there).
+
+    The macro effect stays ~null (measured ≈ −0.0001 on sep, ≈0 on affect, even
+    when fired at the 2010/2020 social-media peak): the algorithmic channel is
+    *deliberately* weak (media-paradox blindspot #1; Meta-2020 / Allcott 2024
+    null), so removing it changes nothing — but the null is now **earned** (the
+    lever genuinely operates the channel) rather than a wiring artifact.
+    """
+    _set_rule_attr(engine, "MediaPenetrationSeries", "bc_aw_per_adoption", 0.0)
+    engine.env.attrs["bc_affect_weight"] = 0.0
     _set_rule_attr(engine, "BoundedConfidenceInfluence", "affect_weight", 0.0)
 
 
@@ -334,10 +407,16 @@ X2_FIX_ALGORITHM = Intervention(
     label="Fix the algorithm",
     description=(
         "Reset social-media feeds to chronological/non-curated; "
-        "reduce algorithmic recommendation. Phase 10: single-knob "
-        "null lever per Meta-2020 / Guess et al. 2023. The Phase 6 "
-        "`BC.epsilon += 0.2` 'bridging' arm is dropped — Stray "
-        "2022 is a position paper with no measured effect size."
+        "reduce algorithmic recommendation. Zeroes the live "
+        "social-media→`BoundedConfidenceInfluence` affect amplifier "
+        "(`bc_affect_weight`, fed each tick by `MediaPenetrationSeries`). "
+        "R-phase fix: the Phase-6 lever set the rule's own "
+        "`affect_weight`, which the data-fed path shadows, so it was a "
+        "no-op; this zeroes the channel the engine actually reads. The "
+        "result stays ~null — the algorithmic channel is deliberately "
+        "weak (media-paradox / Meta-2020) — but the null is now earned. "
+        "The Phase 6 `BC.epsilon += 0.2` 'bridging' arm is dropped — "
+        "Stray 2022 is a position paper with no measured effect size."
     ),
     label_kind="intervention",
     effect_buckets={"issue_sorting": "null", "affect": "null"},
@@ -770,6 +849,19 @@ def _x6_setup(engine):
         if "perceived_threat" in a.state.attrs:
             a.state.attrs["perceived_threat"] = 0.0
 
+    # R-phase R-C — sustained-institutions durability channel. The above is the
+    # one-shot INITIAL contact warming; without ongoing maintenance it decayed to
+    # ~9% by 2025. Hold a cohort-proof, population-wide cooperative-share floor
+    # (env-level, read by AffectiveUpdate at apply-time → covers cohort-replaced
+    # agents) for the rest of the run, so shared life keeps muting out-party
+    # cooling. Value = the Pettigrew-Tropp "contact halves prejudice" anchor; see
+    # X6_SUSTAINED_CONTACT_FLOOR. max() so it never lowers a higher existing floor
+    # (e.g. R1 contact's 0.15 baseline, or a sandbox dial).
+    engine.env.attrs["sandbox_contact_share"] = max(
+        float(engine.env.attrs.get("sandbox_contact_share", 0.0)),
+        X6_SUSTAINED_CONTACT_FLOOR,
+    )
+
 
 X6_SHARED_INSTITUTIONS = Intervention(
     id="X6_shared_institutions",
@@ -782,7 +874,12 @@ X6_SHARED_INSTITUTIONS = Intervention(
         "/ Lowe 2021 measured envelope) + out-party affect reset + "
         "`threat = 0` reset for treated agents (Mutz 2006). "
         "Phase 9's `saturation=1.0` is hypothesized to cap the "
-        "Phase 7 volume-backfire."
+        "Phase 7 volume-backfire. R-phase fix: those are the INITIAL "
+        "contact warming; shared institutions are persistent, so the "
+        "lever now also holds a cohort-proof, population-wide "
+        "cooperative-share floor (Pettigrew-Tropp 'contact halves "
+        "prejudice' level) for the rest of the run — the contact "
+        "effect now PERSISTS to 2025 instead of decaying."
     ),
     label_kind="intervention",
     # Affect re-grade re-bless (2026-06): measured Δaff +0.217 -> +0.149 (9-seed
@@ -805,6 +902,16 @@ X6_SHARED_INSTITUTIONS = Intervention(
     # +0.089), well under the 0.15 "real" floor. Measured, not authored
     # (phase10_measurement.json). X6 is still the strongest affect lever; the
     # warmer, more-realistic baseline simply leaves it less headroom.
+    # R-PHASE R-C re-measure (2026-06-18) — SUSTAINED-institutions durability
+    # fix (X6_SUSTAINED_CONTACT_FLOOR). The lever now holds a cohort-proof
+    # cooperative-share floor (Pettigrew "halving" anchor) so the contact effect
+    # PERSISTS instead of decaying to ~9% by 2025 (durability blindspot;
+    # docs/internal/intervention_durability_findings.md §7.3). 5-seed +30t
+    # cross-release Δaff +0.133 (per-release +0.098/+0.125/+0.139/+0.168 at
+    # 1990/2000/2010/2020 — partial, only the most-polarized 2020 release tips to
+    # real), and the 2025 durable Δaff is now ~+0.078 (was ~+0.017). Tag stays
+    # "partial" on the cross-release mean. Δsep null (−0.006..−0.008). Measured,
+    # not authored.
     effect_buckets={"issue_sorting": "null", "affect": "partial"},
     citation=(
         "Allport 1954 (The Nature of Prejudice); Pettigrew & Tropp "

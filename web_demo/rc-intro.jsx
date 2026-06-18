@@ -84,12 +84,12 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D }) {
   return (
     <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
       <div style={{ flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px 8px ${LX}` }}>
-        <Eyebrow>An agent-based model · 250 simulated Americans</Eyebrow>
+        <Eyebrow>An agent-based model · 250 simulated people</Eyebrow>
         <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(30px, 3.4vw, 44px)', lineHeight: 1.06, letterSpacing: '-.02em', maxWidth: 520 }}>
           How one crowd became two camps — and what, if anything, could have changed it.
         </h2>
         <p style={{ margin: '20px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
-          Every dot on this map is one simulated American: a position on the
+          Every dot on this map is one simulated person: a position on the
           political compass — economics left to right, culture top to bottom —
           and a place in a web of social ties. Influence travels through the
           ties, not across distance on the map.
