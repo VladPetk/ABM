@@ -71,3 +71,53 @@ sep fully in band) *while forcing the arc 40% less* (fed→earned). The saturati
 lever delivered the 3rd affect cell exactly as the earlier recal predicted. This
 is the re-cal candidate point — a light local fit around it (multi-seed) selects
 the adopted point, then the re-bless cascade. Canonical bit-identical.
+
+## CRITICAL UPDATE — the 5-seed fit + budget overturn the fed→earned premise
+
+The 3-seed A6 was optimistic. At **5 seeds** the frontier (`recal_fit.py`) is:
+
+| config | §11 ANES | affect | party_sep | 2025 sep |
+|---|---|---|---|---|
+| current shipped | 17/24 | 0/5 | 4/5 | 1.082 |
+| **corrections only (no mob cut)** | **20/24** | **3/5** | 4/5 | 1.117 |
+| + 30% mob cut | 20/24 | 2/5 | 4/5 | 1.072 |
+| + 40% mob cut | 19/24 | 2/5 | 3/5 | 1.049 |
+
+**Finding 1 — the corrections carry the whole win.** Fixing the media DIRECTION
+(R5 part A) + the affect mechanism (R7 rest + P3a recal) lifts §11 17→20/24 and
+affect 0→3/5 with **no forcing cut at all** — real fixes to two audit blindspots
+(F6 wrong-direction media; the affect 0/5).
+
+**Finding 2 — fed→earned does NOT work, and measurement proves it.** The honesty
+budget (`recal_budget_check.py`, party_sep free_flowing) across the frontier:
+
+| config | final sep | all-frozen floor | emergent % |
+|---|---|---|---|
+| canonical | 1.082 | 0.574 | 35% |
+| corrections only | 1.119 | 0.570 | 33% |
+| + 30% cut | 1.077 | 0.570 | 35% |
+| + 40% cut | 1.050 | 0.570 | 36% |
+
+Cutting the mob forcing 40% moves the emergent fraction only 33→36%. **Why: the
+all-frozen "emergent" floor freezes EVERY external driver including media, and
+media penetration is itself a FED forcing (`data_fed_media`). So R5's centrifugal
+media shifts sorting from one forcing (mobilization) to another (media) —
+forcing→forcing, not forcing→emergent.** The frozen-1980 loop floor (~0.57) is
+unchanged by the mob cut; cutting only lowers the *forced* top, costing per-decade
+sep fit and affect (3→2) for ~zero honesty gain.
+
+**Consequence — blindspot #7 is NOT resolvable by R5.** The positional rise is
+structurally forcing-driven (the dark-matter finding: the 1980 seed cannot
+self-organize to 2025 sorting). The honest stance: keep the drivers as *realistic
+forcings routed through mechanisms* (mob→loop→PartyPull; media→diet→
+MediaConsumption) — which they are — and report the emergent fraction truthfully
+(~33%), NOT pretend the rise is emergent. R5 part A (media direction) is still a
+real bug-fix; R5 part B (fed→earned) is **abandoned as measured-not-to-work**.
+
+## Revised re-cal recommendation: adopt CORRECTIONS-ONLY
+
+Adopt `corrections only` (R5 media-direction + R7 rest + P3a affect_lr_scale 0.30
++ saturation 1.0 + mild R1; **no mob cut**): §11 20/24, affect 3/5, sep 4/5 — a
+clean improvement over shipped (17/24, 0/5) that fixes the media + affect
+blindspots, with the emergent fraction reported honestly (unchanged ~33%; #7
+stands). Drop the fed→earned mob cut. Then the re-bless cascade + honest docs.
