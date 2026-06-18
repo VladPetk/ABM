@@ -1,8 +1,20 @@
 # Phase 10 — Landing Summary
 
 *Status: shipped. Intervention library (X1–X7) redesigned against
-the Phase 9 ANES-recalibrated engine. Last updated 2026-06-16
-(reality-validation — re-measured on the COMMON-MODE + ECON canonical config).*
+the Phase 9 ANES-recalibrated engine. Last updated 2026-06-18
+(R-phase — re-measured on the R-PHASE canonical config).*
+
+> **✅ R-PHASE — RE-MEASURED on the R-phase canonical config (2026-06-18; methods §5.32).**
+> `ANES_FULL_KWARGS` = `ANES_FULL_RPHASE_KWARGS` (common-mode-econ + R5 media-direction
+> + R7 affect rest + P3a affect recal + mild R1 contact + R8 endogenous mobilization).
+> 9-seed re-measure (`phase10_measurement.json`): **one tag moved — X6 affect
+> `real` → `partial`**, now Δaff **+0.060 / +0.078 / +0.089 / +0.116** (1990/2000/
+> 2010/2020), **all below the 0.15 "real" floor at every decade** (no era is "real"
+> any more — the warmer R-phase baseline leaves a contact lever less out-party animus
+> to undo). **The library now has ZERO "real" levers:** one backfire (X1), one
+> partial-on-affect (X6), five null. All other buckets unchanged (X1 backfire on sep,
+> X2–X5/X7 null). `test_phase6` green. **The boxes below predate the R-phase** — they
+> are the prior re-bless log; read this box as the current shipped state.
 
 > **✅ reality-validation ECON common-mode — RE-MEASURED on the econ-channel canonical
 > config (2026-06-16; methods §5.31).** The reality-validation workstream added a

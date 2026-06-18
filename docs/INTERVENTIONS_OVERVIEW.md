@@ -195,14 +195,17 @@ Malhotra 2016; Martin & Yurukoglu 2017. Broockman & Kalla 2024
 washed out. Direction is consistent with Phase 6's finding (and
 with the model's diet-target-inward-of-centroids artefact) but
 the magnitude lives in the null bucket. **Honest framing (2026-06
-peer-review audit, P6 / F6):** because the diet targets sit *inward*
-of the party centroids, `MediaConsumption` is **centripetal on the
-position axis** — the opposite sign of the Levendusky 2013 /
-DellaVigna-Kaplan / Martin-Yurukoglu polarizing-media literature, so
-*removing* cable nudges separation *up* (the backfire-direction trend),
-not down. The model's polarizing-media effect lives only on the
-**affect** channel (`MediatedAnimus`). This sign-mismatch is flagged
-for R-phase (R5) reconciliation.
+peer-review audit, P6 / F6):** the audit found that, because the diet
+targets sat *inward* of the party centroids, `MediaConsumption` was
+**centripetal on the position axis** — the opposite sign of the
+Levendusky 2013 / DellaVigna-Kaplan / Martin-Yurukoglu polarizing-media
+literature. **FIXED in the R-phase (R5, 2026-06-18; methods §5.32):** the
+shipped canonical now sets `media_centrifugal=0.7`, which sharpens the
+partisan diet onto same-pole outlets so the diet target sits *at/beyond*
+the party pole — media is now **centrifugal (polarizing) on position**,
+matching the literature. (The X3 "quit cable news" Δsep stays in the null
+bucket — removing a now-mildly-polarizing diet is a small effect — but the
+*sign* of the underlying media force is corrected.)
 
 ### 4.4 X4 — Bipartisan dialogue programs
 

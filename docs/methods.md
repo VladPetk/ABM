@@ -1023,12 +1023,16 @@ contact. Out-party affect is now **in band at 2025 (−0.57, was −0.83)** and
 both PASS, up from the failing 17/24 & 15/24. The "0/5" above describes the
 pre-R-phase (`ANES_FULL_COMMONMODE_ECON_KWARGS`) config.
 
-**Intervention re-bless.** The X1–X7 sweeps were re-run on the
-re-graded engine (`phase10_measure`, 9 seeds). One public bucket moved:
-**X6 affect `real` → `partial`** (Δaff +0.218 → +0.149, decade-dependent:
-real at 2020, partial earlier) — the less-polarized re-grounded baseline
-leaves a contact lever less animus to undo. All other buckets hold;
-`test_phase6` green. See `docs/results/phase10_results.md`.
+**Intervention re-bless (R-phase, 2026-06-18).** The X1–X7 sweeps were re-run on
+the R-phase canonical (`phase10_measure`, 9 seeds; `phase10_measurement.json`). One
+public bucket moved: **X6 affect `real` → `partial`** — now Δaff **+0.060/+0.078/
++0.089/+0.116** (1990/2000/2010/2020), **all below the 0.15 "real" floor at every
+decade** (no era is "real" any more; the earlier re-grade had X6 a hair under at
+2020). On the corrected+warmed R-phase baseline (R7 rest + P3a recal + mild R1
+contact) a contact lever has even less out-party animus left to undo. So the
+library now has **zero "real" levers** (one backfire X1, one partial X6, five
+null). All other buckets hold; `test_phase6` green. See
+`docs/results/phase10_results.md`.
 
 ### 5.11 Web-demo sandbox dials — illustrative, not a finding (2026-06)
 
@@ -2263,9 +2267,12 @@ shipped brakes). Provenance: mechanisms **L**, magnitudes **N** (the model's).
 *G1 — generic regime battery* (`validation/audit/layer1_battery.py`): the mechanism
 layer judged across a forcing×restoring matrix on *directional* criteria, **not**
 ANES bands. With the restoring forces on, the coupled layer **polarizes, rests,
-and reverses** as conditions dictate — the audit's net one-way ratchet (#11) is
-broken *as capacity* (the position-reversal leg passes; affect warms back). *G2 —
-US-fit* (the §11 scorecard) is run only after calibration.
+and (on the position axis) reverses** — G1 reaches **2/4** (rise + order pass;
+the position-reversal leg passes, C4 sep peak→end drop ≥0.10). The **affect** leg
+does **not** fully reverse (affect warms to a higher plateau under restoring, it
+doesn't cool-then-warm across the threshold), so the audit's net one-way ratchet
+(#11) is broken *as capacity on position*, partially on affect — not a clean
+end-to-end "reverse." *G2 — US-fit* (the §11 scorecard) is run only after calibration.
 
 **Measured results (measure-then-blessed on `ANES_FULL_RPHASE_KWARGS`).** §11 ANES
 **19/24** (5-seed `phase9_anes_score`) / **18/24** (9-seed realism A2) — both now
@@ -2279,11 +2286,13 @@ warmer baseline a contact lever has less animus to undo; zero "real" levers now)
 self-sustains when the honesty budget freezes the fed drivers (unlike R5's media,
 which is *itself* a fed forcing → shifting sorting media↔mob is forcing→forcing,
 measured to **not** raise emergence). On the shipped `endo_mob_gain=0.15` the
-party_sep emergent fraction rises **0.28 → 0.34**. Sweeping the gain
-(`validation/audit/recal_fit.py`, `recal_budget_check.py`) maps a hard cap:
-fit-compatible emergence tops out **~0.39** — past endo≈0.15 the spiral *front-loads*
-polarization and breaks the per-decade §11 fit; past endo≈2 it runs away to the
-ceiling (bistable positive feedback). **Cause: US polarization's *timing* is
+party_sep emergent fraction rises **0.28 → 0.34** (6-seed `honesty_budget.json`;
+a 2-seed budget-check reads ~0.39 for the same config — seed/freeze-method noise).
+Sweeping the gain (`validation/audit/recal_fit.py`, `recal_budget_check.py`) maps a
+**soft, seed-sensitive fit cap ~0.5–0.56** (endo≈0.25 still scored 18/24 in a
+5-seed re-run): past it the spiral *front-loads* polarization and breaks the
+per-decade §11 fit; past endo≈2 it runs away to the ceiling (bistable positive
+feedback). The shipped 0.15 is a conservative point that keeps the fit comfortably. **Cause: US polarization's *timing* is
 exogenously event-paced** (Gingrich 1994, Fox 1996, Trump 2016), so the magnitude
 *can* be made emergent but the trajectory *shape* requires external pacing. The
 forcing-carried ~0.66 thus **encodes real event timing** — a structural property of

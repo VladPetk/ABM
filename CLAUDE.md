@@ -50,10 +50,9 @@ Integrity test: the mechanism layer is valid *generically* (judged against
 general counterfactuals, not US fit), every Layer-2 input is a mediated forcing
 rather than the answer, and Layer-3 only scales. The honesty budget reports, per
 metric, the mechanism-emergent (L1) vs forcing-carried (L2) split — `party_sep`
-≈ 0.34 emergent / 0.66 forced (R-phase, up from 0.28), with a *measured cap* of
-~0.39: US polarization's timing is event-paced, so the forced share encodes real
-event timing rather than a fixable flaw (blindspots #7, #11; affect is ~0.83
-emergent).
+≈ 0.34 emergent / 0.66 forced (R-phase, up from 0.28), with a soft fit cap ~0.5:
+US polarization's timing is event-paced, so the forced share encodes real event
+timing rather than a fixable flaw (blindspots #7, #11; affect is ~0.83 emergent).
 
 ---
 
@@ -231,16 +230,18 @@ was −0.83; ~83% emergent); intervention buckets re-measured (only X6 moved:
 affect real→partial — zero "real" levers now); web re-exported.
 
 **Blindspot #7 — quantified, not resolved.** The party_sep **emergent fraction
-is ~0.34** (was 0.28; R8 nudged it up). The *measured cap* on fit-compatible
-emergence is **~0.39**: a stronger spiral front-loads polarization and breaks the
+is ~0.34** (6-seed; was 0.28 — R8 nudged it up). Fit-compatible emergence has a
+**soft, seed-sensitive cap ~0.5** (pushable further only by accepting a looser
+per-decade fit): a stronger spiral front-loads polarization and breaks the
 per-decade fit, because **US polarization's TIMING is exogenously event-paced**
 (Gingrich/Fox/Trump) — the magnitude can be emergent, the trajectory shape cannot.
-So ~0.66 of the rise rides calibrated forcings *that encode real event timing* —
-structural, not a fixable flaw (methods §5.29; `model_blindspots.md` #7).
-The one-way ratchet (#11) is **broken as capacity**: the R-phase restoring
-mechanisms make the coupled layer polarize, rest, *and* reverse under a generic
-regime battery (`validation/audit/layer1_battery.py`) — kept near-off in the
-shipped US arc (the US polarized). **Honest open caveat:** the loop's late-period
+So the bulk of the rise rides calibrated forcings *that encode real event timing* —
+structural, not a fixable flaw (methods §5.32; `model_blindspots.md` #7).
+The one-way ratchet (#11) is **partly broken as capacity**: under a generic regime
+battery (`validation/audit/layer1_battery.py`, G1 = 2/4) the R-phase restoring
+mechanisms let the **position** axis peak-then-decline (reverse), while **affect**
+only warms to a higher plateau (doesn't fully reverse) — restoring forces kept
+near-off in the shipped US arc (the US polarized). **Honest open caveat:** the loop's late-period
 *timing* is exogenously calibrated, not out-of-sample predictable (four-cut holdout
 1/3); the single-axis loop over-correlates the compass axes (corr~0.78). The
 pre-R-phase config is preserved as `ANES_FULL_COMMONMODE_ECON_KWARGS`; pre-E5 as
