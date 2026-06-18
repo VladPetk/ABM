@@ -27,23 +27,28 @@ const IV_ORDER = [
 
 // Lay take per intervention (COPY, not numbers — the honest one-line lesson).
 const IV_TAKE = {
-  X1_show_other_side: 'Sustained cross-party exposure activated identity threat and cascaded into a worse split — the classic Bail backfire, played out at population scale.',
+  X1_show_other_side: 'On average it barely moves the split — the feared backfire is real only where exposure lands on active identity threat (the post-2016 window), not for everyone. Null on average, conditional under threat.',
   X2_fix_algorithm: 'Muting the recommender moved nothing — faithful to the Meta-2020 deactivation null.',
   X3_quit_cable_news: 'At a realistic share who actually quit, the population-level effect washes out to nothing.',
   X4_bipartisan_dialogue: 'Dialogue helps the people in the room, but at realistic reach it does not move the country.',
   X5_deprogramming: 'Deradicalising the committed extreme helps the few it reaches — but the organized tail is too thin to move the country, so the aggregate split barely shifts.',
-  X6_shared_institutions: 'Ordinary shared life — neighbourhoods, workplaces, institutions — is the one lever that reliably warms feelings toward the other side.',
+  X6_shared_institutions: 'Ordinary shared life — neighbourhoods, workplaces, institutions — is the one lever that durably warms feelings toward the other side, and the warming holds because the contact keeps going.',
   X7_perception_correction: 'Correcting the perception gap works for the treated — but in a sorted network the corrected view rarely meets the other side, so it never propagates.',
 };
 
 // Extra caveats the audit requires be shown in-UI (§3.4 #6, §5.2).
 const IV_CAVEAT = {
-  X1_show_other_side: 'The backfire magnitude here is this model’s extrapolation to a sustained 20-year policy — roughly 3× Bail’s ~0.1 SD field effect, and exposure can flip helpful when anonymous or structured. Read the direction, not the number.',
+  X1_show_other_side: 'The backfire is threat-gated: it fires only for the identity-threatened (the engine’s post-2016 status-threat population), so it surfaces only when exposure overlaps that window and is null on average — faithful to the contested evidence (Bail 2018 found backfire; Guess & Coppock 2020 found none on average; anonymous exposure can even help, Combs 2023). Read the conditionality, not a single number.',
   X5_deprogramming: 'The engine treats half the organized-faction tail — they leave the faction and their hardened identity is halved. Real-world deradicalization efficacy is itself contested; the null here means the treated tail is too small to move the population, not that exit programs fail the people they reach.',
 };
 
 const RELEASE_YEARS = ['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'];
 const DEFAULT_RELEASE = '2000';
+// Per-intervention default release. X1's backfire is threat-gated (conditional
+// on the engine's post-2016 status-threat window), so it only surfaces at a
+// release whose ~10y window overlaps 2016 — open X1 on 2010 so its conditional
+// backfire is visible on first view. Every other lever opens on the canonical 2000.
+const IV_DEFAULT_RELEASE = { X1_show_other_side: '2010' };
 const HORIZON = 30; // phase10 measurement window (clipped to available length)
 
 const IVMETA = D.interventions;
@@ -244,7 +249,7 @@ function useInterventions() {
   // Reset to the canonical fixed decade on each pick. For interventions whose
   // result is steady across decades the selector is hidden, so this is the one
   // release they run; the decade-dependent ones (X5/X6) re-expose the picker.
-  const pick = (id) => { setSbMode(false); setActiveId(id); setReleaseYear(DEFAULT_RELEASE); };
+  const pick = (id) => { setSbMode(false); setActiveId(id); setReleaseYear(IV_DEFAULT_RELEASE[id] || DEFAULT_RELEASE); };
   const submitGuess = (g) => {
     if (!activeId) return;
     setGuesses((p) => ({ ...p, [activeId]: g }));
