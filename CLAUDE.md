@@ -49,9 +49,11 @@ to measure exactly this separation. (Full statement: [`methods.md` §1.1](docs/m
 Integrity test: the mechanism layer is valid *generically* (judged against
 general counterfactuals, not US fit), every Layer-2 input is a mediated forcing
 rather than the answer, and Layer-3 only scales. The honesty budget reports, per
-metric, the mechanism-emergent (L1) vs forcing-carried (L2) split — currently
-`party_sep` ≈ 0.28 emergent / 0.72 forced, the gap the R-phase is narrowing
-(blindspots #7, #11).
+metric, the mechanism-emergent (L1) vs forcing-carried (L2) split — `party_sep`
+≈ 0.34 emergent / 0.66 forced (R-phase, up from 0.28), with a *measured cap* of
+~0.39: US polarization's timing is event-paced, so the forced share encodes real
+event timing rather than a fixable flaw (blindspots #7, #11; affect is ~0.83
+emergent).
 
 ---
 
@@ -210,26 +212,38 @@ presenting results:
 Time maps via `ticks_per_year = 3` (1 tick ≈ 4 months), anchored to the ANES
 out-party thermometer; the shipped run is ticks `0…135` = 1980 → ~end 2025.
 **Status: Phase 10 complete** (Phase 9 = ANES recalibration; Phase 10 =
-intervention library re-measure on that baseline), **MHV S0–S5 done**, and
-**emergence-recovery E5 done**. The canonical engine substrate is the emergent
+intervention library re-measure on that baseline), **MHV S0–S5 done**,
+**emergence-recovery E5 done**, and the **R-phase (audit-fix + reversibility) done**
+on branch `audit-surface-fixes`. The canonical engine substrate is the emergent
 D=7 build (S2/T2.6). Media coupling is still a **data-fed input series**
-(penetration curves; `data_fed_media`, methods §5.24). The elite channel,
-however, is no longer fed: since **emergence-recovery E5** the canonical
-`ANES_FULL_KWARGS` runs the **endogenous activist→elite→mass loop**
-(`endogenous_elite=True`, `data_fed_elite=False`, the adopted E4 ABC point;
-`abm/rules/activist_elite.py`, methods §5.29), so positional sorting is **written
-by the loop** rather than replaying fed ANES voter centroids. **Blindspot #7 is
-only partly resolved:** the mechanism is endogenous (no fed-series replay), but
-the honesty budget shows only **~0.28** of the party_sep rise is forcing-free —
-**~0.72 rides calibrated forcings** (the activist-mobilization schedule). The
-~1.00 sometimes quoted is *loop-attributable* (the loop is the proximate writer),
-**not** emergent. The re-bless cascade ran on it (ANES scorecard **17/24**,
-realism battery **15/24** — both below the project's own ≥18/24 target; phase-10
-buckets unchanged, web re-exported). **Honest open caveat:** the loop's late-period
-*timing* is an exogenously-calibrated forcing, not out-of-sample predictable —
-the four-cut holdout fails the temporal + instrument cuts (1/3;
-`docs/results/e5_holdout.md`), and the single-axis loop over-correlates the
-compass axes (corr~0.78). The pre-E5 fed config is preserved as
+(penetration curves; `data_fed_media`, methods §5.24) — but since the R-phase its
+*direction* is fixed (centrifugal, audit F6). The elite channel is no longer fed:
+since **emergence-recovery E5** the canonical runs the **endogenous
+activist→elite→mass loop** (`endogenous_elite=True`, `data_fed_elite=False`;
+`abm/rules/activist_elite.py`, methods §5.29). Since the **R-phase** the canonical
+`ANES_FULL_KWARGS` = `ANES_FULL_RPHASE_KWARGS` adds the audit-fix corrections
+(R5 media-direction, R7 affect rest state + P3a affect-magnitude recal, mild R1
+contact) + **R8 endogenous mobilization** (`endo_mob_gain=0.15` — a party's own
+sorting feeds its mobilization, the polarization spiral). **Results (measure-then-
+blessed): §11 ANES 19/24 (5-seed) / 18/24 (9-seed realism) — both now PASS (≥18),
+up from the failing 17/24 & 15/24**; out-party affect now **in band** (2025 −0.57,
+was −0.83; ~83% emergent); intervention buckets re-measured (only X6 moved:
+affect real→partial — zero "real" levers now); web re-exported.
+
+**Blindspot #7 — quantified, not resolved.** The party_sep **emergent fraction
+is ~0.34** (was 0.28; R8 nudged it up). The *measured cap* on fit-compatible
+emergence is **~0.39**: a stronger spiral front-loads polarization and breaks the
+per-decade fit, because **US polarization's TIMING is exogenously event-paced**
+(Gingrich/Fox/Trump) — the magnitude can be emergent, the trajectory shape cannot.
+So ~0.66 of the rise rides calibrated forcings *that encode real event timing* —
+structural, not a fixable flaw (methods §5.29; `model_blindspots.md` #7).
+The one-way ratchet (#11) is **broken as capacity**: the R-phase restoring
+mechanisms make the coupled layer polarize, rest, *and* reverse under a generic
+regime battery (`validation/audit/layer1_battery.py`) — kept near-off in the
+shipped US arc (the US polarized). **Honest open caveat:** the loop's late-period
+*timing* is exogenously calibrated, not out-of-sample predictable (four-cut holdout
+1/3); the single-axis loop over-correlates the compass axes (corr~0.78). The
+pre-R-phase config is preserved as `ANES_FULL_COMMONMODE_ECON_KWARGS`; pre-E5 as
 `ANES_FULL_FED_KWARGS`. I3 (no direct outcome writes outside the delta pipeline)
 is enforced **only for the arc's event handlers** — the lint AST-walks the
 `_event_*`/`_decade_*` functions; the typed input channels (`shocks.py`,

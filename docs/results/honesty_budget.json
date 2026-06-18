@@ -4,38 +4,38 @@
   "metrics": {
     "party_sep": {
       "b0": 0.3427,
-      "b1": 1.0843,
-      "free_flowing": 0.2793,
-      "empirical_input": 0.7207,
-      "empirical_input_value": 0.4929,
-      "fed_positions": -0.1721,
-      "loop_attributable": 1.0587,
-      "forcing": -0.0424
+      "b1": 1.1366,
+      "free_flowing": 0.3414,
+      "empirical_input": 0.6586,
+      "empirical_input_value": 0.46,
+      "fed_positions": -0.1326,
+      "loop_attributable": 1.0514,
+      "forcing": -0.0388
     },
     "affect": {
       "b0": -0.0909,
-      "b1": -0.8092,
-      "free_flowing": 0.9414,
-      "empirical_input": 0.0586,
-      "empirical_input_value": 0.052,
-      "fed_positions": -0.0345,
-      "loop_attributable": 0.0402,
-      "forcing": 0.0689
+      "b1": -0.575,
+      "free_flowing": 0.8258,
+      "empirical_input": 0.1742,
+      "empirical_input_value": 0.1467,
+      "fed_positions": -0.0397,
+      "loop_attributable": 0.1049,
+      "forcing": 0.1556
     },
     "identity_alignment": {
       "b0": 0.2089,
-      "b1": 0.3381,
-      "free_flowing": 0.2836,
-      "empirical_input": 0.7164,
-      "empirical_input_value": 0.2736,
-      "fed_positions": -0.1101,
-      "loop_attributable": 0.9619,
-      "forcing": 0.0323
+      "b1": 0.3438,
+      "free_flowing": 0.3591,
+      "empirical_input": 0.6409,
+      "empirical_input_value": 0.2514,
+      "fed_positions": -0.0811,
+      "loop_attributable": 0.9606,
+      "forcing": 0.0217
     }
   },
   "events_brake": {
-    "full_arc": 1.0843,
-    "no_events": 1.1157,
+    "full_arc": 1.1366,
+    "no_events": 1.1674,
     "survives": true
   }
 }
