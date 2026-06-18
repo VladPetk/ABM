@@ -131,3 +131,44 @@ live affect-mediated position-convergence channel for the joint US-fit re-cal
 (more emergent-position headroom once the forcing is cut in R5). G1 stays 2/4,
 still blocked only by the **affect** leg (flat + reverse). R6 is also position-
 axis, so the affect rest state remains the gating decision before G1 ≥ 3/4.
+
+---
+
+## Update — after R6 (thermostatic feedback) → full R1–R6 stack; affect is the sole gap
+
+R6: a two-signed negative feedback on the party-separation overshoot (homeostat
+around a `reference`; rigid per-party translation → within-party spread
+preserved). Canonical bit-identical; +5 isolation tests.
+
+**Homeostat-vs-metric subtlety (recorded honestly):** R6 *prevents* overshoot, it
+doesn't *reverse* from a peak. At a strong setting (gain 0.6 / ref 0.4) it lowered
+the C4 endpoint to 0.445 but *flattened* the peak-then-decline (sep reversal fell
+0.170 → 0.066) — so it can regress the peak-decline metric while improving the
+*level*. The level is the right lens for a homeostat; the peak-decline metric is
+the right lens for R2/R3. A gentle setting (gain 0.10 / ref 0.4) lowers the level
+AND keeps the reversal visible.
+
+**Full restoring stack R1+R2+R3+R4+R6 (gentle R6):**
+
+| Cell | 2025 party_sep | 2025 affect | sep reversal | affect reversal |
+|---|---|---|---|---|
+| C1 polarizing | 1.065 | −0.834 | — | — |
+| C2 resisted | 0.660 | −0.332 | 0.101 | 0.021 |
+| C3 neutral | 0.236 | −0.767 | — | — |
+| C4 depolarizing | **0.497** | **−0.291** | **0.139** | 0.024 |
+
+**The position axis now behaves like a valid general mechanism — every position
+criterion passes:** rises under forcing (C1), rests without forcing (C3 sep Δ
+−0.054), reverses under restoring (C4 sep reversal 0.139 ≥ 0.10), orders correctly
+(C1 > C2 > C4). **G1 = 2/4, and BOTH failures are now purely the affect axis:**
+- **G1-flat (affect):** C3 affect cools to −0.767 with zero drivers — no rest state.
+- **G1-reverse (affect):** C4 affect plateaus warm (−0.291) but never
+  cools-then-warms (reversal 0.024 < 0.10) — contact offsets cooling, can't reverse it.
+
+**None of R1–R6 fix the affect axis** (R1 contact only offsets to a plateau). The
+gate now isolates a single decision: give `AffectiveUpdate` a **rest state**. The
+G1 diagnostic argues this is structural (no equilibrium), so the principled fix is
+a gated **mean-reversion term** (affect relaxes toward a neutral anchor absent
+drivers, analogous to the FJ ideology anchor) — not merely the P3a rate
+recalibration, which slows cooling but adds no equilibrium. This is the proposed
+**R7** (decision pending sign-off), to be paired with the P3a magnitude tune.

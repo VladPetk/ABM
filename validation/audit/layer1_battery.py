@@ -42,6 +42,7 @@ RESTORING_STRONG = dict(
     xpressure_sorting_damp=0.7, xpressure_affect_damp=0.7,
     bridge_rewire=0.5,  # R3 — cross-cutting tie formation (feeds R1, mixes net)
     bc_affect_weight_floor=0.6,  # R4 — warmth re-opens cross-party BC convergence
+    thermostatic_gain=0.10, thermostatic_reference=0.4,  # R6 — gentle homeostat (lowers equilibrium)
 )
 
 # --- Forcing-down: zero the US-specific EXOGENOUS drivers, keep mechanisms. ---

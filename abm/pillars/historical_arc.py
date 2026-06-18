@@ -851,6 +851,13 @@ def build_engine(
     # warm regime. Default 0.0 → bit-identical. Requires temperature > 0 (true
     # on the arc; the hard-cutoff branch would raise).
     bc_affect_weight_floor: float = 0.0,
+    # ── R-phase R6 — two-signed thermostatic feedback (reversibility_spec.md) ──
+    # Negative feedback on the party-separation overshoot: contracts the two party
+    # clouds toward their midpoint when sep > reference (and apart below it), a
+    # homeostat that preserves within-party spread. Turns the FED econ thermostat
+    # (#9) into a genuine feedback. gain 0.0 → not installed → bit-identical.
+    thermostatic_gain: float = 0.0,
+    thermostatic_reference: float = 0.6,
     # ── MHV S3 (T3.2) — data-fed elite/party-position channel ─────────────────
     # When True, the scheduled `EliteDrift` is replaced by a `PartyCentroidSeries`
     # input rule (abm/pillars/inputs.py) that sets env.attrs["parties"][pid] each
@@ -2008,6 +2015,16 @@ def build_engine(
             else float(economic_common_mode_amplitude)
         )
         env_rules.append(CommonModeEconomic(amplitude=_econ_amp))
+
+    # R-phase R6 — two-signed thermostatic feedback on the party-separation
+    # overshoot (reversibility_spec.md). Runs LAST so it reads the post-loop,
+    # post-common-mode centroids. Installed only when thermostatic_gain > 0 →
+    # otherwise absent from the pipeline → bit-identical.
+    if thermostatic_gain > 0.0:
+        from ..rules.thermostatic_feedback import ThermostaticFeedback
+        env_rules.append(ThermostaticFeedback(
+            gain=float(thermostatic_gain),
+            reference=float(thermostatic_reference)))
 
     # Sanity: at most one instance per class.
     seen: set[str] = set()
