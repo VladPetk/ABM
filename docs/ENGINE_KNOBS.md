@@ -372,6 +372,27 @@ of the static ~0 cohort base — the identity-side twin of the Phase-9
 *toward* the ANES 1.04+ target. Landed values from a joint-constraint
 sweep; see [`results/phase10_results.md`](results/phase10_results.md).
 
+### 3.16 R-phase knobs (reversibility / audit-fix; methods §5.32)
+
+The R-phase added gated knobs to existing rules + one new rule. All default to a
+no-op (bit-identical when off). The shipped canonical (`ANES_FULL_RPHASE_KWARGS`)
+turns on the **corrections** + R8; the strong restoring forces (R2/R3/R4/R6) stay
+off — they are the depolarization *capacity* proven in the G1 generic battery
+(`validation/audit/layer1_battery.py`), not shipped brakes.
+
+| Knob (build kwarg) | Rule | Effect | Shipped value |
+|---|---|---|---|
+| `media_centrifugal` | `diet_for_party` (R5) | sharpens partisan diet onto same-pole outlets → media centrifugal (audit F6 fix) | **0.7** |
+| `affect_rest_rate` / `affect_rest_anchor` | `AffectiveUpdate` (R7) | mean-reversion → affect equilibrium (fixes cool-to-floor) | **0.02 / −0.30** |
+| `affect_lr_scale` | `_per_agent_heterogeneity` (P3a) | scales per-agent affect cooling rate + its clip floor | **0.30** |
+| `affect_saturation` | `AffectiveUpdate` (P3a) | override soft-saturation shape (re-enabled under regrade) | **1.0** |
+| `contact_warming` + `contact_coop_frac` / `contact_warm_threshold` / `contact_warm_magnitude` / `contact_coop_share` | `mark_cross_party_cooperative` + `AffectiveUpdate` (R1) | seed cooperative cross-party edges → wake the warming path | **on / 0.3 / −0.6 / 0.04 / 0.15** |
+| `endo_mob_gain` | `ActivistEliteCue` (R8) | endogenous self-mobilization (sorting feeds mobilization; the spiral) → emergent fraction 0.28→0.34 (cap ~0.39) | **0.15** |
+| `xpressure_sorting_damp` / `xpressure_affect_damp` | `PartyPull`+`ConstraintOp` / `AffectiveUpdate` (R2) | cross-pressure damping (capacity) | off (0.0) |
+| `bridge_rewire` | `TieRewiring` (R3) | cross-cutting bridge tie formation (capacity) | off (0.0) |
+| `bc_affect_weight_floor` | `BoundedConfidenceInfluence` (R4) | warmth re-opens cross-party BC convergence (capacity) | off (0.0) |
+| `thermostatic_gain` / `thermostatic_reference` | `ThermostaticFeedback` (R6, new env rule) | two-signed feedback on party-sep overshoot (capacity) | off (0.0) |
+
 ---
 
 ## 4. Historical-arc parameter constants
