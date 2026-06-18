@@ -114,10 +114,41 @@ MediaConsumption) — which they are — and report the emergent fraction truthf
 (~33%), NOT pretend the rise is emergent. R5 part A (media direction) is still a
 real bug-fix; R5 part B (fed→earned) is **abandoned as measured-not-to-work**.
 
-## Revised re-cal recommendation: adopt CORRECTIONS-ONLY
+## DIGGING ON EMERGENCE — R8 (endogenous mobilization) + the definitive cap
 
-Adopt `corrections only` (R5 media-direction + R7 rest + P3a affect_lr_scale 0.30
-+ saturation 1.0 + mild R1; **no mob cut**): §11 20/24, affect 3/5, sep 4/5 — a
-clean improvement over shipped (17/24, 0/5) that fixes the media + affect
-blindspots, with the emergent fraction reported honestly (unchanged ~33%; #7
-stands). Drop the fed→earned mob cut. Then the re-bless cascade + honest docs.
+Per the user's "keep digging on emergence," built **R8** — endogenous
+self-mobilization in the activist→elite→mass loop: a party's own sorting feeds its
+mobilization (`mob_eff = mob_exo + endo_mob_gain·max(0, cent·dir)`), the empirically
+real polarization spiral (Mason 2018). This is the RIGHT fed→earned mechanism (vs
+R5's media, which is itself fed). It reads the *unfrozen* sorting state, so it
+self-sustains when the budget freezes the fed drivers → it genuinely raises the
+emergent (free_flowing) fraction.
+
+**It works — and measurement maps the exact cap.** Frontier (5-seed §11 + 2-seed budget):
+
+| endo_mob_gain | §11 ANES | party_sep cells | emergent % |
+|---|---|---|---|
+| 0.00 (corrections only) | 19/24 | 4/5 | 33% |
+| **0.15** | **18/24 PASS** | 4/5 | **39%** |
+| 0.25 | 17/24 FAIL | 3/5 | 56% |
+| 0.35 | 13/24 | 2/5 | 55% |
+| ≥2.0 | (runaway) | — | >100% (ignites to ceiling) |
+
+**The definitive finding: fit-compatible emergence caps at ~39%.** A positive-
+feedback spiral is bistable (quiescent vs ignite-to-ceiling); the tunable middle
+exists, but past endo≈0.15 the spiral FRONT-LOADS polarization and breaks the
+per-decade §11 fit — because **US polarization's TIMING is exogenously event-paced
+(Gingrich/Fox/Trump), not a spontaneous spiral.** So the magnitude *can* be made
+emergent (R8 reaches the endpoint at any gain), but matching the US *trajectory
+shape* requires external pacing. This QUANTIFIES and EXPLAINS blindspot #7: the
+forcing-carried share is structural (it encodes the real event timing), not a
+fixable flaw. The honest ceiling on emergence-with-fit is ~39%, up from ~33%.
+
+## Final re-cal recommendation: CORRECTIONS + R8@0.15
+
+Adopt R5 media-direction + R7 rest + P3a (affect_lr_scale 0.30 + saturation 1.0) +
+mild R1 + **R8 endo_mob_gain 0.15** (no mob cut): §11 **18/24 PASS**, affect ~2-3/5,
+sep 4/5, **emergent fraction 33→39%** — fixes the media + affect blindspots AND
+ships the genuine (data-supported) self-reinforcement, with #7 honestly quantified
+(cap ~39%, timing exogenous). Then the re-bless cascade + honest docs. (R8 stays a
+tunable knob; the cap is the headline finding.)

@@ -29,8 +29,14 @@ FIXED = dict(
 CANDS = {
     "canonical (shipped)": {},
     "corrections only (no cut)": dict(FIXED, mob_peak=MOB0),
-    "corrections + 30% cut": dict(FIXED, mob_peak=MOB0 * 0.70),
     "corrections + 40% cut": dict(FIXED, mob_peak=MOB0 * 0.60),
+    # R8 — endogenous mobilization feedback: map the ignition curve (positive
+    # feedback → bistable: quiescent vs ignite-to-ceiling). Looking for a stable
+    # middle (floor rises moderately, final stays in band, no runaway).
+    "corr + R8(endo=0.5)": dict(FIXED, mob_peak=MOB0, endo_mob_gain=0.5),
+    "corr + R8(endo=1.0)": dict(FIXED, mob_peak=MOB0, endo_mob_gain=1.0),
+    "corr + R8(endo=1.5)": dict(FIXED, mob_peak=MOB0, endo_mob_gain=1.5),
+    "corr + R8(endo=1.0) + 30% cut": dict(FIXED, mob_peak=MOB0 * 0.70, endo_mob_gain=1.0),
 }
 
 

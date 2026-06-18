@@ -53,11 +53,27 @@ class ActivistEliteCue:
         gain: float = 2.5,
         ceiling: float = 0.65,
         intensity_weight: bool = True,
+        endo_mob_gain: float = 0.0,
     ):
         self.tail_q = float(tail_q)
         self.gain = float(gain)
         self.ceiling = float(ceiling)
         self.intensity_weight = bool(intensity_weight)
+        # R-phase R8 — ENDOGENOUS mobilization feedback (the genuine fed→earned
+        # lever). The leapfrog gain is `gain · mob`, where `mob` is the EXOGENOUS
+        # activist-mobilization schedule (low in 1980 → loop quiescent → low
+        # emergent floor). R8 adds an endogenous term: as a party's mass sorts
+        # (its centroid extremity along the realignment axis grows), the base
+        # SELF-mobilizes — the empirically-real polarization spiral (Mason 2018;
+        # the activist base grows with sorting), independent of the exogenous
+        # schedule. So `mob_eff = mob_exo + endo_mob_gain · max(0, cent·dir)`.
+        # Because this reads the CURRENT (unfrozen) sorting state, it keeps
+        # self-reinforcing even when the budget freezes the exogenous drivers →
+        # it RAISES the emergent (free_flowing) fraction of party_sep, the share
+        # that survives with every fed driver removed. Default 0.0 → no endo
+        # term → bit-identical. Provenance: L (self-reinforcing mobilization /
+        # polarization spiral) + N (the functional form, gain).
+        self.endo_mob_gain = float(endo_mob_gain)
 
     def apply(
         self,
@@ -143,7 +159,16 @@ class ActivistEliteCue:
                 tail_mean = pos[idx].mean(0)
             else:
                 tail_mean = np.average(pos[idx], axis=0, weights=w[idx])
-            g = self.gain * (float(mob.get(pid, 1.0)) if mob else 1.0)
+            mob_exo = float(mob.get(pid, 1.0)) if mob else 1.0
+            # R8 — endogenous self-mobilization: the party's current sorting
+            # (centroid extremity along its realignment axis) feeds back into the
+            # mobilization, so the loop self-sustains independent of the exogenous
+            # schedule. max(0, …) so a party on the wrong side isn't mobilized.
+            mob_eff = mob_exo
+            if self.endo_mob_gain > 0.0:
+                endo = max(0.0, float(cent @ dirv))
+                mob_eff = mob_exo + self.endo_mob_gain * endo
+            g = self.gain * mob_eff
             raw = cent + g * (tail_mean - cent)
             # Saturating elite ceiling — the bounding nonlinearity (E0).
             elite = self.ceiling * np.tanh(raw / self.ceiling)

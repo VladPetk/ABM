@@ -882,6 +882,14 @@ def build_engine(
     # recal found 3/5 needs it for the narrow early-decade bands) requires this
     # override. None → keep the existing build logic → bit-identical.
     affect_saturation: float | None = None,
+    # ── R-phase R8 — endogenous mobilization feedback (the genuine fed→earned) ──
+    # The activist→elite→mass loop's leapfrog is gated by the EXOGENOUS mob
+    # schedule (low 1980 → quiescent → low emergent floor). R8 makes mobilization
+    # partly endogenous: a party's sorting feeds its own mobilization (the
+    # polarization spiral), so the loop self-sustains with the fed drivers frozen
+    # — raising the emergent (free_flowing) fraction of party_sep. 0.0 →
+    # bit-identical. Only active on the endogenous_elite path.
+    endo_mob_gain: float = 0.0,
     # ── R-phase R5 — media-direction fix (reversibility_spec.md; audit F6) ──
     # Sharpen the partisan media diet toward same-pole outlets so the diet target
     # sits at/beyond the party centroid → MediaConsumption becomes centrifugal
@@ -1941,6 +1949,7 @@ def build_engine(
         from ..rules.activist_elite import ActivistEliteCue
         _elite_channel = ActivistEliteCue(
             tail_q=elite_tail_q, gain=elite_gain, ceiling=elite_ceiling,
+            endo_mob_gain=endo_mob_gain,   # R8 (default 0.0 → bit-identical)
         )
     elif data_fed_elite:
         from .inputs import (
