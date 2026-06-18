@@ -57,6 +57,13 @@ CANDS = {
         contact_warming=True, contact_coop_frac=0.5, contact_warm_threshold=-0.6,
         contact_warm_magnitude=0.06, contact_coop_share=0.25,
         media_centrifugal=0.7, mob_peak=MOB_PEAK_CANON * 0.60),
+    # A6 — A4 + the saturation lever re-enabled (the affect_recal_verdict 3/5 cell).
+    "A6_saturation+mobcut40": dict(
+        affect_rest_rate=0.02, affect_rest_anchor=-0.30, affect_lr_scale=0.30,
+        affect_saturation=1.0,
+        contact_warming=True, contact_coop_frac=0.3, contact_warm_threshold=-0.6,
+        contact_warm_magnitude=0.04, contact_coop_share=0.15,
+        media_centrifugal=0.7, mob_peak=MOB_PEAK_CANON * 0.60),
 }
 
 

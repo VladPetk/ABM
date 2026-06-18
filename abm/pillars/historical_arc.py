@@ -877,6 +877,11 @@ def build_engine(
     # blindspot) and its clip floor together. R7 owns the affect EQUILIBRIUM; P3a
     # owns the cooling RATE. 1.0 → bit-identical.
     affect_lr_scale: float = 1.0,
+    # P3a affect-SHAPE: soft saturation (per-encounter delta × (1 − s·w²)). Under
+    # evidence_regrade the build sets saturation 0.0; re-enabling it (the affect
+    # recal found 3/5 needs it for the narrow early-decade bands) requires this
+    # override. None → keep the existing build logic → bit-identical.
+    affect_saturation: float | None = None,
     # ── R-phase R5 — media-direction fix (reversibility_spec.md; audit F6) ──
     # Sharpen the partisan media diet toward same-pole outlets so the diet target
     # sits at/beyond the party centroid → MediaConsumption becomes centrifugal
@@ -1817,8 +1822,9 @@ def build_engine(
             # was a late-decelerator fit to the OLD cold bands and fights the
             # convex collapse the grounded bands want. Off-regrade unchanged.
             saturation=(
-                0.0 if evidence_regrade
-                else (1.0 if anes_knobs_active else 0.0)
+                float(affect_saturation) if affect_saturation is not None
+                else (0.0 if evidence_regrade
+                      else (1.0 if anes_knobs_active else 0.0))
             ),
             # R-phase R2 — cross-pressure damping on cooling (0.0 → bit-identical).
             xpressure_affect_damp=float(xpressure_affect_damp),

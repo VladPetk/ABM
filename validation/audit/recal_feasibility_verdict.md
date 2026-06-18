@@ -54,3 +54,20 @@ extra prereq — a `saturation` (or affect-shape) build knob** — to reach 3/5;
 
 The expensive fit + irreversible re-bless are justified: the joint targets are
 demonstrably reachable, and fed→earned delivers.
+
+## Update — saturation knob added → A6 hits all targets (the re-cal candidate point)
+
+Added the `affect_saturation` build knob (overrides the build's 0.0-under-regrade).
+Candidate **A6** = mob cut 40% + R5 media + R7 rest (rate 0.02, anchor −0.30) + P3a
+(affect_lr_scale 0.30, **saturation 1.0**) + mild R1 contact:
+
+| | §11 ANES | affect cells | party_sep cells | 2025 affect | 2025 sep |
+|---|---|---|---|---|---|
+| current shipped | 17/24 | 0/5 | — | −0.83 | 1.08 |
+| **A6 (3-seed)** | **21/24 PASS** | **3/5** | **5/5** | −0.579 | 1.055 |
+
+A6 **beats the current shipped config on every axis** (§11 17→21, affect 0→3/5,
+sep fully in band) *while forcing the arc 40% less* (fed→earned). The saturation
+lever delivered the 3rd affect cell exactly as the earlier recal predicted. This
+is the re-cal candidate point — a light local fit around it (multi-seed) selects
+the adopted point, then the re-bless cascade. Canonical bit-identical.

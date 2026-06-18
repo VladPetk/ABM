@@ -105,3 +105,13 @@ def test_p3a_affect_lr_scale_linear():
     k = dict(ANES_FULL_KWARGS); k.update(affect_lr_scale=0.5)
     half = _mean_partisan_lr(build_engine(seed=0, **k))
     assert abs(half / base - 0.5) < 0.05, f"expected ~0.5x, got {half / base:.3f}"
+
+
+def test_p3a_affect_saturation_override():
+    """P3a affect-shape: affect_saturation overrides the build's saturation (which
+    is 0.0 under evidence_regrade). None → keep build logic → bit-identical."""
+    base = _affect_rule(build_engine(seed=0, **ANES_FULL_KWARGS))
+    assert base.saturation == 0.0   # evidence_regrade default
+    k = dict(ANES_FULL_KWARGS); k.update(affect_saturation=1.0)
+    on = _affect_rule(build_engine(seed=0, **k))
+    assert on.saturation == 1.0
