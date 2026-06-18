@@ -1014,6 +1014,15 @@ restores affect to band with **zero** collateral on the position metrics — fol
 into the R-phase re-bless. Scorecard:
 `docs/results/phase9_anes_score_anes_full.json`.
 
+**RESOLVED (2026-06-18, R-phase; see §5.32).** The recalibration shipped: the
+canonical `ANES_FULL_RPHASE_KWARGS` adds **R7** (affect rest state — a
+mean-reversion equilibrium, the real fix for the cool-to-floor) + **P3a**
+(`affect_lr_scale` 0.30 + `affect_saturation` 1.0 re-enabled) + mild **R1**
+contact. Out-party affect is now **in band at 2025 (−0.57, was −0.83)** and
+~0.83 emergent; the §11 gate clears at **19/24** (5-seed) / **18/24** (9-seed) —
+both PASS, up from the failing 17/24 & 15/24. The "0/5" above describes the
+pre-R-phase (`ANES_FULL_COMMONMODE_ECON_KWARGS`) config.
+
 **Intervention re-bless.** The X1–X7 sweeps were re-run on the
 re-graded engine (`phase10_measure`, 9 seeds). One public bucket moved:
 **X6 affect `real` → `partial`** (Δaff +0.218 → +0.149, decade-dependent:
@@ -2225,6 +2234,61 @@ synthesis (the "Great Awokening" contributing set + the unresolved direction/art
 debates), and the honest HYBRID fix direction in
 [`docs/results/cultural_sorting_analysis.md`](results/cultural_sorting_analysis.md).
 Not yet built.
+
+---
+
+### 5.32 R-phase — audit-fix corrections, reversibility capacity, and the emergence cap (2026-06-18)
+
+The R-phase (branch `audit-surface-fixes`) acts on the 2026-06 peer-review audit
+([`results/engine_peer_review_audit.md`](results/engine_peer_review_audit.md)). It
+adds, all gated + isolation-tested (the `compass_basic` pattern, closing the audit's
+missing-isolation gap) and bit-identical until the canonical flip, the following
+mechanisms. The shipped canonical (`ANES_FULL_RPHASE_KWARGS`) turns on the
+**corrections** + R8; the strong position-restoring forces stay off (capacity, not
+shipped brakes). Provenance: mechanisms **L**, magnitudes **N** (the model's).
+
+| Mech | What | Knobs (shipped) | Lit anchor |
+|---|---|---|---|
+| **R1** | contact→affect warming (wakes the dead positive-valence path) | `contact_warming`, `contact_coop_frac` 0.3, `contact_coop_share` 0.15 | Allport 1954; Pettigrew & Tropp 2006 |
+| **R2** | cross-pressure damping on `PartyPull`+`ConstraintOp` | off (capacity) | Lipset & Rokkan 1967; Mutz 2002; Mason 2018 |
+| **R3** | cross-cutting bridge tie formation in `TieRewiring` | off (capacity) | Mutz & Mondak 2006 |
+| **R4** | BC revival (affect_weight floor: warmth re-opens cross-party BC) | off (capacity) | Hegselmann-Krause 2002; Phase 5 affect mod |
+| **R5** | media-direction fix — centrifugal partisan diet (was centripetal, audit F6) | `media_centrifugal` 0.7 | Levendusky 2013; Martin & Yurukoglu 2017 |
+| **R6** | two-signed thermostatic feedback on party-sep overshoot | off (capacity) | Wlezien 1995; Erikson-MacKuen-Stimson 2002 |
+| **R7** | affect rest state (mean-reversion → equilibrium; fixes the cool-to-floor) | `affect_rest_rate` 0.02, `anchor` −0.30 | Iyengar et al. 2019 (animus sustained by exposure) |
+| **P3a** | affect-magnitude recalibration (`affect_lr_scale` 0.30 + `saturation` 1.0) | on | affect_recal_verdict.md (over-cooling fix) |
+| **R8** | endogenous mobilization feedback (sorting feeds mobilization — the spiral) | `endo_mob_gain` 0.15 | Mason 2018 (self-reinforcing sorting) |
+
+**The two-gate validation (de-circularizes audit F2; `reversibility_spec.md` §4).**
+*G1 — generic regime battery* (`validation/audit/layer1_battery.py`): the mechanism
+layer judged across a forcing×restoring matrix on *directional* criteria, **not**
+ANES bands. With the restoring forces on, the coupled layer **polarizes, rests,
+and reverses** as conditions dictate — the audit's net one-way ratchet (#11) is
+broken *as capacity* (the position-reversal leg passes; affect warms back). *G2 —
+US-fit* (the §11 scorecard) is run only after calibration.
+
+**Measured results (measure-then-blessed on `ANES_FULL_RPHASE_KWARGS`).** §11 ANES
+**19/24** (5-seed `phase9_anes_score`) / **18/24** (9-seed realism A2) — both now
+PASS (≥18), up from the failing 17/24 & 15/24. Out-party affect is now **in band**
+at 2025 (−0.57, was −0.83; ~0.83 emergent). Intervention buckets re-measured
+(`phase10_measurement.json`): only **X6** moves — affect **real→partial** (with the
+warmer baseline a contact lever has less animus to undo; zero "real" levers now).
+
+**The emergence cap (the headline finding; quantifies blindspot #7).** R8 is the
+*genuine* fed→earned lever — a party's own sorting feeds its mobilization, so it
+self-sustains when the honesty budget freezes the fed drivers (unlike R5's media,
+which is *itself* a fed forcing → shifting sorting media↔mob is forcing→forcing,
+measured to **not** raise emergence). On the shipped `endo_mob_gain=0.15` the
+party_sep emergent fraction rises **0.28 → 0.34**. Sweeping the gain
+(`validation/audit/recal_fit.py`, `recal_budget_check.py`) maps a hard cap:
+fit-compatible emergence tops out **~0.39** — past endo≈0.15 the spiral *front-loads*
+polarization and breaks the per-decade §11 fit; past endo≈2 it runs away to the
+ceiling (bistable positive feedback). **Cause: US polarization's *timing* is
+exogenously event-paced** (Gingrich 1994, Fox 1996, Trump 2016), so the magnitude
+*can* be made emergent but the trajectory *shape* requires external pacing. The
+forcing-carried ~0.66 thus **encodes real event timing** — a structural property of
+mass polarization at this layer, not a fixable flaw. Pre-R-phase config preserved
+as `ANES_FULL_COMMONMODE_ECON_KWARGS`.
 
 ---
 
