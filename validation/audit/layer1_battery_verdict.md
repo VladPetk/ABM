@@ -64,3 +64,32 @@ This is exactly the diagnostic the tripartite framing predicts:
 
 Thresholds in `layer1_battery.py` / spec §4 are pre-registered but provisional
 (lock at AGREE). The point of pre-registering: they can't be slid to fit.
+
+---
+
+## Update — after the R2 retarget (PartyPull damping) → G1 2/4
+
+Extended cross-pressure damping to `PartyPull` (the actual `party_sep` driver),
+driven by the same `xpressure_sorting_damp` knob (so R2 now damps both sorting
+rules; ConstraintOp kept). Canonical seed-0 2025 endpoint **bit-identical**
+(1.065353525 / −0.833695686 / 0.791709610); +3 isolation tests; pillar pin +
+canonical guards green.
+
+| Cell | 2025 sep (was → now) | 2025 affect |
+|---|---|---|
+| C1 polarizing | 1.065 (unchanged) | −0.834 |
+| C2 resisted | 1.072 → **0.880** | −0.473 |
+| C4 depolarizing | 0.776 → **0.568** | −0.393 |
+
+- **G1-order now PASS**: sep C1 1.065 > C2 0.880 > C4 0.568 — restoring finally
+  has positional traction (cut C2/C4 sep by ~0.18–0.21). The probe's "R2 doesn't
+  bite on party_sep" is fixed.
+- **G1-reverse still FAIL but close**: C4 sep peak→end drop 0.035 → **0.093**
+  (threshold 0.10). R4/R5/R6 should push it over. Affect in C4 cools to a warmer
+  *plateau* (−0.393) rather than reversing (cool-then-warm), so the affect
+  reverse leg needs contact to eventually *dominate* cooling (stronger R1 /
+  the P3a rest state), not just offset it.
+
+**G1 = 2/4** (rise, order PASS; flat, reverse FAIL). Remaining gaps map exactly
+to the unbuilt work: flat-on-affect → R1 + P3a (affect rest state); reverse →
+R4 (BC revival) + R5 (media fed→earned) + R6 (thermostatic).

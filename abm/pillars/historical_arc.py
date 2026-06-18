@@ -1719,7 +1719,7 @@ def build_engine(
             float(tier_c_party_pull_strength)
             if tier_c_party_pull_strength is not None
             else 0.07
-        )),
+        ), xpressure_damp=float(xpressure_sorting_damp)),
         # Phase 9 Tier C: FactionAnchor — inert until events tag agents.
         # Self-gates on the `faction_center` attr (no-op at t=0 and
         # no-op for any agent without the attr). Placed AFTER PartyPull
