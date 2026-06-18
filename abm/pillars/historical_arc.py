@@ -837,6 +837,13 @@ def build_engine(
     # rises, so the polarizing forces dominate late-arc endogenously.
     xpressure_sorting_damp: float = 0.0,
     xpressure_affect_damp: float = 0.0,
+    # ── R-phase R3 — cross-cutting tie formation (reversibility_spec.md) ──
+    # Probability a rewiring agent forms its new tie to a cross-party "bridge"
+    # (closest cross-party candidate, flagged cooperative so R1 warming can fire)
+    # instead of the homophilous closest. Supplies the cross-party ties contact
+    # needs + lowers echo-chamber modularity (Mutz & Mondak 2006). Default 0.0 →
+    # no bridge AND no extra rng draw → bit-identical.
+    bridge_rewire: float = 0.0,
     # ── MHV S3 (T3.2) — data-fed elite/party-position channel ─────────────────
     # When True, the scheduled `EliteDrift` is replaced by a `PartyCentroidSeries`
     # input rule (abm/pillars/inputs.py) that sets env.attrs["parties"][pid] each
@@ -1930,6 +1937,7 @@ def build_engine(
             # changed, so the pillar drift-guard stays bit-identical.
             rewire_rate=0.03 * sandbox_rewire_mult,   # sandbox dial (1.0 = no-op)
             affect_weight_rewire=TR_AFFECT_WEIGHT_REWIRE,
+            p_bridge_rewire=float(bridge_rewire),   # R3 (default 0.0 = off)
         ),
         ResidentialMigration(
             migration_rate=RESIDENTIAL_MIGRATION_RATE_DEFAULT,

@@ -37,6 +37,8 @@ class TieRewiring:
         w_soc: float = 1.0,
         n_candidates: int = 10,
         affect_weight_rewire: float = 0.0,
+        p_bridge_rewire: float = 0.0,
+        bridge_cooperative: bool = True,
     ):
         self.rewire_rate = rewire_rate
         self.w_ideo = w_ideo
@@ -46,6 +48,18 @@ class TieRewiring:
         # preserves Phase 4 behaviour. The pillar opts in at S2+ via
         # TR_AFFECT_WEIGHT_REWIRE in calm_to_camps.py.
         self.affect_weight_rewire = affect_weight_rewire
+        # R-phase R3 — cross-cutting tie formation. With probability
+        # p_bridge_rewire, a rewiring agent forms its NEW tie to a cross-party
+        # "bridge" (the closest cross-party candidate) instead of the
+        # homophilous closest. Supplies the cross-party ties R1 contact warming
+        # needs and lowers echo-chamber modularity (Mutz & Mondak 2006). Bridges
+        # are flagged cooperative (bridge_cooperative) so the AffectiveUpdate
+        # warming path can fire on them. Self-limiting: voluntary bridges are
+        # erodable by the drop ranking (cold out-party ties score high to drop)
+        # unless kept warm (affect_weight_rewire). Default 0.0 → no bridge AND
+        # NO extra rng draw (short-circuit below) → byte-identical.
+        self.p_bridge_rewire = float(p_bridge_rewire)
+        self.bridge_cooperative = bool(bridge_cooperative)
 
     def _drop_score(self, agent, j, by_id):
         """Score a tie for dropping. Higher = more droppable."""
@@ -111,8 +125,22 @@ class TieRewiring:
             k = min(self.n_candidates, len(pool))
             idxs = rng.integers(0, len(pool), size=k)
             cand = [pool[int(i)] for i in idxs]
-            new = min(
-                cand,
-                key=lambda x: combined_distance(a, x, self.w_ideo, self.w_soc),
-            )
-            network.add_edge(a.id, new.id)
+            # R3: with prob p_bridge_rewire, deliberately form a cross-party
+            # bridge instead of the homophilous closest. Short-circuit keeps the
+            # rng stream identical when off (p_bridge_rewire <= 0 → no draw).
+            new = None
+            coop = False
+            if self.p_bridge_rewire > 0.0 and rng.random() < self.p_bridge_rewire:
+                own_party = a.state.attrs.get("party")
+                cross = [
+                    x for x in cand
+                    if x.state.attrs.get("party") not in (None, own_party)
+                ]
+                if cross:
+                    new = min(cross, key=lambda x: combined_distance(
+                        a, x, self.w_ideo, self.w_soc))
+                    coop = self.bridge_cooperative
+            if new is None:
+                new = min(cand, key=lambda x: combined_distance(
+                    a, x, self.w_ideo, self.w_soc))
+            network.add_edge(a.id, new.id, cooperative=coop)

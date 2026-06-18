@@ -93,3 +93,26 @@ canonical guards green.
 **G1 = 2/4** (rise, order PASS; flat, reverse FAIL). Remaining gaps map exactly
 to the unbuilt work: flat-on-affect → R1 + P3a (affect rest state); reverse →
 R4 (BC revival) + R5 (media fed→earned) + R6 (thermostatic).
+
+---
+
+## Update — after R3 (cross-cutting bridge formation) → still G1 2/4, but reverse now affect-only
+
+R3: `TieRewiring` forms cross-party "bridge" ties (gated `bridge_rewire`), flagged
+cooperative so they feed R1. Canonical bit-identical; +5 isolation tests.
+
+| Cell | sep (post-R2 → post-R3) | affect (→) |
+|---|---|---|
+| C2 resisted | 0.880 → **0.789** | −0.473 → −0.352 |
+| C4 depolarizing | 0.568 → **0.519** | −0.393 → −0.292 |
+
+- **C4 sep reversal 0.093 → 0.169** — crosses the 0.10 bar. The **position leg of
+  G1-reverse now passes** (peak 0.688 @ tick 24 → 0.519). Bridges mix the network
+  so BC/ConstraintOp average across party, and feed R1 (affect much warmer).
+- **G1-reverse is now blocked ONLY by the affect leg** (affect warm-reversal
+  0.023 < 0.10). Affect cools to a warm *plateau* (−0.292) but never
+  cools-then-warms — because `AffectiveUpdate` has no rest state, contact only
+  *offsets* the cooling to a higher floor, it can't reverse it. **So the affect
+  rest-state fix (mean-reversion mechanism and/or P3a recalibration) is on the
+  critical path for G1-reverse, not just G1-flat.** R4/R6 are position-axis and
+  won't move this leg.
