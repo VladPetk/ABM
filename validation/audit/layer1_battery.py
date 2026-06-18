@@ -36,6 +36,16 @@ if SNAPS[-1] != 135:
 # Today: R1 (contact->affect warming) + R2 (cross-pressure damping). The probe
 # showed R2 hits ConstraintOp not PartyPull, so it barely touches party_sep --
 # until R2 is retargeted + R4/R5/R6 added, C4 will NOT meet G1-reverse on sep.
+# BASE = always-on MECHANISM-LAYER corrections (not regime-varying). R7 (affect
+# rest state) belongs here: a valid affect mechanism HAS an equilibrium in every
+# regime, so it must be on even in C3 (where G1-flat is measured). (R5's media-
+# direction fix, when built, will also live here — a correction, not a knob.)
+BASE = dict(
+    affect_rest_rate=0.015, affect_rest_anchor=-0.15,  # R7 — affect equilibrium
+)
+
+# RESTORING = regime-varying restoring FORCES (a society can have more/less of
+# these). Applied only to C2/C4.
 RESTORING_STRONG = dict(
     contact_warming=True, contact_coop_frac=0.8, contact_warm_threshold=-1.0,
     contact_warm_magnitude=0.10, contact_coop_share=0.6,
@@ -70,7 +80,8 @@ CONFIGS = [
 
 def run(extra):
     k = dict(ANES_FULL_KWARGS)
-    k.update(extra)
+    k.update(BASE)      # always-on mechanism-layer corrections (R7)
+    k.update(extra)     # per-regime forcing / restoring
     eng = build_engine(seed=SEED, **k)
     sched = build_schedule(
         factional_seeding=k.get("factional_seeding", False),
@@ -148,11 +159,18 @@ def main():
           f"-> {'PASS' if order else 'FAIL'}")
     n_pass = sum([rise, flat, reverse, order])
     print(f"\n  G1 SUMMARY: {n_pass}/4 criteria pass "
-          f"(G1-ablation is a separate per-mechanism pass, run once R3-R6 land).")
+          f"(G1-ablation is a separate per-mechanism pass).")
+    # Diagnostic split: which AXIS blocks each failing criterion.
+    if not flat:
+        blk = "affect" if abs(da3) > 0.08 and abs(ds3) <= 0.10 else "both"
+        print(f"  NOTE flat: blocked by {blk} (C3 sep Δ {ds3:+.3f}, affect Δ {da3:+.3f}).")
     if not reverse:
-        print("  NOTE: G1-reverse FAIL is EXPECTED at this baseline — R1+R2 do not "
-              "yet bring party_sep down (R2->ConstraintOp, not PartyPull). This is "
-              "the gap R2-retarget + R4/R5/R6 must close.")
+        leg = ("affect leg" if drop_s >= 0.10 and drop_a < 0.10
+               else ("sep leg" if drop_a >= 0.10 else "both legs"))
+        print(f"  NOTE reverse: blocked by {leg} (sep {drop_s:+.3f}, affect {drop_a:+.3f}). "
+              "Position reverses via R2+R3(+R6); the affect leg needs R7 (rest "
+              "state) PAIRED with the P3a affect-magnitude re-cal — R7 alone "
+              "cannot overcome the canonical over-cooling.")
 
 
 if __name__ == "__main__":

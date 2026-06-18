@@ -172,3 +172,42 @@ a gated **mean-reversion term** (affect relaxes toward a neutral anchor absent
 drivers, analogous to the FJ ideology anchor) — not merely the P3a rate
 recalibration, which slows cooling but adds no equilibrium. This is the proposed
 **R7** (decision pending sign-off), to be paired with the P3a magnitude tune.
+
+---
+
+## Update — after R7 (affect rest state) → Layer-1 mechanism set COMPLETE; affect needs R7 + P3a
+
+R7: `AffectiveUpdate` gains a mean-reversion term — out-party warmth relaxes
+toward `affect_rest_anchor` at `affect_rest_rate`/tick (gated; isolation test
+proves a finite cold equilibrium instead of the floor). It is a **mechanism-layer
+correction** (affect *should* have an equilibrium), so the battery applies it in a
+`BASE` group ON in every regime — including C3 where G1-flat is measured.
+Canonical bit-identical; +6 isolation tests (46 R-phase tests total).
+
+**Full set R1–R7 (BASE: R7 gentle; RESTORING: R1–R4,R6):**
+
+| Cell | 2025 sep | 2025 affect | sep reversal | affect reversal |
+|---|---|---|---|---|
+| C1 polarizing | 1.062 | −0.701 | — | — |
+| C2 resisted | 0.656 | −0.311 | 0.101 | 0.017 |
+| C3 neutral | 0.284 | −0.582 | — | — |
+| C4 depolarizing | 0.498 | −0.285 | 0.139 | 0.019 |
+
+- **G1 = 2/4** (rise, order PASS), and the position axis fully validates.
+- **R7 directionally fixes the affect rest** (C3 affect Δ −0.621 → −0.430; C4
+  affect much warmer) but does **not** fully clear G1-flat/reverse-affect.
+- **Why, and the handoff:** with the *canonical* affect_lr (the documented
+  over-cooling blindspot), no single R7 rate puts C1 at ≤−0.6 *and* C3 near the
+  anchor — C3 retains nonzero intrinsic cooling that only the **P3a magnitude
+  recalibration** (reduce affect_lr / animus_mult) removes. **R7 is the mechanism
+  (equilibrium); P3a is the magnitude. The affect axis needs BOTH.** At rate 0.03
+  R7 over-warmed C1 (broke G1-rise); rate 0.015 preserves G1-rise but leaves C3/C4
+  affect short — i.e. the cooling magnitude, not the mechanism, is the residual.
+
+**Conclusion: the Layer-1 mechanism set (R1–R7) is complete.** The position axis
+behaves like a valid general model on every G1 criterion. The affect axis has the
+right mechanisms (R1 warming + R7 rest); clearing its two G1 legs is now a
+**calibration** task (P3a), folded into the joint re-cal — not a missing mechanism.
+The remaining build decision is **R5** (media direction + fed→earned), flagged for
+sign-off, after which the joint re-calibration runs (R5 + P3a + the R-knob fit +
+G2 US-fit + the falsification battery).

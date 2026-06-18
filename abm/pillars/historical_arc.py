@@ -858,6 +858,14 @@ def build_engine(
     # (#9) into a genuine feedback. gain 0.0 → not installed → bit-identical.
     thermostatic_gain: float = 0.0,
     thermostatic_reference: float = 0.6,
+    # ── R-phase R7 — affect rest state / mean-reversion (reversibility_spec.md) ──
+    # AffectiveUpdate has no equilibrium (G1 diagnostic): with no drivers affect
+    # spirals to the floor, and under restoring it only plateaus. This relaxes
+    # out-party warmth toward `affect_rest_anchor` at `affect_rest_rate`/tick, so
+    # cooling balances reversion at a finite level and warming can carry affect
+    # back. rate 0.0 → bit-identical.
+    affect_rest_rate: float = 0.0,
+    affect_rest_anchor: float = 0.0,
     # ── MHV S3 (T3.2) — data-fed elite/party-position channel ─────────────────
     # When True, the scheduled `EliteDrift` is replaced by a `PartyCentroidSeries`
     # input rule (abm/pillars/inputs.py) that sets env.attrs["parties"][pid] each
@@ -1792,6 +1800,9 @@ def build_engine(
             ),
             # R-phase R2 — cross-pressure damping on cooling (0.0 → bit-identical).
             xpressure_affect_damp=float(xpressure_affect_damp),
+            # R-phase R7 — affect rest state (0.0 → bit-identical).
+            affect_rest_rate=float(affect_rest_rate),
+            affect_rest_anchor=float(affect_rest_anchor),
         ),
         # Affect re-grade: contact-independent (parasocial) animus channel.
         # No-op unless evidence_regrade (lr>0) AND mediated_animus_weight>0
