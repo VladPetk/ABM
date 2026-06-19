@@ -57,7 +57,8 @@ class IdentityToIdeologyPull:
         env: Environment,
         rng: np.random.Generator,
     ) -> StateDelta:
-        if self.strength_x == 0.0 and self.strength_y == 0.0:
+        rac_pull_y = float(env.attrs.get("racialization_pull_y", 0.0))
+        if self.strength_x == 0.0 and self.strength_y == 0.0 and rac_pull_y == 0.0:
             return StateDelta()
         identities = agent.state.attrs.get("identities")
         if identities is None or len(identities) == 0:
@@ -90,6 +91,15 @@ class IdentityToIdeologyPull:
             float(sy_override) if sy_override is not None
             else self.strength_y
         )
+        # Racialization onset (spec §10): a time-profiled cultural-axis pull added
+        # ON TOP of the baseline Mason channel (baseline = generic identity
+        # sorting; this = the extra post-2008 racial spillover, Tesler). The peak
+        # `racialization_pull_y` and the per-tick 2008->2016 ramp
+        # `racialization_salience_y` (written by RacializationSalience) are absent
+        # on every existing path → +0 → bit-identical. Routed through the same
+        # coupling + FJ stubbornness damping below.
+        eff_strength_y = eff_strength_y + rac_pull_y * float(
+            env.attrs.get("racialization_salience_y", 0.0))
         d = np.array([
             coupling * self.strength_x * signal,
             coupling * eff_strength_y * signal,

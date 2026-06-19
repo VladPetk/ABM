@@ -152,6 +152,37 @@ PRESETS = {
 # Reconcile to the single source of truth (Step-2 preset reconciliation).
 PRESETS["anes_full"] = dict(ANES_FULL_KWARGS)
 
+# Racialization ONSET (spec §10/§11) — the opt-in single-cultural-forcing build,
+# for the §11 validation gate: canonical + ramp-and-hold racialization (no decay),
+# with the post-2008 mob increment frozen so it substitutes the cultural grab-bag.
+PRESETS["anes_full_rac_onset"] = dict(
+    ANES_FULL_KWARGS,
+    racialization_kick=True,
+    rac_peak=0.18,   # calibrated: cultural axis on ANES target (1.84≈1.83); §11 20/24
+    rac_freeze_mob=True,
+    rac_decay_frac=None,
+)
+
+# Fork B (spec §11.x) — racialization carries cultural; the RETAINED 2020-25 elite-
+# economic divergence (Hacker-Pierson) carries the late econ/party_sep. Freeze only
+# the early (2010-20) step so racialization's gentler ramp still fixes the 2010 over-sort.
+PRESETS["anes_full_rac_forkb"] = dict(
+    ANES_FULL_KWARGS,
+    racialization_kick=True,
+    rac_peak=0.15,
+    rac_freeze_mob=True,
+    rac_mob_freeze_keys=("2010-20",),
+    rac_decay_frac=None,
+)
+
+# Onset at a higher (better-calibrated) peak — cultural is UNDER target at 0.15
+# (1.70 vs ANES 1.83), so lift it toward target; this also raises late combined
+# party_sep toward the 1.04 floor without a new mechanism.
+PRESETS["anes_full_rac_p18"] = dict(
+    PRESETS["anes_full_rac_onset"], rac_peak=0.18)
+PRESETS["anes_full_rac_p21"] = dict(
+    PRESETS["anes_full_rac_onset"], rac_peak=0.21)
+
 
 def _worker(args: tuple) -> dict:
     """Build, run, snapshot at decade ticks; measure §11 metrics.

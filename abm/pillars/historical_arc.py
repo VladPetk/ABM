@@ -688,6 +688,32 @@ def build_engine(
     # bit-identical.
     tier_c_identity_pull_x: float = 0.0,
     tier_c_identity_pull_y: float = 0.0,
+    # ── Racialization onset (spec §10) — opt-in single cultural forcing ────────
+    # racialization_kick=True installs a time-profiled cultural-axis identity→
+    # ideology pull (Tesler spillover) ADDED on top of the baseline Mason channel:
+    # ramp 2008→2016 then HOLD (the onset). It is routed through RacializationSalience
+    # (env rule) × racialization_pull_y. rac_decay_frac is the OPTIONAL,
+    # pre-registered, LOW-graded DERACIALIZATION probe (2020→2024 dealignment) — keep
+    # None for the onset build. rac_freeze_mob flattens the post-2008 activist-
+    # mobilization increment so racialization SUBSTITUTES the cultural grab-bag
+    # (Fork A: econ then under-fits — a disclosed caveat; econ-decoupling is separate).
+    # Default off → racialization_pull_y unset, rule not installed, mob schedule
+    # untouched → every existing path bit-identical.
+    racialization_kick: bool = False,
+    rac_peak: float = 0.18,
+    rac_onset_tick: int = 84,
+    rac_peak_tick: int = 108,
+    rac_hold_end_tick: int = 120,
+    rac_decay_end_tick: int = 132,
+    rac_decay_frac: float | None = None,
+    rac_freeze_mob: bool = True,
+    # Which post-2008 mobilization steps to flatten to the 2008 level. Fork A
+    # (default) freezes both → racialization fully substitutes the post-2008 elite
+    # drive (econ then under-fits late). Fork B passes ("2010-20",) — freeze only the
+    # early step (so racialization's gentler ramp fixes the 2010 over-sort) while
+    # RETAINING the 2020-25 step as the late elite-economic divergence (Hacker-Pierson),
+    # which carries the late econ/party_sep the cultural kick alone can't.
+    rac_mob_freeze_keys: tuple = ("2010-20", "2020-25"),
     # Phase 9 §11.7-C — historical PartyPull strength. The 8f value
     # (0.07) was bumped from the pillar's 0.04 to drive party_sep
     # against the OLD §11 bands. Under ANES bands wp_sd needs to be
@@ -1750,6 +1776,16 @@ def build_engine(
         # at the 1980 baseline (low → loop quiescent → mass holds near the seed).
         _mob_sched = compute_activist_mobilization_schedule(
             mob_base, mob_peak, mob_backload, mob_asym)
+        # Racialization onset (spec §10) — flatten the post-2008 mobilization
+        # INCREMENT to its 2008 (2000-10) level so the racialization cultural
+        # forcing SUBSTITUTES the (cultural) post-2008 grab-bag instead of stacking
+        # on it. The 2010/2020 decade-boundary mob setters then become no-ops. Econ
+        # consequently under-fits (the disclosed Fork-A caveat). Off → untouched.
+        if racialization_kick and rac_freeze_mob:
+            _rac_base = dict(_mob_sched.get("2000-10") or {})
+            for _rac_k in rac_mob_freeze_keys:
+                if _rac_k in _mob_sched:
+                    _mob_sched[_rac_k] = dict(_rac_base)
         env.attrs["activist_mobilization_schedule"] = _mob_sched
         env.attrs["activist_mobilization"] = dict(_mob_sched["1980"])
     if _emergent:
@@ -2073,6 +2109,21 @@ def build_engine(
         env_rules.append(ThermostaticFeedback(
             gain=float(thermostatic_gain),
             reference=float(thermostatic_reference)))
+
+    # Racialization onset (spec §10) — opt-in single cultural forcing. Sets the
+    # peak magnitude read by IdentityToIdeologyPull and installs the salience
+    # env rule (the 2008→2016 ramp-and-hold; optional pre-registered decay). Off →
+    # racialization_pull_y unset + rule absent → IdentityToIdeologyPull bit-identical.
+    if racialization_kick:
+        from ..rules.racialization import RacializationSalience
+        env.attrs["racialization_pull_y"] = float(rac_peak)
+        env_rules.append(RacializationSalience(
+            onset_tick=rac_onset_tick,
+            peak_tick=rac_peak_tick,
+            hold_end_tick=rac_hold_end_tick,
+            decay_end_tick=rac_decay_end_tick,
+            decay_frac=rac_decay_frac,
+        ))
 
     # Sanity: at most one instance per class.
     seen: set[str] = set()
