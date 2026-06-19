@@ -172,6 +172,28 @@ are in methods.md's provenance table.
   polarization. Anchors `IdentitySorting`, `IdentityAlignment`,
   `IdentityToIdeologyPull`, and the identity term in `MediatedAnimus`.
   Appendix B sorting coefficients are a Phase 9 target.
+- **Tesler, M.** (2016). *Post-Racial or Most-Racial? Race and Politics in the
+  Obama Era*. University of Chicago Press. — The "spillover of racialization":
+  post-2008 racial attitudes came to structure positions on otherwise non-racial
+  issues (a latent dimension re-projecting onto the partisan axis). Anchors the
+  **opt-in racialization onset** (`RacializationSalience` × the `IdentityToIdeologyPull`
+  cultural pull; methods §5.34). Phenomenon **HIGH**; "race as the *single* driver
+  of the post-2008 rise" CONTESTED → the single-carrier modelling choice is graded
+  **E**, event grade **MED**. NOT the shipped default.
+- **Sides, J., Tesler, M., & Vavreck, L.** (2018). *Identity Crisis: The 2016
+  Presidential Campaign and the Battle for the Meaning of America*. Princeton UP.
+  — "Racialized economics" = racial grievance refracted through economic standing
+  (a vote-choice predictor), *not* a shift in economic-policy positions. Cited in
+  methods §5.34 to **justify NOT loading race onto the economic axis**; the econ
+  divergence stays the elite-led trend (Hacker-Pierson; McCarty et al., §3.5).
+- **Racialization → dealignment (2020-2024), evidence grade LOW.** The Latino/
+  minority "dealignment, not realignment" + race/immigration depolarization —
+  e.g. Niskanen Center *Class, race, gender, and the 2024 election*; *Are Racial
+  and Ethnic Minority Voters Abandoning the Democrats?* (J. American Studies);
+  *2024 Election and the Enduring Power of the Racial Divide* (PSQ, the counter-
+  camp). Anchors the **off-by-default, pre-registered** deracialization decay probe
+  (`rac_decay_frac`; methods §5.34) — one-to-two contested elections, so the decay
+  *direction* is the claim, the magnitude is a weak knob (not tuned to 2024).
 - **Iyengar, S., Lelkes, Y., Levendusky, M., Malhotra, N., & Westwood, S. J.**
   (2019). The origins and consequences of affective polarization in the United
   States. *ARPS* 22:129. — The out-party thermometer trend; the affective-

@@ -2376,6 +2376,72 @@ both predates it (layered-banner convention). Reproducible diagnostics in
 
 ---
 
+### 5.34 Racialization onset — opt-in single cultural forcing (2026-06-19; NOT the shipped default) [L / E / N]
+
+An **opt-in** `build_engine(racialization_kick=True)` build that carries the
+post-2008 *cultural*-axis acceleration with **one** literature-named forcing —
+the **racialization of politics** (Tesler 2016, the "spillover of racialization":
+post-Obama, racial attitudes came to structure positions on otherwise non-racial
+issues) — instead of the canonical's grab-bag of post-2008 cultural drivers. **The
+shipped canonical (`ANES_FULL_KWARGS`) is unchanged and remains the data-driven
+build; racialization is off by default and bit-identical when off** (verified
+max |Δ| = 0.00e+00 across all seeds/ticks/axes). Adoption as canonical is an open
+user decision; this logs the mechanism and its measurement.
+
+- **Mechanism.** `IdentityToIdeologyPull` adds a cultural-axis term
+  `eff_strength_y += racialization_pull_y × racialization_salience_y` *on top of*
+  the baseline Mason channel (baseline = generic identity sorting; this = the
+  extra post-2008 racial spillover). `RacializationSalience` (env rule,
+  `abm/rules/racialization.py`) writes the per-tick salience: 0 before 2008, a
+  linear ramp to 1.0 by 2016 (the Tesler onset), then **HOLD** — the onset is
+  ramp-and-hold. When on, the post-2008 activist-mobilization increment is frozen
+  (`rac_mob_freeze_keys`) so racialization *substitutes* the cultural grab-bag
+  rather than stacking on it. Peak `rac_peak = 0.18` is calibrated so the cultural
+  axis lands on its ANES target (indexed 2024 ≈ 1.84 vs ANES 1.83; per-axis shape
+  RMSE 0.12 vs the canonical's 0.24).
+- **Results (measure-then-blessed).** §11 ANES scorecard: **20/24 (5-seed) /
+  18/24 (9-seed realism)** — beats canonical's 19/24 at 5 seeds, ties its 18/24 at
+  9. Composition is favorable: the gentler racialization ramp **fixes the 2010
+  over-sort** (canonical overshoots 2010 constraint + party_sep) at the cost of
+  ~3% late party_sep (the frozen-mob econ caveat below). The mechanism carries a
+  **distinct, falsifiable signature** absent from a generic "turn-the-axis-up"
+  bump: at matched sorting it lifts identity↔issue correlation higher (0.73 vs an
+  elite-gain bump's 0.67), reproducing Tesler's spillover fingerprint.
+- **Provenance & honesty.** The spillover *mechanism* is **L** (Mason 2018 §2.4 /
+  Tesler 2016); the *single-carrier* modelling choice is **E** (the post-2008
+  acceleration is multicausal — racialization is a defensible single representative,
+  not the sole cause); the kick profile + freeze are **N**. Event evidence grade
+  **MED** (phenomenon HIGH; "race is *the* single driver" CONTESTED). This is a
+  **parsimony / legibility** move: it makes the forced share of the post-2008 rise
+  legible and falsifiable as one named forcing — it does **NOT** resolve blindspot
+  #7 (the rise stays Layer-2 forced, not emergent; timing stays fed).
+- **Economic axis — deliberately left to the existing elite trend (no new knob).**
+  Racialization carries cultural only. A literature check (4-search sweep) found
+  **no scholarly consensus on a single post-2008 *economic*-axis cause**: the
+  econ-policy divergence is a decades-long, elite-led trend predating 2008
+  (Hacker-Pierson; McCarty-Poole-Rosenthal) — already the model's elite loop — and
+  mass economic-policy attitudes stayed largely stable (McCarty/Stewart/Plotkin
+  PNAS 2021), the apparent econ "polarization" being identity *sorting* partly
+  downstream of the same racial dynamics. "Racialized economics" (Sides/Tesler/
+  Vavreck 2018) is racial grievance refracted through economic standing, *not* a
+  shift in economic-policy positions — so it does **not** license loading race onto
+  the econ axis. Per the no-consensus rule, no econ mechanism was added. The
+  onset's econ under-fit is therefore a **structural** limitation — the single-axis
+  elite loop can't carry independent econ + cultural divergence (the corr~0.78
+  over-correlation; #11-adjacent), and the freeze drops the loop's late
+  elite-economic divergence — *not* a missing-science gap. Resolving it fully is the
+  architecture-level axis-decoupling, a separate decision.
+- **Deracialization (the 2020→2024 dealignment) is a separate, OFF-by-default,
+  pre-registered LOW-graded probe** (`rac_decay_frac`), not part of the onset.
+  Modelled as the kick relaxing, it reproduces the ANES 2020-peak/2024-dip and
+  exercises the reversibility capacity (the ratchet releases *given* an exogenous
+  release; restoring forces then act — NOT endogenous depolarization). Held out of
+  the shipped onset because the 2024 dip is one contested, possibly-preliminary
+  point on *both* axes (not cultural-specific). Full design + all measurements:
+  `docs/internal/racialization_spillover_spec.md`.
+
+---
+
 ## 6. What the model is for
 
 polarlab is a **teaching artifact** for a public, non-expert
