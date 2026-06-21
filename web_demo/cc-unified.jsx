@@ -49,8 +49,8 @@ function SiteHeader({ page, setPage }) {
       </button>
       <span style={{ flex: 1 }} />
       <nav style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-        <HeaderNavLink id="model" page={page} setPage={setPage}>The Model</HeaderNavLink>
-        <HeaderNavLink id="story" target="prologue" active={page === 'prologue' || page === 'story'} page={page} setPage={setPage}>The Story</HeaderNavLink>
+        <HeaderNavLink id="forces" target="forces" active={page === 'model' || page === 'forces' || page === 'prologue'} page={page} setPage={setPage}>The Forces</HeaderNavLink>
+        <HeaderNavLink id="story" target="story" active={page === 'story'} page={page} setPage={setPage}>The U.S. Story</HeaderNavLink>
         <HeaderNavLink id="playground" page={page} setPage={setPage}>Playground</HeaderNavLink>
         <HeaderNavLink id="methods" page={page} setPage={setPage}>Methods</HeaderNavLink>
         <HeaderNavLink id="about" page={page} setPage={setPage}>About</HeaderNavLink>
@@ -66,6 +66,18 @@ function ModeBar({ mode, setMode }) {
   return (
     <div style={{ height: 50, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '0 clamp(24px, 4vw, 56px)', background: CC.bg, position: 'relative', zIndex: 20 }}>
       <Segmented value={mode} onChange={setMode} options={[['interventions', 'Interventions'], ['sandbox', 'Sandbox']]} />
+    </div>);
+
+}
+
+// ── Tier-2 — "The Forces" mode bar. Two views of the same engine: the guided
+// force-by-force tour, and the whole engine running at once (the hub). Lives on
+// both pages so the toggle is always the way between them (and back). ──
+function ForcesModeBar({ mode, goPage }) {
+  return (
+    <div style={{ height: 50, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '0 clamp(24px, 4vw, 56px)', background: CC.bg, position: 'relative', zIndex: 20 }}>
+      <Segmented value={mode} onChange={(v) => goPage(v === 'tour' ? 'forces' : 'prologue')}
+        options={[['tour', 'Force by force'], ['engine', 'The whole engine']]} />
     </div>);
 
 }
@@ -471,8 +483,8 @@ function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, be
 
 // hash ↔ page mapping (deep links; review amendment #8). '#model' is the
 // canonical landing hash; unknown hashes fall back to the intro.
-const HASH2PAGE = { '#model': 'model', '#prologue': 'prologue', '#story': 'story', '#playground': 'playground', '#methods': 'methods', '#about': 'about', '#3d': 'agents' };
-const PAGE2HASH = { model: '#model', prologue: '#prologue', story: '#story', playground: '#playground', methods: '#methods', about: '#about', agents: '#3d' };
+const HASH2PAGE = { '#model': 'model', '#forces': 'forces', '#prologue': 'prologue', '#story': 'story', '#playground': 'playground', '#methods': 'methods', '#about': 'about', '#3d': 'agents' };
+const PAGE2HASH = { model: '#model', forces: '#forces', prologue: '#prologue', story: '#story', playground: '#playground', methods: '#methods', about: '#about', agents: '#3d' };
 
 function Unified() {
   const ph = useTick({ start: 0, autoplay: false, base: 2.25 });
@@ -672,13 +684,26 @@ function Unified() {
 
   }
 
-  // ── Prologue — "the engine with America switched off" (plays before the
-  // guided story; hands off to it). A separate surface from the sim canvas. ──
+  // ── The Forces — the engine, force by force (orientation → 6 toys → finale).
+  // The main act: each force is a self-contained, pokeable mini-sim. ──
+  if (page === 'forces') {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}>
+        <SiteHeader page={page} setPage={goPage} />
+        <ForcesModeBar mode="tour" goPage={goPage} />
+        <ForcesTour onFinale={() => goPage('prologue')} />
+      </div>);
+
+  }
+
+  // ── All together / the hub — every force at once, engine-alone (it stalls);
+  // the three doors out: the U.S. story · the Playground · the 3-D view. ──
   if (page === 'prologue') {
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}>
         <SiteHeader page={page} setPage={goPage} />
-        <ProloguePage onToStory={() => goPage('story')} onSkip={() => goPage('story')} />
+        <ForcesModeBar mode="engine" goPage={goPage} />
+        <ProloguePage onToStory={() => goPage('story')} onPlayground={() => goPlayground('interventions')} on3D={() => goPage('agents')} />
       </div>);
 
   }
@@ -732,7 +757,7 @@ function Unified() {
           {/* floating narrative — a centered editorial block on the left */}
           <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(54%, 820px)', display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3 }}>
             {isIntro &&
-              <IntroRail tick={introTick} storyDone={storyDone} onWatch={startPrologue}
+              <IntroRail tick={introTick} storyDone={storyDone} onWatch={() => goPage('forces')}
                 onSandbox={() => goPlayground('sandbox')} onAbout={() => goPage('about')} on3D={() => goPage('agents')} />}
             {isWatch && (stagedOrient ?
               <OrientRail step={orientStep} onPrev={orientPrev} onNext={orientNext} onContinue={finishOrient} /> :
@@ -760,7 +785,7 @@ function Unified() {
       {isIntro ? null :
 
       <TimelineBar tick={tick} setTick={setTick} playing={playing} toggle={toggle} speed={speed} setSpeed={setSpeed}
-      mode={isWatch ? 'watch' : 'explore'} beatI={dispBeatI} onPickBeat={pickBeat} ended={ended} />
+      mode={isWatch ? 'watch' : 'explore'} beatI={dispBeatI} onPickBeat={pickBeat} ended={ended} events={!isWatch} />
       }
 
       {/* first-run helper — black, gently bobbing, dismissed on the first scroll

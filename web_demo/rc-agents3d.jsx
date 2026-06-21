@@ -274,6 +274,9 @@ function Agents3DPage() {
   const monthLabel = `${months[Math.min(11, Math.floor((tickToYear(tick) - year) * 12))]} ${year}`;
   const Dot = ({ c }) => <span style={{ width: 8, height: 8, borderRadius: 999, background: c, display: 'inline-block', flexShrink: 0 }} />;
   const LX = 'clamp(64px, 14vw, 248px)';
+  // the same chapter markers as the U.S. story (not the raw historical events)
+  const BEATS = window.STORY_BEATS || [];
+  let beatI = 0; for (let i = 0; i < BEATS.length; i++) if (tick + 1e-6 >= BEATS[i].tick) beatI = i;
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative', background: CC.bg }}>
@@ -343,8 +346,23 @@ function Agents3DPage() {
             <span style={{ fontSize: DS.type.micro, color: CC.ink4 }}>tick {Math.round(tick)}/{LAST}</span>
           </div>
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <ProtoTimeline tick={tick} setTick={setTick} color={CC.ink} altLabels />
+        <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+          {BEATS.map((b, k) => {
+            const on = k === beatI;
+            const left = `calc(14px + ${b.tick / LAST} * (100% - 28px))`;
+            return (
+              <React.Fragment key={k}>
+                {on &&
+                  <span style={{ position: 'absolute', zIndex: 5, left, top: 54, transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontFamily: SANS, fontSize: 10, fontWeight: 600, color: CC.ink, background: 'rgba(249,248,244,.9)', padding: '0 3px' }}>{b.short}</span>}
+                <button title={b.title} onClick={() => setTick(b.tick)} style={{
+                  position: 'absolute', zIndex: 4, left, top: 38, transform: 'translate(-50%,-50%) rotate(45deg)',
+                  width: on ? 13 : 10, height: on ? 13 : 10, background: b.tick <= tick ? CC.ink : CC.surface,
+                  border: `2px solid ${b.tick <= tick ? CC.ink : CC.ink3}`, cursor: 'pointer', padding: 0, borderRadius: 2,
+                }} />
+              </React.Fragment>
+            );
+          })}
+          <ProtoTimeline tick={tick} setTick={setTick} color={CC.ink} altLabels events={false} />
         </div>
       </div>
     </div>

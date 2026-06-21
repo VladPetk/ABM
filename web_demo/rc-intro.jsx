@@ -101,7 +101,7 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D }) {
           rest of this site is about turning them.
         </p>
         <div style={{ marginTop: 28, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <button onClick={onWatch} style={watchStyle}>▶ &nbsp;Watch the story</button>
+          <button onClick={onWatch} style={watchStyle}>Meet the forces &nbsp;→</button>
           <button onClick={onSandbox} style={sandboxStyle}>Open the sandbox</button>
         </div>
         <div style={{ marginTop: 22, display: 'flex', gap: 18, alignItems: 'baseline', flexWrap: 'wrap' }}>
