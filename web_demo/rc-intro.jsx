@@ -86,7 +86,7 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D }) {
       <div style={{ flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px 8px ${LX}` }}>
         <Eyebrow>An agent-based model · 250 simulated people</Eyebrow>
         <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(30px, 3.4vw, 44px)', lineHeight: 1.06, letterSpacing: '-.02em', maxWidth: 520 }}>
-          How one crowd became two camps — and what, if anything, could have changed it.
+          How a crowd splits into two camps — and what, if anything, could pull it back.
         </h2>
         <p style={{ margin: '20px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
           Every dot on this map is one simulated person: a position on the

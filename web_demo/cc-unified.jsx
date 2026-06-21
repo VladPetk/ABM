@@ -44,8 +44,7 @@ function SiteHeader({ page, setPage }) {
     <div style={{ height: 58, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '0 clamp(24px, 4vw, 56px)', background: CC.bg, position: 'relative', zIndex: 30 }}>
       <button onClick={() => setPage('model')} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
         <Logo />
-        <span style={{ width: 1, height: 18, background: CC.border }} />
-        <span style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 16, color: CC.ink2, whiteSpace: 'nowrap' }}>Calm to Camps</span>
+        <span style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 16, color: CC.ink2, whiteSpace: 'nowrap' }}>The Divide</span>
       </button>
       <span style={{ flex: 1 }} />
       <nav style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
@@ -158,12 +157,12 @@ function MapLegend() {
     <div style={{ marginTop: 22, paddingTop: 14, borderTop: `1px solid ${CC.border}` }}>
       <Eyebrow style={{ color: CC.ink4 }}>Reading the map</Eyebrow>
       <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <Item glyph={<Ring c={CC.r} />} label={<><strong style={{ color: CC.ink }}>Party centres</strong> — the live heart of each camp, moving with the simulation.</>} />
+        <Item glyph={<Ring c={CC.r} />} label={<><strong style={{ color: CC.ink }}>Party centres</strong> — the live heart of each camp, moving with the engine.</>} />
         <Item glyph={<Diamond c={CC.r} />} label={<><strong style={{ color: CC.ink }}>Emergent factions</strong> — Tea Party, MAGA, Bernie, DSA — each appears the year it forms.</>} />
         <Item glyph={<Sq c={CC.ink2} />} label={<><strong style={{ color: CC.ink }}>News outlets</strong> — at the calibrated positions that actually pull people.</>} />
       </div>
       <p style={{ margin: '12px 0 0', paddingTop: 11, borderTop: `1px solid ${CC.border}`, fontSize: DS.type.micro, lineHeight: 1.5, color: CC.ink3 }}>
-        Every marker is the model’s own data, not an illustrative placement. Navy is Democratic, oxblood Republican.
+        Every marker is the engine’s own data, not an illustrative placement. Navy is Democratic, oxblood Republican.
       </p>
     </div>);
 
@@ -190,9 +189,9 @@ const ORIENT_STEPS = [
     body: 'Each sits at the average position of all its members. The dashed line between them is the gap — keep an eye on it as the years run.',
   },
   {
-    title: 'Landmarks from the model',
-    lead: 'A few markers the simulation places itself.',
-    body: 'Hollow squares are news outlets at their measured positions; small diamonds are factions that emerge mid-story — Tea Party, MAGA — each appearing only in the year it forms. Every marker is the model’s own, not hand-placed.',
+    title: 'Landmarks from the engine',
+    lead: 'A few markers the engine places itself.',
+    body: 'Hollow squares are news outlets at their measured positions; small diamonds are factions that emerge mid-story — Tea Party, MAGA — each appearing only in the year it forms. Every marker is the engine’s own, not hand-placed.',
   },
 ];
 
@@ -238,8 +237,8 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
     return (
       <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
         <div style={scrollWrap}>
-          <Eyebrow>An interactive history · 1980–2025</Eyebrow>
-          <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.display, lineHeight: 0.98, letterSpacing: '-.025em' }}>Calm to Camps</h2>
+          <Eyebrow>The U.S. story · an interactive history, 1980–2025</Eyebrow>
+          <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.display, lineHeight: 0.98, letterSpacing: '-.025em' }}>The Divide</h2>
           <p style={{ margin: '16px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.4, color: CC.ink2 }}>How a country that mostly agreed to disagree sorted itself into two camps that can barely speak.</p>
           <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2 }}>Watch forty-five years of Americans drift across the political compass. We’ll pause at the moments that moved the country — and say, plainly, what each one did.</p>
         </div>
@@ -253,7 +252,7 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
     return (
       <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
         <div style={scrollWrap}>
-          <Eyebrow style={{ color: CC.ink3 }}>The story · playing</Eyebrow>
+          <Eyebrow style={{ color: CC.ink3 }}>The U.S. story · playing</Eyebrow>
           <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, letterSpacing: '-.015em' }}>{Math.floor(tickToYear(tick))}</h2>
           <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>The country is sorting itself in real time. We’ll stop at the next moment that matters.</p>
           {nextBeat &&
@@ -275,10 +274,10 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
     return (
       <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
         <div style={scrollWrap}>
-          <Eyebrow>The story · 1980 → 2025</Eyebrow>
+          <Eyebrow>The U.S. story · 1980 → 2025</Eyebrow>
           <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, lineHeight: 1.05, letterSpacing: '-.015em' }}>Now drive it yourself.</h2>
           <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2 }}>Forty-five years, two hardening camps, a middle that thinned — and an out-party warmth that fell from the high-50s to the low-30s.</p>
-          <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>You’ve watched the model reproduce the real arc. Two ways to take the wheel: try the things researchers have actually tested, or turn the dials freely.</p>
+          <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>You’ve watched the engine reproduce the real U.S. arc. Two ways to take the wheel: try the things researchers have actually tested, or turn the dials freely.</p>
         </div>
         <div style={{ ...footer, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', gap: 10, width: '100%' }}>
@@ -697,10 +696,11 @@ function Unified() {
   }
 
   // ── All together / the hub — every force at once, engine-alone (it stalls);
-  // the three doors out: the U.S. story · the Playground · the 3-D view. ──
+  // the two doors out: the U.S. story · the 3-D view (Playground stays in the header). ──
   if (page === 'prologue') {
     return (
-      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}>
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}
+      onClick={(e) => {const g = e.target.closest('[data-goto]');if (g) {e.preventDefault();goPage(g.getAttribute('data-goto'));}}}>
         <SiteHeader page={page} setPage={goPage} />
         <ForcesModeBar mode="engine" goPage={goPage} />
         <ProloguePage onToStory={() => goPage('story')} onPlayground={() => goPlayground('interventions')} on3D={() => goPage('agents')} />
@@ -713,7 +713,8 @@ function Unified() {
   // playback surface. ──
   if (page === 'playground') {
     return (
-      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}>
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}
+      onClick={(e) => {const g = e.target.closest('[data-goto]');if (g) {e.preventDefault();goPage(g.getAttribute('data-goto'));}}}>
         <SiteHeader page={page} setPage={goPage} />
         <ModeBar mode={iv.isSandbox ? 'sandbox' : 'interventions'} setMode={(m) => {m === 'sandbox' ? iv.openSandbox() : iv.back();}} />
         <IvWorkbench iv={iv} layer={layer} />

@@ -4,8 +4,8 @@
 // floor plane is the familiar political compass (x = economic, depth = cultural)
 // and the vertical axis is ANIMUS (out-party coldness, = −affect), so the crowd
 // both spreads into two camps AND rises as it cools — the "scissors" as one
-// motion. No chapters, no annotations: just a slowly auto-rotating scene you can
-// orbit + zoom, driven by the same timeline as everywhere else.
+// motion. A slowly auto-rotating scene you can orbit + zoom, driven by the same
+// timeline as everywhere else (carrying the U.S.-story chapter markers).
 //
 // All three axes are real engine data: pos (econ/cultural) and the per-agent
 // affect series (runs.baseline.affect = [tick][agent]). Nothing here is mocked.
@@ -262,7 +262,7 @@ function Scatter3D({ tick, run, zoomApi }) {
 }
 
 // ── the page: right-anchored scene · left prose · shared timeline — the same
-// frame as the story page, minus the chapters ──────────────────────────────
+// frame as the story page, with the U.S.-story chapter markers on the timeline ──
 function Agents3DPage() {
   const ph = useTick({ start: 0, autoplay: true, base: 2.25 });
   const { tick, setTick, playing, toggle, speed, setSpeed } = ph;
@@ -294,15 +294,15 @@ function Agents3DPage() {
         <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(54%, 820px)', display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3, pointerEvents: 'none' }}>
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
             <div style={{ flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px clamp(28px,4.5vh,52px) ${LX}` }}>
-              <Eyebrow>Under the hood · for the brave</Eyebrow>
+              <Eyebrow>Under the hood · the U.S. run</Eyebrow>
               <h2 style={{ margin: '14px 0 18px', fontFamily: SERIF, fontWeight: 600, fontSize: 46, lineHeight: 1.04, letterSpacing: '-.022em', maxWidth: 460 }}>
                 Every agent, in three dimensions.
               </h2>
               <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: 440 }}>
-                No clouds, no chapters — just the 250 people the model actually moves, one dot each.
+                No density clouds — just the 250 people the engine actually moves, one dot each.
               </p>
               <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-                The flat plane is the political compass you already know — left–right is the economy, front–back is culture. Then each person lifts off it as they sour on the other side: <strong>Democrats rise, Republicans sink</strong>, so the vertical gap between blue and red <em>is</em> their mutual animus. Independents stay in the common middle.
+                This is the engine run against the United States, 1980 to 2025. The flat plane is the <strong>political compass</strong> — left–right is the economy, front–back is culture. Then each person lifts off it as they sour on the other side: <strong>Democrats rise, Republicans sink</strong>, so the vertical gap between blue and red <em>is</em> their mutual animus. Independents stay in the common middle.
               </p>
               <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
                 Press play and watch the two camps fly apart.

@@ -758,14 +758,14 @@ const FORCE_PARTY = {
   id: 'party',
   eyebrow: 'How the engine works · force 4 of 5',
   title: 'Each side feels a steady tug toward its own pole.',
-  lead: 'Party pull — the first force that actually sorts.',
+  lead: 'Party pull — sorting from the top down.',
   body: (
     <>
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
         Now a force from above. Each person feels a steady tug from their side’s banner — an <strong>elite cue</strong> pulling Democrats toward one pole, Republicans toward the other (the two dashed targets). Independents feel no pull and stay in the middle. <strong>Drag a pole</strong> to re-aim a whole side — or drag a person and watch their own side reel them back.
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Press play. The mixed crowd <strong>splits</strong> — the colours peel apart into two camps with a thinning middle. This is the first genuinely polarizing force. Turn the pull up and the camps snap to their poles; turn it down and they drift back toward the centre.
+        Press play. The mixed crowd <strong>splits</strong> — the colours peel apart into two camps with a thinning middle. Where backfire split the crowd from below, this sorts it <strong>from above</strong> — a tug from the party banner, not from your neighbours. Turn the pull up and the camps snap to their poles; turn it down and they drift back toward the centre.
       </p>
     </>
   ),
@@ -847,7 +847,7 @@ const FORCE_MEDIA = {
       </p>
     </>
   ),
-  caption: 'Faithful in form to MediaConsumption. Unlike the universal mechanisms, this is a country-specific FORCING (a media-penetration curve) — the kind of input a real country like the US later switches on.',
+  caption: 'Faithful in form to MediaConsumption. Unlike the universal mechanisms, this is a country-specific FORCING (a media-penetration curve) — the kind of input a real country such as the US switches on.',
   seed: seedMedia,
   step: (ags, knob, anchors) => stepMedia(ags, knob, anchors, 0.004),
   anchors: () => [
@@ -868,7 +868,7 @@ const FORCE_BACKFIRE = {
   body: (
     <>
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Force one pulled neighbours together — but only when they could still <em>hear</em> each other. Here’s the flip side. Each cross-party encounter is now checked against how warm you feel: stay above a line and contact is harmless; drop below it and the same brush pushes you <strong>away</strong>. Reach for the <strong>hostility</strong> knob.
+        Bounded confidence pulled neighbours together — but only when they could still <em>hear</em> each other. Here’s the flip side. Each cross-party encounter is now checked against how warm you feel: stay above a line and contact is harmless; drop below it and the same brush pushes you <strong>away</strong>. Reach for the <strong>hostility</strong> knob.
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
         Turn it low and press play — the mixed crowd just sits there; contact does nothing. Turn it high and the <em>same</em> encounters become repellent: a salt-and-pepper mix tears itself into two camps on disgust alone. Drag a cold dot toward the other side and watch it recoil. It’s why “just get people talking” can make things worse.
@@ -945,7 +945,7 @@ function ForceBar({ stops, fi, goStop, force, playing, setPlaying, onStep, onRes
       </div>
       {/* force buttons (center) — named, the active one filled */}
       <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, overflowX: 'auto', whiteSpace: 'nowrap' }}>
-        {stops.map((s, i) => pill(i === 0 ? 'Orientation' : `${i} · ${FORCE_TAB[s.id] || s.id}`, i === fi, () => goStop(i)))}
+        {stops.map((s, i) => pill(i === 0 ? 'Orientation' : s.id === 'affect' ? FORCE_TAB[s.id] : `${i} · ${FORCE_TAB[s.id] || s.id}`, i === fi, () => goStop(i)))}
       </div>
       {/* knob + reveal (right) */}
       {(force.knob || force.reveal) &&

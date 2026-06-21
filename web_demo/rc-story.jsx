@@ -1,5 +1,8 @@
-// Concept 2 — Story dispatch in the polished simulation-page frame:
-// header · dimmed field · wide dispatch rail · bottom chapter-timeline strip.
+// Story chapter data (STORY_BEATS) — the tick-anchored chapters of the U.S.
+// story. This file is now DATA-ONLY: the chapters are rendered by WatchRail in
+// cc-unified.jsx (and their markers reused on the 3-D page). The old standalone
+// ConceptStory renderer was retired in the copy rewrite — it was mounted nowhere
+// and had become a second, drifting source of the same chapter copy.
 // Single society-level voice (named characters/personas were retired in v1).
 
 const _sepAt = (t) => centroids(posAt(D.runs.baseline, t), D.runs.baseline.party[Math.round(t)]).gap;
@@ -58,95 +61,10 @@ const STORY_BEATS = [
   {
     tick: 120, title: 'Two Americas', short: 'Two Americas', layer: 'position',
     lead: 'By the pandemic, the two camps no longer share a map — or a set of facts.',
-    body: 'COVID and January 6th harden the sort into two separate masses. Out-party warmth has fallen from the high-50s to the mid-30s — down by more than a third. Forty years earlier they were one crowd; now they can barely speak.',
+    body: 'COVID and January 6th harden the sort into two separate masses. Out-party warmth has fallen from the high-50s to the low-30s — down by more than a third. Forty years earlier they were one crowd; now they can barely speak.',
     metric: (t) => `out-party warmth bottoms near ${warmthDegAt(t)}°`,
     data: { label: 'Out-party warmth', valueAt: (t) => warmthDegAt(t), fmt: (v) => `${Math.round(v)}°`, note: 'two camps' },
   },
 ];
 
-function ConceptStory() {
-  const [bi, setBi] = React.useState(0);
-  const beat = STORY_BEATS[bi];
-  const year = Math.floor(tickToYear(beat.tick));
-
-  return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0 }}>
-      {/* header */}
-      <div style={{ height: 54, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '0 22px', borderBottom: `1px solid ${CC.border}`, background: CC.bg }}>
-        <Eyebrow>Watch · the guided story</Eyebrow>
-        <span style={{ fontSize: 13, color: CC.ink3 }}>auto-pauses at the moments that matter</span>
-        <span style={{ flex: 1 }} />
-        <span style={{ fontSize: 12.5, color: CC.ink2, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 13px', border: `1px solid ${CC.border}`, borderRadius: 999 }}>About this model <InfoDot /></span>
-      </div>
-
-      {/* body: dimmed field | dispatch rail */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 460px', minHeight: 0 }}>
-        <div style={{ position: 'relative', background: CC.surface, minWidth: 0, minHeight: 0 }}>
-          <Field run={D.runs.baseline} tick={beat.tick} layer="position" view="density" showGap dim={0.26} />
-          <div style={{ position: 'absolute', left: 24, top: 20, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: CC.ink3, background: 'rgba(255,255,255,.85)', padding: '5px 12px', borderRadius: 999, border: `1px solid ${CC.border}` }}>
-            <span style={{ width: 7, height: 7, borderRadius: 999, background: '#c47a2c' }} /> paused at a story beat · {year}
-          </div>
-        </div>
-
-        <div style={{ borderLeft: `1px solid ${CC.border}`, background: CC.bg, padding: '26px 30px', display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <Eyebrow>Chapter {bi + 1} of {STORY_BEATS.length}</Eyebrow>
-            <span style={{ fontFamily: MONO, fontSize: 13, color: CC.ink3, ...TNUM }}>{year}</span>
-          </div>
-          <h2 style={{ margin: '10px 0 20px', fontFamily: SERIF, fontWeight: 600, fontSize: 33, lineHeight: 1.03, letterSpacing: '-.015em' }}>{beat.title}</h2>
-
-          <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: 20, lineHeight: 1.42, color: CC.ink }}>{beat.lead}</p>
-          <p style={{ margin: '16px 0 0', fontSize: 15, lineHeight: 1.6, color: CC.ink2 }}>{beat.body}</p>
-
-          <div style={{ marginTop: 20, padding: '12px 15px', background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: 10, display: 'flex', alignItems: 'center', gap: 11 }}>
-            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase', color: CC.ink4 }}>data</span>
-            <span style={{ fontFamily: MONO, fontSize: 13.5, color: CC.ink, ...TNUM }}>{beat.metric(beat.tick)}</span>
-          </div>
-
-          <div style={{ marginTop: 'auto', paddingTop: 24, display: 'flex', gap: 10 }}>
-            <button onClick={() => setBi((i) => Math.max(0, i - 1))} disabled={bi === 0} style={{
-              padding: '12px 16px', borderRadius: 999, border: `1px solid ${CC.border}`, background: CC.surface,
-              color: bi === 0 ? CC.ink4 : CC.ink2, cursor: bi === 0 ? 'default' : 'pointer', fontFamily: SANS, fontSize: 13.5,
-            }}>← Back</button>
-            <button onClick={() => setBi((i) => Math.min(STORY_BEATS.length - 1, i + 1))} style={{
-              flex: 1, padding: '12px 16px', borderRadius: 999, border: 'none', background: CC.ink, color: '#fff',
-              cursor: 'pointer', fontFamily: SANS, fontSize: 14, fontWeight: 500,
-            }}>{bi === STORY_BEATS.length - 1 ? 'Finish the story' : 'Continue →'}</button>
-          </div>
-        </div>
-      </div>
-
-      {/* bottom strip: chapter timeline */}
-      <div style={{ minHeight: 100, flexShrink: 0, borderTop: `1px solid ${CC.border}`, background: CC.bg, display: 'flex', alignItems: 'center', gap: 22, padding: '14px 30px' }}>
-        <div style={{ flexShrink: 0 }}>
-          <Eyebrow style={{ color: CC.ink3 }}>The story</Eyebrow>
-          <div style={{ fontFamily: MONO, fontSize: 13, color: CC.ink, marginTop: 4, ...TNUM }}>1980 → 2025</div>
-        </div>
-        <div style={{ width: 1, height: 56, background: CC.border }} />
-        <div style={{ flex: 1, minWidth: 0, position: 'relative', height: 50, display: 'flex', alignItems: 'center' }}>
-          <div style={{ position: 'absolute', left: 0, right: 0, height: 3, borderRadius: 999, background: CC.border }} />
-          <div style={{ position: 'absolute', left: 0, width: `${(beat.tick / LAST) * 100}%`, height: 3, borderRadius: 999, background: CC.ink }} />
-          {/* faint event ticks for context */}
-          {TL_EVENTS.filter((e) => e.fn).map((e) => (
-            <span key={e.tick} style={{ position: 'absolute', left: `${(e.tick / LAST) * 100}%`, top: 19, width: 1, height: 12, background: CC.ink4, transform: 'translateX(-50%)' }} />
-          ))}
-          {STORY_BEATS.map((b, k) => {
-            const on = k === bi, past = b.tick <= beat.tick;
-            return (
-              <button key={k} onClick={() => setBi(k)} title={b.title} style={{
-                position: 'absolute', left: `${(b.tick / LAST) * 100}%`, transform: 'translateX(-50%)', top: 2,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-              }}>
-                <span style={{ width: on ? 15 : 12, height: on ? 15 : 12, borderRadius: 999, background: past ? CC.ink : CC.surface, border: `2px solid ${past ? CC.ink : CC.ink4}` }} />
-                <span style={{ fontFamily: SANS, fontSize: 11, color: on ? CC.ink : CC.ink3, whiteSpace: 'nowrap', fontWeight: on ? 600 : 400 }}>{b.title}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-window.ConceptStory = ConceptStory;
 window.STORY_BEATS = STORY_BEATS;

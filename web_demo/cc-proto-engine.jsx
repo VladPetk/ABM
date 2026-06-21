@@ -1,5 +1,5 @@
 // Calm to Camps — prototype engine
-// Thin layer over window.CC_DATA (the real polarlab export, repacked compact).
+// Thin layer over window.CC_DATA (the real model export, repacked compact).
 // Provides party/colour mapping, fractional-tick interpolation of agent
 // positions and macro metrics, network-snapshot lookup, and the usePlayhead
 // hook that drives play / pause / speed / scrub with localStorage persistence.

@@ -20,11 +20,22 @@ const FF = window.CC_FREEFLOW || null;
 const _FF_OK = !!(FF && FF.run && FF.run.pos);
 const _PLX = 'clamp(64px, 14vw, 248px)';
 
+// inline prose link — routes via the prologue page wrapper's data-goto handler
+// (cc-unified). `goto` is a page id ('forces' / 'methods'). Defined BEFORE
+// PROLOGUE_BEATS because the beat bodies reference it at array-build time.
+const _PLink = ({ goto, children }) => (
+  <button data-goto={goto} style={{ background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', fontSize: 'inherit', color: CC.ink, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer' }}>{children}</button>
+);
+
 // engine-first chapters (tick-anchored, like STORY_BEATS) — no America, no events.
 const PROLOGUE_BEATS = [
-  { tick: 0, short: 'The engine', title: 'Meet the engine',
-    lead: 'Start with the bare machine — its rules, running on nothing but themselves.',
-    body: '250 simulated people, each a point on the compass and a node in a web of social ties. A handful of mechanisms from the polarization research move them: they drift toward the neighbours they’re close enough to actually hear (bounded-confidence influence); they lean toward their own side; their feeling toward the other side updates with every interaction — and can harden into backlash as readily as it eases; and the network itself slowly re-sorts, so people end up tied to the like-minded (homophily). Most are anchored and barely move; a restless few drift freely. There’s no partisan-media build-up, no elite prising the parties apart, no events — those are the historical forces, and here they’re switched off. This is just the mechanics, from a calm start. Scrub through 45 years. (On the map: the two parties show as navy and oxblood, grey is where they overlap, and the dashed line tracks the gap between them.)' },
+  { tick: 0, short: 'The engine', title: 'Engine in action',
+    lead: 'All the forces at once now — the engine running on nothing but its own rules.',
+    body: (
+      <>
+        250 simulated people, each a point on the compass and a node in a web of social ties. It runs on the same forces laid out <_PLink goto="forces">force by force</_PLink> — bounded confidence, party pull, homophily and the rest — plus numerous others (cohort turnover, identity sorting, threat dynamics, and more) detailed in the <_PLink goto="methods">Methods</_PLink>. Most are anchored and barely move; a restless few drift freely. There’s no partisan-media build-up, no elite prising the parties apart, no events — those are the historical forces, and here they’re switched off. This is just the mechanics, from a calm start. Scrub through 45 years. (On the map: the two parties show as navy and oxblood, grey is where they overlap, and the dashed line tracks the gap between them.)
+      </>
+    ) },
   { tick: 48, short: 'It cools', title: 'On its own, it cools',
     lead: 'Left to themselves, the forces do something — but not everything.',
     body: 'Warmth toward the other side drains away, steadily, and the two leanings pull a little apart. This much the mechanism produces all by itself, with no help from the outside world.' },
@@ -110,7 +121,7 @@ function PrologueBeatRail({ beat, tick, year, onSkip }) {
     <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
       <div style={{ flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px 8px ${_PLX}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-          <Eyebrow>Prologue · the engine alone</Eyebrow>
+          <Eyebrow>The engine, on its own</Eyebrow>
           {onSkip && <button onClick={onSkip} style={_skipStyle}>skip ahead →</button>}
         </div>
         <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(28px,3.2vw,40px)', lineHeight: 1.05, letterSpacing: '-.018em', maxWidth: 460 }}>{beat.title}</h2>
@@ -126,8 +137,8 @@ function PrologueBeatRail({ beat, tick, year, onSkip }) {
   );
 }
 
-// the closing rail — all six forces at once (engine-alone) hit their ceiling;
-// the comparison to a real country, and the three doors out of the tour.
+// the closing rail — every force at once (engine-alone) hits its ceiling;
+// the comparison to a real country, and the two doors out: the U.S. story · the 3-D view.
 function PrologueEndRail({ usArr, ffArr, onToStory, onPlayground, on3D }) {
   const doorAlt = {
     flex: 1, padding: '12px 14px', borderRadius: DS.rad.pill, border: `1px solid ${CC.border}`, background: CC.surface,
@@ -136,14 +147,14 @@ function PrologueEndRail({ usArr, ffArr, onToStory, onPlayground, on3D }) {
   return (
     <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
       <div style={{ flexShrink: 0, padding: `clamp(24px,4vh,44px) 44px 8px ${_PLX}` }}>
-        <Eyebrow>The engine · all six forces, together</Eyebrow>
+        <Eyebrow>The engine · every force at once</Eyebrow>
         <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(26px,3vw,38px)', lineHeight: 1.05, letterSpacing: '-.018em', maxWidth: 460 }}>These forces alone aren’t enough</h2>
         <p style={{ margin: '14px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.4, color: CC.ink, maxWidth: 460 }}>Run the same mechanism against a country that actually polarized — say, the United States.</p>
         <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
           The <strong>feelings</strong> line up almost exactly — animus is something the mechanism generates on its own, no outside help needed.
         </p>
         <p style={{ margin: '12px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
-          But the real <strong>split</strong> runs far past anything the engine reaches alone, and keeps climbing after ~2010 while the engine stalls. That gap is what mechanisms can’t make by themselves — <strong>external shocks</strong>: partisan media, dated events, the timing of who mobilized when. The engine supplies the forces; history supplies the shove. (And the six you just toured are only a slice — the full model carries more dials still.)
+          But the real <strong>split</strong> runs far past anything the engine reaches alone, and keeps climbing after ~2010 while the engine stalls. That gap is what mechanisms can’t make by themselves — <strong>external forcings</strong> switched off here: the partisan-media build-up, dated events, the timing of who mobilized when. The engine supplies the forces; history supplies the shove. (And the forces you just toured are only a slice — the full model carries more dials still.)
         </p>
         <div style={{ marginTop: 18, maxWidth: 480 }}>
           <PChart title="Party separation — the split" sub="tracks, then peels away after ~2010" us={usArr('sep')} ff={ffArr('sep')} marker />
@@ -223,9 +234,10 @@ function ProloguePage({ onToStory, onPlayground, on3D }) {
           <Field run={run} tick={tick} layer="position" view="density" showGap dim={ended ? 0.24 : 0} landmarks={false} />
         </div>
         {/* the engine-alone marker chip (mirrors the story's "paused at…" chip) */}
+        {!ended &&
         <div style={{ position: 'absolute', right: 24, top: 20, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: CC.ink3, background: 'rgba(249,248,244,.85)', padding: '5px 12px', borderRadius: 999, border: `1px solid ${CC.border}` }}>
-          <span style={{ width: 7, height: 7, borderRadius: 999, background: '#9aa0a6' }} /> the engine alone · {ended ? '1980–2025' : year}
-        </div>
+          <span style={{ width: 7, height: 7, borderRadius: 999, background: '#9aa0a6' }} /> the engine alone · {year}
+        </div>}
         {/* paper scrim — keeps the floating prose legible */}
         <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '56%', background: `linear-gradient(90deg, ${CC.bg} 0%, ${CC.bg} 88%, rgba(249,248,244,0) 100%)`, pointerEvents: 'none', zIndex: 1 }} />
         {/* floating narrative — same left column as the story */}

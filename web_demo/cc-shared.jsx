@@ -146,14 +146,13 @@ function seriesPath(series, key, x0, y0, w, h) {
 }
 
 // ── Small primitives ──────────────────────────────────────────────────────
+// The brand mark: two dots (navy Democrat · oxblood Republican). The wordmark
+// text lives next to it in the header (SiteHeader), so the mark stays text-free.
 function Logo({ size = 13.5, color = CC.ink }) {
   return (
-    <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: size, fontWeight: 600, letterSpacing: '-.015em', color }}>
-      <span style={{ display: 'inline-flex', gap: 3 }}>
-        <span style={{ width: 7, height: 7, borderRadius: 999, background: CC.d }} />
-        <span style={{ width: 7, height: 7, borderRadius: 999, background: CC.r }} />
-      </span>
-      polarlab
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+      <span style={{ width: 7, height: 7, borderRadius: 999, background: CC.d }} />
+      <span style={{ width: 7, height: 7, borderRadius: 999, background: CC.r }} />
     </span>
   );
 }
