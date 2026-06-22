@@ -1037,17 +1037,8 @@ function ForcesTour({ onFinale }) {
   );
 }
 
-// dev harness (forces-lab.html) — the tour in isolation, no site header.
-function ForcesLabPage() {
-  return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <ForcesTour onFinale={() => {}} />
-    </div>
-  );
-}
-
 Object.assign(window, {
-  ForceToy, ForceBar, ForcesTour, ForcesLabPage, FORCES, FORCE_ORIENT,
+  ForceToy, ForceBar, ForcesTour, FORCES, FORCE_ORIENT,
   seedMixed, seedAgents: seedMixed, seedAffect, seedNetwork, seedMedia, seedBackfire,
   stepBC, stepParty, stepAffect, stepRewire, stepMedia, stepBackfire,
   spreadOf, partyGap, meanWarmth, crossTieFrac, meanExtremity,

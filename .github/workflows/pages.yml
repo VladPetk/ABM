@@ -1,0 +1,45 @@
+name: Deploy web demo to GitHub Pages
+
+# Publishes the static web demo (web_demo/) to GitHub Pages. The demo is
+# build-free (React UMD + @babel/standalone compiling .jsx in-browser), so the
+# folder is uploaded as-is — no npm/build step. cc-data.js is committed; to
+# refresh it, re-run the data pipeline (see README) before pushing.
+#
+# One-time setup: in the repo Settings → Pages, set "Source" to "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web_demo/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; don't cancel an in-progress production deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload web_demo as the Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web_demo
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

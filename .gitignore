@@ -114,3 +114,66 @@ _temp/
 # only, no data). Built by hand from the current-vs-legacy triage — see its
 # own SNAPSHOT_README.md. Not part of the repo.
 _current_state_snapshot/
+# === Public-release declutter (2026-06-22): internal audit/investigation trail ===
+# Kept on disk + in git history; unpublished from the public repo (Tidy surface).
+# Removable because uncited by any canonical doc and not imported by tests/pipeline.
+/scripts/audit/e0_loop_feasibility.py
+/scripts/audit/e5_holdout.py
+/scripts/audit/e5_preset_smoke.py
+/scripts/audit/events_brake_bisection.py
+/scripts/audit/events_brake_confirm.py
+/scripts/audit/intervention_durability_decomp.py
+/scripts/audit/phase6_npe_ridge.py
+/scripts/audit/pilot_cov_addendum.py
+/scripts/audit/racialization_calib_probe.py
+/scripts/audit/racialization_clean_tests.py
+/scripts/audit/racialization_final_fit.py
+/scripts/audit/racialization_fit_compare.py
+/scripts/audit/racialization_kick_probe.py
+/scripts/audit/racialization_onset_validate.py
+/scripts/audit/racialization_spillover_probe.py
+/scripts/audit/s4_holdout.py
+/scripts/audit/t06_desaturate.py
+/scripts/audit/t32_datafed_check.py
+/scripts/audit/x2_channel_probe.py
+/scripts/audit/x6_reconvergence_decomp.py
+/scripts/audit/x6_sustained_probe.py
+/validation/_fingerprint.py
+/validation/_realism_econ_off.py
+/validation/anchors_gss.json
+/validation/econ_gap_analysis.py
+/validation/ensemble_headline.json
+/validation/exp_demography.py
+/validation/exp_emergent.py
+/validation/gen_run.py
+/validation/gss_cohort_gradient.json
+/validation/overlap_1996.py
+/validation/real_sorting_curves.json
+/validation/render_ensemble_compass.py
+/validation/render_export_compass.py
+/validation/audit/OVERNIGHT_REPORT.md
+/validation/audit/_adv_corr_vs_anes.py
+/validation/audit/_advreview_drivers_probe.py
+/validation/audit/_advreview_ratchet_probe.py
+/validation/audit/_bitident_fp.py
+/validation/audit/_forcing_check.py
+/validation/audit/_synthesis.md
+/validation/audit/affect_band_compare_configs.py
+/validation/audit/affect_band_score.py
+/validation/audit/affect_recal_scope.json
+/validation/audit/affect_recal_scope.py
+/validation/audit/bc_force_probe.py
+/validation/audit/bc_off_counterfactual.py
+/validation/audit/channel_decomp.py
+/validation/audit/fed_axis_dependence_probe.py
+/validation/audit/fit_axes.png
+/validation/audit/fit_battery.py
+/validation/audit/media_inward_probe.py
+/validation/audit/recal_fit_result.json
+/validation/audit/stream_affect_check.py
+/docs/results/econ_gap_attribution.md
+/docs/results/structural_phase_survey.md
+/docs/results/blindspot_priority.md
+
+# Internal developer guide — kept on disk + in history, not published.
+/CLAUDE.md
