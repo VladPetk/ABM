@@ -48,7 +48,7 @@ function SiteHeader({ page, setPage }) {
       </button>
       <span style={{ flex: 1 }} />
       <nav style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-        <HeaderNavLink id="forces" target="forces" active={page === 'model' || page === 'forces' || page === 'prologue'} page={page} setPage={setPage}>The Forces</HeaderNavLink>
+        <HeaderNavLink id="forces" target="forces" active={page === 'model' || page === 'forces' || page === 'prologue'} page={page} setPage={setPage}>The Model</HeaderNavLink>
         <HeaderNavLink id="story" target="story" active={page === 'story'} page={page} setPage={setPage}>The U.S. Story</HeaderNavLink>
         <HeaderNavLink id="playground" page={page} setPage={setPage}>Playground</HeaderNavLink>
         <HeaderNavLink id="methods" page={page} setPage={setPage}>Methods</HeaderNavLink>
