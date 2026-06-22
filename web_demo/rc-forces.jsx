@@ -733,19 +733,19 @@ function ForceToy({ force, knob = 0, playing = false, revealed = false, onAutoRe
 const FORCE_BC = {
   id: 'bc',
   eyebrow: 'How the engine works · force 1 of 5',
-  title: 'People drift toward the neighbours they can still hear.',
-  lead: 'Bounded-confidence influence — the first and gentlest force.',
+  title: 'Interaction builds consensus, in some cases.',
+  lead: 'Talking helps, but only if some agreement is already there.',
   body: (
     <>
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Each person edges toward the average of everyone close enough to actually take seriously — inside their <strong>confidence radius</strong> (the dashed ring). Anyone too far away is simply tuned out. Pick someone up and drop them somewhere new to see who they’d then listen to.
+        Each person moves toward those close enough to them to have a constructive conversation. Hence the <em>bounded confidence</em> name - confidence in other people’s opinions bounded by how much they agree - anything out of those bounds gets ignored. On the compass this is represented by each person’s <strong>confidence radius</strong> (the dashed ring). Dots with overlapping rings mingle and build consensus. If the rings don’t overlap - conversations don’t happen or go nowhere. Think about it - do you often genuinely try to understand people who hold views that are anathema to you?
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Press play. The crowd clumps into <strong>shared clusters</strong> and the party colours <em>mix</em>. Left alone, listening-to-your-neighbours builds <strong>agreement</strong>, not two camps. Widen the radius and everyone converges on one blob; narrow it and the crowd shatters into islands. Polarization has to come from somewhere else.
+        See the force in action. The crowd clumps into <strong>shared clusters</strong> and the party colors <em>mix</em>. Left to itself, listening to your neighbors tends toward <strong>agreement</strong> (albeit in your circle) rather than division. Widen the radius (increase confidence) and everyone converges on one big blob; narrow it and the crowd shatters into islands.
       </p>
     </>
   ),
-  caption: 'The engine recovers classic Hegselmann–Krause as the all-to-all special case.',
+  caption: 'Nerdy note: the engine recovers classic Hegselmann–Krause as the all-to-all special case.',
   seed: seedMixed,
   step: (ags, knob) => stepBC(ags, knob, 0.05, 0.05, 0.020),
   knob: { label: 'confidence radius', min: 0.12, max: 0.9, step: 0.01, def: 0.34 },
@@ -757,19 +757,19 @@ const FORCE_BC = {
 const FORCE_PARTY = {
   id: 'party',
   eyebrow: 'How the engine works · force 4 of 5',
-  title: 'Each side feels a steady tug toward its own pole.',
-  lead: 'Party pull — sorting from the top down.',
+  title: 'Party pull: following your side’s lead.',
+  lead: 'Influence that comes down from the top — the leaders, not the neighbors.',
   body: (
     <>
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Now a force from above. Each person feels a steady tug from their side’s banner — an <strong>elite cue</strong> pulling Democrats toward one pole, Republicans toward the other (the two dashed targets). Independents feel no pull and stay in the middle. <strong>Drag a pole</strong> to re-aim a whole side — or drag a person and watch their own side reel them back.
+        A lot of our politics comes from the top. A party’s leaders take a stance, and over time their electorate drifts closer to it. Political scientists call it an <strong>elite cue</strong>, but you may have felt it yourself: an issue you’d hardly thought about suddenly feels salient and you know where <em>you</em> stand on it. Each party has its pole here (the two dashed targets); independents, with no team to follow, stay put. <strong>Drag a pole</strong> and you swing a whole side with it; pull a person away and watch their side drag them back.
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Press play. The mixed crowd <strong>splits</strong> — the colours peel apart into two camps with a thinning middle. Where backfire split the crowd from below, this sorts it <strong>from above</strong> — a tug from the party banner, not from your neighbours. Turn the pull up and the camps snap to their poles; turn it down and they drift back toward the centre.
+        As it runs, the mixed crowd comes apart, the colors peeling into two camps with the middle thinning between them. Crank the pull up and each side snaps tight to its pole; ease it back down and they drift toward the center again.
       </p>
     </>
   ),
-  caption: 'Faithful in form to the engine’s PartyPull — elite-cue drift toward the party pole.',
+  caption: 'Nerdy note: faithful in form to PartyPull — elite-cue drift toward each party’s own emergent pole.',
   seed: seedMixed,
   step: (ags, knob, anchors) => stepParty(ags, knob, anchors, 0.012),
   anchors: () => [
@@ -785,19 +785,19 @@ const FORCE_PARTY = {
 const FORCE_AFFECT = {
   id: 'affect',
   eyebrow: 'How the engine works · the second axis',
-  title: 'They stop moving — and start to loathe each other.',
-  lead: 'Affect — not a push, but the feeling the forces breed.',
+  title: 'Disagreeing is only half the story',
+  lead: 'Affect: not a push by itself, but the feeling the forces before fail to capture.',
   body: (
     <>
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        This one isn’t really a force — nobody gets shoved, no <em>position</em> changes. It’s a <strong>result</strong>: the feeling the other forces breed, and the second axis polarization is measured on. Looking straight down, almost nothing seems to happen — but warmth toward the other side is quietly draining, driven by <strong>contact</strong> (the more of them around you, the faster you sour) and a <strong>negativity bias</strong> (the knob).
+        Affect isn’t really a force at all — rather it’s a <strong>result</strong>. It’s the feeling the other forces breed which becomes the second, different dimension that polarization gets measured on. Look straight down at the compass and almost nothing seems to be happening. Then the axes tilt and a new movement path becomes apparent - it’s the emotional side of polarization. Two things drive it: <strong>contact</strong> (the more of the other side around you, the faster you sour) and a <strong>negativity bias</strong> (the knob).
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Press play. At first, barely anything — just a little jitter. Then the camera tilts <em>on its own</em>, and a whole third dimension lifts into view: the animus that’s been building where you weren’t looking. Democrats rise, Republicans sink — the vertical gap <em>is</em> their mutual contempt. That’s the <strong>scissors</strong>: same views, opposite emotional worlds. (Flatten or reveal it yourself any time.)
+        On screen, Democrats lift up, Republicans sink down, and the vertical gap between them is their mutual animosity.
       </p>
     </>
   ),
-  caption: 'Faithful in form to the engine’s AffectiveUpdate — contact-driven, negativity-biased. Affect is ~83% emergent in the shipped model.',
+  caption: 'Nerdy note: In the shipped model, affect is about 83% emergent.',
   seed: seedAffect,
   step: (ags, knob) => stepAffect(ags, knob, 0.022, 0.004),
   lift: (a) => (PSGN[a.party] || 0) * Math.max(0, -(a.warm == null ? 0 : a.warm)) * HEIGHT,
@@ -811,19 +811,19 @@ const FORCE_AFFECT = {
 const FORCE_NETWORK = {
   id: 'network',
   eyebrow: 'How the engine works · force 3 of 5',
-  title: 'Your circle quietly closes around your own side.',
-  lead: 'Homophily — the network rewires into echo chambers.',
+  title: 'Homophily - literally love of the same',
+  lead: 'You slowly lose touch with those you disagree with.',
   body: (
     <>
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Everyone now sits in a web of social ties (the lines). At first it’s mixed — plenty of links cross the aisle (the <strong>dark bridges</strong> between the two camps). But people slowly trade ties that chafe for ones that feel like home: drop a cross-party link, add a same-side one. Hover or drag a dot to light up its circle.
+        Every dot sits in a web of social ties (the lines). At first it’s mixed: plenty of links cross the aisle. But people don’t want to constantly find themselves arguing and defending their positions; so they slowly trade ties that irritate for ones that soothe. Over time this tendency largely erodes the cross-aisle links, leaving only what cannot be given up easily (colleagues, neighbors, fellow commuters).
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Press play. Most of the dark bridges thin out as people trade them away — but a stubborn few never break: the <strong>involuntary</strong> ties nobody chooses, like work, family, or the block you live on. Each side knits tighter, yet a handful of cross-cutting links survive. This is the <strong>ratchet</strong> — the web seals, but never completely. Turn homophily down to keep it mixed; up to close the bubbles fast.
+        Look at the compass. Most of the bridges thin out as people trade them away, but a few stubborn ones never break - these are the <strong>involuntary</strong> ties nobody chooses, like work, family, or neighbors. This is the <strong>ratchet</strong>: your network slowly seals itself, but some outside influence always remains. Turn homophily down to keep it mixed; up to close the bubbles fast.
       </p>
     </>
   ),
-  caption: 'Faithful in form to the engine’s TieRewiring — slow homophilous network co-evolution.',
+  caption: 'Nerdy note: faithful in form to Tie Rewiring — slow homophilous network co-evolution.',
   seed: seedNetwork,
   step: (ags, knob) => stepRewire(ags, knob),
   knob: { label: 'homophily', min: 0, max: 0.2, step: 0.01, def: 0.02 },
@@ -835,19 +835,19 @@ const FORCE_NETWORK = {
 const FORCE_MEDIA = {
   id: 'media',
   eyebrow: 'How the engine works · force 5 of 5',
-  title: 'A handful tune in — and get pulled to the edges.',
-  lead: 'Partisan media — the force that stretches the tails.',
+  title: 'Turn on the news, and you may drift toward your own side.',
+  lead: (<>Heavy media users exposed to <strong>partisan media</strong> are influenced.</>),
   body: (
     <>
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Out past each camp sits a <strong>partisan outlet</strong> (the diamonds), further out than anyone. People tune into their <em>own</em> side — selective exposure — and the pull depends on how heavily they consume. <strong>Drag an outlet</strong> and watch the tail follow it — or drag a person to see which outlet it’s wired to.
+        Each party has its outlets (the diamonds). People tune in to their preferred ones, often based on political affiliation — what researchers call selective exposure. The more of partisan media they watch, the harder their outlet pulls them toward it. <strong>Drag an outlet</strong> to change where it pulls; drag a person to see which outlet they’re wired to.
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Press play. Most people barely move — but the heavy consumers get hauled out toward the extremes, and each camp grows a long <strong>tail</strong> reaching for the corner. Media doesn’t sort the middle; it <strong>stretches the edges</strong>. Turn the diet up and the tails reach the outlets; down and everyone stays put.
+        As it runs, most people barely move; it’s the heavy consumers who get drawn toward their outlet, coming out more partisan the more they watch — how far, and which way, depends on where the outlets sit. Turn the diet up and the pull strengthens (and vice versa).
       </p>
     </>
   ),
-  caption: 'Faithful in form to MediaConsumption. Unlike the universal mechanisms, this is a country-specific FORCING (a media-penetration curve) — the kind of input a real country such as the US switches on.',
+  caption: 'Nerdy note: Unlike the universal mechanisms on the other pages, this one is country-specific and uses a media-penetration curve tailored per country (the U.S. in the story that follows).',
   seed: seedMedia,
   step: (ags, knob, anchors) => stepMedia(ags, knob, anchors, 0.004),
   anchors: () => [
@@ -863,19 +863,19 @@ const FORCE_MEDIA = {
 const FORCE_BACKFIRE = {
   id: 'backfire',
   eyebrow: 'How the engine works · force 2 of 5',
-  title: 'The same contact — now it shoves them apart.',
-  lead: 'Backfire — what bounded confidence becomes once people turn cold.',
+  title: 'The same contact, now it shoves people apart.',
+  lead: 'Backfire: the flip side of bounded confidence.',
   body: (
     <>
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Bounded confidence pulled neighbours together — but only when they could still <em>hear</em> each other. Here’s the flip side. Each cross-party encounter is now checked against how warm you feel: stay above a line and contact is harmless; drop below it and the same brush pushes you <strong>away</strong>. Reach for the <strong>hostility</strong> knob.
+        Bounded confidence pulled people together, but only when they could still <em>hear</em> each other. What happens if you do talk to someone from ‘the other side’? The backfiring force describes exactly that. Each cross-party encounter is now checked against how hostile you feel: up until a certain threshold the contact is harmless; but cross it and talking to someone you disagree with propels you <strong>away</strong>.
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Turn it low and press play — the mixed crowd just sits there; contact does nothing. Turn it high and the <em>same</em> encounters become repellent: a salt-and-pepper mix tears itself into two camps on disgust alone. Drag a cold dot toward the other side and watch it recoil. It’s why “just get people talking” can make things worse.
+        Reach for the <strong>hostility</strong> knob. With it low, the mixed crowd just sits there, not much happening; turn it high and the <em>same</em> encounters become repellent, quickly forming a schism in the crowd. Drag a dot toward the other side and watch it recoil. This is what makes fostering constructive debates such an ambitious goal.
       </p>
     </>
   ),
-  caption: 'Faithful in form to the engine’s BacklashRepulsion (Bail 2018) — affect-gated; fires only when warmth is already cold, warm contact stays benign.',
+  caption: 'Nerdy note: faithful in form to Backlash Repulsion (Bail 2018) — gated by affect and fires only when warmth is already low.',
   seed: seedBackfire,
   step: (ags, knob) => stepBackfire(ags, knob, 0.022, 0.05, 0.7, 0.004),
   knob: { label: 'hostility', min: 0, max: 1, step: 0.05, def: 0.8 },
@@ -892,18 +892,18 @@ const FORCE_ORIENT = {
   id: 'orient',
   eyebrow: 'How the engine works · orientation',
   title: 'Two axes, a few hundred people.',
-  lead: 'Before any force moves — what you’re looking at.',
+  lead: 'First, what you are looking at.',
   body: (
     <>
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        The floor is a <strong>political compass</strong>: left–right is the <strong>economic</strong> axis, up–down the <strong>cultural</strong> one. Every dot is one simulated person, placed by where they stand. <strong>Navy</strong> leans Democratic, <strong>oxblood</strong> Republican, <strong>grey</strong> sits independent in the middle.
+        The graph on the right is a <strong>political compass</strong>: left to right is the <strong>economic</strong> axis (from centralized to free), up–down the <strong>cultural</strong> one (from traditional to progressive). Every dot is one simulated person, their beliefs dictating their position on the compass. <strong>Navy</strong> leans Democratic, <strong>oxblood</strong> Republican, <strong>gray</strong> sits independent in the middle.
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-        Right now nobody’s moving — this is just the map. Hover a dot to pick it out. Then we switch the forces on, <strong>one at a time</strong>, and watch what each one does to this same crowd.
+        Right now nobody is moving. On the following pages you’ll see the forces that move them <strong>one at a time</strong>, starting with the smart-sounding ‘bounded confidence’.
       </p>
     </>
   ),
-  caption: 'The same compass the rest of the site uses — navy Democrat, oxblood Republican.',
+  caption: 'The same compass the rest of the site uses: economic and cultural axes create the political space.',
   seed: seedMixed,
   step: () => {},          // nothing moves — the orientation is a still map you read
   knob: null,

@@ -84,35 +84,39 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D }) {
   return (
     <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
       <div style={{ flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px 8px ${LX}` }}>
-        <Eyebrow>An agent-based model · 250 simulated people</Eyebrow>
+        <Eyebrow>An agent-based model · 250 simulated citizens</Eyebrow>
         <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(30px, 3.4vw, 44px)', lineHeight: 1.06, letterSpacing: '-.02em', maxWidth: 520 }}>
-          How a crowd splits into two camps — and what, if anything, could pull it back.
+          Simulating political polarization, visually
         </h2>
         <p style={{ margin: '20px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
-          Every dot on this map is one simulated person: a position on the
-          political compass — economics left to right, culture top to bottom —
-          and a place in a web of social ties. Influence travels through the
-          ties, not across distance on the map.
+          This is a (rather accurate) simulation of how politics polarize. It's
+          built using well-established mechanisms from polarization research and
+          real-world survey data. The website allows you to interact with the
+          engine and see polarization unfold - in the process learning more about
+          what drives it, what stalls it, and what it actually means to be
+          'polarized'.
         </p>
         <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
-          A handful of forces move them: people drift toward those they’re tied
-          to; they follow their party’s lead; they soak up their media diet;
-          warmth toward the other side can curdle. Every force has a dial — the
-          rest of this site is about turning them.
+          I invite you to take the tour of the simulation engine. You'll be
+          introduced to the forces (and get a chance to play around with them),
+          get a visual feel for how society polarizes, and get a chance to see
+          the engine tuned to a specific case - the U.S. Afterwards (or now if
+          feeling rebellious), you can dive into the sandbox to see what happens
+          if we tinker with the forces driving the divide.
         </p>
         <div style={{ marginTop: 28, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <button onClick={onWatch} style={watchStyle}>Meet the forces &nbsp;→</button>
+          <button onClick={onWatch} style={watchStyle}>Take the tour &nbsp;→</button>
           <button onClick={onSandbox} style={sandboxStyle}>Open the sandbox</button>
         </div>
         <div style={{ marginTop: 22, display: 'flex', gap: 18, alignItems: 'baseline', flexWrap: 'wrap' }}>
           <button onClick={on3D} style={quiet}>see it in three dimensions →</button>
-          <button onClick={onAbout} style={quiet}>built by one person — why →</button>
+          <button onClick={onAbout} style={quiet}>Why did I build it? →</button>
         </div>
       </div>
       <div style={{ flexShrink: 0, padding: `18px 44px clamp(24px,4vh,40px) ${LX}`, display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ width: 7, height: 7, borderRadius: DS.rad.pill, background: '#c47a2c', flexShrink: 0 }} />
         <span style={{ fontFamily: MONO, fontSize: DS.type.micro, color: CC.ink3, ...TNUM }}>
-          {Math.floor(tickToYear(tick))} · the 45 years on loop — every dot is moving
+          {Math.floor(tickToYear(tick))} · 45 years of polarization on a loop.
         </span>
       </div>
     </div>);

@@ -31,36 +31,50 @@ function AboutPage() {
     <PageShell
       eyebrow="About"
       title="The Divide"
-      lead="How a country that mostly agreed to disagree sorted itself into two camps that can barely speak.">
+      lead="How politics pulled apart: drifting away on the issues, and disliking the other side more than the drift calls for.">
       <Prose>
-        <strong style={{ color: CC.ink, fontWeight: 600 }}>The Divide</strong> is an interactive model of how a public
-        splits into hostile camps — a handful of universal forces, run against one worked example: American political
-        polarization from 1980 to 2025. It follows a simulated public — 250 Americans — as they drift across
-        a political compass, and pauses at the moments that moved the country: cable news, the social-media feed, a
-        status-threat shock. The aim is to make a slow, abstract process visible, then hand you the controls and let you
-        ask the obvious question — <em>could anything have pulled them back together?</em>
+        <strong style={{ color: CC.ink, fontWeight: 600 }}>The Divide</strong> is an interactive model of political
+        polarization — how a public splits into hostile camps. It's a simulation built primarily as an educational tool:
+        you can learn about both how polarization (and its simulation) work in general and about American political
+        polarization specifically. The story in this demo follows a simulated public — 250 people — as they drift across
+        a political compass, pausing at moments to explain a force or note a salient event. The aim is to make a slow,
+        abstract process visible and intuitive, both by showing and by letting you pull the levers yourself.
       </Prose>
 
-      <H2>The claim, in one breath</H2>
+      <H2>What this is (and isn't)</H2>
       <Prose>
-        Americans haven't actually moved that far apart on the issues. What changed is how they <em>feel</em> about each
-        other. Positional distance crept up; affective warmth toward the other side collapsed. Distance and animus are
-        different axes, and the second one is where the damage is — that distinction is the spine of the whole piece.
+        This isn't an argument with a thesis. It's a model. A handful of forces (albeit carefully constructed), run
+        together, produce something that looks like the polarization a country lived through. It won't tell you who's
+        right, or where the real harm lies. It just moves dots on a map, trying to stay honest about how it does that.
       </Prose>
 
       <H2>Who this is for</H2>
       <Prose>
-        It's built for the curious non-specialist: someone who has felt the country harden and wants to understand the
-        mechanism without a literature review. Everything quantitative is explained in plain language as you go, and the
-        honest answer to "what fixes this?" — <em>most things barely work</em> — is delivered plainly rather than sold.
+        This demo is for anyone really — curious non-specialists, academics looking for inspiration, people who just
+        wandered in and stayed for the slick design. It's for anyone who wants to understand the forces behind
+        polarization, see them in action and contextualize them — someone who wants to understand but doesn't quite feel
+        like perusing a literature review. And, not least, it is for myself, which brings us to…
       </Prose>
 
-      <H2>A word on honesty</H2>
+      <H2>What's the point</H2>
       <Prose>
-        This is a model, not a measurement. The realistic interventions are calibrated to published field experiments;
-        the "beyond realism" ones are mechanism-driven thought experiments, cranked past anything we'd calibrate, and are
-        labelled as such everywhere they appear. The point isn't to predict — it's to build intuition for which kinds of
-        levers move a polarized system, and which don't. The <a style={{ color: CC.d, textDecoration: 'none', borderBottom: `1px solid ${CC.dSoft}` }} href="#methods" data-goto="methods">Methods</a> page lays out exactly what's under the hood.
+        I built this project for a couple of reasons. Firstly, I was always fond (if intermittently) of studying politics
+        computationally. Once upon a time, when I was flirting with doing a PhD, I considered an ABM study to examine
+        real-time links between polarization and media consumption. So I suppose it's both satisfying an old intellectual
+        itch and just reminiscing on the younger days. Secondly, I do like to dabble in design a bit, and this was no lame
+        excuse. I got to play with layouts, colors (or absence thereof), fonts, flows, and so on. A creative itch, this
+        time. Thirdly, it's always great to teach people something. I may not miss my short stint in academia, but I do
+        fondly remember the times when I managed to explain something challenging to a student — it felt rewarding every
+        time without fail. And I hope that this demo, too, will succeed in teaching someone at least something. So in a
+        word: it's fun, and might even be useful.
+      </Prose>
+
+      <H2>A disclaimer</H2>
+      <Prose>
+        To close, a word of honesty. This is a model, not a measurement. The realistic interventions are calibrated to
+        published field experiments; the "beyond realism" ones are thought experiments driven by the mechanism, turned up
+        past anything I'd ever calibrate. The aim was never to predict. It's to build some intuition for which kinds of
+        levers actually move a polarized system, and which ones don't. The <a style={{ color: CC.d, textDecoration: 'none', borderBottom: `1px solid ${CC.dSoft}` }} href="#methods" data-goto="methods">Methods</a> page sets out exactly what's under the hood.
       </Prose>
     </PageShell>
   );
@@ -125,8 +139,8 @@ function TagChip({ tag, label }) {
 // ── the forces (the lever-y submodels, mapped to engine rules) ───────────────
 const FORCES_M = [
   { name: 'Bounded confidence', rule: 'BoundedConfidenceInfluence', tag: 'L',
-    what: 'People drift toward the average of the neighbours close enough to still take seriously — inside a confidence radius. Anyone too far away is tuned out.',
-    how: 'Each tick an agent moves a fraction of the way toward the mean position of its network neighbours within radius r, weighted by a graded logistic (not a hard cutoff). Influence travels along ties, not raw distance. Left alone it builds agreement, not camps — classic Hegselmann–Krause is the complete-graph special case.',
+    what: 'People drift toward the average of the neighbors close enough to still take seriously — inside a confidence radius. Anyone too far away is tuned out.',
+    how: 'Each tick an agent moves a fraction of the way toward the mean position of its network neighbors within radius r, weighted by a graded logistic (not a hard cutoff). Influence travels along ties, not raw distance. Left alone it builds agreement, not camps — classic Hegselmann–Krause is the complete-graph special case.',
     cite: 'Hegselmann & Krause 2002; Deffuant et al. 2000' },
   { name: 'Backfire', rule: 'BacklashRepulsion', tag: 'L',
     what: 'The same contact can shove people apart once they have already turned cold on the other side.',
@@ -417,7 +431,7 @@ function MethodsPage() {
           <MSection id="measure" title="What we measure">
             <Prose>
               Polarization isn’t one number. The engine reports two, side by side, because they tell different stories —
-              one crept up, the other fell off a cliff. (Both lines are read live from the shipped baseline.)
+              one crept up, the other dropped sharply. (Both lines are read live from the shipped baseline.)
             </Prose>
             <div style={{ marginTop: 22, display: 'flex', gap: 30, flexWrap: 'wrap' }}>
               <MSpark title="Party separation — positional" metricKey="sep" color={CC.ink} />
@@ -468,13 +482,14 @@ function MethodsPage() {
             <Prose>
               The map isn’t 250 dots by default — it’s a {ink('kernel-density field')} (the same KDE used for the ANES
               build), so you read where the mass <em>is</em>, not individual points. Navy is Democratic, oxblood
-              Republican, grey where they overlap — the vanishing middle. The 3-D view is where the raw individual agents
+              Republican, gray where they overlap — the vanishing middle. The 3-D view is where the raw individual agents
               are shown, one dot each.
             </Prose>
             <Prose>
-              The headline picture is a {ink('“scissors”')}: issue positions barely separate while warmth collapses — two
-              lines crossing. One honest flag: the flat in-party line in that chart is an <strong>external ANES reference,
-              not an engine output</strong>, and is labelled as such wherever it appears.
+              The headline picture is a {ink('“scissors”')}: warmth toward your own side holds steady while warmth toward
+              the other side collapses — two lines pulling apart. One honest flag: the flat in-party line in that chart is
+              an <strong>external ANES reference, not an engine output</strong>, and is labelled as such wherever it
+              appears.
             </Prose>
           </MSection>
 
@@ -483,7 +498,7 @@ function MethodsPage() {
               The engine is stochastic — random tie formation, the noise term, cohort draws — so no single run is
               definitive. The baseline you watch isn’t one lucky seed: it’s the model’s {ink('ensemble center')}. Eight
               independent seeds are pooled and a reproducible cross-seed subsample of 250 agents is drawn from them (we call
-              it Method-B), validated to sit at the centre of the seed-to-seed spread while preserving the model’s true
+              it Method-B), validated to sit at the center of the seed-to-seed spread while preserving the model’s true
               within-party dispersion. The published figures — the honesty budget, the intervention buckets — are likewise
               multi-seed means (6 and 9 seeds).
             </Prose>

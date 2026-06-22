@@ -356,10 +356,10 @@ function NarrativeLeft({ iv }) {
             <Eyebrow>The experiment</Eyebrow>
             <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.display, lineHeight: 1.04, letterSpacing: '-.02em', color: CC.ink }}>Could anything have stopped the U.S. split?</h2>
             <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-              You’re looking at the engine calibrated to the United States, 1980→2025 — the same run that plays out in <a style={{ color: CC.d, textDecoration: 'none', borderBottom: `1px solid ${CC.dSoft}`, cursor: 'pointer' }} href="#story" data-goto="story">the U.S. story</a>. Every lever here re-runs that history with one thing changed, and reports what it does to the American split.
+              This is the engine calibrated to the United States, 1980 to 2025: the same run you watched in <a style={{ color: CC.d, textDecoration: 'none', borderBottom: `1px solid ${CC.dSoft}`, cursor: 'pointer' }} href="#story" data-goto="story">the U.S. story</a>. Each lever here re-runs that history with one thing changed, to isolate its effect.
             </p>
             <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-              Seven real depolarization efforts. Most do less than you’d think, one can backfire, and the win isn’t the obvious one. Pick one and call it before you run it.
+              Below are seven interventions, real things people have tried against the growing divide. Did they work? That is the open question. Pick one and see whether your expectations line up with what the data shows.
             </p>
             <div style={{ marginTop: DS.sp.lg, background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: DS.rad.card, overflow: 'hidden', maxWidth: 480 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '13px 16px 11px', borderBottom: `1px solid ${CC.border}` }}>

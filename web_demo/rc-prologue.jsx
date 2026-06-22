@@ -29,19 +29,19 @@ const _PLink = ({ goto, children }) => (
 
 // engine-first chapters (tick-anchored, like STORY_BEATS) — no America, no events.
 const PROLOGUE_BEATS = [
-  { tick: 0, short: 'The engine', title: 'Engine in action',
-    lead: 'All the forces at once now — the engine running on nothing but its own rules.',
+  { tick: 0, short: 'The engine', title: 'The engine, on its own',
+    lead: 'All the forces at once.',
     body: (
       <>
-        250 simulated people, each a point on the compass and a node in a web of social ties. It runs on the same forces laid out <_PLink goto="forces">force by force</_PLink> — bounded confidence, party pull, homophily and the rest — plus numerous others (cohort turnover, identity sorting, threat dynamics, and more) detailed in the <_PLink goto="methods">Methods</_PLink>. Most are anchored and barely move; a restless few drift freely. There’s no partisan-media build-up, no elite prising the parties apart, no events — those are the historical forces, and here they’re switched off. This is just the mechanics, from a calm start. Scrub through 45 years. (On the map: the two parties show as navy and oxblood, grey is where they overlap, and the dashed line tracks the gap between them.)
+        Same dots-as-people you've just seen, but now rendered as density clouds - the more people in a given area the denser the cloud there. This way it's easier to spot the trends. On the forces tour you switched the mechanisms on one at a time. Here they all run together — the ones you've seen and a handful more (things like cohort replacement and so on; all laid out in the <_PLink goto="methods">Methods</_PLink>). No external data is fed in here — only the forces themselves. The mechanism is general in form, applicable in principle to any democratic country, with its strengths fit to the U.S. Here you can scrub through 45 years of engine running and see where these fundamental forces take the society on their own. (On the map: navy and oxblood are the two parties and the dashed line measures the gap between them.)
       </>
     ) },
-  { tick: 48, short: 'It cools', title: 'On its own, it cools',
-    lead: 'Left to themselves, the forces do something — but not everything.',
-    body: 'Warmth toward the other side drains away, steadily, and the two leanings pull a little apart. This much the mechanism produces all by itself, with no help from the outside world.' },
-  { tick: 96, short: 'It stalls', title: '…then it stalls',
-    lead: 'And here is the ceiling of pure mechanism.',
-    body: 'The split plateaus — it never hardens into two separate worlds, and it even drifts back a touch. The feelings keep cooling, but the positions settle. Forty-five years of nothing-but-forces land about here. Scrub to the end to see what that misses.' },
+  { tick: 48, short: 'It cools', title: 'On its own, it pulls apart',
+    lead: 'Left alone, does anything happen? Some things do.',
+    body: 'Warmth toward the other side does drain away, steadily, and the two leanings do pull a little apart. The mechanism manages this much by itself, with nothing fed in from the outside world.' },
+  { tick: 96, short: 'It stalls', title: 'But then it stalls',
+    lead: 'And here is about as far as the bare forces reach.',
+    body: 'From this point onwards the split flattens out, it even slips back a tad. Though the feelings keep cooling, the positions settle into a sort of optimum. Society never hardens into two genuinely separate worlds. That\'s roughly as far as forty-five years of engine-only forces can take us. But is it enough to model the real-world situation? Scrub to the end - the answer might surprise you.*', footnote: '* click-bait used exclusively ironically' },
 ];
 const _pBeat = (t) => {
   let i = 0;
@@ -131,6 +131,7 @@ function PrologueBeatRail({ beat, tick, year, onSkip }) {
           <Eyebrow style={{ color: CC.ink3 }}>The engine, so far · {year}</Eyebrow>
           <PChart title="Out-party warmth" sub="cools on its own" series={affSeries} tick={tick} deg />
           <PChart title="Party separation" sub="drifts, then stalls" series={sepSeries} tick={tick} />
+          {beat.footnote && <p style={{ margin: '12px 0 0', fontSize: DS.type.micro, lineHeight: 1.4, color: CC.ink4, fontStyle: 'italic' }}>{beat.footnote}</p>}
         </div>
       </div>
     </div>
@@ -148,26 +149,26 @@ function PrologueEndRail({ usArr, ffArr, onToStory, onPlayground, on3D }) {
     <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
       <div style={{ flexShrink: 0, padding: `clamp(24px,4vh,44px) 44px 8px ${_PLX}` }}>
         <Eyebrow>The engine · every force at once</Eyebrow>
-        <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(26px,3vw,38px)', lineHeight: 1.05, letterSpacing: '-.018em', maxWidth: 460 }}>These forces alone aren’t enough</h2>
-        <p style={{ margin: '14px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.4, color: CC.ink, maxWidth: 460 }}>Run the same mechanism against a country that actually polarized — say, the United States.</p>
+        <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(26px,3vw,38px)', lineHeight: 1.05, letterSpacing: '-.018em', maxWidth: 460 }}>The forces alone don’t get us all the way</h2>
+        <p style={{ margin: '14px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.4, color: CC.ink, maxWidth: 460 }}>Compare the in-engine polarization against a country that <em>did</em> polarize — the United States.</p>
         <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
-          The <strong>feelings</strong> line up almost exactly — animus is something the mechanism generates on its own, no outside help needed.
+          So how far does the bare engine reach? On the <strong>feelings</strong>, most of the way — somewhere north of 80 percent. The engine-only line and the real one nearly meet, suggesting that animus can be modeled largely from rather fundamental psychological forces.
         </p>
         <p style={{ margin: '12px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
-          But the real <strong>split</strong> runs far past anything the engine reaches alone, and keeps climbing after ~2010 while the engine stalls. That gap is what mechanisms can’t make by themselves — <strong>external forcings</strong> switched off here: the partisan-media build-up, dated events, the timing of who mobilized when. The engine supplies the forces; history supplies the shove. (And the forces you just toured are only a slice — the full model carries more dials still.)
+          The <strong>position split</strong> is a different story. Alone, the engine reaches only about a third of it, tracking the data well until c. 2010 but then stalling while the real split climbs sharply. This sharp rise is caused by external factors (<strong>forcings</strong>) that are switched off in this view: the build-up of partisan media, momentous events, the timing of who mobilized and when. The engine supplies the forces; history supplies the rest.
         </p>
         <div style={{ marginTop: 18, maxWidth: 480 }}>
-          <PChart title="Party separation — the split" sub="tracks, then peels away after ~2010" us={usArr('sep')} ff={ffArr('sep')} marker />
-          <PChart title="Out-party warmth — the feelings" sub="nearly identical — the engine cools on its own" us={usArr('aff')} ff={ffArr('aff')} deg marker />
+          <PChart title="Party separation — the split" sub="tracks for a while, then peels away after ~2010" us={usArr('sep')} ff={ffArr('sep')} marker />
+          <PChart title="Out-party warmth — the feelings" sub="close, not identical — the engine cools mostly on its own" us={usArr('aff')} ff={ffArr('aff')} deg marker />
           <CompareLegend />
         </div>
         <div style={{ marginTop: 22, maxWidth: 480 }}>
           <Eyebrow style={{ color: CC.ink3 }}>Where to next</Eyebrow>
           <button onClick={onToStory} style={{ marginTop: 10, width: '100%', padding: '13px 18px', borderRadius: DS.rad.pill, border: 'none', background: CC.ink, color: '#fff', cursor: 'pointer', fontFamily: SANS, fontSize: 14, fontWeight: 500 }}>
-            See it hit a real country — the U.S. story →
+            See what actually happened in the U.S. →
           </button>
           <div style={{ marginTop: 10, marginBottom: 12, display: 'flex', gap: 10 }}>
-            <button onClick={on3D} style={doorAlt}>See it in three dimensions →</button>
+            <button onClick={on3D} style={doorAlt}>See the engine in three dimensions →</button>
           </div>
         </div>
       </div>

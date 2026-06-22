@@ -177,21 +177,15 @@ function MapLegend() {
 // three stack step by step.
 const ORIENT_LAYERS = ['blobs', 'rings', 'entities'];
 const ORIENT_BASE = ['axes', 'labels'];
+// A single framing beat at the start of the U.S. story: same engine as the
+// prologue (US-tuned forces), now with the real history switched on. (Replaces
+// the old staged map-reading build — the map is already taught by the intro +
+// forces tour; markers self-label as they appear.)
 const ORIENT_STEPS = [
   {
-    title: 'Where people cluster',
-    lead: 'The dots you just met, read as a crowd.',
-    body: 'Each soft cloud is many Americans; the denser the colour, the more people sit there. Navy leans Democratic, oxblood Republican; where the two overlap the field turns grey — the middle.',
-  },
-  {
-    title: 'The centre of each camp',
-    lead: 'The two markers track the heart of each party.',
-    body: 'Each sits at the average position of all its members. The dashed line between them is the gap — keep an eye on it as the years run.',
-  },
-  {
-    title: 'Landmarks from the engine',
-    lead: 'A few markers the engine places itself.',
-    body: 'Hollow squares are news outlets at their measured positions; small diamonds are factions that emerge mid-story — Tea Party, MAGA — each appearing only in the year it forms. Every marker is the engine’s own, not hand-placed.',
+    title: 'The same engine, now with the history switched on.',
+    lead: 'Nothing about the forces changes here — only what’s driving them.',
+    body: 'These are the same forces you watched stall short a moment ago, already tuned to the United States: their strengths were fit to decades of ANES survey data — where Americans actually stood, and how cold they’d grown toward the other side. What the prologue switched off, and this switches back on, is the history: the real drivers fed in on top of the mechanism — the spread of partisan media across the period, and the dated events that shaped it, from Fox News to the Tea Party to 2016 to COVID and January 6th. That’s what carries the engine the rest of the way, onto the actual 1980→2025 arc. From here you’re watching a reconstruction of the United States, and we’ll stop at the moments that moved it.',
   },
 ];
 
@@ -203,17 +197,18 @@ function OrientRail({ step, onPrev, onNext, onContinue }) {
   return (
     <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
       <div style={{ flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px 8px ${LX}` }}>
-        <Eyebrow>What you’re looking at · 1980</Eyebrow>
-        <h2 style={{ margin: '14px 0 18px', fontFamily: SERIF, fontWeight: 600, fontSize: 40, lineHeight: 1.04, letterSpacing: '-.02em', maxWidth: 440 }}>{s.title}</h2>
+        <Eyebrow>The U.S. story · 1980</Eyebrow>
+        <h2 style={{ margin: '14px 0 18px', fontFamily: SERIF, fontWeight: 600, fontSize: 38, lineHeight: 1.05, letterSpacing: '-.02em', maxWidth: 460 }}>{s.title}</h2>
         <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: 440 }}>{s.lead}</p>
         <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>{s.body}</p>
-        {/* progress — one tick per element being introduced */}
+        {total > 1 &&
         <div style={{ marginTop: 26, display: 'flex', alignItems: 'center', gap: 9 }}>
           {ORIENT_STEPS.map((_, i) => (
             <span key={i} style={{ height: 3, flex: i === step ? '0 0 26px' : '0 0 14px', borderRadius: 2, background: i <= step ? CC.ink : CC.border, transition: 'background .2s, flex-basis .2s' }} />
           ))}
           <span style={{ marginLeft: 4, fontFamily: MONO, fontSize: DS.type.micro, color: CC.ink4, ...TNUM }}>{step + 1}/{total}</span>
         </div>
+        }
       </div>
       <div style={{ flexShrink: 0, padding: `14px 44px clamp(24px,4vh,40px) ${LX}`, display: 'flex', gap: 10 }}>
         <button onClick={onPrev} disabled={step === 0} style={{
@@ -233,39 +228,10 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
   const scrollWrap = { flexShrink: 0, padding: pad };
   const footer = { flexShrink: 0, padding: `14px 44px clamp(24px,4vh,40px) ${LX}`, background: 'transparent' };
 
-  if (phase === 'intro') {
-    return (
-      <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
-        <div style={scrollWrap}>
-          <Eyebrow>The U.S. story · an interactive history, 1980–2025</Eyebrow>
-          <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.display, lineHeight: 0.98, letterSpacing: '-.025em' }}>The Divide</h2>
-          <p style={{ margin: '16px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.4, color: CC.ink2 }}>How a country that mostly agreed to disagree sorted itself into two camps that can barely speak.</p>
-          <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2 }}>Watch forty-five years of Americans drift across the political compass. We’ll pause at the moments that moved the country — and say, plainly, what each one did.</p>
-        </div>
-        <div style={footer}>
-          <button onClick={onContinue} style={primaryBtn}>▶ &nbsp;Start the story</button>
-        </div>
-      </div>);
-
-  }
-  if (phase === 'playing') {
-    return (
-      <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
-        <div style={scrollWrap}>
-          <Eyebrow style={{ color: CC.ink3 }}>The U.S. story · playing</Eyebrow>
-          <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, letterSpacing: '-.015em' }}>{Math.floor(tickToYear(tick))}</h2>
-          <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>The country is sorting itself in real time. We’ll stop at the next moment that matters.</p>
-          {nextBeat &&
-          <div style={{ marginTop: 22, paddingTop: 14, borderTop: `1px solid ${CC.border}` }}>
-              <Eyebrow style={{ color: CC.ink4 }}>Next stop · {Math.floor(tickToYear(nextBeat.tick))}</Eyebrow>
-              <div style={{ fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.subhead, marginTop: 5, letterSpacing: '-.01em' }}>{nextBeat.title}</div>
-            </div>
-          }
-        </div>
-        <div style={footer}><Caption>Use the timeline below to pause, scrub, or change speed.</Caption></div>
-      </div>);
-
-  }
+  // (the old phase==='intro' and phase==='playing' rails were removed — both
+  // were unreachable once the prologue + enterStory() flow landed: the story
+  // page always renders with started===true, so phase is only 'beat' or
+  // 'ended'. The intro framing now lives in rc-intro.jsx + rc-prologue.jsx.)
   if (phase === 'ended') {
     const quiet = {
       background: 'none', border: 'none', cursor: 'pointer', padding: 0,
@@ -276,8 +242,8 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
         <div style={scrollWrap}>
           <Eyebrow>The U.S. story · 1980 → 2025</Eyebrow>
           <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, lineHeight: 1.05, letterSpacing: '-.015em' }}>Now drive it yourself.</h2>
-          <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2 }}>Forty-five years, two hardening camps, a middle that thinned — and an out-party warmth that fell from the high-50s to the low-30s.</p>
-          <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>You’ve watched the engine reproduce the real U.S. arc. Two ways to take the wheel: try the things researchers have actually tested, or turn the dials freely.</p>
+          <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2 }}>You’ve just watched the engine reproduce the U.S. polarization story: an amorphous blob turning into two better-defined partisan blobs.</p>
+          <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>You might be wondering whether any of it had to play out this way, whether there is a vaccine for it. There are two ways to find out: try the things researchers have actually put to the test, or tinker with the dials yourself.</p>
         </div>
         <div style={{ ...footer, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', gap: 10, width: '100%' }}>
@@ -299,19 +265,19 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
   return (
     <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
       <div key={beatI} style={{ ...scrollWrap, animation: 'ccFadeUp .42s ease' }}>
-        <Eyebrow>Chapter {beatI + 1} of {total} · {Math.floor(tickToYear(beat.tick))}</Eyebrow>
-        <h2 style={{ margin: '14px 0 24px', fontFamily: SERIF, fontWeight: 600, fontSize: 50, lineHeight: 1.02, letterSpacing: '-.022em' }}>{beat.title}</h2>
+        <Eyebrow>{beat.orient ? `The U.S. story · ${Math.floor(tickToYear(beat.tick))}` : `Chapter ${beatI} of ${total - 1} · ${Math.floor(tickToYear(beat.tick))}`}</Eyebrow>
+        <h2 style={{ margin: '14px 0 24px', fontFamily: SERIF, fontWeight: 600, fontSize: beat.orient ? 38 : 50, lineHeight: beat.orient ? 1.05 : 1.02, letterSpacing: '-.022em' }}>{beat.title}</h2>
         <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink }}>{beat.lead}</p>
         <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>{beat.body}</p>
         {beat.orient ?
-        <MapLegend /> :
+        null :
         beat.data ?
         <BeatMetric data={beat.data} tick={beat.tick} /> :
-
+        beat.metric ?
         <div style={{ marginTop: 22, paddingTop: 13, borderTop: `1px solid ${CC.border}`, display: 'flex', alignItems: 'center', gap: 11 }}>
               <Eyebrow style={{ color: CC.ink4, letterSpacing: '.1em' }}>data</Eyebrow>
               <MonoVal size={DS.type.small} color={CC.ink}>{beat.metric(beat.tick)}</MonoVal>
-            </div>
+            </div> : null
         }
       </div>
       <div style={{ ...footer, display: 'flex', gap: 10 }}>
@@ -319,7 +285,7 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
           padding: '12px 16px', borderRadius: DS.rad.pill, border: `1px solid ${CC.border}`, background: CC.surface,
           color: beatI === 0 ? CC.ink4 : CC.ink2, cursor: beatI === 0 ? 'default' : 'pointer', fontFamily: SANS, fontSize: DS.type.small
         }}>← Back</button>
-        <button onClick={onContinue} style={{ ...primaryBtn, width: 'auto', padding: '13px 26px' }}>{beatI === total - 1 ? 'Jump to the end →' : 'Jump to next →'}</button>
+        <button onClick={onContinue} style={{ ...primaryBtn, width: 'auto', padding: '13px 26px' }}>{beat.orient ? 'Start the story →' : beatI === total - 1 ? 'Jump to the end →' : 'Jump to next →'}</button>
       </div>
     </div>);
 
@@ -335,13 +301,13 @@ const primaryBtn = {
 const EXPLORE_NOTES = [
 { tick: 0, year: 1980, event: 'One country, one cluster.', viz: 'Almost everyone piles into a single warm blob near the center — no camps yet.' },
 { tick: 21, year: 1987, event: 'The Fairness Doctrine is repealed.', viz: 'Broadcasters can take a side. The blob starts to stretch.' },
-{ tick: 42, year: 1994, event: 'Gingrich: the parties pull apart at the top.', viz: 'Elites lead — the heart of each camp begins to slide off-center, the right faster.' },
+{ tick: 42, year: 1994, event: 'Gingrich: the parties split at the top.', viz: 'Elites lead — the heart of each camp begins to slide off-center, the right faster.' },
 { tick: 48, year: 1996, event: 'Fox News launches.', viz: 'A second lobe pulls toward the traditional-right corner.' },
-{ tick: 60, year: 2000, event: 'Identities start to stack.', viz: 'Party, faith and region align into one identity; the camps cool as they sort.' },
-{ tick: 84, year: 2008, event: 'Social media reaches everyone; Obama elected.', viz: 'Often blamed, rarely convicted — the split was already underway, and rose fastest among the least-online.' },
+{ tick: 60, year: 2000, event: 'Identities begin to stack.', viz: 'Party, faith and region align into one identity; the camps cool as they sort.' },
+{ tick: 84, year: 2008, event: 'Social media reaches everyone; Obama is elected.', viz: 'Often blamed, rarely convicted — the split was already underway, and rose fastest among the least-online.' },
 { tick: 90, year: 2010, event: 'The base hardens; Citizens United lands.', viz: 'Primary challenges pull the right outward. Citizens United is an era marker here, not the cause.' },
 { tick: 105, year: 2015, event: 'MAGA emerges.', viz: 'A dense knot forms in the populist-right corner.' },
-{ tick: 108, year: 2016, event: 'Trump wins — a status-threat shock.', viz: 'The camps harden into opposite corners; the contested middle keeps thinning.' },
+{ tick: 108, year: 2016, event: 'Trump wins — a contested status-threat shock.', viz: 'The camps harden into opposite corners; the contested middle keeps thinning.' },
 { tick: 120, year: 2020, event: 'COVID and January 6th.', viz: 'Two separate masses, with almost nothing left between them.' }];
 
 // Live "on the map" block — folded out of the old floating card and into the
@@ -371,9 +337,9 @@ function ExploreNow({ tick }) {
 function CalibrationAnchor({ tick }) {
   const warmth = warmthDegAt(tick);
   let line;
-  if (warmth >= 42) line = <>Back here, only about <strong>1 in 20</strong> Americans said they'd be unhappy if their child married someone from the other party.</>;else
-  if (warmth >= 30) line = <>By now, roughly <strong>a third</strong> say a cross-party marriage in the family would bother them.</>;else
-  line = <>At this level, close to <strong>half</strong> of Americans say they'd be uncomfortable if their child married someone from the other party.</>;
+  if (warmth >= 42) line = <>So what does a number like that feel like? Back here, only about <strong>1 in 20</strong> Americans said they’d mind if their child married someone from the other party.</>;else
+  if (warmth >= 30) line = <>So what does a number like that feel like? By now it’s closer to <strong>a third</strong> who’d mind if their child married someone from the other party.</>;else
+  line = <>So what does a number like that feel like? By now it’s getting on for <strong>half</strong> who’d mind if their child married someone from the other party.</>;
   return (
     <div style={{ paddingTop: 14, borderTop: `1px solid ${CC.border}` }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
@@ -381,6 +347,7 @@ function CalibrationAnchor({ tick }) {
         <MonoVal size={DS.type.small} color={CC.ink}>{warmth}° warmth</MonoVal>
       </div>
       <p style={{ margin: '9px 0 0', fontSize: DS.type.small, lineHeight: 1.55, color: CC.ink2 }}>{line}</p>
+      <p style={{ margin: '5px 0 0', fontSize: DS.type.micro, lineHeight: 1.45, color: CC.ink4 }}>Rough survey figures (ANES / Iyengar), not an engine output.</p>
     </div>);
 
 }
@@ -399,11 +366,12 @@ function ExploreRail({ tick, onBackToStory }) {
             }}>← Back to the chapters</button>
           </div>
           }
+          <Eyebrow>Affective polarization</Eyebrow>
           <h3 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 46, lineHeight: 1.02, letterSpacing: '-.022em' }}>
             Do they hate each other?
           </h3>
           <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-            Issue positions barely moved — the feelings curdled. The map shows where people <em>stand</em>; this shows how they <em>feel</em>. Warmth toward your <em>own</em> side barely budged; toward the <em>other</em> it fell off a cliff. <strong>Distance and animus are different axes.</strong>
+            The positions pulled apart, but the feelings pulled apart faster. The map shows where people <em>stand</em>; this shows how they <em>feel</em>. Warmth toward your <em>own</em> side barely moved; toward the <em>other</em> side it fell sharply. <strong>Distance and animus are two different axes.</strong>
           </p>
         </div>
         <ExploreNow tick={tick} />
@@ -583,13 +551,21 @@ function Unified() {
     return () => {cancelAnimationFrame(raf);clearTimeout(to);};
   }, [settling]);
 
-  // entering the story drops the reader at 1980, paused — the prologue already
-  // taught the map, so there is NO staged orientation (orientSeen=true => the
-  // staged-orient rail never shows). They scroll, or press ▶, to move through time.
+  // entering the story lands on STORY_BEATS[0] — the orientation beat at tick 0
+  // (a normal, navigable chapter; the old staged OrientRail is retired). Paused
+  // at 1980; scroll / ▶ / "Start the story →" advance to the next beat.
   const enterStory = () => {
-    setStarted(true);setOrientStep(ORIENT_LAYERS.length - 1);setOrientSeen(true);setBeatI(0);
+    setStarted(true);setOrientStep(0);setOrientSeen(true);setBeatI(0);
     setTick(0);setPaused(false);setPlaying(false);setEnded(false);setHintSeen(false);
   };
+  // Self-heal: any path that lands on the story page without initialising it —
+  // a deep-link/refresh on #story, or a navigation race — would leave `started`
+  // false, so `inStory` is false, the copy sticks on the orientation beat, and
+  // the wheel stays dead (the intermittent bug). This guarantees the story is
+  // entered whenever it's shown. Fires only when not yet started.
+  React.useEffect(() => {
+    if (page === 'story' && !started) enterStory();
+  }, [page, started]);
   // Back / Continue step discretely between chapters (for readers who'd rather
   // click than scroll); the wheel and ▶ remain the primary ways through.
   const stepBeat = (dir) => {
@@ -598,7 +574,7 @@ function Unified() {
     if (dir > 0 && k >= BEATS.length) {setTick(LAST);return;}
     setTick(BEATS[Math.max(0, Math.min(BEATS.length - 1, k))].tick + 0.001);
   };
-  const railContinue = () => {phase === 'intro' ? enterStory() : stepBeat(1);};
+  const railContinue = () => stepBeat(1);   // phase is only ever 'beat'/'ended' on the story page
   const pickBeat = (k) => {setHintSeen(true);setPlaying(false);setEnded(false);setTick(BEATS[k].tick + 0.001);};
   // finishing the guided story hands the controls over ON THE SAME canvas
   // (no separate Explore tab) — free scrub on the position field, parties toggle.
@@ -658,8 +634,8 @@ function Unified() {
   const dispBeatI = inStory ? beatIndexAt(tick) : beatI;
   const beat = BEATS[dispBeatI];
   const phase = ended ? 'ended' : started ? 'beat' : 'intro';
-  const stagedOrient = isWatch && started && beat && beat.orient && !orientSeen;
-  const watchReveal = stagedOrient ? [...ORIENT_BASE, ...ORIENT_LAYERS.slice(0, orientStep + 1)] : null;
+  const stagedOrient = false;   // orientation is now STORY_BEATS[0] (tick 0), a normal beat; staged OrientRail retired
+  const watchReveal = null;   // staged map-build retired; the field shows in full
   const dimField = isWatch && ended && !stagedOrient ? 0.24 : 0;
   // wheel-scrub gates — computed BEFORE any early return, so leaving the story
   // for a static page can never strand a stale `true` in the refs (the old

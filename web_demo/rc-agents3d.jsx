@@ -299,13 +299,13 @@ function Agents3DPage() {
                 Every agent, in three dimensions.
               </h2>
               <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: 440 }}>
-                No density clouds — just the 250 people the engine actually moves, one dot each.
+                No density clouds this time — just the 250 people the engine actually moves, one dot apiece.
               </p>
               <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-                This is the engine run against the United States, 1980 to 2025. The flat plane is the <strong>political compass</strong> — left–right is the economy, front–back is culture. Then each person lifts off it as they sour on the other side: <strong>Democrats rise, Republicans sink</strong>, so the vertical gap between blue and red <em>is</em> their mutual animus. Independents stay in the common middle.
+                This is the engine run against the United States, 1980 to 2025. The flat plane is the <strong>political compass</strong> you already know: left–right is the economy, front–back is culture. What the third dimension adds is the <em>feeling</em>. Each person lifts off the plane as they sour on the other side — Democrats rising, Republicans sinking — so the vertical gap between blue and red <em>is</em> their mutual animus. The independents stay down in the shared middle.
               </p>
               <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-                Press play and watch the two camps fly apart.
+                Press play, and watch the two camps pull apart sideways and lift away from each other at the same time.
               </p>
               <p style={{ margin: '18px 0 0', display: 'flex', alignItems: 'center', gap: 16, fontSize: DS.type.small, color: CC.ink3, flexWrap: 'wrap' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Dot c={CC.d} /> Democrat</span>

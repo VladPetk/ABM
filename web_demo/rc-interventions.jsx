@@ -27,19 +27,19 @@ const IV_ORDER = [
 
 // Lay take per intervention (COPY, not numbers — the honest one-line lesson).
 const IV_TAKE = {
-  X1_show_other_side: 'On average it barely moves the split — the feared backfire is real only where exposure lands on active identity threat (the post-2016 window), not for everyone. Null on average, conditional under threat.',
-  X2_fix_algorithm: 'Muting the recommender moved nothing — faithful to the Meta-2020 deactivation null.',
-  X3_quit_cable_news: 'At a realistic share who actually quit, the population-level effect washes out to nothing.',
-  X4_bipartisan_dialogue: 'Dialogue helps the people in the room, but at realistic reach it does not move the country.',
-  X5_deprogramming: 'Deradicalising the committed extreme helps the few it reaches — but the organized tail is too thin to move the country, so the aggregate split barely shifts.',
-  X6_shared_institutions: 'Ordinary shared life — neighbourhoods, workplaces, institutions — is the one lever that durably warms feelings toward the other side, and the warming holds because the contact keeps going.',
-  X7_perception_correction: 'Correcting the perception gap works for the treated — but in a sorted network the corrected view rarely meets the other side, so it never propagates.',
+  X1_show_other_side: 'The classic recipe — bring people from across the aisle together, get them talking, walk them through what the other side actually believes. Does it work? Mostly it does nothing: averaged over the whole population the animus barely moves. But it can also backfire. People who already feel their own side is under threat will grow even more hostile toward the other side when exposed to its ideas.',
+  X2_fix_algorithm: 'The classic scapegoat of the social media era - the algorithm. The logic is simple - algorithms maximize engagement, which it comes from extreme, enraging, polarizing content. So turn your feed off. Alas, in the model, as in research studies, almost nothing happens. The divide was never mainly the feed’s doing.',
+  X3_quit_cable_news: 'Get people to turn off partisan cable. It sounds promising, since cable carries real causal weight. But only a small share ever actually quits, and once you account for that, the effect across the country washes out to almost nothing.',
+  X4_bipartisan_dialogue: 'Structured, facilitated conversations between the two sides — the kind that genuinely helps the people in the room. The catch is reach: only a sliver of the country ever sits in such a room, so at any realistic scale the national split hardly notices.',
+  X5_deprogramming: 'Go after the committed extreme directly and deradicalise the most hardened. It does help the few it reaches. But that organized tail is thin — too thin to move the whole — so the aggregate split barely shifts.',
+  X6_shared_institutions: 'Not a program but a condition: ordinary shared life — mixed neighborhoods, workplaces, institutions where the two sides actually rub along. This is the one lever here that reliably warms feelings toward the other side, and the warmth lasts as long as the shared life does.',
+  X7_perception_correction: 'Show people that the other side isn’t as extreme as they imagine, and correct the perception gap. It works for whoever you treat. But in a network already sorted into camps, the corrected view rarely travels across, so it never spreads beyond the person you reached.',
 };
 
 // Extra caveats the audit requires be shown in-UI (§3.4 #6, §5.2).
 const IV_CAVEAT = {
-  X1_show_other_side: 'The backfire is threat-gated: it fires only for the identity-threatened (the engine’s post-2016 status-threat population), so it surfaces only when exposure overlaps that window and is null on average — faithful to the contested evidence (Bail 2018 found backfire; Guess & Coppock 2020 found none on average; anonymous exposure can even help, Combs 2023). Read the conditionality, not a single number.',
-  X5_deprogramming: 'The engine treats half the organized-faction tail — they leave the faction and their hardened identity is halved. Real-world deradicalization efficacy is itself contested; the null here means the treated tail is too small to move the population, not that exit programs fail the people they reach.',
+  X1_show_other_side: 'The backfire is threat-gated — Bail 2018 vs Guess & Coppock 2020 vs Combs 2023.',
+  X5_deprogramming: 'This treats half the organized tail, and real deradicalization efficacy is itself contested.',
 };
 
 const RELEASE_YEARS = ['1985', '1990', '1995', '2000', '2005', '2010', '2015', '2020'];
@@ -304,7 +304,7 @@ function IvTray({ iv }) {
         <Eyebrow>Interventions</Eyebrow>
         <h3 style={{ margin: '8px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.subhead, letterSpacing: '-.01em' }}>What could we do about it?</h3>
         <p style={{ margin: '7px 0 0', fontSize: DS.type.micro, lineHeight: 1.45, color: CC.ink3 }}>
-          Seven things people have actually tried. Pick one and call it before you run it. <MonoVal size={DS.type.micro} color={CC.ink3}>{iv.revealedCount}/{iv.total}</MonoVal> run so far.
+          Seven things people have actually tried. Pick one and guess before you run it. <MonoVal size={DS.type.micro} color={CC.ink3}>{iv.revealedCount}/{iv.total}</MonoVal> run so far.
         </p>
       </div>
 
@@ -517,10 +517,10 @@ function IvRail({ iv }) {
         <div style={{ flex: 1, overflow: 'auto', padding: `${DS.sp.lg - 6}px ${DS.sp.lg - 2}px` }}>
           <Eyebrow>The experiment</Eyebrow>
           <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, lineHeight: 1.08, letterSpacing: '-.015em' }}>Could anything have stopped it?</h2>
-          <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2 }}>Researchers have tried — exposure programs, media diets, voting reform, contact. Most do less than you’d think. One backfires. The one that works isn’t the obvious one.</p>
-          <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>Pick an intervention on the left, <strong>call what it does before you run it</strong>, then watch the model answer — and try changing <em>when</em> it was tried.</p>
+          <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2 }}>Seven real efforts to ease the divide, each re-run through the same history with one thing changed. Whether they worked is the open question.</p>
+          <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>Pick one on the left and make your guess before you run it. Then watch what the model does, and try changing <em>when</em> it was tried.</p>
           <div style={{ marginTop: 22, padding: '13px 15px', background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: DS.rad.inset }}>
-            <Caption>Your hunches get scored. The interesting ones are where you’re wrong.</Caption>
+            <Caption>Your guesses are kept as you go, to compare against what the model shows.</Caption>
           </div>
         </div>
       </div>
