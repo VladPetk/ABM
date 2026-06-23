@@ -610,11 +610,13 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
   const year = Math.floor(tickToYear(beats[ci] ? beats[ci].tick : tick));   // the chapter's year
   const tickAt = (i) => i < N ? beats[i].tick : LAST;
 
-  // each chapter's compass — clamped to its own [prev, this] window so only the
-  // window you're scrolling through animates; the rest are frozen (no redraw).
+  // each chapter's compass — its window runs from the previous chapter's year to
+  // the NEXT chapter's, so it keeps animating with the scroll the whole time it's
+  // on screen (not just until you reach it), and only freezes (recompute-free)
+  // once it has scrolled off. At most ~2 compasses are live at any moment.
   const compassFor = (i) => {
     const lo = i > 0 ? tickAt(i - 1) : tickAt(0);
-    const hi = tickAt(i);
+    const hi = tickAt(i + 1);
     const ct = Math.max(lo, Math.min(hi, tick));
     return (
       <div style={{ position: 'relative', width: '100%', aspectRatio: '1', margin: '2px 0 4px' }}>
