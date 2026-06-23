@@ -360,7 +360,7 @@ function Agents3DPage() {
   if (isMobile) {
     return (
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative', background: CC.bg }}>
-        <div style={{ position: 'relative', height: '42%', flexShrink: 0, overflow: 'hidden', borderBottom: `1px solid ${CC.border}` }}>
+        <div style={{ position: 'relative', height: '42%', flexShrink: 0, overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0 }}>
             <Scatter3D tick={tick} run={run} zoomApi={zoomApi} />
           </div>
