@@ -49,7 +49,7 @@ const NAV_ITEMS = [
   { id: 'about', label: 'About' },
 ];
 
-function SiteHeader({ page, setPage, hidden = false, pgMode = null, onPgMode = null }) {
+function SiteHeader({ page, setPage, hidden = false, pgMode = null, onPgMode = null, mdMode = null, onMdMode = null }) {
   const isMobile = useIsMobile();
   const [open, setOpen] = React.useState(false);
   // close the sheet whenever we land on a new page
@@ -89,8 +89,19 @@ function SiteHeader({ page, setPage, hidden = false, pgMode = null, onPgMode = n
                     fontFamily: SANS, fontSize: 16, fontWeight: on ? 600 : 500, color: on ? CC.ink : CC.ink2 }}>
                     {it.label}
                   </button>
-                  {/* the Interventions | Sandbox choice lives under Playground in
-                      the menu (it used to be a pill on the page) */}
+                  {/* sub-choices that used to be on-page pills now live under their
+                      section in the menu: Model → tour/engine · Playground → iv/sandbox */}
+                  {it.id === 'forces' && (page === 'forces' || page === 'prologue') && mdMode &&
+                    [['tour', 'Force by force'], ['engine', 'The whole engine']].map(([m, lab]) => {
+                      const mon = mdMode === m;
+                      return (
+                        <button key={m} onClick={() => { onMdMode && onMdMode(m); setOpen(false); }} style={{
+                          textAlign: 'left', padding: '11px 22px 11px 40px', background: 'none', border: 'none', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', gap: 10, fontFamily: SANS, fontSize: 14.5, fontWeight: mon ? 600 : 450, color: mon ? CC.ink : CC.ink3 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: 9, flexShrink: 0, background: mon ? CC.ink : 'transparent', border: `1.5px solid ${mon ? CC.ink : CC.ink4}` }} />
+                          {lab}
+                        </button>);
+                    })}
                   {it.id === 'playground' && page === 'playground' && pgMode &&
                     [['interventions', 'Interventions'], ['sandbox', 'Sandbox']].map(([m, lab]) => {
                       const mon = pgMode === m;
@@ -1010,8 +1021,9 @@ function Unified() {
   if (page === 'forces') {
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}>
-        <SiteHeader page={page} setPage={goPage} hidden={hdrHidden} />
-        <ForcesModeBar mode="tour" goPage={goPage} />
+        <SiteHeader page={page} setPage={goPage} hidden={hdrHidden}
+          mdMode="tour" onMdMode={(m) => goPage(m === 'engine' ? 'prologue' : 'forces')} />
+        {!isMobile && <ForcesModeBar mode="tour" goPage={goPage} />}
         <ForcesTour onFinale={() => goPage('prologue')} />
       </div>);
 
@@ -1023,8 +1035,9 @@ function Unified() {
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}
       onClick={(e) => {const g = e.target.closest('[data-goto]');if (g) {e.preventDefault();goPage(g.getAttribute('data-goto'));}}}>
-        <SiteHeader page={page} setPage={goPage} hidden={hdrHidden} />
-        <ForcesModeBar mode="engine" goPage={goPage} />
+        <SiteHeader page={page} setPage={goPage} hidden={hdrHidden}
+          mdMode="engine" onMdMode={(m) => goPage(m === 'engine' ? 'prologue' : 'forces')} />
+        {!isMobile && <ForcesModeBar mode="engine" goPage={goPage} />}
         <ProloguePage onToStory={() => goPage('story')} onPlayground={() => goPlayground('interventions')} on3D={() => goPage('agents')} />
       </div>);
 

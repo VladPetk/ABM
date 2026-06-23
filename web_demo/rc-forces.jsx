@@ -1014,7 +1014,7 @@ function ForceFeedItem({ force, idx, assignRef, onActive }) {
       <Eyebrow>{force.eyebrow}</Eyebrow>
       <h2 style={{ margin: '11px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 27, lineHeight: 1.05, letterSpacing: '-.02em', color: CC.ink, textWrap: 'balance' }}>{force.title}</h2>
       <p style={{ margin: '13px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: 19, lineHeight: 1.4, color: CC.ink }}>{force.lead}</p>
-      <div style={{ margin: '16px 0 0', position: 'relative', height: 232, borderRadius: 16, overflow: 'hidden', border: `1px solid ${CC.border}`, background: CC.surface }}>
+      <div style={{ margin: '14px 0 0', position: 'relative', height: 236 }}>
         <ForceToy key={force.id} force={force} knob={knob} playing={playing} revealed={revealed} onAutoReveal={() => setRevealed(true)} toyRef={toyRef} />
       </div>
       {/* the poke control — an elegant full-width line right under the viz */}
