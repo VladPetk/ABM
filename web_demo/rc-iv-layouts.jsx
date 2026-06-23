@@ -273,9 +273,6 @@ function NarrativeDetail({ iv }) {
           <div style={{ background: CC.border }} />
           <DeltaReadout label="Δ out-party warmth" v={eff.dAff} helpfulSign={1} side="r" />
         </div>
-        <p style={{ margin: '15px 0 0', fontSize: DS.type.micro, lineHeight: 1.5, color: CC.ink3 }}>
-          Helpful means a <span style={{ color: '#3f7d54' }}>smaller party gap</span> or <span style={{ color: '#3f7d54' }}>warmer feelings</span> toward the other side. Δ vs. no intervention, ~10 years out — single representative run.
-        </p>
       </div>
 
       <div style={{ marginTop: 20, paddingTop: 18, borderTop: `1px solid ${CC.border}` }}>
