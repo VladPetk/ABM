@@ -273,10 +273,107 @@ function Agents3DPage() {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const monthLabel = `${months[Math.min(11, Math.floor((tickToYear(tick) - year) * 12))]} ${year}`;
   const Dot = ({ c }) => <span style={{ width: 8, height: 8, borderRadius: 999, background: c, display: 'inline-block', flexShrink: 0 }} />;
-  const LX = 'clamp(64px, 14vw, 248px)';
+  const isMobile = useIsMobile();
+  const LX = isMobile ? '20px' : 'clamp(64px, 14vw, 248px)';
+  const RX = isMobile ? '20px' : '44px';
   // the same chapter markers as the U.S. story (not the raw historical events)
   const BEATS = window.STORY_BEATS || [];
   let beatI = 0; for (let i = 0; i < BEATS.length; i++) if (tick + 1e-6 >= BEATS[i].tick) beatI = i;
+
+  // narrative column — shared; padding differs per device.
+  const narrative = (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
+      <div style={{ flexShrink: 0, padding: `${isMobile ? '22px' : 'clamp(28px,4.5vh,52px)'} ${RX} ${isMobile ? '26px' : 'clamp(28px,4.5vh,52px)'} ${LX}` }}>
+        <Eyebrow>Under the hood · the U.S. run</Eyebrow>
+        <h2 style={{ margin: '14px 0 18px', fontFamily: SERIF, fontWeight: 600, fontSize: isMobile ? 29 : 46, lineHeight: 1.04, letterSpacing: '-.022em', maxWidth: 460 }}>
+          Every agent, in three dimensions.
+        </h2>
+        <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: 440 }}>
+          No density clouds this time — just the 250 people the engine actually moves, one dot apiece.
+        </p>
+        <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+          This is the engine run against the United States, 1980 to 2025. The flat plane is the <strong>political compass</strong> you already know: left–right is the economy, front–back is culture. What the third dimension adds is the <em>feeling</em>. Each person lifts off the plane as they sour on the other side — Democrats rising, Republicans sinking — so the vertical gap between blue and red <em>is</em> their mutual animus. The independents stay down in the shared middle.
+        </p>
+        <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+          Press play, and watch the two camps pull apart sideways and lift away from each other at the same time.
+        </p>
+        <p style={{ margin: '18px 0 0', display: 'flex', alignItems: 'center', gap: 16, fontSize: DS.type.small, color: CC.ink3, flexWrap: 'wrap' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Dot c={CC.d} /> Democrat</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Dot c={CC.r} /> Republican</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Dot c={CC.i} /> Independent</span>
+        </p>
+        <Caption style={{ marginTop: 14 }}>Drag to orbit · {isMobile ? 'pinch' : 'scroll'} to zoom · all three axes are engine output.</Caption>
+      </div>
+    </div>
+  );
+
+  const zoomBtns = (
+    <div style={{ position: 'absolute', right: isMobile ? 12 : 'clamp(28px, 4vw, 56px)', bottom: isMobile ? 10 : 18, display: 'flex', flexDirection: 'column', gap: 6, zIndex: 4 }}>
+      {[['+', 1.18], ['−', 1 / 1.18]].map(([g, f]) => (
+        <button key={g} onClick={() => zoom(f)} aria-label={g === '+' ? 'Zoom in' : 'Zoom out'} style={{
+          width: 32, height: 32, borderRadius: 999, border: `1px solid ${CC.border}`, background: 'rgba(255,255,255,.86)',
+          color: CC.ink2, cursor: 'pointer', fontSize: 16, lineHeight: 1, fontFamily: SANS, boxShadow: '0 1px 4px rgba(26,29,35,.08)'
+        }}>{g}</button>
+      ))}
+    </div>
+  );
+
+  const transportCluster = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+      <button onClick={toggle} aria-label={playing ? 'Pause' : 'Play'} style={{
+        width: 36, height: 36, borderRadius: 999, background: CC.ink, color: '#fff', border: 'none', cursor: 'pointer',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0
+      }}>{playing ? '❚❚' : '▶'}</button>
+      <button onClick={() => setTick(0)} aria-label="Restart" style={{
+        width: 28, height: 28, borderRadius: 999, border: `1px solid ${CC.borderS}`, color: CC.ink2, background: 'transparent', cursor: 'pointer', fontSize: 13, flexShrink: 0
+      }}>↺</button>
+      <span style={{ width: 1, height: 20, background: CC.border, margin: '0 2px' }} />
+      <SpeedControl speed={speed} setSpeed={setSpeed} />
+      <div style={{ marginLeft: 6, display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
+        <MonoVal size={DS.type.small} color={CC.ink}>{monthLabel}</MonoVal>
+        <span style={{ fontSize: DS.type.micro, color: CC.ink4 }}>tick {Math.round(tick)}/{LAST}</span>
+      </div>
+    </div>
+  );
+
+  const timelineRow = (
+    <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+      {BEATS.map((b, k) => {
+        const on = k === beatI;
+        const left = `calc(14px + ${b.tick / LAST} * (100% - 28px))`;
+        return (
+          <React.Fragment key={k}>
+            {on &&
+              <span style={{ position: 'absolute', zIndex: 5, left, top: 54, transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontFamily: SANS, fontSize: 10, fontWeight: 600, color: CC.ink, background: 'rgba(249,248,244,.9)', padding: '0 3px' }}>{b.short}</span>}
+            <button title={b.title} onClick={() => setTick(b.tick)} style={{
+              position: 'absolute', zIndex: 4, left, top: 38, transform: 'translate(-50%,-50%) rotate(45deg)',
+              width: on ? 13 : 10, height: on ? 13 : 10, background: b.tick <= tick ? CC.ink : CC.surface,
+              border: `2px solid ${b.tick <= tick ? CC.ink : CC.ink3}`, cursor: 'pointer', padding: 0, borderRadius: 2,
+            }} />
+          </React.Fragment>
+        );
+      })}
+      <ProtoTimeline tick={tick} setTick={setTick} color={CC.ink} altLabels events={false} />
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative', background: CC.bg }}>
+        <div style={{ position: 'relative', height: '42%', flexShrink: 0, overflow: 'hidden', borderBottom: `1px solid ${CC.border}` }}>
+          <div style={{ position: 'absolute', inset: 0 }}>
+            <Scatter3D tick={tick} run={run} zoomApi={zoomApi} />
+          </div>
+          {zoomBtns}
+        </div>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>{narrative}</div>
+        <div style={{ flexShrink: 0, background: CC.bg, borderTop: `1px solid ${CC.border}`, padding: '11px 16px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {transportCluster}
+          {timelineRow}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative', background: CC.bg }}>
@@ -292,78 +389,18 @@ function Agents3DPage() {
 
         {/* floating narrative — left column, same position as the story rail */}
         <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(54%, 820px)', display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3, pointerEvents: 'none' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
-            <div style={{ flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px clamp(28px,4.5vh,52px) ${LX}` }}>
-              <Eyebrow>Under the hood · the U.S. run</Eyebrow>
-              <h2 style={{ margin: '14px 0 18px', fontFamily: SERIF, fontWeight: 600, fontSize: 46, lineHeight: 1.04, letterSpacing: '-.022em', maxWidth: 460 }}>
-                Every agent, in three dimensions.
-              </h2>
-              <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: 440 }}>
-                No density clouds this time — just the 250 people the engine actually moves, one dot apiece.
-              </p>
-              <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-                This is the engine run against the United States, 1980 to 2025. The flat plane is the <strong>political compass</strong> you already know: left–right is the economy, front–back is culture. What the third dimension adds is the <em>feeling</em>. Each person lifts off the plane as they sour on the other side — Democrats rising, Republicans sinking — so the vertical gap between blue and red <em>is</em> their mutual animus. The independents stay down in the shared middle.
-              </p>
-              <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
-                Press play, and watch the two camps pull apart sideways and lift away from each other at the same time.
-              </p>
-              <p style={{ margin: '18px 0 0', display: 'flex', alignItems: 'center', gap: 16, fontSize: DS.type.small, color: CC.ink3, flexWrap: 'wrap' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Dot c={CC.d} /> Democrat</span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Dot c={CC.r} /> Republican</span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Dot c={CC.i} /> Independent</span>
-              </p>
-              <Caption style={{ marginTop: 14 }}>Drag to orbit · scroll to zoom · all three axes are engine output.</Caption>
-            </div>
-          </div>
+          {narrative}
         </div>
 
         {/* zoom — viewport corner, above the timeline bar */}
-        <div style={{ position: 'absolute', right: 'clamp(28px, 4vw, 56px)', bottom: 18, display: 'flex', flexDirection: 'column', gap: 6, zIndex: 4 }}>
-          {[['+', 1.18], ['−', 1 / 1.18]].map(([g, f]) => (
-            <button key={g} onClick={() => zoom(f)} aria-label={g === '+' ? 'Zoom in' : 'Zoom out'} style={{
-              width: 32, height: 32, borderRadius: 999, border: `1px solid ${CC.border}`, background: 'rgba(255,255,255,.86)',
-              color: CC.ink2, cursor: 'pointer', fontSize: 16, lineHeight: 1, fontFamily: SANS, boxShadow: '0 1px 4px rgba(26,29,35,.08)'
-            }}>{g}</button>
-          ))}
-        </div>
+        {zoomBtns}
       </div>
 
       {/* bottom bar — the same timeline language as the rest of the site */}
       <div style={{ height: 96, flexShrink: 0, background: CC.bg, position: 'relative', display: 'flex', alignItems: 'center', gap: 'clamp(18px, 3vw, 40px)', padding: '0 clamp(28px, 4vw, 56px)' }}>
         <div style={{ position: 'absolute', top: 0, left: 'clamp(28px, 4vw, 56px)', right: 'clamp(28px, 4vw, 56px)', height: 1, background: CC.border }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-          <button onClick={toggle} aria-label={playing ? 'Pause' : 'Play'} style={{
-            width: 36, height: 36, borderRadius: 999, background: CC.ink, color: '#fff', border: 'none', cursor: 'pointer',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0
-          }}>{playing ? '❚❚' : '▶'}</button>
-          <button onClick={() => setTick(0)} aria-label="Restart" style={{
-            width: 28, height: 28, borderRadius: 999, border: `1px solid ${CC.borderS}`, color: CC.ink2, background: 'transparent', cursor: 'pointer', fontSize: 13, flexShrink: 0
-          }}>↺</button>
-          <span style={{ width: 1, height: 20, background: CC.border, margin: '0 2px' }} />
-          <SpeedControl speed={speed} setSpeed={setSpeed} />
-          <div style={{ marginLeft: 6, display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-            <MonoVal size={DS.type.small} color={CC.ink}>{monthLabel}</MonoVal>
-            <span style={{ fontSize: DS.type.micro, color: CC.ink4 }}>tick {Math.round(tick)}/{LAST}</span>
-          </div>
-        </div>
-        <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
-          {BEATS.map((b, k) => {
-            const on = k === beatI;
-            const left = `calc(14px + ${b.tick / LAST} * (100% - 28px))`;
-            return (
-              <React.Fragment key={k}>
-                {on &&
-                  <span style={{ position: 'absolute', zIndex: 5, left, top: 54, transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontFamily: SANS, fontSize: 10, fontWeight: 600, color: CC.ink, background: 'rgba(249,248,244,.9)', padding: '0 3px' }}>{b.short}</span>}
-                <button title={b.title} onClick={() => setTick(b.tick)} style={{
-                  position: 'absolute', zIndex: 4, left, top: 38, transform: 'translate(-50%,-50%) rotate(45deg)',
-                  width: on ? 13 : 10, height: on ? 13 : 10, background: b.tick <= tick ? CC.ink : CC.surface,
-                  border: `2px solid ${b.tick <= tick ? CC.ink : CC.ink3}`, cursor: 'pointer', padding: 0, borderRadius: 2,
-                }} />
-              </React.Fragment>
-            );
-          })}
-          <ProtoTimeline tick={tick} setTick={setTick} color={CC.ink} altLabels events={false} />
-        </div>
+        {transportCluster}
+        {timelineRow}
       </div>
     </div>
   );
