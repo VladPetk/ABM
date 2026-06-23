@@ -221,7 +221,7 @@ function centroids(pos, party) {
 }
 
 // ── the shared field canvas (edge-to-edge; square grid; field bleeds past it) ─
-function Field({ run, tick, layer = 'position', view = 'density', showGap = true, dim = 0, transform = null, landmarks = false, reveal = null, morphT = null, chrome = true }) {
+function Field({ run, tick, layer = 'position', view = 'density', showGap = true, dim = 0, transform = null, landmarks = false, reveal = null, morphT = null, chrome = true, compact = false }) {
   // `reveal` (array of layer names) stages the first Watch chapter element by
   // element. null = draw everything, exactly as before.
   // `morphT` crossfades the two representations of the SAME positions on one
@@ -261,7 +261,10 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
     const sx = (W - S) / 2,sy = (H - S) / 2;
     const mx = (x) => sx + (x + 1) / 2 * S;
     const my = (y) => sy + S - (y + 1) / 2 * S;
-    const fq = Math.max(11, Math.min(15.5, S * 0.03)),fa = Math.max(10, Math.min(13.5, S * 0.026));
+    // `compact` shrinks all chrome (labels + markers) for the mobile story's
+    // small compass, where the default sizes read as oversized.
+    const _ck = compact ? 0.78 : 1, _mk = compact ? 0.74 : 1;
+    const fq = _ck * Math.max(11, Math.min(15.5, S * 0.03)),fa = _ck * Math.max(10, Math.min(13.5, S * 0.026));
     // world coords of the full canvas rect (the field bleeds across all of it)
     const x0 = (0 - sx) / S * 2 - 1,x1 = (W - sx) / S * 2 - 1;
     const y0 = (sy + S - H) / S * 2 - 1,y1 = (sy + S - 0) / S * 2 - 1;
@@ -429,9 +432,10 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
       }
       ctx.beginPath();ctx.moveTo(mx(D0[0]), my(D0[1]));ctx.lineTo(mx(R0[0]), my(R0[1]));ctx.stroke();
       ctx.setLineDash([]);
+      const _cr = 5.5 * _mk;
       [[D0, CC.d], [R0, CC.r]].forEach(([c, col]) => {
-        ctx.fillStyle = col;ctx.beginPath();ctx.arc(mx(c[0]), my(c[1]), 5.5, 0, 6.283);ctx.fill();
-        ctx.strokeStyle = '#fff';ctx.lineWidth = 2;ctx.beginPath();ctx.arc(mx(c[0]), my(c[1]), 5.5, 0, 6.283);ctx.stroke();
+        ctx.fillStyle = col;ctx.beginPath();ctx.arc(mx(c[0]), my(c[1]), _cr, 0, 6.283);ctx.fill();
+        ctx.strokeStyle = '#fff';ctx.lineWidth = 2 * _mk;ctx.beginPath();ctx.arc(mx(c[0]), my(c[1]), _cr, 0, 6.283);ctx.stroke();
       });
     }
 
@@ -462,24 +466,25 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
     // landmarks: 'fixed' = outlets + emerged factions · 'all' = + party labels.
     if (show('entities') && landmarks && layer === 'position') {
       const list = engineEntities(safeTick, pos, party, landmarks === 'fixed' ? 'fixed' : 'all');
-      const efs = Math.max(11, Math.min(13.5, S * 0.024));
+      const efs = _ck * Math.max(11, Math.min(13.5, S * 0.024));
+      const sq = 3.3 * _mk, dia = 3.6 * _mk;
       list.forEach((L) => {
         const px = mx(L.x),py = my(L.y);
         const col = L.lean === 'd' ? CC.d : L.lean === 'r' ? CC.r : CC.ink2;
         if (L.cls === 'media') {
           // outlet — hollow square (the attractors that pull agents)
           ctx.fillStyle = '#fff';ctx.strokeStyle = col;ctx.lineWidth = 1.6;
-          ctx.beginPath();ctx.rect(px - 3.3, py - 3.3, 6.6, 6.6);ctx.fill();ctx.stroke();
+          ctx.beginPath();ctx.rect(px - sq, py - sq, sq * 2, sq * 2);ctx.fill();ctx.stroke();
         } else if (L.cls === 'party') {
           // party centroid — ring with a filled core
-          ctx.fillStyle = '#fff';ctx.beginPath();ctx.arc(px, py, 7, 0, 6.283);ctx.fill();
-          ctx.strokeStyle = col;ctx.lineWidth = 2.4;ctx.beginPath();ctx.arc(px, py, 6.4, 0, 6.283);ctx.stroke();
-          ctx.fillStyle = col;ctx.beginPath();ctx.arc(px, py, 2.4, 0, 6.283);ctx.fill();
+          ctx.fillStyle = '#fff';ctx.beginPath();ctx.arc(px, py, 7 * _mk, 0, 6.283);ctx.fill();
+          ctx.strokeStyle = col;ctx.lineWidth = 2.4;ctx.beginPath();ctx.arc(px, py, 6.4 * _mk, 0, 6.283);ctx.stroke();
+          ctx.fillStyle = col;ctx.beginPath();ctx.arc(px, py, 2.4 * _mk, 0, 6.283);ctx.fill();
         } else {
           // emergent faction — diamond, so it reads distinctly from parties
           ctx.save();ctx.translate(px, py);ctx.rotate(Math.PI / 4);
-          ctx.fillStyle = col;ctx.fillRect(-3.6, -3.6, 7.2, 7.2);
-          ctx.strokeStyle = '#fff';ctx.lineWidth = 1.5;ctx.strokeRect(-3.6, -3.6, 7.2, 7.2);
+          ctx.fillStyle = col;ctx.fillRect(-dia, -dia, dia * 2, dia * 2);
+          ctx.strokeStyle = '#fff';ctx.lineWidth = 1.5;ctx.strokeRect(-dia, -dia, dia * 2, dia * 2);
           ctx.restore();
         }
         const right = L.side ? L.side === 'r' : L.x >= 0;
@@ -487,14 +492,14 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
         ctx.font = `${L.cls === 'media' ? 'italic ' : ''}${isParty ? 700 : 600} ${isParty ? efs + 0.5 : efs}px Geist, system-ui, sans-serif`;
         ctx.textAlign = right ? 'left' : 'right';
         ctx.textBaseline = 'middle';
-        const lx = px + (right ? (isParty ? 11 : 9) : (isParty ? -11 : -9));
+        const lx = px + (right ? (isParty ? 11 : 9) : (isParty ? -11 : -9)) * _mk;
         ctx.lineJoin = 'round';ctx.strokeStyle = 'rgba(243,243,240,.94)';ctx.lineWidth = 3.6;
         ctx.strokeText(L.name, lx, py);
         ctx.fillStyle = isParty ? col : (L.cls === 'media' ? CC.ink2 : CC.ink);
         ctx.fillText(L.name, lx, py);
       });
     }
-  }, [run, tick, layer, view, showGap, dim, sz, transform, landmarks, reveal, morphT, chrome]);
+  }, [run, tick, layer, view, showGap, dim, sz, transform, landmarks, reveal, morphT, chrome, compact]);
 
   return (
     <div ref={wrapRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>

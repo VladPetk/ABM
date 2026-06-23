@@ -537,11 +537,21 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
   const reflecting = React.useRef(false);  // guards the playhead→scroll echo
   const [vh, setVh] = React.useState(0);
   const [collapse, setCollapse] = React.useState(0);  // 0 hero · 1 strip
+  const [expanded, setExpanded] = React.useState(false); // tap-to-study override
+  const [trans, setTrans] = React.useState(false);    // animate height only on expand/collapse
 
   const HERO = Math.max(150, Math.round(vh * 0.46));
-  const STRIP = 132;
+  const STRIP = 168;
+  const EXPANDED_H = Math.round(vh * 0.72);
   const COLLAPSE_PX = Math.max(120, HERO - STRIP);
-  const compassH = HERO - (HERO - STRIP) * collapse;
+  const compassH = expanded ? EXPANDED_H : HERO - (HERO - STRIP) * collapse;
+  // center-crop: render the compass square at its full (uncollapsed) size and
+  // clip — keeps true proportions, no squash. boxH grows for the expanded view.
+  const boxH = Math.max(HERO, compassH);
+
+  const flashTrans = () => { setTrans(true); setTimeout(() => setTrans(false), 340); };
+  const collapseExpand = () => { if (expanded) { flashTrans(); setExpanded(false); } };
+  const toggleExpand = () => { flashTrans(); setExpanded((e) => !e); };
 
   // measure the live height of the story area (header/transport excluded)
   React.useLayoutEffect(() => {
@@ -589,9 +599,15 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
 
   const onScroll = () => {
     const el = scroller.current; if (!el) return;
+    if (expanded) collapseExpand();              // scrolling shrinks the study view
     setCollapse(Math.min(1, el.scrollTop / COLLAPSE_PX));
     if (reflecting.current || playing) return;   // ignore echo / let ▶ drive
     setTick(scrollToTick(el.scrollTop));
+  };
+  const jumpToTick = (tk) => {
+    const el = scroller.current; if (!el) return;
+    setPlaying(false); collapseExpand();
+    el.scrollTo({ top: Math.max(0, tickToScroll(tk)), behavior: 'smooth' });
   };
 
   // ▶ playback: advance the playhead (useTick) and reflect it onto the scroll
@@ -609,7 +625,9 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
 
   const year = Math.floor(tickToYear(tick));
   const ci = beatIndexAt(tick);
-  const stripMode = collapse > 0.55;
+  const stripMode = !expanded && collapse > 0.5;     // collapsed peek (no chrome)
+  const showFull = expanded || !stripMode;           // hero or study view → full chrome
+  const tlTrans = trans ? 'height .32s ease, top .32s ease' : 'none';
 
   // ── chapter block (mirrors WatchRail's beat copy, minus the nav footer) ──
   const beatBlock = (beat, i) => {
@@ -654,8 +672,9 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
 
   return (
     <div ref={wrapRef} style={{ flex: 1, minHeight: 0, position: 'relative', background: CC.bg, overflow: 'hidden' }}>
-      {/* the scrolling prose column — the only thing that actually scrolls */}
-      <div ref={scroller} onScroll={onScroll}
+      {/* the scrolling prose column — the only thing that actually scrolls.
+          tapping the prose shrinks the study view back to a strip. */}
+      <div ref={scroller} onScroll={onScroll} onClick={collapseExpand}
         style={{ position: 'absolute', inset: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ height: HERO + 16, flexShrink: 0 }} />
         {BEATS.map(beatBlock)}
@@ -664,37 +683,35 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
       </div>
 
       {/* pinned compass — collapses hero → strip, never leaves the screen. The
-          collapse is a center-CROP (constant vertical scale), not a squash; in
-          strip mode the axis labels + outlet markers drop out as clutter. */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: compassH, overflow: 'hidden', background: CC.bg, borderBottom: stripMode ? `1px solid ${CC.border}` : '1px solid transparent', pointerEvents: 'none', zIndex: 2 }}>
-        <div style={{ position: 'absolute', left: 0, right: 0, height: HERO, top: -(HERO - compassH) / 2 }}>
-          <Field run={D.runs.baseline} tick={tick} layer="position" view="density" showGap landmarks={stripMode ? false : 'fixed'} chrome={!stripMode} />
+          collapse is a center-CROP (true proportions, no squash); tapping it
+          expands to a study view, scrolling/tapping the prose shrinks it back.
+          In strip mode the axis labels + outlet markers drop out as clutter. */}
+      <div onClick={expanded ? collapseExpand : undefined}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: compassH, overflow: 'hidden', background: CC.bg, borderBottom: stripMode ? `1px solid ${CC.border}` : '1px solid transparent', pointerEvents: expanded ? 'auto' : 'none', zIndex: 2, transition: tlTrans }}>
+        <div style={{ position: 'absolute', left: 0, right: 0, height: boxH, top: -(boxH - compassH) / 2, transition: tlTrans }}>
+          <Field run={D.runs.baseline} tick={tick} layer="position" view="density" showGap landmarks={showFull ? 'fixed' : false} chrome={showFull} compact />
         </div>
         {/* fade the bottom edge so prose dissolves under the strip */}
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 56, background: `linear-gradient(180deg, rgba(249,248,244,0), ${CC.bg})` }} />
-        {/* year chip */}
-        <div style={{ position: 'absolute', right: 14, top: 12, display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(249,248,244,.85)', border: `1px solid ${CC.border}`, borderRadius: DS.rad.pill, padding: '5px 11px', fontFamily: MONO, fontSize: 12, color: CC.ink2, ...TNUM }}>{year}</div>
-        {/* strip caption, fades in as it collapses */}
-        <div style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', opacity: collapse, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: CC.ink3 }}>
-          {BEATS[ci] ? (BEATS[ci].short || `Ch. ${ci}`) : ''}
-        </div>
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 56, background: `linear-gradient(180deg, rgba(249,248,244,0), ${CC.bg})`, pointerEvents: 'none' }} />
+        {/* expand affordance — only on the collapsed strip; child keeps its own
+            pointer events so it's tappable through the non-interactive compass */}
+        {stripMode &&
+          <button onClick={(e) => { e.stopPropagation(); toggleExpand(); }} aria-label="Expand the map"
+            style={{ position: 'absolute', right: 12, top: 10, pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: DS.rad.pill, background: 'rgba(249,248,244,.85)', border: `1px solid ${CC.border}`, color: CC.ink2, fontSize: 14, cursor: 'pointer' }}>⤢</button>}
       </div>
 
-      {/* progress hairline — between header and compass */}
-      <div style={{ position: 'absolute', top: -1, left: 20, right: 20, height: 14, zIndex: 3, pointerEvents: 'none' }}>
-        <div style={{ position: 'absolute', left: 0, right: 0, top: 6, height: 2, background: CC.border, borderRadius: 2 }} />
-        <div style={{ position: 'absolute', left: 0, top: 6, height: 2, width: `${(tick / LAST) * 100}%`, background: CC.ink, borderRadius: 2 }} />
-        {BEATS.map((b, k) => (
-          <span key={k} style={{ position: 'absolute', left: `${(b.tick / LAST) * 100}%`, top: 7, transform: 'translate(-50%,-50%) rotate(45deg)', width: 7, height: 7, background: k <= ci ? CC.ink : CC.surface, border: `1.5px solid ${k <= ci ? CC.ink : CC.ink3}`, borderRadius: 2 }} />
-        ))}
-      </div>
-
-      {/* transport — ▶ plays it for you; the rail mirrors the playhead */}
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 4, borderTop: `1px solid ${CC.border}`, background: 'rgba(249,248,244,.94)', backdropFilter: 'blur(8px)', padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
+      {/* transport — ▶ plays it for you; the rail carries the chapter markers
+          (the only timeline now) and the playhead, with the year readout. */}
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 4, borderTop: `1px solid ${CC.border}`, background: 'rgba(249,248,244,.94)', backdropFilter: 'blur(8px)', padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={toggle} aria-label={playing ? 'Pause' : 'Play'} style={{ width: 40, height: 40, borderRadius: DS.rad.pill, background: CC.ink, color: '#fff', border: 'none', flexShrink: 0, fontSize: 12, cursor: 'pointer' }}>{playing ? '❚❚' : '▶'}</button>
-        <div style={{ flex: 1, position: 'relative', height: 2, background: CC.border, borderRadius: 2 }}>
-          <div style={{ position: 'absolute', left: 0, top: 0, height: 2, width: `${(tick / LAST) * 100}%`, background: CC.ink, borderRadius: 2 }} />
-          <div style={{ position: 'absolute', left: `${(tick / LAST) * 100}%`, top: 1, transform: 'translate(-50%,-50%)', width: 14, height: 14, borderRadius: 999, background: '#fff', border: `3px solid ${CC.ink}`, boxShadow: '0 2px 6px rgba(26,29,35,.18)' }} />
+        <div style={{ flex: 1, position: 'relative', height: 16 }}>
+          <div style={{ position: 'absolute', left: 0, right: 0, top: 7, height: 2, background: CC.border, borderRadius: 2 }} />
+          <div style={{ position: 'absolute', left: 0, top: 7, height: 2, width: `${(tick / LAST) * 100}%`, background: CC.ink, borderRadius: 2 }} />
+          {BEATS.map((b, k) => (
+            <button key={k} onClick={() => jumpToTick(b.tick)} title={b.short || b.title} aria-label={b.short || b.title}
+              style={{ position: 'absolute', left: `${(b.tick / LAST) * 100}%`, top: 8, transform: 'translate(-50%,-50%) rotate(45deg)', width: 8, height: 8, padding: 0, background: k <= ci ? CC.ink : CC.surface, border: `1.5px solid ${k <= ci ? CC.ink : CC.ink3}`, borderRadius: 2, cursor: 'pointer' }} />
+          ))}
+          <div style={{ position: 'absolute', left: `${(tick / LAST) * 100}%`, top: 8, transform: 'translate(-50%,-50%)', width: 14, height: 14, borderRadius: 999, background: '#fff', border: `3px solid ${CC.ink}`, boxShadow: '0 2px 6px rgba(26,29,35,.18)', pointerEvents: 'none' }} />
         </div>
         <MonoVal size={DS.type.small} color={CC.ink}>{year}</MonoVal>
       </div>
