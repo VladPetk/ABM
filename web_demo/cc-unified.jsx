@@ -49,7 +49,7 @@ const NAV_ITEMS = [
   { id: 'about', label: 'About' },
 ];
 
-function SiteHeader({ page, setPage }) {
+function SiteHeader({ page, setPage, hidden = false, pgMode = null, onPgMode = null }) {
   const isMobile = useIsMobile();
   const [open, setOpen] = React.useState(false);
   // close the sheet whenever we land on a new page
@@ -61,43 +61,65 @@ function SiteHeader({ page, setPage }) {
     </button>);
 
   if (isMobile) {
+    // collapse + slide up when `hidden` (scroll-down); the flex sibling below
+    // grows into the freed space. Kept overflow-visible so the dropdown isn't
+    // clipped (it only opens while the header is shown).
     return (
-      <div style={{ flexShrink: 0, position: 'relative', zIndex: 40 }}>
-        <div style={{ height: 52, display: 'flex', alignItems: 'center', gap: 12, padding: '0 18px', background: CC.bg, borderBottom: `1px solid ${CC.border}` }}>
-          {brand}
-          <span style={{ flex: 1 }} />
-          <button onClick={() => setOpen((v) => !v)} aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} style={{
-            width: 40, height: 40, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
-            background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <span style={{ width: 21, height: 2, borderRadius: 2, background: CC.ink2, transition: 'transform .2s', transform: open ? 'translateY(7px) rotate(45deg)' : 'none' }} />
-            <span style={{ width: 21, height: 2, borderRadius: 2, background: CC.ink2, opacity: open ? 0 : 1, transition: 'opacity .15s' }} />
-            <span style={{ width: 21, height: 2, borderRadius: 2, background: CC.ink2, transition: 'transform .2s', transform: open ? 'translateY(-7px) rotate(-45deg)' : 'none' }} />
-          </button>
+      <div style={{ flexShrink: 0, position: 'relative', zIndex: 40, height: hidden ? 0 : 52, transition: 'height .26s ease' }}>
+        <div style={{ transform: hidden ? 'translateY(-100%)' : 'none', transition: 'transform .26s ease', background: CC.bg }}>
+          <div style={{ height: 52, display: 'flex', alignItems: 'center', gap: 12, padding: '0 18px', background: CC.bg, borderBottom: `1px solid ${CC.border}` }}>
+            {brand}
+            <span style={{ flex: 1 }} />
+            <button onClick={() => setOpen((v) => !v)} aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} style={{
+              width: 40, height: 40, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+              <span style={{ width: 21, height: 2, borderRadius: 2, background: CC.ink2, transition: 'transform .2s', transform: open ? 'translateY(7px) rotate(45deg)' : 'none' }} />
+              <span style={{ width: 21, height: 2, borderRadius: 2, background: CC.ink2, opacity: open ? 0 : 1, transition: 'opacity .15s' }} />
+              <span style={{ width: 21, height: 2, borderRadius: 2, background: CC.ink2, transition: 'transform .2s', transform: open ? 'translateY(-7px) rotate(-45deg)' : 'none' }} />
+            </button>
+          </div>
+          {open &&
+          <nav style={{ position: 'absolute', left: 0, right: 0, top: 52, background: CC.bg, borderBottom: `1px solid ${CC.border}`, boxShadow: '0 12px 28px rgba(26,29,35,.10)', display: 'flex', flexDirection: 'column', padding: '6px 0', animation: 'ccFadeUp .2s ease' }}>
+            {NAV_ITEMS.map((it) => {
+              const on = it.active ? it.active(page) : page === it.id;
+              return (
+                <React.Fragment key={it.id}>
+                  <button onClick={() => setPage(it.target || it.id)} style={{
+                    textAlign: 'left', padding: '14px 22px', background: on ? CC.bg2 : 'none', border: 'none', cursor: 'pointer',
+                    fontFamily: SANS, fontSize: 16, fontWeight: on ? 600 : 500, color: on ? CC.ink : CC.ink2 }}>
+                    {it.label}
+                  </button>
+                  {/* the Interventions | Sandbox choice lives under Playground in
+                      the menu (it used to be a pill on the page) */}
+                  {it.id === 'playground' && page === 'playground' && pgMode &&
+                    [['interventions', 'Interventions'], ['sandbox', 'Sandbox']].map(([m, lab]) => {
+                      const mon = pgMode === m;
+                      return (
+                        <button key={m} onClick={() => { onPgMode && onPgMode(m); setOpen(false); }} style={{
+                          textAlign: 'left', padding: '11px 22px 11px 40px', background: 'none', border: 'none', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', gap: 10, fontFamily: SANS, fontSize: 14.5, fontWeight: mon ? 600 : 450, color: mon ? CC.ink : CC.ink3 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: 9, flexShrink: 0, background: mon ? CC.ink : 'transparent', border: `1.5px solid ${mon ? CC.ink : CC.ink4}` }} />
+                          {lab}
+                        </button>);
+                    })}
+                </React.Fragment>);
+            })}
+          </nav>}
         </div>
-        {open &&
-        <nav style={{ position: 'absolute', left: 0, right: 0, top: 52, background: CC.bg, borderBottom: `1px solid ${CC.border}`, boxShadow: '0 12px 28px rgba(26,29,35,.10)', display: 'flex', flexDirection: 'column', padding: '6px 0', animation: 'ccFadeUp .2s ease' }}>
-          {NAV_ITEMS.map((it) => {
-            const on = it.active ? it.active(page) : page === it.id;
-            return (
-              <button key={it.id} onClick={() => setPage(it.target || it.id)} style={{
-                textAlign: 'left', padding: '14px 22px', background: on ? CC.bg2 : 'none', border: 'none', cursor: 'pointer',
-                fontFamily: SANS, fontSize: 16, fontWeight: on ? 600 : 500, color: on ? CC.ink : CC.ink2 }}>
-                {it.label}
-              </button>);
-          })}
-        </nav>}
       </div>);
   }
 
   return (
-    <div style={{ height: 58, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '0 clamp(24px, 4vw, 56px)', background: CC.bg, position: 'relative', zIndex: 30 }}>
-      {brand}
-      <span style={{ flex: 1 }} />
-      <nav style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-        {NAV_ITEMS.map((it) => (
-          <HeaderNavLink key={it.id} id={it.id} target={it.target} active={it.active ? it.active(page) : undefined} page={page} setPage={setPage}>{it.label}</HeaderNavLink>
-        ))}
-      </nav>
+    <div style={{ flexShrink: 0, position: 'relative', zIndex: 30, height: hidden ? 0 : 58, transition: 'height .26s ease' }}>
+      <div style={{ height: 58, display: 'flex', alignItems: 'center', gap: 14, padding: '0 clamp(24px, 4vw, 56px)', background: CC.bg, transform: hidden ? 'translateY(-100%)' : 'none', transition: 'transform .26s ease' }}>
+        {brand}
+        <span style={{ flex: 1 }} />
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+          {NAV_ITEMS.map((it) => (
+            <HeaderNavLink key={it.id} id={it.id} target={it.target} active={it.active ? it.active(page) : undefined} page={page} setPage={setPage}>{it.label}</HeaderNavLink>
+          ))}
+        </nav>
+      </div>
     </div>);
 
 }
@@ -529,14 +551,12 @@ function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, be
 // chapters stack into one continuous scroll, and scroll position drives `tick`
 // (the playhead). It's frozen when idle — pure scroll-driven, no autodrift —
 // and the ▶ plays it for you, reflecting the playhead back onto the scroll.
-function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onHeader, onInterventions, onSandbox, onExplore, on3D }) {
+function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInterventions, onSandbox, onExplore, on3D }) {
   const wrapRef = React.useRef(null);     // measures available height
   const scroller = React.useRef(null);    // the scrolling prose column
   const secRefs = React.useRef([]);       // chapter section elements
   const anchors = React.useRef([]);       // [{ top, tick }] scroll→tick table
   const reflecting = React.useRef(false);  // guards the playhead→scroll echo
-  const lastTop = React.useRef(0);        // for scroll-direction (header hide)
-  const hdrRef = React.useRef(false);     // current header-hidden state
   const [vh, setVh] = React.useState(0);
   const [vw, setVw] = React.useState(390);
   const [collapse, setCollapse] = React.useState(0);  // 0 hero · 1 strip
@@ -555,7 +575,6 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onHeade
 
   const flashTrans = () => { setTrans(true); setTimeout(() => setTrans(false), 340); };
   const toggleExpand = () => { flashTrans(); setExpanded((e) => !e); };
-  const setHeader = (hidden) => { if (hdrRef.current !== hidden) { hdrRef.current = hidden; onHeader && onHeader(hidden); } };
 
   // measure the live size of the story area (header/transport excluded). A
   // ResizeObserver catches the header sliding away, not just window resizes.
@@ -608,13 +627,7 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onHeade
     const el = scroller.current; if (!el) return;
     const sT = el.scrollTop;
     setCollapse(Math.min(1, sT / COLLAPSE_PX));    // expanded study view stays put
-    // hide the header on the way down, bring it back on the way up (classic)
-    const dy = sT - lastTop.current;
-    if (sT < 8) setHeader(false);
-    else if (dy > 6) setHeader(true);
-    else if (dy < -6) setHeader(false);
-    lastTop.current = sT;
-    if (reflecting.current || playing) return;   // ignore echo / let ▶ drive
+    if (reflecting.current || playing) return;     // ignore echo / let ▶ drive
     setTick(scrollToTick(sT));
   };
   const jumpToTick = (tk) => {
@@ -801,8 +814,24 @@ function Unified() {
   // dismiss the first-run hint as soon as the reader plays.
   React.useEffect(() => {if (playing) setHintSeen(true);}, [playing]);
 
-  // the header only auto-hides inside the mobile story; restore it everywhere else.
-  React.useEffect(() => {if (!(isMobile && page === 'story' && !unlocked)) setHdrHidden(false);}, [isMobile, page, unlocked]);
+  // site-wide auto-hiding header: a single capture-phase scroll listener catches
+  // whichever element is scrolling and hides the header on the way down, brings
+  // it back on the way up. Reset to shown on every page change.
+  React.useEffect(() => { setHdrHidden(false); }, [page]);
+  React.useEffect(() => {
+    let lastY = 0, lastT = null;
+    const onScroll = (e) => {
+      const el = e.target; if (!el || typeof el.scrollTop !== 'number') return;
+      const y = el.scrollTop;
+      if (el !== lastT) { lastT = el; lastY = y; return; }   // new scroller — just record
+      if (y < 8) setHdrHidden(false);
+      else if (y - lastY > 6) setHdrHidden(true);
+      else if (y - lastY < -6) setHdrHidden(false);
+      lastY = y;
+    };
+    window.addEventListener('scroll', onScroll, true);        // capture: catches nested scrollers
+    return () => window.removeEventListener('scroll', onScroll, true);
+  }, []);
 
   // wheel scrubbing — roll to move the needle through time, then ease onto the
   // nearest chapter when the wheel goes idle so it always lands on a beat. One
@@ -970,7 +999,7 @@ function Unified() {
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0 }}
       onClick={(e) => {const g = e.target.closest('[data-goto]');if (g) {e.preventDefault();goPage(g.getAttribute('data-goto'));}}}>
-        <SiteHeader page={page} setPage={goPage} />
+        <SiteHeader page={page} setPage={goPage} hidden={hdrHidden} />
         {page === 'about' ? <AboutPage /> : page === 'agents' ? <Agents3DPage /> : <MethodsPage />}
       </div>);
 
@@ -981,7 +1010,7 @@ function Unified() {
   if (page === 'forces') {
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}>
-        <SiteHeader page={page} setPage={goPage} />
+        <SiteHeader page={page} setPage={goPage} hidden={hdrHidden} />
         <ForcesModeBar mode="tour" goPage={goPage} />
         <ForcesTour onFinale={() => goPage('prologue')} />
       </div>);
@@ -994,7 +1023,7 @@ function Unified() {
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}
       onClick={(e) => {const g = e.target.closest('[data-goto]');if (g) {e.preventDefault();goPage(g.getAttribute('data-goto'));}}}>
-        <SiteHeader page={page} setPage={goPage} />
+        <SiteHeader page={page} setPage={goPage} hidden={hdrHidden} />
         <ForcesModeBar mode="engine" goPage={goPage} />
         <ProloguePage onToStory={() => goPage('story')} onPlayground={() => goPlayground('interventions')} on3D={() => goPage('agents')} />
       </div>);
@@ -1008,32 +1037,27 @@ function Unified() {
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}
       onClick={(e) => {const g = e.target.closest('[data-goto]');if (g) {e.preventDefault();goPage(g.getAttribute('data-goto'));}}}>
-        <SiteHeader page={page} setPage={goPage} />
-        {/* hide the mode pill on a mobile intervention detail to buy vertical
-            room (the detail has its own "← All interventions" back) */}
-        {!(isMobile && iv.activeId && !iv.isSandbox) &&
+        <SiteHeader page={page} setPage={goPage} hidden={hdrHidden}
+          pgMode={iv.isSandbox ? 'sandbox' : 'interventions'}
+          onPgMode={(m) => { m === 'sandbox' ? iv.openSandbox() : iv.back(); }} />
+        {/* the Interventions | Sandbox toggle lives in the menu now; desktop keeps
+            the on-page pill for quick switching. */}
+        {!isMobile &&
           <ModeBar mode={iv.isSandbox ? 'sandbox' : 'interventions'} setMode={(m) => {m === 'sandbox' ? iv.openSandbox() : iv.back();}} />}
         <IvWorkbench iv={iv} layer={layer} />
       </div>);
 
   }
 
-  // ── mobile guided story — its own surface so the header can float and slide
-  // away on scroll (giving the compass the full screen height). ──
+  // ── mobile guided story — the collapsing header (site-wide) gives the compass
+  // the full screen height as you scroll. ──
   if (isMobile && isWatch && !stagedOrient) {
     return (
-      <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: CC.bg }}>
-        {/* overlay header — slides up on scroll-down, back on scroll-up. Kept as
-            an overlay (not a flex row) so its dropdown menu isn't clipped. */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50, transform: hdrHidden ? 'translateY(-100%)' : 'none', transition: 'transform .28s ease' }}>
-          <SiteHeader page={page} setPage={goPage} />
-        </div>
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, top: hdrHidden ? 0 : 52, transition: 'top .28s ease', display: 'flex', flexDirection: 'column' }}>
-          <MobileScrollStory tick={tick} setTick={setTick} playing={playing} toggle={toggle} setPlaying={setPlaying}
-            onHeader={setHdrHidden}
-            onInterventions={() => goPlayground('interventions')} onSandbox={() => goPlayground('sandbox')}
-            onExplore={goExplore} on3D={() => goPage('agents')} />
-        </div>
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0 }}>
+        <SiteHeader page={page} setPage={goPage} hidden={hdrHidden} />
+        <MobileScrollStory tick={tick} setTick={setTick} playing={playing} toggle={toggle} setPlaying={setPlaying}
+          onInterventions={() => goPlayground('interventions')} onSandbox={() => goPlayground('sandbox')}
+          onExplore={goExplore} on3D={() => goPage('agents')} />
       </div>);
   }
 
@@ -1041,7 +1065,7 @@ function Unified() {
   // story = the guided chapters / unlocked explore) ──
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}>
-      <SiteHeader page={page} setPage={goPage} />
+      <SiteHeader page={page} setPage={goPage} hidden={hdrHidden} />
 
       {isMobile ? (
         /* ── mobile intro + unlocked explore: map band on top (swipe to scrub),
