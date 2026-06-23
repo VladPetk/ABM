@@ -263,6 +263,30 @@ function Scatter3D({ tick, run, zoomApi }) {
 
 // ── the page: right-anchored scene · left prose · shared timeline — the same
 // frame as the story page, with the U.S.-story chapter markers on the timeline ──
+// a bare scrub line — no chapters, no decade labels, just a draggable playhead
+function Scrubber({ tick, setTick }) {
+  const ref = React.useRef(null);
+  const pct = (tick / LAST) * 100;
+  const scrub = (clientX) => {
+    const el = ref.current; if (!el) return;
+    const r = el.getBoundingClientRect();
+    setTick(Math.max(0, Math.min(LAST, ((clientX - r.left) / r.width) * LAST)));
+  };
+  const onDown = (e) => {
+    e.preventDefault(); scrub(e.clientX);
+    const mv = (ev) => scrub(ev.clientX);
+    const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+  };
+  return (
+    <div ref={ref} onPointerDown={onDown} style={{ flex: 1, minWidth: 0, position: 'relative', height: 22, cursor: 'pointer', touchAction: 'none' }}>
+      <div style={{ position: 'absolute', left: 0, right: 0, top: 10, height: 2, background: CC.border, borderRadius: 2 }} />
+      <div style={{ position: 'absolute', left: 0, top: 10, height: 2, width: `${pct}%`, background: CC.ink, borderRadius: 2 }} />
+      <div style={{ position: 'absolute', left: `${pct}%`, top: 11, transform: 'translate(-50%,-50%)', width: 14, height: 14, borderRadius: 999, background: '#fff', border: `3px solid ${CC.ink}`, boxShadow: '0 2px 6px rgba(26,29,35,.18)' }} />
+    </div>
+  );
+}
+
 function Agents3DPage() {
   const ph = useTick({ start: 0, autoplay: true, base: 2.25 });
   const { tick, setTick, playing, toggle, speed, setSpeed } = ph;
@@ -360,16 +384,19 @@ function Agents3DPage() {
   if (isMobile) {
     return (
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative', background: CC.bg }}>
-        <div style={{ position: 'relative', height: '42%', flexShrink: 0, overflow: 'hidden' }}>
+        <div style={{ position: 'relative', height: '50%', flexShrink: 0, overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0 }}>
             <Scatter3D tick={tick} run={run} zoomApi={zoomApi} />
           </div>
           {zoomBtns}
         </div>
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>{narrative}</div>
-        <div style={{ flexShrink: 0, background: CC.bg, borderTop: `1px solid ${CC.border}`, padding: '11px 16px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {transportCluster}
-          {timelineRow}
+        {/* one slim row: play · reset · plain scrub line · year */}
+        <div style={{ flexShrink: 0, background: CC.bg, borderTop: `1px solid ${CC.border}`, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={toggle} aria-label={playing ? 'Pause' : 'Play'} style={{ width: 36, height: 36, borderRadius: 999, background: CC.ink, color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{playing ? '❚❚' : '▶'}</button>
+          <button onClick={() => setTick(0)} aria-label="Restart" style={{ width: 30, height: 30, borderRadius: 999, border: `1px solid ${CC.borderS}`, color: CC.ink2, background: 'transparent', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>↺</button>
+          <Scrubber tick={tick} setTick={setTick} />
+          <MonoVal size={DS.type.small} color={CC.ink}>{monthLabel}</MonoVal>
         </div>
       </div>
     );
