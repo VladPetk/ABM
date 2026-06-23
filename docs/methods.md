@@ -125,7 +125,7 @@ L / N / E throughout:
 > Hegselmann–Krause; the canonical test (`test_canonical.py` / `compass_basic`)
 > only verifies the exact HK recovery at the hard-cutoff `temperature = 0`, so the
 > graded path's behavior is *not* directly literature-pinned. (See the isolation-
-> layer caveat in `CLAUDE.md` / `ENGINE_OVERVIEW.md`.)
+> layer caveat in `ENGINE_OVERVIEW.md`.)
 
 When this distinction matters for a section's calibration, the tag
 is stated inline.
@@ -172,7 +172,7 @@ and the late steepening of out-party animus was instead sourced from
 schedule that does map to a real change. The corollary check that the
 arc is not *only* its schedules is the **pillar**: the same mechanisms
 run with no dated events, so it isolates what the dynamics generate on
-their own (the composition layer; see CLAUDE.md's three test layers).
+their own (the composition layer — isolation / composition / empirical).
 
 **Friedkin-Johnsen realization (Phase 8c D5 clarification).**
 polarlab implements the Friedkin-Johnsen anchoring via two separate

@@ -66,7 +66,9 @@ function animateIntroMorph({ fromTick, setTick, setMorphT, onDone, dur = 1500 })
 
 // ── Act 0 left rail — stakes first, mechanics second, then the two doors ────
 function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D }) {
-  const LX = 'clamp(64px, 14vw, 248px)';
+  const isMobile = useIsMobile();
+  const LX = isMobile ? '20px' : 'clamp(64px, 14vw, 248px)';
+  const RX = isMobile ? '20px' : '44px';
   const pillBase = {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
     padding: '13px 26px', borderRadius: DS.rad.pill, cursor: 'pointer',
@@ -82,8 +84,8 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D }) {
   const watchStyle = storyDone ? white : black;
   const sandboxStyle = storyDone ? black : white;
   return (
-    <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
-      <div style={{ flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px 8px ${LX}` }}>
+    <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
+      <div style={{ flexShrink: 0, padding: `${isMobile ? '22px' : 'clamp(28px,4.5vh,52px)'} ${RX} 8px ${LX}` }}>
         <Eyebrow>An agent-based model · 250 simulated citizens</Eyebrow>
         <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(30px, 3.4vw, 44px)', lineHeight: 1.06, letterSpacing: '-.02em', maxWidth: 520 }}>
           Simulating political polarization, visually
@@ -113,7 +115,7 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D }) {
           <button onClick={onAbout} style={quiet}>Why did I build it? →</button>
         </div>
       </div>
-      <div style={{ flexShrink: 0, padding: `18px 44px clamp(24px,4vh,40px) ${LX}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ flexShrink: 0, padding: `18px ${RX} ${isMobile ? '26px' : 'clamp(24px,4vh,40px)'} ${LX}`, display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ width: 7, height: 7, borderRadius: DS.rad.pill, background: '#c47a2c', flexShrink: 0 }} />
         <span style={{ fontFamily: MONO, fontSize: DS.type.micro, color: CC.ink3, ...TNUM }}>
           {Math.floor(tickToYear(tick))} · 45 years of polarization on a loop.

@@ -919,6 +919,7 @@ const FORCE_TAB = { orient: 'Orientation', bc: 'Bounded confidence', backfire: '
 // ── the shared bottom bar — transport (left) · force buttons (center) · knob
 // (right). Named buttons, not a timeline; the controls sit where the story's do.
 function ForceBar({ stops, fi, goStop, force, playing, setPlaying, onStep, onReset, knob, setKnob, revealed, setRevealed }) {
+  const isMobile = useIsMobile();
   const round = { width: 32, height: 32, borderRadius: DS.rad.pill, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, fontFamily: SANS };
   const pill = (label, active, onClick, muted) => (
     <button key={label} onClick={onClick} style={{
@@ -928,41 +929,61 @@ function ForceBar({ stops, fi, goStop, force, playing, setPlaying, onStep, onRes
     }}>{label}</button>
   );
   const kpct = force.knob ? ((knob - force.knob.min) / (force.knob.max - force.knob.min)) * 100 : 0;
+  // transport cluster + knob/reveal — reused in both layouts
+  const transport = force.static ? (
+    <Caption>the map — no force yet</Caption>
+  ) : (
+    <>
+      <button onClick={() => setPlaying((p) => !p)} aria-label={playing ? 'Pause' : 'Play'} style={{ ...round, background: CC.ink, color: '#fff', border: 'none', fontSize: 11 }}>{playing ? '❚❚' : '▶'}</button>
+      <button onClick={onStep} title="Step" style={{ ...round, background: 'transparent', color: CC.ink2, border: `1px solid ${CC.borderS}`, fontSize: 12 }}>▷</button>
+      <button onClick={onReset} title="Reset" style={{ ...round, background: 'transparent', color: CC.ink2, border: `1px solid ${CC.borderS}`, fontSize: 13 }}>↺</button>
+    </>
+  );
+  const controls = (force.knob || force.reveal) && (
+    <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+      {force.reveal &&
+        <button onClick={() => setRevealed((r) => !r)} style={{
+          padding: '7px 12px', borderRadius: DS.rad.pill, cursor: 'pointer', fontFamily: SANS, fontSize: 12.5, fontWeight: 500,
+          border: `1px solid ${revealed ? CC.ink : CC.borderS}`, background: 'transparent', color: revealed ? CC.ink : CC.ink2,
+        }}>{revealed ? '⤡ Flatten' : '⤢ Reveal'}</button>}
+      {force.knob &&
+        <label style={{ display: 'flex', alignItems: 'center', gap: 9, fontFamily: SANS, fontSize: 13, color: CC.ink2 }}>
+          {force.knob.label}
+          <input type="range" className="cc-range" min={force.knob.min} max={force.knob.max} step={force.knob.step} value={knob} onChange={(e) => setKnob(parseFloat(e.target.value))}
+            style={{ width: isMobile ? 104 : 140, background: `linear-gradient(90deg, ${CC.ink} 0 ${kpct}%, ${CC.border} ${kpct}% 100%)` }} />
+          <MonoVal size={12}>{knob.toFixed(2)}</MonoVal>
+        </label>}
+    </div>
+  );
+
+  // Mobile: the three desktop sections can't share a row at 390px — stack the
+  // force-picker strip over a transport+knob row.
+  if (isMobile) {
+    return (
+      <div style={{ flexShrink: 0, background: CC.bg, borderTop: `1px solid ${CC.border}`, padding: '8px 14px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3, overflowX: 'auto', whiteSpace: 'nowrap' }}>
+          {stops.map((s, i) => pill(i === 0 ? 'Orientation' : s.id === 'affect' ? FORCE_TAB[s.id] : `${i} · ${FORCE_TAB[s.id] || s.id}`, i === fi, () => goStop(i)))}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>{transport}</div>
+          <span style={{ flex: 1 }} />
+          {controls}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ height: 96, flexShrink: 0, background: CC.bg, position: 'relative', display: 'flex', alignItems: 'center', gap: 'clamp(16px,2.5vw,36px)', padding: '0 clamp(28px,4vw,56px)' }}>
       <div style={{ position: 'absolute', top: 0, left: 'clamp(28px,4vw,56px)', right: 'clamp(28px,4vw,56px)', height: 1, background: CC.border }} />
       {/* transport (left) — hidden on the orientation map (nothing to play) */}
-      <div style={{ width: 150, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 9 }}>
-        {force.static ? (
-          <Caption>the map — no force yet</Caption>
-        ) : (
-          <>
-            <button onClick={() => setPlaying((p) => !p)} aria-label={playing ? 'Pause' : 'Play'} style={{ ...round, background: CC.ink, color: '#fff', border: 'none', fontSize: 11 }}>{playing ? '❚❚' : '▶'}</button>
-            <button onClick={onStep} title="Step" style={{ ...round, background: 'transparent', color: CC.ink2, border: `1px solid ${CC.borderS}`, fontSize: 12 }}>▷</button>
-            <button onClick={onReset} title="Reset" style={{ ...round, background: 'transparent', color: CC.ink2, border: `1px solid ${CC.borderS}`, fontSize: 13 }}>↺</button>
-          </>
-        )}
-      </div>
+      <div style={{ width: 150, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 9 }}>{transport}</div>
       {/* force buttons (center) — named, the active one filled */}
       <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, overflowX: 'auto', whiteSpace: 'nowrap' }}>
         {stops.map((s, i) => pill(i === 0 ? 'Orientation' : s.id === 'affect' ? FORCE_TAB[s.id] : `${i} · ${FORCE_TAB[s.id] || s.id}`, i === fi, () => goStop(i)))}
       </div>
       {/* knob + reveal (right) */}
-      {(force.knob || force.reveal) &&
-        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-          {force.reveal &&
-            <button onClick={() => setRevealed((r) => !r)} style={{
-              padding: '7px 12px', borderRadius: DS.rad.pill, cursor: 'pointer', fontFamily: SANS, fontSize: 12.5, fontWeight: 500,
-              border: `1px solid ${revealed ? CC.ink : CC.borderS}`, background: 'transparent', color: revealed ? CC.ink : CC.ink2,
-            }}>{revealed ? '⤡ Flatten' : '⤢ Reveal'}</button>}
-          {force.knob &&
-            <label style={{ display: 'flex', alignItems: 'center', gap: 9, fontFamily: SANS, fontSize: 13, color: CC.ink2 }}>
-              {force.knob.label}
-              <input type="range" className="cc-range" min={force.knob.min} max={force.knob.max} step={force.knob.step} value={knob} onChange={(e) => setKnob(parseFloat(e.target.value))}
-                style={{ width: 140, background: `linear-gradient(90deg, ${CC.ink} 0 ${kpct}%, ${CC.border} ${kpct}% 100%)` }} />
-              <MonoVal size={12}>{knob.toFixed(2)}</MonoVal>
-            </label>}
-        </div>}
+      {controls}
     </div>
   );
 }
@@ -978,7 +999,9 @@ function ForcesTour({ onFinale }) {
   const [playing, setPlaying] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const toyRef = useRef(null);
-  const LX = 'clamp(64px, 14vw, 248px)';
+  const isMobile = useIsMobile();
+  const LX = isMobile ? '20px' : 'clamp(64px, 14vw, 248px)';
+  const RX = isMobile ? '20px' : '44px';
 
   const goStop = (i) => {
     const f = STOPS[i];
@@ -1000,6 +1023,42 @@ function ForcesTour({ onFinale }) {
     }}>{label}</button>
   );
 
+  // the editorial column — shared between layouts; padding differs per device.
+  const narrative = (
+    <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
+      <div style={{ flexShrink: 0, padding: `${isMobile ? '22px' : 'clamp(28px,4.5vh,52px)'} ${RX} 8px ${LX}` }}>
+        <Eyebrow>{force.eyebrow}</Eyebrow>
+        <h1 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: isMobile ? 28 : 'clamp(30px,3.4vw,46px)', lineHeight: 1.04, letterSpacing: '-.02em', maxWidth: 460 }}>{force.title}</h1>
+        <p style={{ margin: '16px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: 440 }}>{force.lead}</p>
+        {force.body}
+        <Caption style={{ marginTop: 18 }}>{force.caption}</Caption>
+      </div>
+      <div style={{ flexShrink: 0, padding: `14px ${RX} ${isMobile ? '26px' : 'clamp(24px,4vh,40px)'} ${LX}`, display: 'flex', gap: 10, pointerEvents: 'auto' }}>
+        {fi > 0 && navBtn('← Back', () => goStop(fi - 1), false)}
+        {fi === 0 ? navBtn('Meet the first force →', () => goStop(1), true)
+          : lastForce ? navBtn('All together →', onFinale, true)
+            : navBtn('Next force →', () => goStop(fi + 1), true)}
+      </div>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: CC.bg }}>
+        <div style={{ position: 'relative', height: '40%', flexShrink: 0, overflow: 'hidden', borderBottom: `1px solid ${CC.border}` }}>
+          <div style={{ position: 'absolute', inset: 0 }}>
+            <ForceToy key={force.id} force={force} knob={knob} playing={playing} revealed={revealed}
+              onAutoReveal={() => setRevealed(true)} toyRef={toyRef} />
+          </div>
+        </div>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>{narrative}</div>
+        <ForceBar stops={STOPS} fi={fi} goStop={goStop} force={force}
+          playing={playing} setPlaying={setPlaying} onStep={onStep} onReset={onReset}
+          knob={knob} setKnob={setKnob} revealed={revealed} setRevealed={setRevealed} />
+      </div>
+    );
+  }
+
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: CC.bg }}>
       <div style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden', background: CC.bg }}>
@@ -1013,21 +1072,7 @@ function ForcesTour({ onFinale }) {
         {/* floating narrative — a centered editorial block on the left (pointer-
             transparent so the map stays draggable; only the buttons catch clicks) */}
         <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(54%, 820px)', display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3, pointerEvents: 'none' }}>
-          <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
-            <div style={{ flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px 8px ${LX}` }}>
-              <Eyebrow>{force.eyebrow}</Eyebrow>
-              <h1 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(30px,3.4vw,46px)', lineHeight: 1.04, letterSpacing: '-.02em', maxWidth: 460 }}>{force.title}</h1>
-              <p style={{ margin: '16px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: 440 }}>{force.lead}</p>
-              {force.body}
-              <Caption style={{ marginTop: 18 }}>{force.caption}</Caption>
-            </div>
-            <div style={{ flexShrink: 0, padding: `14px 44px clamp(24px,4vh,40px) ${LX}`, display: 'flex', gap: 10, pointerEvents: 'auto' }}>
-              {fi > 0 && navBtn('← Back', () => goStop(fi - 1), false)}
-              {fi === 0 ? navBtn('Meet the first force →', () => goStop(1), true)
-                : lastForce ? navBtn('All together →', onFinale, true)
-                  : navBtn('Next force →', () => goStop(fi + 1), true)}
-            </div>
-          </div>
+          {narrative}
         </div>
       </div>
       <ForceBar stops={STOPS} fi={fi} goStop={goStop} force={force}
@@ -1037,17 +1082,8 @@ function ForcesTour({ onFinale }) {
   );
 }
 
-// dev harness (forces-lab.html) — the tour in isolation, no site header.
-function ForcesLabPage() {
-  return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <ForcesTour onFinale={() => {}} />
-    </div>
-  );
-}
-
 Object.assign(window, {
-  ForceToy, ForceBar, ForcesTour, ForcesLabPage, FORCES, FORCE_ORIENT,
+  ForceToy, ForceBar, ForcesTour, FORCES, FORCE_ORIENT,
   seedMixed, seedAgents: seedMixed, seedAffect, seedNetwork, seedMedia, seedBackfire,
   stepBC, stepParty, stepAffect, stepRewire, stepMedia, stepBackfire,
   spreadOf, partyGap, meanWarmth, crossTieFrac, meanExtremity,

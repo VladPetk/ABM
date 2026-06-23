@@ -144,15 +144,10 @@ pass unnoticed:
   test references it by class name or metric. A headline series with no
   pin.
 - **`IdentityToIdeologyPull`** — historical-arc only, active, unasserted.
-- **`ProtectedPartyRealignment`** — historical-arc only, active,
-  unasserted.
-- **`MediaShock`** — fired via event handlers (not the static pipeline);
-  confirm it's wired in the arc schedule, then guard it.
 - (`PerceptionBoostExpiry` — minor; companion expiry to the tested
   `PerceptionUpdate`.)
-- (`ArgumentExchange` and `X1ExposureExpiry` are *not* gaps: the former
-  is in no pipeline; the latter is intervention-triggered and covered
-  indirectly via X1's phase10 measurement.)
+- (`X1ExposureExpiry` is *not* a gap: it is intervention-triggered and
+  covered indirectly via X1's phase10 measurement.)
 
 **The fix is a per-rule isolation suite (the `compass_basic` pattern)
 — NOT adding these to the pillar.** The pillar is the *eventless
@@ -162,8 +157,8 @@ event-handler); piling single mechanisms into it would break that
 control and still wouldn't isolation-test them. Build a minimal
 scenario per rule that exercises it alone on a clean substrate and
 asserts its effect, starting with `IdentityAlignment`. See the
-three-layer model (Isolation / Composition / Empirical) documented in
-`CLAUDE.md` → "How rules are drift-guarded."
+three-layer model (Isolation / Composition / Empirical) — each layer
+catches what the others miss.
 
 **Rough effort.** Small-to-moderate and incremental — one isolation
 test per rule, ~3–4 to clear the active gaps. No engine change, just

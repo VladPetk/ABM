@@ -322,14 +322,12 @@ Under `tier_d_anes_knobs`, replacement draws position from
 `N(party_centroid, σ_anchor=0.30)` and party_cue σ from
 `PARTY_CUE_SIGMA_HISTORICAL_ANES`.
 
-### 3.14 `ArgumentExchange`, `MediaShock`, `ResidentialMigration`, `ThreatDecay`, `IdentityPrimeExpiry`
+### 3.14 `ResidentialMigration`, `ThreatDecay`, `IdentityPrimeExpiry`
 Supporting rules for specific scenario mechanics. Defaults preserve
 no-op for paths that don't seed the relevant attrs.
 
 | Rule | Key knob | Default | Range | Used by |
 |---|---|---|---|---|
-| `ArgumentExchange` | `homophily_radius` | 0.3 | [0, 2] | (not in current pillar / arc pipelines) |
-| `MediaShock` | `magnitude` | varies | [0, 1] | One-shot events |
 | `ResidentialMigration` | rate | 0.02 | [0, 0.2] | Historical-arc (default 0.02) |
 | `ThreatDecay` | `decay_rate` | 0.05 | [0, 0.5] | After 2016 status-threat spike |
 | `IdentityPrimeExpiry` | n/a | n/a | n/a | Reverts `identity_weight_override` after X4 |

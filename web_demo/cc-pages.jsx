@@ -7,9 +7,10 @@
 // with a sticky section nav. Sparklines read live from D.runs.baseline.
 
 function PageShell({ eyebrow, title, lead, children }) {
+  const isMobile = useIsMobile();
   return (
     <div style={{ flex: 1, minHeight: 0, overflow: 'auto', background: CC.bg }}>
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '72px 40px 120px' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: isMobile ? '40px 20px 96px' : '72px 40px 120px' }}>
         <Eyebrow>{eyebrow}</Eyebrow>
         <h1 style={{ fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.display, lineHeight: 1.02, letterSpacing: '-.022em', margin: '18px 0 0' }}>{title}</h1>
         {lead && <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 21, lineHeight: 1.45, color: CC.ink2, margin: '20px 0 0', maxWidth: '40em', textWrap: 'pretty' }}>{lead}</p>}
@@ -82,9 +83,10 @@ function AboutPage() {
 
 // ── small shared rows ────────────────────────────────────────────────────────
 function MethodRow({ k, children }) {
+  const isMobile = useIsMobile();
   return (
-    <div style={{ display: 'flex', gap: 18, padding: '16px 0', borderBottom: `1px solid ${CC.border}`, alignItems: 'baseline' }}>
-      <div style={{ width: 132, flexShrink: 0, fontFamily: SANS, fontSize: DS.type.small, fontWeight: 600, color: CC.ink }}>{k}</div>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 5 : 18, padding: '16px 0', borderBottom: `1px solid ${CC.border}`, alignItems: isMobile ? 'stretch' : 'baseline' }}>
+      <div style={{ width: isMobile ? 'auto' : 132, flexShrink: 0, fontFamily: SANS, fontSize: DS.type.small, fontWeight: 600, color: CC.ink }}>{k}</div>
       <div style={{ flex: 1, fontSize: DS.type.body, lineHeight: 1.6, color: CC.ink2, textWrap: 'pretty' }}>{children}</div>
     </div>
   );
@@ -326,6 +328,7 @@ function MethodsTOC({ active, onGo }) {
 function MethodsPage() {
   const scrollRef = React.useRef(null);
   const [active, setActive] = React.useState('overview');
+  const isMobile = useIsMobile();
 
   React.useEffect(() => {
     const root = scrollRef.current; if (!root) return;
@@ -348,8 +351,8 @@ function MethodsPage() {
 
   return (
     <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflow: 'auto', background: CC.bg }}>
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '60px 40px 140px', display: 'flex', gap: 46, alignItems: 'flex-start' }}>
-        <MethodsTOC active={active} onGo={go} />
+      <div style={{ maxWidth: 1000, margin: '0 auto', padding: isMobile ? '40px 20px 110px' : '60px 40px 140px', display: 'flex', gap: 46, alignItems: 'flex-start' }}>
+        {!isMobile && <MethodsTOC active={active} onGo={go} />}
 
         <div style={{ flex: 1, minWidth: 0, maxWidth: 720 }}>
           <Eyebrow>Methods · under the hood</Eyebrow>
