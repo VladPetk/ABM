@@ -39,20 +39,64 @@ function HeaderNavLink({ id, page, setPage, children, target, active }) {
     </button>);
 
 }
+// Nav model shared by the desktop bar and the mobile sheet — one source of
+// truth for the five destinations + their active rules.
+const NAV_ITEMS = [
+  { id: 'forces', target: 'forces', label: 'The Model', active: (p) => p === 'model' || p === 'forces' || p === 'prologue' },
+  { id: 'story', target: 'story', label: 'The U.S. Story', active: (p) => p === 'story' },
+  { id: 'playground', label: 'Playground' },
+  { id: 'methods', label: 'Methods' },
+  { id: 'about', label: 'About' },
+];
+
 function SiteHeader({ page, setPage }) {
+  const isMobile = useIsMobile();
+  const [open, setOpen] = React.useState(false);
+  // close the sheet whenever we land on a new page
+  React.useEffect(() => { setOpen(false); }, [page]);
+  const brand = (
+    <button onClick={() => setPage('model')} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+      <Logo />
+      <span style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 16, color: CC.ink2, whiteSpace: 'nowrap' }}>The Divide</span>
+    </button>);
+
+  if (isMobile) {
+    return (
+      <div style={{ flexShrink: 0, position: 'relative', zIndex: 40 }}>
+        <div style={{ height: 52, display: 'flex', alignItems: 'center', gap: 12, padding: '0 18px', background: CC.bg, borderBottom: `1px solid ${CC.border}` }}>
+          {brand}
+          <span style={{ flex: 1 }} />
+          <button onClick={() => setOpen((v) => !v)} aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} style={{
+            width: 40, height: 40, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <span style={{ width: 21, height: 2, borderRadius: 2, background: CC.ink2, transition: 'transform .2s', transform: open ? 'translateY(7px) rotate(45deg)' : 'none' }} />
+            <span style={{ width: 21, height: 2, borderRadius: 2, background: CC.ink2, opacity: open ? 0 : 1, transition: 'opacity .15s' }} />
+            <span style={{ width: 21, height: 2, borderRadius: 2, background: CC.ink2, transition: 'transform .2s', transform: open ? 'translateY(-7px) rotate(-45deg)' : 'none' }} />
+          </button>
+        </div>
+        {open &&
+        <nav style={{ position: 'absolute', left: 0, right: 0, top: 52, background: CC.bg, borderBottom: `1px solid ${CC.border}`, boxShadow: '0 12px 28px rgba(26,29,35,.10)', display: 'flex', flexDirection: 'column', padding: '6px 0', animation: 'ccFadeUp .2s ease' }}>
+          {NAV_ITEMS.map((it) => {
+            const on = it.active ? it.active(page) : page === it.id;
+            return (
+              <button key={it.id} onClick={() => setPage(it.target || it.id)} style={{
+                textAlign: 'left', padding: '14px 22px', background: on ? CC.bg2 : 'none', border: 'none', cursor: 'pointer',
+                fontFamily: SANS, fontSize: 16, fontWeight: on ? 600 : 500, color: on ? CC.ink : CC.ink2 }}>
+                {it.label}
+              </button>);
+          })}
+        </nav>}
+      </div>);
+  }
+
   return (
     <div style={{ height: 58, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '0 clamp(24px, 4vw, 56px)', background: CC.bg, position: 'relative', zIndex: 30 }}>
-      <button onClick={() => setPage('model')} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-        <Logo />
-        <span style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 16, color: CC.ink2, whiteSpace: 'nowrap' }}>The Divide</span>
-      </button>
+      {brand}
       <span style={{ flex: 1 }} />
       <nav style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-        <HeaderNavLink id="forces" target="forces" active={page === 'model' || page === 'forces' || page === 'prologue'} page={page} setPage={setPage}>The Model</HeaderNavLink>
-        <HeaderNavLink id="story" target="story" active={page === 'story'} page={page} setPage={setPage}>The U.S. Story</HeaderNavLink>
-        <HeaderNavLink id="playground" page={page} setPage={setPage}>Playground</HeaderNavLink>
-        <HeaderNavLink id="methods" page={page} setPage={setPage}>Methods</HeaderNavLink>
-        <HeaderNavLink id="about" page={page} setPage={setPage}>About</HeaderNavLink>
+        {NAV_ITEMS.map((it) => (
+          <HeaderNavLink key={it.id} id={it.id} target={it.target} active={it.active ? it.active(page) : undefined} page={page} setPage={setPage}>{it.label}</HeaderNavLink>
+        ))}
       </nav>
     </div>);
 
@@ -223,10 +267,17 @@ function OrientRail({ step, onPrev, onNext, onContinue }) {
 
 // ── Watch rail — sticky action footer (D2); transport now lives in the bar ──
 function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContinue, onExplore, onInterventions, onSandbox, on3D }) {
-  const LX = 'clamp(64px, 14vw, 248px)';
-  const pad = `clamp(28px,4.5vh,52px) 44px 8px ${LX}`;
+  const isMobile = useIsMobile();
+  const LX = isMobile ? '20px' : 'clamp(64px, 14vw, 248px)';
+  const RX = isMobile ? '20px' : '44px';
+  const topPad = isMobile ? '22px' : 'clamp(28px,4.5vh,52px)';
+  const botPad = isMobile ? '26px' : 'clamp(24px,4vh,40px)';
+  const pad = `${topPad} ${RX} 8px ${LX}`;
   const scrollWrap = { flexShrink: 0, padding: pad };
-  const footer = { flexShrink: 0, padding: `14px 44px clamp(24px,4vh,40px) ${LX}`, background: 'transparent' };
+  const footer = { flexShrink: 0, padding: `14px ${RX} ${botPad} ${LX}`, background: 'transparent' };
+  // top-align on mobile (read top-down in the scroll pane); centered on desktop
+  const wrap = { background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' };
+  const beatTitleSize = isMobile ? (beat && beat.orient ? 25 : 29) : (beat && beat.orient ? 38 : 50);
 
   // (the old phase==='intro' and phase==='playing' rails were removed — both
   // were unreachable once the prologue + enterStory() flow landed: the story
@@ -238,7 +289,7 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
       fontFamily: SANS, fontSize: DS.type.micro, color: CC.ink3, textDecoration: 'underline', textUnderlineOffset: 3,
     };
     return (
-      <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
+      <div style={wrap}>
         <div style={scrollWrap}>
           <Eyebrow>The U.S. story · 1980 → 2025</Eyebrow>
           <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.title, lineHeight: 1.05, letterSpacing: '-.015em' }}>Now drive it yourself.</h2>
@@ -263,10 +314,10 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
   }
   // beat
   return (
-    <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
+    <div style={wrap}>
       <div key={beatI} style={{ ...scrollWrap, animation: 'ccFadeUp .42s ease' }}>
         <Eyebrow>{beat.orient ? `The U.S. story · ${Math.floor(tickToYear(beat.tick))}` : `Chapter ${beatI} of ${total - 1} · ${Math.floor(tickToYear(beat.tick))}`}</Eyebrow>
-        <h2 style={{ margin: '14px 0 24px', fontFamily: SERIF, fontWeight: 600, fontSize: beat.orient ? 38 : 50, lineHeight: beat.orient ? 1.05 : 1.02, letterSpacing: '-.022em' }}>{beat.title}</h2>
+        <h2 style={{ margin: '14px 0 24px', fontFamily: SERIF, fontWeight: 600, fontSize: beatTitleSize, lineHeight: beat.orient ? 1.05 : 1.02, letterSpacing: '-.022em' }}>{beat.title}</h2>
         <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink }}>{beat.lead}</p>
         <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>{beat.body}</p>
         {beat.orient ?
@@ -353,9 +404,13 @@ function CalibrationAnchor({ tick }) {
 }
 
 function ExploreRail({ tick, onBackToStory }) {
+  const isMobile = useIsMobile();
+  const pad = isMobile
+    ? `22px 20px 26px 20px`
+    : `clamp(28px,4.5vh,52px) 44px clamp(28px,4.5vh,52px) clamp(64px,14vw,248px)`;
   return (
-    <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%', justifyContent: 'safe center', overflow: 'auto' }}>
-      <div style={{ flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px clamp(28px,4.5vh,52px) clamp(64px,14vw,248px)`, display: 'flex', flexDirection: 'column', gap: 22 }}>
+    <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%', justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
+      <div style={{ flexShrink: 0, padding: pad, display: 'flex', flexDirection: 'column', gap: 22 }}>
         <div>
           {onBackToStory &&
           <div style={{ marginBottom: 18 }}>
@@ -367,7 +422,7 @@ function ExploreRail({ tick, onBackToStory }) {
           </div>
           }
           <Eyebrow>Affective polarization</Eyebrow>
-          <h3 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 46, lineHeight: 1.02, letterSpacing: '-.022em' }}>
+          <h3 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: isMobile ? 30 : 46, lineHeight: 1.02, letterSpacing: '-.022em' }}>
             Do they hate each other?
           </h3>
           <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
@@ -409,10 +464,46 @@ function BarTransport({ playing, toggle, setTick, speed, setSpeed }) {
 }
 
 function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, beatI, onPickBeat, ended, beats = BEATS, events = true }) {
+  const isMobile = useIsMobile();
   const year = Math.floor(tickToYear(tick));
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const monthLabel = `${months[Math.min(11, Math.floor((tickToYear(tick) - year) * 12))]} ${year}`;
   const accent = CC.ink;
+  // chapter diamonds + the "you are here" name — shared between both layouts
+  const chapterRail = (mode === 'watch' || mode === 'prologue') && beats.map((b, k) => {
+    const on = k === beatI && !ended;
+    const left = `calc(14px + ${b.tick / LAST} * (100% - 28px))`;
+    return (
+      <React.Fragment key={k}>
+        {on &&
+        <span style={{ position: 'absolute', zIndex: 5, left, top: 54, transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontFamily: SANS, fontSize: 10, fontWeight: 600, color: CC.ink, background: 'rgba(249,248,244,.9)', padding: '0 3px' }}>{b.short}</span>
+        }
+        <button title={b.title} onClick={() => onPickBeat(k)} style={{
+          position: 'absolute', zIndex: 4, left,
+          top: 38, transform: 'translate(-50%,-50%) rotate(45deg)',
+          width: on ? 13 : 10, height: on ? 13 : 10, background: b.tick <= tick ? CC.ink : CC.surface,
+          border: `2px solid ${b.tick <= tick ? CC.ink : CC.ink3}`, cursor: 'pointer', padding: 0, borderRadius: 2
+        }} />
+      </React.Fragment>);
+  });
+
+  // Mobile: stack the transport over a full-width timeline so neither gets
+  // crushed at 390px (the desktop side-by-side leaves the track ~90px wide).
+  if (isMobile) {
+    return (
+      <div style={{ flexShrink: 0, background: CC.bg, position: 'relative', borderTop: `1px solid ${CC.border}`, padding: '11px 16px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <BarTransport playing={playing} toggle={toggle} setTick={setTick} speed={speed} setSpeed={setSpeed} />
+          <span style={{ flex: 1 }} />
+          <MonoVal size={DS.type.small} color={CC.ink}>{monthLabel}</MonoVal>
+        </div>
+        <div style={{ position: 'relative' }}>
+          {chapterRail}
+          <ProtoTimeline tick={tick} setTick={setTick} color={accent} altLabels events={events} />
+        </div>
+      </div>);
+  }
+
   return (
     <div style={{ height: BARH, flexShrink: 0, background: CC.bg, position: 'relative', display: 'flex', alignItems: 'center', gap: 'clamp(20px, 3vw, 44px)', padding: '0 clamp(28px, 4vw, 56px)' }}>
       <div style={{ position: 'absolute', top: 0, left: 'clamp(28px, 4vw, 56px)', right: 'clamp(28px, 4vw, 56px)', height: 1, background: CC.border }} />
@@ -422,25 +513,7 @@ function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, be
       </div>
       <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
         <div style={{ marginTop: 4, position: 'relative' }}>
-          {/* chapter rail for Watch — labeled, click-to-jump diamonds; the active
-              chapter carries its name as the "you are here" marker */}
-          {(mode === 'watch' || mode === 'prologue') && beats.map((b, k) => {
-            const on = k === beatI && !ended;
-            const left = `calc(14px + ${b.tick / LAST} * (100% - 28px))`;
-            return (
-              <React.Fragment key={k}>
-                {on &&
-                <span style={{ position: 'absolute', zIndex: 5, left, top: 54, transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontFamily: SANS, fontSize: 10, fontWeight: 600, color: CC.ink, background: 'rgba(249,248,244,.9)', padding: '0 3px' }}>{b.short}</span>
-                }
-                <button title={b.title} onClick={() => onPickBeat(k)} style={{
-                  position: 'absolute', zIndex: 4, left,
-                  top: 38, transform: 'translate(-50%,-50%) rotate(45deg)',
-                  width: on ? 13 : 10, height: on ? 13 : 10, background: b.tick <= tick ? CC.ink : CC.surface,
-                  border: `2px solid ${b.tick <= tick ? CC.ink : CC.ink3}`, cursor: 'pointer', padding: 0, borderRadius: 2
-                }} />
-              </React.Fragment>);
-
-          })}
+          {chapterRail}
           <ProtoTimeline tick={tick} setTick={setTick} color={accent} altLabels events={events} />
         </div>
       </div>
@@ -481,6 +554,12 @@ function Unified() {
   const snapRaf = React.useRef(0);                         // in-flight snap animation frame
   const wheelIdle = React.useRef(0);                       // idle timer that triggers the snap
   const iv = useInterventions();
+  const isMobile = useIsMobile();
+  // touch scrubbing — phones have no wheel, so a vertical drag on the map band
+  // moves time (swipe up = forward). The band carries `touchAction:'none'`, so
+  // these read raw deltas without the page trying to scroll underneath.
+  const touchRef = React.useRef(null);
+  const TOUCH_SENS = 0.085;                                 // ticks advanced per px of drag
 
   const isIntro = page === 'model';
   const morphingIntro = introMorphT != null;
@@ -648,6 +727,24 @@ function Unified() {
   // for a single frame; once `settleIn` flips, it fades out over 1s.
   const settleFrom = settling && !settleIn;
 
+  // touch-scrub handlers for the mobile map band (no-op unless a tick is live).
+  const touchScrubs = isWatch || isExplore;
+  const onBandTouchStart = (e) => {
+    if (!touchScrubs || e.touches.length !== 1) return;
+    touchRef.current = { y: e.touches[0].clientY, tick: tickRef.current, moved: false };
+  };
+  const onBandTouchMove = (e) => {
+    const s = touchRef.current; if (!s) return;
+    const dy = s.y - e.touches[0].clientY;        // swipe up → forward
+    if (!s.moved && Math.abs(dy) > 4) { s.moved = true; setHintSeen(true); setPlaying(false); }
+    if (s.moved) setTick(Math.max(0, Math.min(LAST, s.tick + dy * TOUCH_SENS)));
+  };
+  const onBandTouchEnd = () => { touchRef.current = null; };
+  const bandHandlers = isMobile && touchScrubs
+    ? { onTouchStart: onBandTouchStart, onTouchMove: onBandTouchMove, onTouchEnd: onBandTouchEnd }
+    : {};
+  const bandTouchAction = isMobile && touchScrubs ? 'none' : undefined;
+
   // ── static pages (Methods / About / the demoted 3D view) ──
   if (page === 'methods' || page === 'about' || page === 'agents') {
     return (
@@ -704,7 +801,55 @@ function Unified() {
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}>
       <SiteHeader page={page} setPage={goPage} />
 
-      {
+      {isMobile ? (
+        /* ── mobile: stack the map over a scrolling narrative pane (variant C).
+           The compass can't share a row with the prose at 390px, so it gets a
+           top band (swipe to scrub) and the rail reads beneath it. ── */
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: CC.bg, overflow: 'hidden' }}>
+          <div {...bandHandlers} style={{ position: 'relative', height: isIntro ? '46%' : '40%', flexShrink: 0, overflow: 'hidden', borderBottom: `1px solid ${CC.border}`, touchAction: bandTouchAction }}>
+            <div style={{ position: 'absolute', inset: 0 }}>
+              {isIntro ?
+              <Field run={D.runs.baseline} tick={introTick} layer="position" view="dots" morphT={introMorphT} showGap={false} landmarks={false} /> :
+              <Field run={D.runs.baseline} tick={tick} layer="position" view="density" showGap dim={dimField} reveal={watchReveal} landmarks={isExplore && showLandmarks ? 'all' : 'fixed'} />}
+            </div>
+            {isExplore &&
+            <button onClick={() => setShowLandmarks((v) => !v)} style={{
+              position: 'absolute', right: 14, top: 12, display: 'inline-flex', alignItems: 'center', gap: 7,
+              fontFamily: SANS, fontSize: DS.type.micro, fontWeight: 500, cursor: 'pointer',
+              color: showLandmarks ? CC.ink : CC.ink3, background: showLandmarks ? 'transparent' : 'rgba(249,248,244,.8)',
+              padding: '6px 11px', borderRadius: DS.rad.pill, border: `1px solid ${showLandmarks ? CC.ink : CC.border}`
+            }}>
+              <span style={{ width: 7, height: 7, borderRadius: 2, background: showLandmarks ? CC.ink : 'transparent', border: `1.5px solid ${showLandmarks ? CC.ink : CC.ink4}` }} />
+              {showLandmarks ? 'Parties on' : 'Show parties'}
+            </button>}
+            {showHint &&
+            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 12, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '8px 15px', background: CC.ink, color: '#fff', borderRadius: DS.rad.pill, boxShadow: '0 6px 20px rgba(26,29,35,.22)', fontFamily: SANS, fontSize: 12.5, fontWeight: 500, animation: 'ccFadeUp .55s ease both' }}>
+                <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 0.5, animation: 'ccHintBob 1.5s ease-in-out infinite' }}>
+                  <span style={{ fontSize: 9 }}>⌃</span><span style={{ fontSize: 9 }}>⌄</span>
+                </span>
+                Swipe the map to move through time
+              </div>
+            </div>}
+            {settling &&
+            <div style={{ position: 'absolute', inset: 0, zIndex: 6, pointerEvents: 'none', background: CC.bg, overflow: 'hidden', opacity: settleFrom ? 1 : 0, transition: 'opacity 1s ease' }}>
+              <div style={{ position: 'absolute', inset: 0 }}>
+                <Field run={D.runs.baseline} tick={0} layer="position" view="density" showGap={false} />
+              </div>
+            </div>}
+          </div>
+          <div style={{ flex: 1, minHeight: 0, overflow: 'auto', position: 'relative' }}>
+            {isIntro &&
+              <IntroRail tick={introTick} storyDone={storyDone} onWatch={() => goPage('forces')}
+                onSandbox={() => goPlayground('sandbox')} onAbout={() => goPage('about')} on3D={() => goPage('agents')} />}
+            {isWatch && (stagedOrient ?
+              <OrientRail step={orientStep} onPrev={orientPrev} onNext={orientNext} onContinue={finishOrient} /> :
+              <WatchRail phase={phase} beat={beat} beatI={dispBeatI} total={BEATS.length} nextBeat={BEATS.find((b) => b.tick > tick) || null} tick={tick} onBack={() => stepBeat(-1)} onContinue={railContinue} onExplore={goExplore}
+                onInterventions={() => goPlayground('interventions')} onSandbox={() => goPlayground('sandbox')} on3D={() => goPage('agents')} />)}
+            {isExplore && <ExploreRail tick={tick} onBackToStory={() => {setUnlocked(false);setPlaying(false);}} />}
+          </div>
+        </div>
+      ) : (
       <div style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden', background: CC.bg }}>
           {/* the compass — a fully contained square anchored right (no bleed; all axes & labels visible) */}
           <div style={{ position: 'absolute', top: '-2%', bottom: '-2%', right: '2%', aspectRatio: '1' }}>
@@ -755,7 +900,7 @@ function Unified() {
             </div>
           }
         </div>
-      }
+      )}
 
       {/* bottom bar — the story's transport + chapter rail. The intro drives
           itself (ambient loop, year readout in the rail), so no bar there. */}
@@ -766,8 +911,9 @@ function Unified() {
       }
 
       {/* first-run helper — black, gently bobbing, dismissed on the first scroll
-          or play. Tells the reader the two ways through the story. */}
-      {showHint &&
+          or play. Tells the reader the two ways through the story. (Mobile shows
+          its own swipe hint inside the map band.) */}
+      {showHint && !isMobile &&
       <div style={{ position: 'absolute', left: 0, right: 0, bottom: BARH + 20, zIndex: 8, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, animation: 'ccFadeUp .55s ease both' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 18px', background: CC.ink, color: '#fff', borderRadius: DS.rad.pill, boxShadow: '0 8px 26px rgba(26,29,35,.22)', fontFamily: SANS, fontSize: 14, fontWeight: 500, letterSpacing: '-.005em' }}>

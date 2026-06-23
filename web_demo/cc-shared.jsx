@@ -38,6 +38,26 @@ const BODY_SERIF = "'Literata', Georgia, serif";
 const PROSE = { fontFamily: BODY_SERIF, fontSize: 14.5, lineHeight: 1.62 };
 const TNUM = { fontFeatureSettings: '"tnum", "ss01"' };
 
+// ── Responsive foundation ─────────────────────────────────────────────────
+// The whole site was built desktop-first (a prose column floating over a
+// compass anchored right). `useIsMobile` is the single switch every view reads
+// to fall back to a stacked, touch-friendly layout. One breakpoint, matchMedia
+// driven so it tracks orientation changes without a resize listener storm.
+const MOBILE_BP = 760;
+function useIsMobile(bp = MOBILE_BP) {
+  const q = `(max-width: ${bp}px)`;
+  const get = () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(q).matches : false);
+  const [m, setM] = React.useState(get);
+  React.useEffect(() => {
+    const mq = window.matchMedia(q);
+    const on = () => setM(mq.matches);
+    on();
+    mq.addEventListener ? mq.addEventListener('change', on) : mq.addListener(on);
+    return () => { mq.removeEventListener ? mq.removeEventListener('change', on) : mq.removeListener(on); };
+  }, [q]);
+  return m;
+}
+
 // ── Seeded RNG (own name to avoid colliding with the old wireframes) ────
 function ccRng(seed) {
   let a = seed >>> 0;
@@ -197,6 +217,7 @@ function PartySwatch({ party, size = 8 }) {
 
 Object.assign(window, {
   CC, SANS, MONO, SERIF, BODY_SERIF, PROSE, TNUM, ccRng,
+  MOBILE_BP, useIsMobile,
   YEAR0, YEAR1, yearToFrac, separationAt,
   genAgents, POLE_D, POLE_R,
   EVENTS, macroSeries, seriesPath,
