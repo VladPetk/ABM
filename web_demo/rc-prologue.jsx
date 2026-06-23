@@ -242,37 +242,47 @@ function ProloguePage({ onToStory, onPlayground, on3D }) {
   const ffArr = (k) => run.macro_mean.map((m) => m[k]);
 
   if (isMobile) {
-    return (
-      <>
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: CC.bg, overflow: 'hidden' }}>
-          <div onTouchStart={onBandTouchStart} onTouchMove={onBandTouchMove} onTouchEnd={onBandTouchEnd}
-            style={{ position: 'relative', height: '40%', flexShrink: 0, overflow: 'hidden', borderBottom: `1px solid ${CC.border}`, touchAction: 'none' }}>
-            <div style={{ position: 'absolute', inset: 0 }}>
-              <Field run={run} tick={tick} layer="position" view="density" showGap dim={ended ? 0.24 : 0} landmarks={false} />
-            </div>
-            {!ended &&
-            <div style={{ position: 'absolute', right: 14, top: 12, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, color: CC.ink3, background: 'rgba(249,248,244,.85)', padding: '5px 11px', borderRadius: 999, border: `1px solid ${CC.border}` }}>
-              <span style={{ width: 7, height: 7, borderRadius: 999, background: '#9aa0a6' }} /> the engine alone · {year}
-            </div>}
-            {showHint &&
-            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 12, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '8px 15px', background: CC.ink, color: '#fff', borderRadius: DS.rad.pill, boxShadow: '0 6px 20px rgba(26,29,35,.22)', fontFamily: SANS, fontSize: 12.5, fontWeight: 500, animation: 'ccFadeUp .55s ease both' }}>
-                <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 0.5, animation: 'ccHintBob 1.5s ease-in-out infinite' }}>
-                  <span style={{ fontSize: 9 }}>⌃</span><span style={{ fontSize: 9 }}>⌄</span>
-                </span>
-                Swipe the map to move through time
-              </div>
-            </div>}
-          </div>
-          <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-            {ended
-              ? <PrologueEndRail usArr={usArr} ffArr={ffArr} onToStory={onToStory} onPlayground={onPlayground} on3D={on3D} />
-              : <PrologueBeatRail beat={beat} tick={tick} year={year} onSkip={skipToEnd} />}
-          </div>
+    // the whole-engine page rides the story's pinned-compass shell: scroll the
+    // engine chapters → drives time; tap-to-expand the map; one bottom timeline.
+    const affSeries = FF.run.macro.map((m) => m.aff);
+    const sepSeries = FF.run.macro.map((m) => m.sep);
+    const renderBeat = (beat) => {
+      const yr = Math.floor(1980 + beat.tick / 3);
+      return (<>
+        <Eyebrow>The engine, on its own · {yr}</Eyebrow>
+        <h2 style={{ margin: '13px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 27, lineHeight: 1.05, letterSpacing: '-.02em', textWrap: 'balance' }}>{beat.title}</h2>
+        <p style={{ margin: '15px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink }}>{beat.lead}</p>
+        <p style={{ margin: '15px 0 0', ...PROSE, color: CC.ink2 }}>{beat.body}</p>
+        <div style={{ marginTop: 22, paddingTop: 16, borderTop: `1px solid ${CC.border}` }}>
+          <Eyebrow style={{ color: CC.ink3 }}>The engine, so far · {yr}</Eyebrow>
+          <PChart title="Out-party warmth" sub="cools on its own" series={affSeries} tick={beat.tick} deg />
+          <PChart title="Party separation" sub="drifts, then stalls" series={sepSeries} tick={beat.tick} />
+          {beat.footnote && <p style={{ margin: '12px 0 0', fontSize: DS.type.micro, lineHeight: 1.4, color: CC.ink4, fontStyle: 'italic' }}>{beat.footnote}</p>}
         </div>
-        <TimelineBar tick={tick} setTick={setTick} playing={playing} toggle={toggle} speed={speed} setSpeed={setSpeed}
-          mode="prologue" beatI={beatI} onPickBeat={(k) => { setPlaying(false); setTick(PROLOGUE_BEATS[k].tick); }} ended={ended} beats={PROLOGUE_BEATS} events={false} />
-      </>
+      </>);
+    };
+    const endContent = (<>
+      <Eyebrow>The engine · every force at once</Eyebrow>
+      <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 27, lineHeight: 1.05, letterSpacing: '-.018em', textWrap: 'balance' }}>The forces alone don’t get us all the way</h2>
+      <p style={{ margin: '14px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.4, color: CC.ink }}>Compare the in-engine polarization against a country that <em>did</em> polarize — the United States.</p>
+      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>So how far does the bare engine reach? On the <strong>feelings</strong>, most of the way — somewhere north of 80 percent. The engine-only line and the real one nearly meet, suggesting that animus can be modeled largely from rather fundamental psychological forces.</p>
+      <p style={{ margin: '12px 0 0', ...PROSE, color: CC.ink2 }}>The <strong>position split</strong> is a different story. Alone, the engine reaches only about a third of it, tracking the data well until c. 2010 but then stalling while the real split climbs sharply. This sharp rise is caused by external <strong>forcings</strong> switched off in this view: the build-up of partisan media, momentous events, the timing of who mobilized and when. The engine supplies the forces; history supplies the rest.</p>
+      <div style={{ marginTop: 18 }}>
+        <PChart title="Party separation — the split" sub="tracks for a while, then peels away after ~2010" us={usArr('sep')} ff={ffArr('sep')} marker />
+        <PChart title="Out-party warmth — the feelings" sub="close, not identical — the engine cools mostly on its own" us={usArr('aff')} ff={ffArr('aff')} deg marker />
+        <CompareLegend />
+      </div>
+      <div style={{ marginTop: 22 }}>
+        <Eyebrow style={{ color: CC.ink3 }}>Where to next</Eyebrow>
+        <button onClick={onToStory} style={{ marginTop: 10, width: '100%', padding: '14px 18px', borderRadius: DS.rad.pill, border: 'none', background: CC.ink, color: '#fff', cursor: 'pointer', fontFamily: SANS, fontSize: 14, fontWeight: 500 }}>See what actually happened in the U.S. →</button>
+        <button onClick={on3D} style={{ marginTop: 10, width: '100%', padding: '13px 14px', borderRadius: DS.rad.pill, border: `1px solid ${CC.border}`, background: CC.surface, color: CC.ink2, cursor: 'pointer', fontFamily: SANS, fontSize: DS.type.small, fontWeight: 500 }}>See the engine in three dimensions →</button>
+      </div>
+    </>);
+    return (
+      <MobileScrollStory
+        tick={tick} setTick={setTick} playing={playing} toggle={toggle} setPlaying={setPlaying}
+        beats={PROLOGUE_BEATS} run={run} landmarks={false} beatIndexAtFn={_pBeat}
+        renderBeat={renderBeat} endContent={endContent} on3D={on3D} />
     );
   }
 
