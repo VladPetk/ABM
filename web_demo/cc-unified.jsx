@@ -1009,7 +1009,10 @@ function Unified() {
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0, position: 'relative' }}
       onClick={(e) => {const g = e.target.closest('[data-goto]');if (g) {e.preventDefault();goPage(g.getAttribute('data-goto'));}}}>
         <SiteHeader page={page} setPage={goPage} />
-        <ModeBar mode={iv.isSandbox ? 'sandbox' : 'interventions'} setMode={(m) => {m === 'sandbox' ? iv.openSandbox() : iv.back();}} />
+        {/* hide the mode pill on a mobile intervention detail to buy vertical
+            room (the detail has its own "← All interventions" back) */}
+        {!(isMobile && iv.activeId && !iv.isSandbox) &&
+          <ModeBar mode={iv.isSandbox ? 'sandbox' : 'interventions'} setMode={(m) => {m === 'sandbox' ? iv.openSandbox() : iv.back();}} />}
         <IvWorkbench iv={iv} layer={layer} />
       </div>);
 

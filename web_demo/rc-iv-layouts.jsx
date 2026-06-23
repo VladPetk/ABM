@@ -729,18 +729,20 @@ function IvNarrative({ iv, layer }) {
   // room for that plus a control column at 390px).
   if (isMobile) {
     // the index (no lever picked) is pure cards — no compass band or result
-    // chart, so it reads like the story's chapter index. The detail and the
-    // sandbox bring the compass + result band back.
+    // chart, so it reads like the story's chapter index.
     const onIndex = !iv.activeId && !iv.isSandbox;
+    // detail / sandbox: ONE scroll — the read + the line chart (with its
+    // controls), then the compass LAST. So scrolling down lands the reader on
+    // the chart and the compass together, no compass eating the top.
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg }}>
-        {!onIndex &&
-          <div style={{ position: 'relative', height: '30%', flexShrink: 0, overflow: 'hidden', borderBottom: `1px solid ${CC.border}` }}>
-            <div style={{ position: 'absolute', inset: 0 }}>{field}</div>
-          </div>}
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
           <NarrativeLeft iv={iv} />
           {!onIndex && <div style={{ borderTop: `1px solid ${CC.border}` }}>{band}</div>}
+          {!onIndex &&
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '1', borderTop: `1px solid ${CC.border}` }}>
+              <div style={{ position: 'absolute', inset: 0 }}>{field}</div>
+            </div>}
         </div>
       </div>
     );
