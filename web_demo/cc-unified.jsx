@@ -562,7 +562,8 @@ function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, be
 // chapters stack into one continuous scroll, and scroll position drives `tick`
 // (the playhead). It's frozen when idle — pure scroll-driven, no autodrift —
 // and the ▶ plays it for you, reflecting the playhead back onto the scroll.
-function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInterventions, onSandbox, onExplore, on3D }) {
+function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInterventions, onSandbox, onExplore, on3D,
+  beats = BEATS, run = D.runs.baseline, landmarks = 'fixed', beatIndexAtFn = beatIndexAt, renderBeat = null, endContent = null }) {
   const wrapRef = React.useRef(null);     // measures available height
   const scroller = React.useRef(null);    // the scrolling prose column
   const secRefs = React.useRef([]);       // chapter section elements
@@ -607,7 +608,7 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
     const els = secRefs.current.filter(Boolean);
     anchors.current = els.map((el, i) => ({
       top: el.offsetTop,
-      tick: i < BEATS.length ? BEATS[i].tick : LAST,
+      tick: i < beats.length ? beats[i].tick : LAST,
     }));
   }, [vh]);
 
@@ -661,36 +662,41 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
   }, [tick, playing]);
 
   const year = Math.floor(tickToYear(tick));
-  const ci = beatIndexAt(tick);
+  const ci = beatIndexAtFn(tick);
   const stripMode = !expanded && collapse > 0.5;     // collapsed peek (no chrome)
   const showFull = expanded || !stripMode;           // hero or study view → full chrome
   const tlTrans = trans ? 'height .32s ease, top .32s ease' : 'none';
 
-  // ── chapter block (mirrors WatchRail's beat copy, minus the nav footer) ──
-  const beatBlock = (beat, i) => {
+  // ── chapter block — default = the U.S. story copy; `renderBeat` overrides the
+  // inner (e.g. the prologue's engine chapters) while the shell stays shared. ──
+  const storyBeatInner = (beat, i) => {
     const yr = Math.floor(tickToYear(beat.tick));
-    return (
-      <section key={i} ref={(el) => (secRefs.current[i] = el)}
-        style={{ padding: i === 0 ? '0 20px' : '34px 20px 0', marginTop: i === 0 ? 0 : 38, borderTop: i === 0 ? 'none' : `1px solid ${CC.border}` }}>
-        <Eyebrow>{beat.orient ? `The U.S. story · ${yr}` : `Chapter ${i} of ${BEATS.length - 1} · ${yr}`}</Eyebrow>
-        <h2 style={{ margin: '13px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: beat.orient ? 25 : 29, lineHeight: 1.05, letterSpacing: '-.022em', textWrap: 'balance' }}>{beat.title}</h2>
-        <p style={{ margin: '15px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink }}>{beat.lead}</p>
-        <p style={{ margin: '15px 0 0', ...PROSE, color: CC.ink2 }}>{beat.body}</p>
-        {beat.orient ? null :
-          beat.data ? <BeatMetric data={beat.data} tick={beat.tick} /> :
-          beat.metric ?
-            <div style={{ marginTop: 22, paddingTop: 13, borderTop: `1px solid ${CC.border}`, display: 'flex', alignItems: 'center', gap: 11 }}>
-              <Eyebrow style={{ color: CC.ink4, letterSpacing: '.1em' }}>data</Eyebrow>
-              <MonoVal size={DS.type.small} color={CC.ink}>{beat.metric(beat.tick)}</MonoVal>
-            </div> : null}
-      </section>);
+    return (<>
+      <Eyebrow>{beat.orient ? `The U.S. story · ${yr}` : `Chapter ${i} of ${beats.length - 1} · ${yr}`}</Eyebrow>
+      <h2 style={{ margin: '13px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: beat.orient ? 25 : 29, lineHeight: 1.05, letterSpacing: '-.022em', textWrap: 'balance' }}>{beat.title}</h2>
+      <p style={{ margin: '15px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink }}>{beat.lead}</p>
+      <p style={{ margin: '15px 0 0', ...PROSE, color: CC.ink2 }}>{beat.body}</p>
+      {beat.orient ? null :
+        beat.data ? <BeatMetric data={beat.data} tick={beat.tick} /> :
+        beat.metric ?
+          <div style={{ marginTop: 22, paddingTop: 13, borderTop: `1px solid ${CC.border}`, display: 'flex', alignItems: 'center', gap: 11 }}>
+            <Eyebrow style={{ color: CC.ink4, letterSpacing: '.1em' }}>data</Eyebrow>
+            <MonoVal size={DS.type.small} color={CC.ink}>{beat.metric(beat.tick)}</MonoVal>
+          </div> : null}
+    </>);
   };
+  const beatBlock = (beat, i) => (
+    <section key={i} ref={(el) => (secRefs.current[i] = el)}
+      style={{ padding: i === 0 ? '0 20px' : '34px 20px 0', marginTop: i === 0 ? 0 : 38, borderTop: i === 0 ? 'none' : `1px solid ${CC.border}` }}>
+      {(renderBeat || storyBeatInner)(beat, i)}
+    </section>);
 
   // ── end card (scrolls in as the final section) ──
-  const endI = BEATS.length;
+  const endI = beats.length;
   const endBlock = (
     <section key="end" ref={(el) => (secRefs.current[endI] = el)}
       style={{ padding: '38px 20px 0', marginTop: 40, borderTop: `1px solid ${CC.border}` }}>
+      {endContent || <>
       <Eyebrow>The U.S. story · 1980 → 2025</Eyebrow>
       <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 29, lineHeight: 1.05, letterSpacing: '-.015em' }}>Now drive it yourself.</h2>
       <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2 }}>You’ve just watched the engine reproduce the U.S. polarization story: an amorphous blob turning into two better-defined partisan blobs.</p>
@@ -705,6 +711,7 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
           <button onClick={on3D} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: SANS, fontSize: DS.type.micro, color: CC.ink3, textDecoration: 'underline', textUnderlineOffset: 3 }}>see it in 3-D →</button>
         </div>
       </div>
+      </>}
     </section>);
 
   return (
@@ -714,7 +721,7 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
       <div ref={scroller} onScroll={onScroll}
         style={{ position: 'absolute', inset: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ height: HERO + 16, flexShrink: 0 }} />
-        {BEATS.map(beatBlock)}
+        {beats.map(beatBlock)}
         {endBlock}
         <div style={{ height: '60vh' }} />
       </div>
@@ -726,7 +733,7 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
           outlet markers drop out as clutter. */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: compassH, overflow: 'hidden', background: CC.bg, pointerEvents: 'none', zIndex: 2, transition: tlTrans }}>
         <div style={{ position: 'absolute', left: (vw - Q) / 2, width: Q, height: Q, top: (compassH - Q) / 2, transition: tlTrans }}>
-          <Field run={D.runs.baseline} tick={tick} layer="position" view="density" showGap landmarks={showFull ? 'fixed' : false} chrome={showFull} compact />
+          <Field run={run} tick={tick} layer="position" view="density" showGap landmarks={showFull ? landmarks : false} chrome={showFull} compact />
         </div>
         {/* fade the bottom edge so prose dissolves under the strip */}
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 56, background: `linear-gradient(180deg, rgba(249,248,244,0), ${CC.bg})`, pointerEvents: 'none' }} />
@@ -750,7 +757,7 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
         <div style={{ flex: 1, position: 'relative', height: 16 }}>
           <div style={{ position: 'absolute', left: 0, right: 0, top: 7, height: 2, background: CC.border, borderRadius: 2 }} />
           <div style={{ position: 'absolute', left: 0, top: 7, height: 2, width: `${(tick / LAST) * 100}%`, background: CC.ink, borderRadius: 2 }} />
-          {BEATS.map((b, k) => (
+          {beats.map((b, k) => (
             <button key={k} onClick={() => jumpToTick(b.tick)} title={b.short || b.title} aria-label={b.short || b.title}
               style={{ position: 'absolute', left: `${(b.tick / LAST) * 100}%`, top: 8, transform: 'translate(-50%,-50%) rotate(45deg)', width: 8, height: 8, padding: 0, background: k <= ci ? CC.ink : CC.surface, border: `1.5px solid ${k <= ci ? CC.ink : CC.ink3}`, borderRadius: 2, cursor: 'pointer' }} />
           ))}
