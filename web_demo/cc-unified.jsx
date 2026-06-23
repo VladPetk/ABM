@@ -554,7 +554,6 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onHeade
   const compassH = expanded ? EXPANDED_H : HERO - (HERO - STRIP) * collapse;
 
   const flashTrans = () => { setTrans(true); setTimeout(() => setTrans(false), 340); };
-  const collapseExpand = () => { if (expanded) { flashTrans(); setExpanded(false); } };
   const toggleExpand = () => { flashTrans(); setExpanded((e) => !e); };
   const setHeader = (hidden) => { if (hdrRef.current !== hidden) { hdrRef.current = hidden; onHeader && onHeader(hidden); } };
 
@@ -608,8 +607,7 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onHeade
   const onScroll = () => {
     const el = scroller.current; if (!el) return;
     const sT = el.scrollTop;
-    if (expanded) collapseExpand();              // scrolling shrinks the study view
-    setCollapse(Math.min(1, sT / COLLAPSE_PX));
+    setCollapse(Math.min(1, sT / COLLAPSE_PX));    // expanded study view stays put
     // hide the header on the way down, bring it back on the way up (classic)
     const dy = sT - lastTop.current;
     if (sT < 8) setHeader(false);
@@ -621,7 +619,7 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onHeade
   };
   const jumpToTick = (tk) => {
     const el = scroller.current; if (!el) return;
-    setPlaying(false); collapseExpand();
+    setPlaying(false);
     el.scrollTo({ top: Math.max(0, tickToScroll(tk)), behavior: 'smooth' });
   };
 
@@ -688,8 +686,8 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onHeade
   return (
     <div ref={wrapRef} style={{ flex: 1, minHeight: 0, position: 'relative', background: CC.bg, overflow: 'hidden' }}>
       {/* the scrolling prose column — the only thing that actually scrolls.
-          tapping the prose shrinks the study view back to a strip. */}
-      <div ref={scroller} onScroll={onScroll} onClick={collapseExpand}
+          the study view stays open until the reader taps minimize. */}
+      <div ref={scroller} onScroll={onScroll}
         style={{ position: 'absolute', inset: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ height: HERO + 16, flexShrink: 0 }} />
         {BEATS.map(beatBlock)}
@@ -698,21 +696,27 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onHeade
       </div>
 
       {/* pinned compass — collapses hero → strip, never leaves the screen. The
-          collapse is a center-CROP (true proportions, no squash); tapping it
-          expands to a study view, scrolling/tapping the prose shrinks it back.
-          In strip mode the axis labels + outlet markers drop out as clutter. */}
-      <div onClick={expanded ? collapseExpand : undefined}
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: compassH, overflow: 'hidden', background: CC.bg, borderBottom: stripMode ? `1px solid ${CC.border}` : '1px solid transparent', pointerEvents: expanded ? 'auto' : 'none', zIndex: 2, transition: tlTrans }}>
+          collapse is a center-CROP (true proportions, no squash). Always
+          non-interactive so a drag scrubs time through it; the expand/minimize
+          buttons keep their own pointer events. In strip mode the axis labels +
+          outlet markers drop out as clutter. */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: compassH, overflow: 'hidden', background: CC.bg, borderBottom: stripMode ? `1px solid ${CC.border}` : '1px solid transparent', pointerEvents: 'none', zIndex: 2, transition: tlTrans }}>
         <div style={{ position: 'absolute', left: (vw - Q) / 2, width: Q, height: Q, top: (compassH - Q) / 2, transition: tlTrans }}>
           <Field run={D.runs.baseline} tick={tick} layer="position" view="density" showGap landmarks={showFull ? 'fixed' : false} chrome={showFull} compact />
         </div>
         {/* fade the bottom edge so prose dissolves under the strip */}
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 56, background: `linear-gradient(180deg, rgba(249,248,244,0), ${CC.bg})`, pointerEvents: 'none' }} />
-        {/* expand affordance — only on the collapsed strip; child keeps its own
-            pointer events so it's tappable through the non-interactive compass */}
-        {stripMode &&
-          <button onClick={(e) => { e.stopPropagation(); toggleExpand(); }} aria-label="Expand the map"
-            style={{ position: 'absolute', right: 12, top: 10, pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: DS.rad.pill, background: 'rgba(249,248,244,.85)', border: `1px solid ${CC.border}`, color: CC.ink2, fontSize: 14, cursor: 'pointer' }}>⤢</button>}
+        {/* expand (strip) / minimize (study view) — SVG so the glyph is crisp
+            and centered; child keeps pointer events through the inert compass */}
+        {(stripMode || expanded) &&
+          <button onClick={(e) => { e.stopPropagation(); toggleExpand(); }} aria-label={expanded ? 'Minimize the map' : 'Expand the map'}
+            style={{ position: 'absolute', right: 12, top: 10, pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: DS.rad.pill, background: 'rgba(249,248,244,.9)', border: `1px solid ${CC.border}`, color: CC.ink2, cursor: 'pointer', padding: 0 }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              {expanded
+                ? <><polyline points="9 4 9 9 4 9" /><polyline points="15 4 15 9 20 9" /><polyline points="9 20 9 15 4 15" /><polyline points="15 20 15 15 20 15" /></>
+                : <><polyline points="4 9 4 4 9 4" /><polyline points="20 9 20 4 15 4" /><polyline points="4 15 4 20 9 20" /><polyline points="20 15 20 20 15 20" /></>}
+            </svg>
+          </button>}
       </div>
 
       {/* transport — ▶ plays it for you; the rail carries the chapter markers
