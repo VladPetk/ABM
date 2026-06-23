@@ -529,36 +529,44 @@ function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, be
 // chapters stack into one continuous scroll, and scroll position drives `tick`
 // (the playhead). It's frozen when idle — pure scroll-driven, no autodrift —
 // and the ▶ plays it for you, reflecting the playhead back onto the scroll.
-function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInterventions, onSandbox, onExplore, on3D }) {
+function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onHeader, onInterventions, onSandbox, onExplore, on3D }) {
   const wrapRef = React.useRef(null);     // measures available height
   const scroller = React.useRef(null);    // the scrolling prose column
   const secRefs = React.useRef([]);       // chapter section elements
   const anchors = React.useRef([]);       // [{ top, tick }] scroll→tick table
   const reflecting = React.useRef(false);  // guards the playhead→scroll echo
+  const lastTop = React.useRef(0);        // for scroll-direction (header hide)
+  const hdrRef = React.useRef(false);     // current header-hidden state
   const [vh, setVh] = React.useState(0);
+  const [vw, setVw] = React.useState(390);
   const [collapse, setCollapse] = React.useState(0);  // 0 hero · 1 strip
   const [expanded, setExpanded] = React.useState(false); // tap-to-study override
   const [trans, setTrans] = React.useState(false);    // animate height only on expand/collapse
 
-  const HERO = Math.max(150, Math.round(vh * 0.46));
-  const STRIP = 168;
-  const EXPANDED_H = Math.round(vh * 0.72);
+  // The compass is square: its Field box is W×W in every state, only clipped /
+  // padded by the (shorter or taller) pinned container — so the density never
+  // stretches. Q = the square's edge (the column width).
+  const Q = vw;
+  const HERO = Q;                                   // arrival shows the whole square
+  const STRIP = 180;                               // collapsed peek
+  const EXPANDED_H = Math.min(Math.round(vh * 0.8), Q + 60); // tap-to-study view
   const COLLAPSE_PX = Math.max(120, HERO - STRIP);
   const compassH = expanded ? EXPANDED_H : HERO - (HERO - STRIP) * collapse;
-  // center-crop: render the compass square at its full (uncollapsed) size and
-  // clip — keeps true proportions, no squash. boxH grows for the expanded view.
-  const boxH = Math.max(HERO, compassH);
 
   const flashTrans = () => { setTrans(true); setTimeout(() => setTrans(false), 340); };
   const collapseExpand = () => { if (expanded) { flashTrans(); setExpanded(false); } };
   const toggleExpand = () => { flashTrans(); setExpanded((e) => !e); };
+  const setHeader = (hidden) => { if (hdrRef.current !== hidden) { hdrRef.current = hidden; onHeader && onHeader(hidden); } };
 
-  // measure the live height of the story area (header/transport excluded)
+  // measure the live size of the story area (header/transport excluded). A
+  // ResizeObserver catches the header sliding away, not just window resizes.
   React.useLayoutEffect(() => {
-    const measure = () => { if (wrapRef.current) setVh(wrapRef.current.clientHeight); };
+    const el = wrapRef.current; if (!el) return;
+    const measure = () => { setVh(el.clientHeight); setVw(el.clientWidth); };
     measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   // build the scroll→tick anchor table from each chapter's offset. The reading
@@ -599,10 +607,17 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
 
   const onScroll = () => {
     const el = scroller.current; if (!el) return;
+    const sT = el.scrollTop;
     if (expanded) collapseExpand();              // scrolling shrinks the study view
-    setCollapse(Math.min(1, el.scrollTop / COLLAPSE_PX));
+    setCollapse(Math.min(1, sT / COLLAPSE_PX));
+    // hide the header on the way down, bring it back on the way up (classic)
+    const dy = sT - lastTop.current;
+    if (sT < 8) setHeader(false);
+    else if (dy > 6) setHeader(true);
+    else if (dy < -6) setHeader(false);
+    lastTop.current = sT;
     if (reflecting.current || playing) return;   // ignore echo / let ▶ drive
-    setTick(scrollToTick(el.scrollTop));
+    setTick(scrollToTick(sT));
   };
   const jumpToTick = (tk) => {
     const el = scroller.current; if (!el) return;
@@ -688,7 +703,7 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
           In strip mode the axis labels + outlet markers drop out as clutter. */}
       <div onClick={expanded ? collapseExpand : undefined}
         style={{ position: 'absolute', top: 0, left: 0, right: 0, height: compassH, overflow: 'hidden', background: CC.bg, borderBottom: stripMode ? `1px solid ${CC.border}` : '1px solid transparent', pointerEvents: expanded ? 'auto' : 'none', zIndex: 2, transition: tlTrans }}>
-        <div style={{ position: 'absolute', left: 0, right: 0, height: boxH, top: -(boxH - compassH) / 2, transition: tlTrans }}>
+        <div style={{ position: 'absolute', left: (vw - Q) / 2, width: Q, height: Q, top: (compassH - Q) / 2, transition: tlTrans }}>
           <Field run={D.runs.baseline} tick={tick} layer="position" view="density" showGap landmarks={showFull ? 'fixed' : false} chrome={showFull} compact />
         </div>
         {/* fade the bottom edge so prose dissolves under the strip */}
@@ -739,6 +754,7 @@ function Unified() {
   const [settleIn, setSettleIn] = React.useState(false);   // flips on the next frame to fire the fade
   const [unlocked, setUnlocked] = React.useState(false);   // story finished → free explore on the SAME canvas
   const [hintSeen, setHintSeen] = React.useState(false);   // first-run "scroll or play" helper
+  const [hdrHidden, setHdrHidden] = React.useState(false); // mobile story: hide header on scroll-down
   // ── Act 0 (the dots intro) — its own playhead, so the ambient loop never
   // fights the story's tick; the morph hands off between them. ──
   const [introTick, setIntroTick] = React.useState(0);
@@ -780,6 +796,9 @@ function Unified() {
 
   // dismiss the first-run hint as soon as the reader plays.
   React.useEffect(() => {if (playing) setHintSeen(true);}, [playing]);
+
+  // the header only auto-hides inside the mobile story; restore it everywhere else.
+  React.useEffect(() => {if (!(isMobile && page === 'story' && !unlocked)) setHdrHidden(false);}, [isMobile, page, unlocked]);
 
   // wheel scrubbing — roll to move the needle through time, then ease onto the
   // nearest chapter when the wheel goes idle so it always lands on a beat. One
@@ -992,6 +1011,25 @@ function Unified() {
 
   }
 
+  // ── mobile guided story — its own surface so the header can float and slide
+  // away on scroll (giving the compass the full screen height). ──
+  if (isMobile && isWatch && !stagedOrient) {
+    return (
+      <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', background: CC.bg }}>
+        {/* overlay header — slides up on scroll-down, back on scroll-up. Kept as
+            an overlay (not a flex row) so its dropdown menu isn't clipped. */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50, transform: hdrHidden ? 'translateY(-100%)' : 'none', transition: 'transform .28s ease' }}>
+          <SiteHeader page={page} setPage={goPage} />
+        </div>
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, top: hdrHidden ? 0 : 52, transition: 'top .28s ease', display: 'flex', flexDirection: 'column' }}>
+          <MobileScrollStory tick={tick} setTick={setTick} playing={playing} toggle={toggle} setPlaying={setPlaying}
+            onHeader={setHdrHidden}
+            onInterventions={() => goPlayground('interventions')} onSandbox={() => goPlayground('sandbox')}
+            onExplore={goExplore} on3D={() => goPage('agents')} />
+        </div>
+      </div>);
+  }
+
   // ── the simulation surface — one canvas, two labels (model = Act 0 intro,
   // story = the guided chapters / unlocked explore) ──
   return (
@@ -999,17 +1037,8 @@ function Unified() {
       <SiteHeader page={page} setPage={goPage} />
 
       {isMobile ? (
-        /* mobile guided story → one pinned compass + one scroll (scroll drives
-           time). The intro and the unlocked free-explore keep the older band +
-           rail layout below. */
-        (isWatch && !stagedOrient) ? (
-          <MobileScrollStory tick={tick} setTick={setTick} playing={playing} toggle={toggle} setPlaying={setPlaying}
-            onInterventions={() => goPlayground('interventions')} onSandbox={() => goPlayground('sandbox')}
-            onExplore={goExplore} on3D={() => goPage('agents')} />
-        ) : (
-        /* ── mobile: stack the map over a scrolling narrative pane (variant C).
-           The compass can't share a row with the prose at 390px, so it gets a
-           top band (swipe to scrub) and the rail reads beneath it. ── */
+        /* ── mobile intro + unlocked explore: map band on top (swipe to scrub),
+           rail beneath. The guided story has its own surface above. ── */
         <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: CC.bg, overflow: 'hidden' }}>
           <div {...bandHandlers} style={{ position: 'relative', height: isIntro ? '46%' : '40%', flexShrink: 0, overflow: 'hidden', borderBottom: `1px solid ${CC.border}`, touchAction: bandTouchAction }}>
             <div style={{ position: 'absolute', inset: 0 }}>
@@ -1054,7 +1083,6 @@ function Unified() {
             {isExplore && <ExploreRail tick={tick} onBackToStory={() => {setUnlocked(false);setPlaying(false);}} />}
           </div>
         </div>
-        )
       ) : (
       <div style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden', background: CC.bg }}>
           {/* the compass — a fully contained square anchored right (no bleed; all axes & labels visible) */}
