@@ -687,7 +687,75 @@ function SandboxAnimusChart({ play }) {
   );
 }
 
-// bottom band for the sandbox: transport in the gutter + the five live outcome
+// ── mobile sandbox — compass + affect line + transport up top; the five dials
+// and presets tuck into an expandable menu so the playable view fits one screen.
+function SandboxControls({ iv }) {
+  const K = window.SANDBOX_KNOBS, P = window.SANDBOX_PRESETS;
+  return (
+    <React.Fragment>
+      <p style={{ margin: '0 0 16px', ...PROSE, fontSize: 14, color: CC.ink2 }}>
+        Five forces, dialed past anything real. Pick a preset or drag the dials and watch that alternate 1980→2025 play out on the map. Changes the <em>model</em>, not a policy — <strong>illustrative, not a finding.</strong>
+      </p>
+      <Eyebrow style={{ color: CC.ink3 }}>Presets</Eyebrow>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 9 }}>
+        {P.map((p) => {
+          const on = iv.sbKey === p.vec.join('');
+          return (
+            <button key={p.name} onClick={() => iv.applyPreset(p.vec)} title={p.note} style={{
+              fontFamily: SANS, fontSize: DS.type.small, fontWeight: on ? 600 : 450, cursor: 'pointer',
+              color: on ? '#fff' : CC.ink2, background: on ? CC.ink : CC.surface,
+              border: `1px solid ${on ? CC.ink : CC.border}`, borderRadius: DS.rad.pill, padding: '6px 12px',
+            }}>{p.name}</button>);
+        })}
+      </div>
+      <Eyebrow style={{ color: CC.ink3, display: 'block', marginTop: 18 }}>Dials</Eyebrow>
+      <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 15 }}>
+        {K.map((k, i) => (
+          <div key={k.key}>
+            <Detent s={{ name: k.name, stops: k.stops }} value={iv.sbKnobs[i]} onChange={(idx) => iv.setSbKnob(i, idx)} />
+            <div style={{ fontSize: DS.type.micro, color: CC.ink4, marginTop: 3 }}>{k.owns}</div>
+          </div>
+        ))}
+      </div>
+    </React.Fragment>
+  );
+}
+
+function MobileSandbox({ iv, play, field }) {
+  const [open, setOpen] = React.useState(false);
+  const P = window.SANDBOX_PRESETS;
+  const active = P.find((p) => p.vec.join('') === iv.sbKey);
+  const label = active ? active.name : 'Custom mix';
+  return (
+    <div style={{ flex: 1, minHeight: 0, overflow: 'auto', background: CC.bg }}>
+      <div style={{ padding: '14px 20px 0' }}>
+        <Eyebrow style={{ color: '#8a6d1f' }}>Sandbox · not a finding</Eyebrow>
+      </div>
+      {/* the alternate-history cloud — plays on the same playhead as the chart */}
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '1', marginTop: 4 }}>
+        <div style={{ position: 'absolute', inset: 0 }}>{field}</div>
+      </div>
+      <div style={{ padding: '6px 20px 44px' }}>
+        {play ? <IvTransport play={play} /> :
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, fontFamily: SANS, fontSize: DS.type.small, color: CC.ink3 }}>
+            <span style={{ width: 12, height: 12, borderRadius: 999, border: `2px solid ${CC.border}`, borderTopColor: CC.ink3, animation: 'ccSpin .8s linear infinite' }} />
+            Preparing the alternate history…
+          </div>}
+        {play && <div style={{ marginTop: 14 }}><SandboxAnimusChart play={play} /></div>}
+        {/* the five dials + presets, tucked away by default */}
+        <div style={{ marginTop: 18, borderTop: `1px solid ${CC.border}`, paddingTop: 14 }}>
+          <button onClick={() => setOpen((o) => !o)} aria-expanded={open} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, color: CC.ink }}>Dials &amp; presets</span>
+            <span style={{ fontFamily: SANS, fontSize: 12.5, color: CC.ink3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>· {label}</span>
+            <span style={{ marginLeft: 'auto', flexShrink: 0, fontSize: 12, color: CC.ink3, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>▾</span>
+          </button>
+          {open && <div style={{ marginTop: 16, animation: 'ccFadeUp .2s ease' }}><SandboxControls iv={iv} /></div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // READOUTS at the playhead — one per dial (causes are the dials; these are what
 // they produce — animus, spread & echo-chambers are hard to read off the cloud)
 // ABOVE a 1980→2025 scrubber.
@@ -725,6 +793,9 @@ function IvNarrative({ iv, layer }) {
   // the result band beneath them (the desktop pins the band to the floor — no
   // room for that plus a control column at 390px).
   if (isMobile) {
+    // sandbox gets its own playable layout: compass + affect line + transport
+    // up top, the dials/presets in an expandable menu.
+    if (iv.isSandbox) return <MobileSandbox iv={iv} play={play} field={field} />;
     // the index (no lever picked) is pure cards — no compass band or result
     // chart, so it reads like the story's chapter index.
     const onIndex = !iv.activeId && !iv.isSandbox;

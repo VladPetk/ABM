@@ -107,7 +107,10 @@ docs/_*
 web_demo/OLD_VERSION/
 docs/web_demo_audit_screenshots/
 web_demo/dashboard-mock.html
-web_demo/cf/
+# cf/ holds per-tick trajectory data. The sandbox grid is committed so the
+# public deploy can play it; the (larger) intervention-branch runs stay ignored.
+web_demo/cf/*
+!web_demo/cf/sandbox/
 _temp/
 
 # Current-state snapshot for hand-off / show-and-tell (regenerable; code+docs
