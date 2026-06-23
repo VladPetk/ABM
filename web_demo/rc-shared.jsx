@@ -221,7 +221,7 @@ function centroids(pos, party) {
 }
 
 // ── the shared field canvas (edge-to-edge; square grid; field bleeds past it) ─
-function Field({ run, tick, layer = 'position', view = 'density', showGap = true, dim = 0, transform = null, landmarks = false, reveal = null, morphT = null }) {
+function Field({ run, tick, layer = 'position', view = 'density', showGap = true, dim = 0, transform = null, landmarks = false, reveal = null, morphT = null, chrome = true }) {
   // `reveal` (array of layer names) stages the first Watch chapter element by
   // element. null = draw everything, exactly as before.
   // `morphT` crossfades the two representations of the SAME positions on one
@@ -435,8 +435,9 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
       });
     }
 
-    // quadrant + axis labels on the square
-    if (show('labels')) {
+    // quadrant + axis labels on the square (chrome=false drops them, e.g. the
+    // mobile story's collapsed compass strip, where they'd just be clutter)
+    if (show('labels') && chrome) {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = CC.ink4;ctx.font = `italic ${fq}px Newsreader, Georgia, serif`;
     ctx.textAlign = 'left';ctx.fillText('populist', mx(-0.95), my(0.9));
@@ -493,7 +494,7 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
         ctx.fillText(L.name, lx, py);
       });
     }
-  }, [run, tick, layer, view, showGap, dim, sz, transform, landmarks, reveal, morphT]);
+  }, [run, tick, layer, view, showGap, dim, sz, transform, landmarks, reveal, morphT, chrome]);
 
   return (
     <div ref={wrapRef} style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
