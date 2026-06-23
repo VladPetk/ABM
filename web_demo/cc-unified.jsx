@@ -700,7 +700,7 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onHeade
           non-interactive so a drag scrubs time through it; the expand/minimize
           buttons keep their own pointer events. In strip mode the axis labels +
           outlet markers drop out as clutter. */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: compassH, overflow: 'hidden', background: CC.bg, borderBottom: stripMode ? `1px solid ${CC.border}` : '1px solid transparent', pointerEvents: 'none', zIndex: 2, transition: tlTrans }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: compassH, overflow: 'hidden', background: CC.bg, pointerEvents: 'none', zIndex: 2, transition: tlTrans }}>
         <div style={{ position: 'absolute', left: (vw - Q) / 2, width: Q, height: Q, top: (compassH - Q) / 2, transition: tlTrans }}>
           <Field run={D.runs.baseline} tick={tick} layer="position" view="density" showGap landmarks={showFull ? 'fixed' : false} chrome={showFull} compact />
         </div>
