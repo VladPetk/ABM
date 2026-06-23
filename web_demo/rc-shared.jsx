@@ -503,14 +503,14 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
 }
 
 // ── small UI ──────────────────────────────────────────────────────────────────
-function Segmented({ value, onChange, options, accent = CC.ink }) {
+function Segmented({ value, onChange, options, accent = CC.ink, compact = false }) {
   return (
-    <div style={{ display: 'inline-flex', gap: 3, padding: 3, background: 'transparent', borderRadius: 999, border: `1px solid ${CC.ink}` }}>
+    <div style={{ display: 'inline-flex', gap: 3, padding: compact ? 2 : 3, background: 'transparent', borderRadius: 999, border: `1px solid ${CC.ink}` }}>
       {options.map(([v, l]) => {
         const on = value === v;
         return (
           <button key={v} onClick={() => onChange(v)} style={{
-            fontSize: 12.5, padding: '5px 13px', borderRadius: 999, cursor: 'pointer', fontFamily: SANS,
+            fontSize: compact ? 11.5 : 12.5, padding: compact ? '4px 11px' : '5px 13px', borderRadius: 999, cursor: 'pointer', fontFamily: SANS,
             border: `1px solid ${on ? CC.ink : 'transparent'}`, background: 'transparent', color: on ? accent : CC.ink3,
             fontWeight: on ? 600 : 500, whiteSpace: 'nowrap'
           }}>{l}</button>);

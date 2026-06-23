@@ -106,9 +106,10 @@ function SiteHeader({ page, setPage }) {
 // Lives ONLY on the Playground page: the two ways to drive the model — the
 // measured levers vs. free tinkering ("not a finding").
 function ModeBar({ mode, setMode }) {
+  const isMobile = useIsMobile();
   return (
-    <div style={{ height: 50, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '0 clamp(24px, 4vw, 56px)', background: CC.bg, position: 'relative', zIndex: 20 }}>
-      <Segmented value={mode} onChange={setMode} options={[['interventions', 'Interventions'], ['sandbox', 'Sandbox']]} />
+    <div style={{ height: isMobile ? 46 : 50, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start', gap: 14, padding: isMobile ? '0 16px' : '0 clamp(24px, 4vw, 56px)', background: CC.bg, position: 'relative', zIndex: 20 }}>
+      <Segmented value={mode} onChange={setMode} options={[['interventions', 'Interventions'], ['sandbox', 'Sandbox']]} compact={isMobile} />
     </div>);
 
 }
@@ -117,10 +118,11 @@ function ModeBar({ mode, setMode }) {
 // force-by-force tour, and the whole engine running at once (the hub). Lives on
 // both pages so the toggle is always the way between them (and back). ──
 function ForcesModeBar({ mode, goPage }) {
+  const isMobile = useIsMobile();
   return (
-    <div style={{ height: 50, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '0 clamp(24px, 4vw, 56px)', background: CC.bg, position: 'relative', zIndex: 20 }}>
+    <div style={{ height: isMobile ? 46 : 50, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start', gap: 14, padding: isMobile ? '0 16px' : '0 clamp(24px, 4vw, 56px)', background: CC.bg, position: 'relative', zIndex: 20 }}>
       <Segmented value={mode} onChange={(v) => goPage(v === 'tour' ? 'forces' : 'prologue')}
-        options={[['tour', 'Force by force'], ['engine', 'The whole engine']]} />
+        options={[['tour', 'Force by force'], ['engine', 'The whole engine']]} compact={isMobile} />
     </div>);
 
 }
