@@ -55,6 +55,7 @@ function LeverRow({ id, iv }) {
 // between them is the effect. Decade marks are clickable to move WHEN it was
 // tried.
 function TwoFutures({ iv, play }) {
+  const isMobile = useIsMobile();
   const ref = React.useRef(null);
   const [w, setW] = React.useState(1100);
   React.useEffect(() => {
@@ -115,13 +116,13 @@ function TwoFutures({ iv, play }) {
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'stretch', height: '100%', width: '100%' }}>
+    <div style={{ display: 'flex', alignItems: 'stretch', flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : '100%', width: '100%', gap: isMobile ? 12 : 0 }}>
       {/* left gutter — transport (when a branch is playing) + legend */}
-      <div style={{ width: 224, flexShrink: 0, padding: '16px 0 16px 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, borderRight: `1px solid ${CC.border}` }}>
+      <div style={{ width: isMobile ? 'auto' : 224, flexShrink: 0, padding: isMobile ? 0 : '16px 0 16px 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, borderRight: isMobile ? 'none' : `1px solid ${CC.border}` }}>
         {play
           ? <IvTransport play={play} />
           : <Eyebrow style={{ color: CC.ink3 }}>The two futures</Eyebrow>}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'row' : 'column', flexWrap: 'wrap', gap: isMobile ? 14 : 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: DS.type.micro, color: CC.ink2 }}>
             <span style={{ width: 18, height: 0, borderTop: `2px solid ${CC.ink2}` }} /> what happened
           </div>
@@ -337,10 +338,13 @@ function SandboxRow({ iv }) {
 
 function NarrativeLeft({ iv }) {
   // Matches the Story page's WatchRail: large left indent, vertically centred,
-  // scrolls when content is tall.
-  const LX = 'clamp(64px, 14vw, 248px)';
-  const wrap = { height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'safe center', overflow: 'auto', minHeight: 0 };
-  const pad = { flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px clamp(24px,4vh,40px) ${LX}` };
+  // scrolls when content is tall. On mobile it's a normal top-aligned column.
+  const isMobile = useIsMobile();
+  const LX = isMobile ? '20px' : 'clamp(64px, 14vw, 248px)';
+  const RX = isMobile ? '20px' : '44px';
+  const wrap = { height: isMobile ? 'auto' : '100%', display: 'flex', flexDirection: 'column', justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: isMobile ? 'visible' : 'auto', minHeight: 0 };
+  const pad = { flexShrink: 0, padding: isMobile ? `22px ${RX} 26px ${LX}` : `clamp(28px,4.5vh,52px) ${RX} clamp(24px,4vh,40px) ${LX}` };
+  const headSize = isMobile ? 28 : DS.type.display;
 
   // sandbox: the 5-knob alternate-history panel. No back-affordances here —
   // the Playground's Tier-2 pill (Interventions | Sandbox) is the one way
@@ -354,7 +358,7 @@ function NarrativeLeft({ iv }) {
         ? <React.Fragment><BackToList onClick={iv.back} /><NarrativeDetail iv={iv} /></React.Fragment>
         : <React.Fragment>
             <Eyebrow>The experiment</Eyebrow>
-            <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.display, lineHeight: 1.04, letterSpacing: '-.02em', color: CC.ink }}>Could anything have stopped the U.S. split?</h2>
+            <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: headSize, lineHeight: 1.04, letterSpacing: '-.02em', color: CC.ink }}>Could anything have stopped the U.S. split?</h2>
             <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
               This is the engine calibrated to the United States, 1980 to 2025: the same run you watched in <a style={{ color: CC.d, textDecoration: 'none', borderBottom: `1px solid ${CC.dSoft}`, cursor: 'pointer' }} href="#story" data-goto="story">the U.S. story</a>. Each lever here re-runs that history with one thing changed, to isolate its effect.
             </p>
@@ -643,13 +647,14 @@ function SandboxAnimusChart({ play }) {
 // they produce — animus, spread & echo-chambers are hard to read off the cloud)
 // ABOVE a 1980→2025 scrubber.
 function SandboxBand({ iv, play }) {
+  const isMobile = useIsMobile();
   return (
-    <div style={{ display: 'flex', alignItems: 'stretch', height: '100%', width: '100%' }}>
-      <div style={{ width: 224, flexShrink: 0, padding: '16px 0 16px 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, borderRight: `1px solid ${CC.border}` }}>
+    <div style={{ display: 'flex', alignItems: 'stretch', flexDirection: isMobile ? 'column' : 'row', height: isMobile ? 'auto' : '100%', width: '100%', gap: isMobile ? 12 : 0 }}>
+      <div style={{ width: isMobile ? 'auto' : 224, flexShrink: 0, padding: isMobile ? 0 : '16px 0 16px 4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, borderRight: isMobile ? 'none' : `1px solid ${CC.border}` }}>
         {play ? <IvTransport play={play} /> : <Eyebrow style={{ color: CC.ink3 }}>Sandbox</Eyebrow>}
         <div style={{ fontSize: DS.type.micro, color: CC.ink4 }}>Alternate 1980 → 2025 · illustrative</div>
       </div>
-      {play ? <SandboxAnimusChart play={play} /> : <div style={{ flex: 1 }} />}
+      {play ? <SandboxAnimusChart play={play} /> : (!isMobile && <div style={{ flex: 1 }} />)}
     </div>
   );
 }
@@ -657,6 +662,37 @@ function SandboxBand({ iv, play }) {
 function IvNarrative({ iv, layer }) {
   const play = useIvPlayback(iv);
   const hasPlay = !!play;
+  const isMobile = useIsMobile();
+  const field = (
+    <Field run={hasPlay ? play.run : _ivD.runs.baseline} tick={hasPlay ? play.tick : window.LAST}
+      layer="position" view="density"
+      showGap={hasPlay} dim={0}
+      transform={hasPlay ? null : (iv.isSandbox ? iv.transform : null)}
+      landmarks="fixed" />
+  );
+  const band = (
+    <div style={{ height: isMobile ? 'auto' : 152, background: CC.bg, padding: isMobile ? '14px 16px 20px' : '0 clamp(20px, 3vw, 44px)' }}>
+      {iv.isSandbox ? <SandboxBand iv={iv} play={play} /> : <TwoFutures iv={iv} play={play} />}
+    </div>
+  );
+
+  // Mobile: a compass band on top, then ONE scroll holding the prose/levers and
+  // the result band beneath them (the desktop pins the band to the floor — no
+  // room for that plus a control column at 390px).
+  if (isMobile) {
+    return (
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg }}>
+        <div style={{ position: 'relative', height: '30%', flexShrink: 0, overflow: 'hidden', borderBottom: `1px solid ${CC.border}` }}>
+          <div style={{ position: 'absolute', inset: 0 }}>{field}</div>
+        </div>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+          <NarrativeLeft iv={iv} />
+          <div style={{ borderTop: `1px solid ${CC.border}` }}>{band}</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg }}>
       {/* top region — the Story page's exact composition: a right-anchored square
@@ -664,20 +700,14 @@ function IvNarrative({ iv, layer }) {
           and the prose floating at the same left indent. */}
       <div style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '-6%', bottom: '-6%', right: '2%', aspectRatio: '1' }}>
-          <Field run={hasPlay ? play.run : _ivD.runs.baseline} tick={hasPlay ? play.tick : window.LAST}
-            layer="position" view="density"
-            showGap={hasPlay} dim={0}
-            transform={hasPlay ? null : (iv.isSandbox ? iv.transform : null)}
-            landmarks="fixed" />
+          {field}
         </div>
         <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '56%', background: `linear-gradient(90deg, ${CC.bg} 0%, ${CC.bg} 88%, rgba(249,248,244,0) 100%)`, pointerEvents: 'none', zIndex: 1 }} />
         <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(54%, 820px)', display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3 }}>
           <NarrativeLeft iv={iv} />
         </div>
       </div>
-      <div style={{ flexShrink: 0, height: 152, borderTop: `1px solid ${CC.border}`, background: CC.bg, padding: '0 clamp(20px, 3vw, 44px)' }}>
-        {iv.isSandbox ? <SandboxBand iv={iv} play={play} /> : <TwoFutures iv={iv} play={play} />}
-      </div>
+      <div style={{ flexShrink: 0, borderTop: `1px solid ${CC.border}` }}>{band}</div>
     </div>
   );
 }
