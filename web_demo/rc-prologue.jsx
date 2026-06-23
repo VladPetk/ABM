@@ -115,11 +115,12 @@ const _skipStyle = { background: 'none', border: 'none', cursor: 'pointer', font
 
 // the scrub-chapter rail (matches the story's floating left copy)
 function PrologueBeatRail({ beat, tick, year, onSkip }) {
+  const isMobile = useIsMobile();
   const affSeries = FF.run.macro.map((m) => m.aff);
   const sepSeries = FF.run.macro.map((m) => m.sep);
   return (
-    <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
-      <div style={{ flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px 8px ${_PLX}` }}>
+    <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
+      <div style={{ flexShrink: 0, padding: isMobile ? '22px 20px 8px 20px' : `clamp(28px,4.5vh,52px) 44px 8px ${_PLX}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
           <Eyebrow>The engine, on its own</Eyebrow>
           {onSkip && <button onClick={onSkip} style={_skipStyle}>skip ahead →</button>}
@@ -145,9 +146,10 @@ function PrologueEndRail({ usArr, ffArr, onToStory, onPlayground, on3D }) {
     flex: 1, padding: '12px 14px', borderRadius: DS.rad.pill, border: `1px solid ${CC.border}`, background: CC.surface,
     color: CC.ink2, cursor: 'pointer', fontFamily: SANS, fontSize: DS.type.small, fontWeight: 500, whiteSpace: 'nowrap',
   };
+  const isMobile = useIsMobile();
   return (
-    <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
-      <div style={{ flexShrink: 0, padding: `clamp(24px,4vh,44px) 44px 8px ${_PLX}` }}>
+    <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
+      <div style={{ flexShrink: 0, padding: isMobile ? '22px 20px 8px 20px' : `clamp(24px,4vh,44px) 44px 8px ${_PLX}` }}>
         <Eyebrow>The engine · every force at once</Eyebrow>
         <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(26px,3vw,38px)', lineHeight: 1.05, letterSpacing: '-.018em', maxWidth: 460 }}>The forces alone don’t get us all the way</h2>
         <p style={{ margin: '14px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.4, color: CC.ink, maxWidth: 460 }}>Compare the in-engine polarization against a country that <em>did</em> polarize — the United States.</p>
@@ -181,10 +183,22 @@ function ProloguePage({ onToStory, onPlayground, on3D }) {
   const [playing, setPlaying] = React.useState(false);
   const [speed, setSpeed] = React.useState(1);
   const [hintSeen, setHintSeen] = React.useState(false);   // first scrub-timeline they meet
+  const isMobile = useIsMobile();
   const toggle = () => { setHintSeen(true); setPlaying((p) => !p); };
   const skipToEnd = () => { setPlaying(false); setTick(LAST); };
   const wrapRef = React.useRef(null);
   const raf = React.useRef(0);
+  // touch-scrub: phones have no wheel, so a vertical drag on the map band moves
+  // time (swipe up = forward), mirroring the story canvas.
+  const touchRef = React.useRef(null);
+  const onBandTouchStart = (e) => { if (e.touches.length === 1) touchRef.current = { y: e.touches[0].clientY, tick, moved: false }; };
+  const onBandTouchMove = (e) => {
+    const s = touchRef.current; if (!s) return;
+    const dy = s.y - e.touches[0].clientY;
+    if (!s.moved && Math.abs(dy) > 4) { s.moved = true; setHintSeen(true); setPlaying(false); }
+    if (s.moved) setTick(Math.max(0, Math.min(LAST, s.tick + dy * 0.085)));
+  };
+  const onBandTouchEnd = () => { touchRef.current = null; };
 
   // play loop (RAF — paused headlessly; the timeline + wheel are the deterministic paths)
   React.useEffect(() => {
@@ -226,6 +240,41 @@ function ProloguePage({ onToStory, onPlayground, on3D }) {
   const year = Math.floor(1980 + tick / 3);
   const usArr = (k) => D.runs.baseline.macro.map((m) => m[k]);
   const ffArr = (k) => run.macro_mean.map((m) => m[k]);
+
+  if (isMobile) {
+    return (
+      <>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: CC.bg, overflow: 'hidden' }}>
+          <div onTouchStart={onBandTouchStart} onTouchMove={onBandTouchMove} onTouchEnd={onBandTouchEnd}
+            style={{ position: 'relative', height: '40%', flexShrink: 0, overflow: 'hidden', borderBottom: `1px solid ${CC.border}`, touchAction: 'none' }}>
+            <div style={{ position: 'absolute', inset: 0 }}>
+              <Field run={run} tick={tick} layer="position" view="density" showGap dim={ended ? 0.24 : 0} landmarks={false} />
+            </div>
+            {!ended &&
+            <div style={{ position: 'absolute', right: 14, top: 12, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, color: CC.ink3, background: 'rgba(249,248,244,.85)', padding: '5px 11px', borderRadius: 999, border: `1px solid ${CC.border}` }}>
+              <span style={{ width: 7, height: 7, borderRadius: 999, background: '#9aa0a6' }} /> the engine alone · {year}
+            </div>}
+            {showHint &&
+            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 12, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '8px 15px', background: CC.ink, color: '#fff', borderRadius: DS.rad.pill, boxShadow: '0 6px 20px rgba(26,29,35,.22)', fontFamily: SANS, fontSize: 12.5, fontWeight: 500, animation: 'ccFadeUp .55s ease both' }}>
+                <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 0.5, animation: 'ccHintBob 1.5s ease-in-out infinite' }}>
+                  <span style={{ fontSize: 9 }}>⌃</span><span style={{ fontSize: 9 }}>⌄</span>
+                </span>
+                Swipe the map to move through time
+              </div>
+            </div>}
+          </div>
+          <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+            {ended
+              ? <PrologueEndRail usArr={usArr} ffArr={ffArr} onToStory={onToStory} onPlayground={onPlayground} on3D={on3D} />
+              : <PrologueBeatRail beat={beat} tick={tick} year={year} onSkip={skipToEnd} />}
+          </div>
+        </div>
+        <TimelineBar tick={tick} setTick={setTick} playing={playing} toggle={toggle} speed={speed} setSpeed={setSpeed}
+          mode="prologue" beatI={beatI} onPickBeat={(k) => { setPlaying(false); setTick(PROLOGUE_BEATS[k].tick); }} ended={ended} beats={PROLOGUE_BEATS} events={false} />
+      </>
+    );
+  }
 
   return (
     <>
