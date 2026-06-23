@@ -1017,9 +1017,9 @@ function ForceFeedItem({ force, idx, assignRef, onActive }) {
       <div style={{ margin: '14px 0 0', position: 'relative', height: 236 }}>
         <ForceToy key={force.id} force={force} knob={knob} playing={playing} revealed={revealed} onAutoReveal={() => setRevealed(true)} toyRef={toyRef} />
       </div>
-      {/* the poke control — an elegant full-width line right under the viz */}
+      {/* the poke control — play / reset + an elegant slider line under the viz */}
       {force.knob &&
-        <div style={{ padding: '13px 2px 0' }}>
+        <div style={{ padding: '14px 2px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 9 }}>
             <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 500, letterSpacing: '.02em', color: CC.ink3 }}>{force.knob.label}</span>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 14 }}>
@@ -1028,9 +1028,15 @@ function ForceFeedItem({ force, idx, assignRef, onActive }) {
               <MonoVal size={12}>{(+knob).toFixed(2)}</MonoVal>
             </span>
           </div>
-          <input type="range" className="cc-range" min={force.knob.min} max={force.knob.max} step={force.knob.step} value={knob}
-            onChange={(e) => setKnob(parseFloat(e.target.value))}
-            style={{ width: '100%', display: 'block', background: `linear-gradient(90deg, ${CC.ink} 0 ${kpct}%, ${CC.border} ${kpct}% 100%)` }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+            <button onClick={() => setPlaying((p) => !p)} aria-label={playing ? 'Pause' : 'Play'}
+              style={{ width: 34, height: 34, borderRadius: DS.rad.pill, flexShrink: 0, background: CC.ink, color: '#fff', border: 'none', fontSize: 11, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{playing ? '❚❚' : '▶'}</button>
+            <button onClick={() => { setRevealed(false); setKnob(force.knob.def); toyRef.current && toyRef.current.reset(); setPlaying(true); }} aria-label="Reset"
+              style={{ width: 34, height: 34, borderRadius: DS.rad.pill, flexShrink: 0, background: 'transparent', color: CC.ink2, border: `1px solid ${CC.borderS}`, fontSize: 13, cursor: 'pointer' }}>↺</button>
+            <input type="range" className="cc-range" min={force.knob.min} max={force.knob.max} step={force.knob.step} value={knob}
+              onChange={(e) => setKnob(parseFloat(e.target.value))}
+              style={{ flex: 1, minWidth: 0, display: 'block', background: `linear-gradient(90deg, ${CC.ink} 0 ${kpct}%, ${CC.border} ${kpct}% 100%)` }} />
+          </div>
         </div>}
       <div style={{ marginTop: 14 }}>{force.body}</div>
       <Caption style={{ marginTop: 14 }}>{force.caption}</Caption>

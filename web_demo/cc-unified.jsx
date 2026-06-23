@@ -556,64 +556,39 @@ function TimelineBar({ tick, setTick, playing, toggle, speed, setSpeed, mode, be
 
 }
 
-// ── Mobile guided story — one pinned compass, one scroll ─────────────────────
-// The phone story unifies reading and time into a single gesture. The compass
-// pins to the top and collapses from a hero to a strip as you scroll; the seven
-// chapters stack into one continuous scroll, and scroll position drives `tick`
-// (the playhead). It's frozen when idle — pure scroll-driven, no autodrift —
-// and the ▶ plays it for you, reflecting the playhead back onto the scroll.
+// ── Mobile guided story — continuous scroll, a compass per chapter ───────────
+// Like the Forces feed: every chapter opens with its own full-size compass, and
+// scroll drives time. Each chapter's compass shows clamp(scrollTime, prevYear,
+// thisYear) — so it animates from the previous chapter's state to its own as it
+// rises into reading position (and freezes, recompute-free, once you pass it).
+// A sticky index (year · chapter · dots) replaces the pinned compass + transport.
 function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInterventions, onSandbox, onExplore, on3D,
   beats = BEATS, run = D.runs.baseline, landmarks = 'fixed', beatIndexAtFn = beatIndexAt, renderBeat = null, endContent = null }) {
-  const wrapRef = React.useRef(null);     // measures available height
-  const scroller = React.useRef(null);    // the scrolling prose column
-  const secRefs = React.useRef([]);       // chapter section elements
+  const wrapRef = React.useRef(null);
+  const scroller = React.useRef(null);
+  const secRefs = React.useRef([]);
   const anchors = React.useRef([]);       // [{ top, tick }] scroll→tick table
-  const reflecting = React.useRef(false);  // guards the playhead→scroll echo
   const [vh, setVh] = React.useState(0);
-  const [vw, setVw] = React.useState(390);
-  const [collapse, setCollapse] = React.useState(0);  // 0 hero · 1 strip
-  const [expanded, setExpanded] = React.useState(false); // tap-to-study override
-  const [trans, setTrans] = React.useState(false);    // animate height only on expand/collapse
 
-  // The compass is square: its Field box is W×W in every state, only clipped /
-  // padded by the (shorter or taller) pinned container — so the density never
-  // stretches. Q = the square's edge (the column width).
-  const Q = vw;
-  const HERO = Q;                                   // arrival shows the whole square
-  const STRIP = 180;                               // collapsed peek
-  const EXPANDED_H = Math.min(Math.round(vh * 0.8), Q + 60); // tap-to-study view
-  const COLLAPSE_PX = Math.max(120, HERO - STRIP);
-  const compassH = expanded ? EXPANDED_H : HERO - (HERO - STRIP) * collapse;
-
-  const flashTrans = () => { setTrans(true); setTimeout(() => setTrans(false), 340); };
-  const toggleExpand = () => { flashTrans(); setExpanded((e) => !e); };
-
-  // measure the live size of the story area (header/transport excluded). A
-  // ResizeObserver catches the header sliding away, not just window resizes.
   React.useLayoutEffect(() => {
     const el = wrapRef.current; if (!el) return;
-    const measure = () => { setVh(el.clientHeight); setVw(el.clientWidth); };
+    const measure = () => setVh(el.clientHeight);
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
-  // build the scroll→tick anchor table from each chapter's offset. The reading
-  // line sits ~halfway down the hero, so a chapter "arrives" as it rises into
-  // view. The trailing end-card anchors to LAST.
-  const READ = HERO * 0.42;
+  // a section "arrives" when its top crosses the read line (~32% down)
+  const READ = Math.max(160, vh * 0.32);
   React.useLayoutEffect(() => {
     if (!vh) return;
     const els = secRefs.current.filter(Boolean);
-    anchors.current = els.map((el, i) => ({
-      top: el.offsetTop,
-      tick: i < beats.length ? beats[i].tick : LAST,
-    }));
+    anchors.current = els.map((el, i) => ({ top: el.offsetTop, tick: i < beats.length ? beats[i].tick : LAST }));
   }, [vh]);
 
   const scrollToTick = (sT) => {
-    const a = anchors.current; if (a.length < 2) return 0;
+    const a = anchors.current; if (a.length < 2) return beats[0].tick;
     const p = sT + READ;
     if (p <= a[0].top) return a[0].tick;
     for (let i = 0; i < a.length - 1; i++) {
@@ -624,146 +599,93 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
     }
     return a[a.length - 1].tick;
   };
-  const tickToScroll = (tk) => {
-    const a = anchors.current; if (a.length < 2) return 0;
-    for (let i = 0; i < a.length - 1; i++) {
-      if (tk >= a[i].tick && tk <= a[i + 1].tick && a[i + 1].tick > a[i].tick) {
-        const f = (tk - a[i].tick) / (a[i + 1].tick - a[i].tick);
-        return a[i].top + (a[i + 1].top - a[i].top) * f - READ;
-      }
-    }
-    return a[a.length - 1].top - READ;
+  const onScroll = () => { const el = scroller.current; if (el) setTick(scrollToTick(el.scrollTop)); };
+  const jumpToSection = (i) => {
+    const el = scroller.current, sec = secRefs.current[i];
+    if (el && sec) el.scrollTo({ top: Math.max(0, sec.offsetTop - 56), behavior: 'smooth' });
   };
 
-  const onScroll = () => {
-    const el = scroller.current; if (!el) return;
-    const sT = el.scrollTop;
-    setCollapse(Math.min(1, sT / COLLAPSE_PX));    // expanded study view stays put
-    if (reflecting.current || playing) return;     // ignore echo / let ▶ drive
-    setTick(scrollToTick(sT));
-  };
-  const jumpToTick = (tk) => {
-    const el = scroller.current; if (!el) return;
-    setPlaying(false);
-    el.scrollTo({ top: Math.max(0, tickToScroll(tk)), behavior: 'smooth' });
-  };
-
-  // ▶ playback: advance the playhead (useTick) and reflect it onto the scroll
-  // so the prose follows the compass. Guard against the resulting scroll event.
-  React.useEffect(() => {
-    if (!playing) return;
-    const el = scroller.current; if (!el) return;
-    const target = tickToScroll(tick);
-    if (Math.abs(target - el.scrollTop) > 0.5) {
-      reflecting.current = true;
-      el.scrollTop = target;
-      requestAnimationFrame(() => { reflecting.current = false; });
-    }
-  }, [tick, playing]);
-
-  const year = Math.floor(tickToYear(tick));
   const ci = beatIndexAtFn(tick);
-  const stripMode = !expanded && collapse > 0.5;     // collapsed peek (no chrome)
-  const showFull = expanded || !stripMode;           // hero or study view → full chrome
-  const tlTrans = trans ? 'height .32s ease, top .32s ease' : 'none';
+  const N = beats.length;
+  const year = Math.floor(tickToYear(beats[ci] ? beats[ci].tick : tick));   // the chapter's year
+  const tickAt = (i) => i < N ? beats[i].tick : LAST;
 
-  // ── chapter block — default = the U.S. story copy; `renderBeat` overrides the
-  // inner (e.g. the prologue's engine chapters) while the shell stays shared. ──
+  // each chapter's compass — clamped to its own [prev, this] window so only the
+  // window you're scrolling through animates; the rest are frozen (no redraw).
+  const compassFor = (i) => {
+    const lo = i > 0 ? tickAt(i - 1) : tickAt(0);
+    const hi = tickAt(i);
+    const ct = Math.max(lo, Math.min(hi, tick));
+    return (
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '1', margin: '2px 0 4px' }}>
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <Field run={run} tick={ct} layer="position" view="density" showGap landmarks={landmarks} />
+        </div>
+      </div>);
+  };
+
+  // ── default U.S. story chapter copy (renderBeat overrides for the prologue) ──
   const storyBeatInner = (beat, i) => {
     const yr = Math.floor(tickToYear(beat.tick));
     return (<>
-      <Eyebrow>{beat.orient ? `The U.S. story · ${yr}` : `Chapter ${i} of ${beats.length - 1} · ${yr}`}</Eyebrow>
-      <h2 style={{ margin: '13px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: beat.orient ? 25 : 29, lineHeight: 1.05, letterSpacing: '-.022em', textWrap: 'balance' }}>{beat.title}</h2>
-      <p style={{ margin: '15px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink }}>{beat.lead}</p>
-      <p style={{ margin: '15px 0 0', ...PROSE, color: CC.ink2 }}>{beat.body}</p>
+      <Eyebrow>{beat.orient ? `The U.S. story · ${yr}` : `Chapter ${i} of ${N - 1} · ${yr}`}</Eyebrow>
+      <h2 style={{ margin: '11px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: beat.orient ? 25 : 28, lineHeight: 1.05, letterSpacing: '-.022em', textWrap: 'balance' }}>{beat.title}</h2>
+      <p style={{ margin: '14px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink }}>{beat.lead}</p>
+      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>{beat.body}</p>
       {beat.orient ? null :
         beat.data ? <BeatMetric data={beat.data} tick={beat.tick} /> :
         beat.metric ?
-          <div style={{ marginTop: 22, paddingTop: 13, borderTop: `1px solid ${CC.border}`, display: 'flex', alignItems: 'center', gap: 11 }}>
+          <div style={{ marginTop: 20, paddingTop: 13, borderTop: `1px solid ${CC.border}`, display: 'flex', alignItems: 'center', gap: 11 }}>
             <Eyebrow style={{ color: CC.ink4, letterSpacing: '.1em' }}>data</Eyebrow>
             <MonoVal size={DS.type.small} color={CC.ink}>{beat.metric(beat.tick)}</MonoVal>
           </div> : null}
     </>);
   };
-  const beatBlock = (beat, i) => (
-    <section key={i} ref={(el) => (secRefs.current[i] = el)}
-      style={{ padding: i === 0 ? '0 20px' : '34px 20px 0', marginTop: i === 0 ? 0 : 38, borderTop: i === 0 ? 'none' : `1px solid ${CC.border}` }}>
-      {(renderBeat || storyBeatInner)(beat, i)}
-    </section>);
-
-  // ── end card (scrolls in as the final section) ──
-  const endI = beats.length;
-  const endBlock = (
-    <section key="end" ref={(el) => (secRefs.current[endI] = el)}
-      style={{ padding: '38px 20px 0', marginTop: 40, borderTop: `1px solid ${CC.border}` }}>
-      {endContent || <>
-      <Eyebrow>The U.S. story · 1980 → 2025</Eyebrow>
-      <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 29, lineHeight: 1.05, letterSpacing: '-.015em' }}>Now drive it yourself.</h2>
-      <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2 }}>You’ve just watched the engine reproduce the U.S. polarization story: an amorphous blob turning into two better-defined partisan blobs.</p>
-      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>You might be wondering whether any of it had to play out this way, whether there is a vaccine for it. There are two ways to find out: try the things researchers have actually put to the test, or tinker with the dials yourself.</p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 22 }}>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onInterventions} style={{ ...primaryBtn, flex: 1, width: 'auto' }}>Try the interventions &nbsp;→</button>
-          <button onClick={onSandbox} style={{ padding: '13px 22px', borderRadius: DS.rad.pill, border: `1px solid ${CC.border}`, background: CC.surface, color: CC.ink2, cursor: 'pointer', fontFamily: SANS, fontSize: DS.type.body }}>Sandbox</button>
-        </div>
-        <div style={{ display: 'flex', gap: 18 }}>
-          <button onClick={onExplore} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: SANS, fontSize: DS.type.micro, color: CC.ink3, textDecoration: 'underline', textUnderlineOffset: 3 }}>keep scrubbing this map →</button>
-          <button onClick={on3D} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: SANS, fontSize: DS.type.micro, color: CC.ink3, textDecoration: 'underline', textUnderlineOffset: 3 }}>see it in 3-D →</button>
-        </div>
+  const defaultEnd = (<>
+    <Eyebrow>The U.S. story · 1980 → 2025</Eyebrow>
+    <h2 style={{ margin: '11px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 28, lineHeight: 1.05, letterSpacing: '-.015em' }}>Now drive it yourself.</h2>
+    <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2 }}>You’ve just watched the engine reproduce the U.S. polarization story: an amorphous blob turning into two better-defined partisan blobs.</p>
+    <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>You might be wondering whether any of it had to play out this way, whether there is a vaccine for it. There are two ways to find out: try the things researchers have actually put to the test, or tinker with the dials yourself.</p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 20 }}>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button onClick={onInterventions} style={{ ...primaryBtn, flex: 1, width: 'auto' }}>Try the interventions &nbsp;→</button>
+        <button onClick={onSandbox} style={{ padding: '13px 22px', borderRadius: DS.rad.pill, border: `1px solid ${CC.border}`, background: CC.surface, color: CC.ink2, cursor: 'pointer', fontFamily: SANS, fontSize: DS.type.body }}>Sandbox</button>
       </div>
-      </>}
-    </section>);
+      <div style={{ display: 'flex', gap: 18 }}>
+        <button onClick={onExplore} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: SANS, fontSize: DS.type.micro, color: CC.ink3, textDecoration: 'underline', textUnderlineOffset: 3 }}>keep scrubbing this map →</button>
+        <button onClick={on3D} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: SANS, fontSize: DS.type.micro, color: CC.ink3, textDecoration: 'underline', textUnderlineOffset: 3 }}>see it in 3-D →</button>
+      </div>
+    </div>
+  </>);
+
+  const section = (i) => {
+    const isEnd = i === N;
+    const beat = isEnd ? null : beats[i];
+    return (
+      <section key={i} ref={(el) => (secRefs.current[i] = el)}
+        style={{ padding: i === 0 ? '6px 20px 14px' : '24px 20px 14px', marginTop: i === 0 ? 0 : 14, borderTop: i === 0 ? 'none' : `1px solid ${CC.border}` }}>
+        {compassFor(i)}
+        {isEnd ? (endContent || defaultEnd) : (renderBeat || storyBeatInner)(beat, i)}
+      </section>);
+  };
 
   return (
     <div ref={wrapRef} style={{ flex: 1, minHeight: 0, position: 'relative', background: CC.bg, overflow: 'hidden' }}>
-      {/* the scrolling prose column — the only thing that actually scrolls.
-          the study view stays open until the reader taps minimize. */}
-      <div ref={scroller} onScroll={onScroll}
-        style={{ position: 'absolute', inset: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <div style={{ height: HERO + 16, flexShrink: 0 }} />
-        {beats.map(beatBlock)}
-        {endBlock}
-        <div style={{ height: '60vh' }} />
-      </div>
-
-      {/* pinned compass — collapses hero → strip, never leaves the screen. The
-          collapse is a center-CROP (true proportions, no squash). Always
-          non-interactive so a drag scrubs time through it; the expand/minimize
-          buttons keep their own pointer events. In strip mode the axis labels +
-          outlet markers drop out as clutter. */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: compassH, overflow: 'hidden', background: CC.bg, pointerEvents: 'none', zIndex: 2, transition: tlTrans }}>
-        <div style={{ position: 'absolute', left: (vw - Q) / 2, width: Q, height: Q, top: (compassH - Q) / 2, transition: tlTrans }}>
-          <Field run={run} tick={tick} layer="position" view="density" showGap landmarks={showFull ? landmarks : false} chrome={showFull} compact />
+      <div ref={scroller} onScroll={onScroll} style={{ position: 'absolute', inset: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        {/* sticky index — year · chapter · jump dots (the only timeline) */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 6, display: 'flex', alignItems: 'center', gap: 11, padding: '10px 20px', background: 'rgba(249,248,244,.96)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${CC.border}` }}>
+          <MonoVal size={13} color={CC.ink}>{year}</MonoVal>
+          <span style={{ width: 1, height: 12, background: CC.border, flexShrink: 0 }} />
+          <span style={{ flex: 1, minWidth: 0, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: CC.ink2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{beats[ci] ? (beats[ci].short || beats[ci].title) : ''}</span>
+          <span style={{ display: 'inline-flex', gap: 5, alignItems: 'center', flexShrink: 0 }}>
+            {beats.map((b, k) => (
+              <button key={k} onClick={() => jumpToSection(k)} title={b.short || b.title} aria-label={b.short || b.title}
+                style={{ width: k === ci ? 16 : 6, height: 6, borderRadius: 9, padding: 0, border: 'none', cursor: 'pointer', background: k === ci ? CC.ink : CC.ink4, opacity: k === ci ? 1 : 0.5, transition: 'all .25s' }} />
+            ))}
+          </span>
         </div>
-        {/* fade the bottom edge so prose dissolves under the strip */}
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 56, background: `linear-gradient(180deg, rgba(249,248,244,0), ${CC.bg})`, pointerEvents: 'none' }} />
-        {/* expand (strip) / minimize (study view) — SVG so the glyph is crisp
-            and centered; child keeps pointer events through the inert compass */}
-        {(stripMode || expanded) &&
-          <button onClick={(e) => { e.stopPropagation(); toggleExpand(); }} aria-label={expanded ? 'Minimize the map' : 'Expand the map'}
-            style={{ position: 'absolute', right: 12, top: 10, pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: DS.rad.pill, background: 'rgba(249,248,244,.9)', border: `1px solid ${CC.border}`, color: CC.ink2, cursor: 'pointer', padding: 0 }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              {expanded
-                ? <><polyline points="9 4 9 9 4 9" /><polyline points="15 4 15 9 20 9" /><polyline points="9 20 9 15 4 15" /><polyline points="15 20 15 15 20 15" /></>
-                : <><polyline points="4 9 4 4 9 4" /><polyline points="20 9 20 4 15 4" /><polyline points="4 15 4 20 9 20" /><polyline points="20 15 20 20 15 20" /></>}
-            </svg>
-          </button>}
-      </div>
-
-      {/* transport — ▶ plays it for you; the rail carries the chapter markers
-          (the only timeline now) and the playhead, with the year readout. */}
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 4, borderTop: `1px solid ${CC.border}`, background: 'rgba(249,248,244,.94)', backdropFilter: 'blur(8px)', padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={toggle} aria-label={playing ? 'Pause' : 'Play'} style={{ width: 40, height: 40, borderRadius: DS.rad.pill, background: CC.ink, color: '#fff', border: 'none', flexShrink: 0, fontSize: 12, cursor: 'pointer' }}>{playing ? '❚❚' : '▶'}</button>
-        <div style={{ flex: 1, position: 'relative', height: 16 }}>
-          <div style={{ position: 'absolute', left: 0, right: 0, top: 7, height: 2, background: CC.border, borderRadius: 2 }} />
-          <div style={{ position: 'absolute', left: 0, top: 7, height: 2, width: `${(tick / LAST) * 100}%`, background: CC.ink, borderRadius: 2 }} />
-          {beats.map((b, k) => (
-            <button key={k} onClick={() => jumpToTick(b.tick)} title={b.short || b.title} aria-label={b.short || b.title}
-              style={{ position: 'absolute', left: `${(b.tick / LAST) * 100}%`, top: 8, transform: 'translate(-50%,-50%) rotate(45deg)', width: 8, height: 8, padding: 0, background: k <= ci ? CC.ink : CC.surface, border: `1.5px solid ${k <= ci ? CC.ink : CC.ink3}`, borderRadius: 2, cursor: 'pointer' }} />
-          ))}
-          <div style={{ position: 'absolute', left: `${(tick / LAST) * 100}%`, top: 8, transform: 'translate(-50%,-50%)', width: 14, height: 14, borderRadius: 999, background: '#fff', border: `3px solid ${CC.ink}`, boxShadow: '0 2px 6px rgba(26,29,35,.18)', pointerEvents: 'none' }} />
-        </div>
-        <MonoVal size={DS.type.small} color={CC.ink}>{year}</MonoVal>
+        {Array.from({ length: N + 1 }, (_, i) => section(i))}
+        <div style={{ height: '40vh' }} />
       </div>
     </div>);
 }
