@@ -988,6 +988,88 @@ function ForceBar({ stops, fi, goStop, force, playing, setPlaying, onStep, onRes
   );
 }
 
+// ── mobile "one long scroll" feed (concept C) ───────────────────────────────
+// Every force is its own section in one continuous scroll: heading → viz →
+// full-width knob line → description. Each viz auto-plays as it scrolls into
+// view (and pauses when it leaves); a sticky index up top tracks/jumps.
+function ForceFeedItem({ force, idx, assignRef, onActive }) {
+  const [knob, setKnob] = React.useState(force.knob ? force.knob.def : 0);
+  const [playing, setPlaying] = React.useState(false);
+  const [revealed, setRevealed] = React.useState(false);
+  const toyRef = React.useRef(null);
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    const el = ref.current; if (!el) return;
+    assignRef(el);
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { onActive(idx); if (!force.static && !force.ambient) setPlaying(true); }
+      else setPlaying(false);
+    }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  const kpct = force.knob ? ((knob - force.knob.min) / (force.knob.max - force.knob.min)) * 100 : 0;
+  return (
+    <section ref={ref} style={{ padding: '30px 20px 10px', borderTop: idx === 0 ? 'none' : `1px solid ${CC.border}` }}>
+      <Eyebrow>{force.eyebrow}</Eyebrow>
+      <h2 style={{ margin: '11px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 27, lineHeight: 1.05, letterSpacing: '-.02em', color: CC.ink, textWrap: 'balance' }}>{force.title}</h2>
+      <p style={{ margin: '13px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: 19, lineHeight: 1.4, color: CC.ink }}>{force.lead}</p>
+      <div style={{ margin: '16px 0 0', position: 'relative', height: 232, borderRadius: 16, overflow: 'hidden', border: `1px solid ${CC.border}`, background: CC.surface }}>
+        <ForceToy key={force.id} force={force} knob={knob} playing={playing} revealed={revealed} onAutoReveal={() => setRevealed(true)} toyRef={toyRef} />
+      </div>
+      {/* the poke control — an elegant full-width line right under the viz */}
+      {force.knob &&
+        <div style={{ padding: '13px 2px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 9 }}>
+            <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 500, letterSpacing: '.02em', color: CC.ink3 }}>{force.knob.label}</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 14 }}>
+              {force.reveal &&
+                <button onClick={() => setRevealed((r) => !r)} style={{ fontFamily: SANS, fontSize: 11.5, fontWeight: 600, color: revealed ? CC.ink : CC.ink3, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{revealed ? '⤡ flatten' : '⤢ reveal'}</button>}
+              <MonoVal size={12}>{(+knob).toFixed(2)}</MonoVal>
+            </span>
+          </div>
+          <input type="range" className="cc-range" min={force.knob.min} max={force.knob.max} step={force.knob.step} value={knob}
+            onChange={(e) => setKnob(parseFloat(e.target.value))}
+            style={{ width: '100%', display: 'block', background: `linear-gradient(90deg, ${CC.ink} 0 ${kpct}%, ${CC.border} ${kpct}% 100%)` }} />
+        </div>}
+      <div style={{ marginTop: 14 }}>{force.body}</div>
+      <Caption style={{ marginTop: 14 }}>{force.caption}</Caption>
+    </section>
+  );
+}
+
+function ForcesFeed({ STOPS, onFinale }) {
+  const [active, setActive] = React.useState(0);
+  const secRefs = React.useRef([]);
+  const jump = (i) => { const el = secRefs.current[i]; if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  const name = (i) => i === 0 ? 'Orientation' : (FORCE_TAB[STOPS[i].id] || STOPS[i].id);
+  return (
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: CC.bg }}>
+      <div style={{ flex: 1, minHeight: 0, overflow: 'auto', position: 'relative' }}>
+        {/* sticky index — current force + jump dots */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 6, display: 'flex', alignItems: 'center', gap: 10, padding: '11px 20px', background: 'rgba(249,248,244,.96)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${CC.border}` }}>
+          <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: CC.ink2 }}>{name(active)}</span>
+          <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: 5, alignItems: 'center' }}>
+            {STOPS.map((s, i) => (
+              <button key={i} onClick={() => jump(i)} title={name(i)} aria-label={name(i)} style={{
+                width: i === active ? 16 : 6, height: 6, borderRadius: 9, padding: 0, border: 'none', cursor: 'pointer',
+                background: i === active ? CC.ink : CC.ink4, opacity: i === active ? 1 : 0.5, transition: 'all .25s' }} />
+            ))}
+          </span>
+        </div>
+        {STOPS.map((force, i) => (
+          <ForceFeedItem key={force.id} force={force} idx={i} assignRef={(el) => (secRefs.current[i] = el)} onActive={setActive} />
+        ))}
+        {/* finale → the whole engine */}
+        <div style={{ padding: '34px 20px 90px', textAlign: 'center', borderTop: `1px solid ${CC.border}`, marginTop: 22 }}>
+          <Eyebrow style={{ color: CC.ink3 }}>That’s the engine</Eyebrow>
+          <button onClick={onFinale} style={{ marginTop: 14, background: CC.ink, color: '#fff', border: 'none', borderRadius: DS.rad.pill, padding: '14px 26px', fontFamily: SANS, fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>See it run, all at once →</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── the integration container: orientation → 6 forces → finale.
 // Same surface geometry as the U.S. story: a square compass anchored right, a
 // paper scrim, and the floating editorial copy on the left.
@@ -1043,20 +1125,9 @@ function ForcesTour({ onFinale }) {
   );
 
   if (isMobile) {
-    return (
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: CC.bg }}>
-        <div style={{ position: 'relative', height: '40%', flexShrink: 0, overflow: 'hidden', borderBottom: `1px solid ${CC.border}` }}>
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <ForceToy key={force.id} force={force} knob={knob} playing={playing} revealed={revealed}
-              onAutoReveal={() => setRevealed(true)} toyRef={toyRef} />
-          </div>
-        </div>
-        <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>{narrative}</div>
-        <ForceBar stops={STOPS} fi={fi} goStop={goStop} force={force}
-          playing={playing} setPlaying={setPlaying} onStep={onStep} onReset={onReset}
-          knob={knob} setKnob={setKnob} revealed={revealed} setRevealed={setRevealed} />
-      </div>
-    );
+    // one long scroll: a section per force (heading → viz → poke line → read),
+    // each viz auto-plays as it enters view. (Desktop keeps the guided stepper.)
+    return <ForcesFeed STOPS={STOPS} onFinale={onFinale} />;
   }
 
   return (
