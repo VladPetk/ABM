@@ -336,6 +336,52 @@ function SandboxRow({ iv }) {
   );
 }
 
+// ── index card — a scannable lever in the picker (matches the story's card
+// language). The outcome stays hidden until the lever is run (the guess game):
+// un-run shows a quiet "not run", run shows the outcome chip. ──
+function LeverCard({ id, iv }) {
+  const [hov, setHov] = React.useState(false);
+  const meta = window.IVMETA[id];
+  const run = iv.revealed.has(id);
+  const bucket = window.bucketAt(id, iv.releaseYear);
+  const o = window.OUTCOME[bucket];
+  return (
+    <button onClick={() => iv.pick(id)} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
+      display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer', fontFamily: SANS,
+      background: CC.surface, border: `1px solid ${hov ? CC.borderS : CC.border}`, borderRadius: DS.rad.card,
+      padding: '14px 15px', transition: 'border-color .12s, box-shadow .12s',
+      boxShadow: hov ? '0 2px 10px rgba(26,29,35,.05)' : 'none',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <span style={{ fontFamily: SERIF, fontWeight: 600, fontSize: 18, lineHeight: 1.15, color: CC.ink }}>{meta.label}</span>
+        {run
+          ? <Tag tone={o.tone}>{o.label}</Tag>
+          : <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: CC.ink4, border: `1px solid ${CC.border}`, borderRadius: DS.rad.pill, padding: '3px 8px', whiteSpace: 'nowrap' }}>not run</span>}
+      </div>
+      <div style={{ marginTop: 7, fontFamily: BODY_SERIF, fontSize: 13.5, lineHeight: 1.5, color: CC.ink3 }}>{meta.expected_naive_effect}</div>
+    </button>
+  );
+}
+
+// the sandbox entry as a card — black, so it reads as a different kind of thing
+// (it changes the model, not a policy).
+function SandboxCard({ iv }) {
+  const [hov, setHov] = React.useState(false);
+  return (
+    <button onClick={iv.openSandbox} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
+      display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer', fontFamily: SANS,
+      background: hov ? '#000' : CC.ink, border: 'none', borderRadius: DS.rad.card, padding: '14px 15px', transition: 'background .12s',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+        <span style={{ fontSize: 13, color: 'rgba(255,255,255,.75)' }}>⚠︎</span>
+        <span style={{ flex: 1, fontFamily: SERIF, fontWeight: 600, fontSize: 18, color: '#fff' }}>Sandbox</span>
+        <span style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: 'rgba(255,255,255,.55)' }}>not a finding</span>
+      </div>
+      <div style={{ marginTop: 6, fontFamily: BODY_SERIF, fontSize: 13.5, lineHeight: 1.5, color: 'rgba(255,255,255,.6)' }}>Not a real intervention — turn the model's own dials and watch the map respond.</div>
+    </button>
+  );
+}
+
 function NarrativeLeft({ iv }) {
   // Matches the Story page's WatchRail: large left indent, vertically centred,
   // scrolls when content is tall. On mobile it's a normal top-aligned column.
@@ -365,13 +411,15 @@ function NarrativeLeft({ iv }) {
             <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
               Below are seven interventions, real things people have tried against the growing divide. Did they work? That is the open question. Pick one and see whether your expectations line up with what the data shows.
             </p>
-            <div style={{ marginTop: DS.sp.lg, background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: DS.rad.card, overflow: 'hidden', maxWidth: 480 }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '13px 16px 11px', borderBottom: `1px solid ${CC.border}` }}>
-                <span style={{ fontFamily: SANS, fontSize: DS.type.small, fontWeight: 600, color: CC.ink }}>Pick a lever</span>
+            <div style={{ marginTop: DS.sp.lg, maxWidth: 520 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '0 2px 11px' }}>
+                <Eyebrow>Pick a lever</Eyebrow>
                 <MonoVal size={DS.type.micro} color={CC.ink3} weight={400}>{iv.revealedCount}/{iv.total} run</MonoVal>
               </div>
-              <div>{window.IV_ORDER.map((id) => <LeverRow key={id} id={id} iv={iv} />)}</div>
-              <SandboxRow iv={iv} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {window.IV_ORDER.map((id) => <LeverCard key={id} id={id} iv={iv} />)}
+                <SandboxCard iv={iv} />
+              </div>
             </div>
           </React.Fragment>}
       </div>
@@ -680,14 +728,19 @@ function IvNarrative({ iv, layer }) {
   // the result band beneath them (the desktop pins the band to the floor — no
   // room for that plus a control column at 390px).
   if (isMobile) {
+    // the index (no lever picked) is pure cards — no compass band or result
+    // chart, so it reads like the story's chapter index. The detail and the
+    // sandbox bring the compass + result band back.
+    const onIndex = !iv.activeId && !iv.isSandbox;
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg }}>
-        <div style={{ position: 'relative', height: '30%', flexShrink: 0, overflow: 'hidden', borderBottom: `1px solid ${CC.border}` }}>
-          <div style={{ position: 'absolute', inset: 0 }}>{field}</div>
-        </div>
+        {!onIndex &&
+          <div style={{ position: 'relative', height: '30%', flexShrink: 0, overflow: 'hidden', borderBottom: `1px solid ${CC.border}` }}>
+            <div style={{ position: 'absolute', inset: 0 }}>{field}</div>
+          </div>}
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
           <NarrativeLeft iv={iv} />
-          <div style={{ borderTop: `1px solid ${CC.border}` }}>{band}</div>
+          {!onIndex && <div style={{ borderTop: `1px solid ${CC.border}` }}>{band}</div>}
         </div>
       </div>
     );
