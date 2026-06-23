@@ -993,6 +993,24 @@ function Unified() {
 
   }
 
+  // ── mobile landing (intro) — one continuous scroll: the ambient dots as a
+  // full-width hero on the page, then the pitch + CTAs flow beneath. ──
+  if (isMobile && isIntro) {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0 }}>
+        <SiteHeader page={page} setPage={goPage} hidden={hdrHidden} />
+        <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+          <div style={{ position: 'relative', width: '100%', aspectRatio: '1' }}>
+            <div style={{ position: 'absolute', inset: 0 }}>
+              <Field run={D.runs.baseline} tick={introTick} layer="position" view="dots" morphT={introMorphT} showGap={false} landmarks={false} />
+            </div>
+          </div>
+          <IntroRail tick={introTick} storyDone={storyDone} onWatch={() => goPage('forces')}
+            onSandbox={() => goPlayground('sandbox')} onAbout={() => goPage('about')} on3D={() => goPage('agents')} />
+        </div>
+      </div>);
+  }
+
   // ── mobile guided story — the collapsing header (site-wide) gives the compass
   // the full screen height as you scroll. ──
   if (isMobile && isWatch && !stagedOrient) {
