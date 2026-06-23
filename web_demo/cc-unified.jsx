@@ -539,7 +539,7 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
   const [collapse, setCollapse] = React.useState(0);  // 0 hero · 1 strip
 
   const HERO = Math.max(150, Math.round(vh * 0.46));
-  const STRIP = 104;
+  const STRIP = 132;
   const COLLAPSE_PX = Math.max(120, HERO - STRIP);
   const compassH = HERO - (HERO - STRIP) * collapse;
 
@@ -663,10 +663,12 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
         <div style={{ height: '60vh' }} />
       </div>
 
-      {/* pinned compass — collapses hero → strip, never leaves the screen */}
+      {/* pinned compass — collapses hero → strip, never leaves the screen. The
+          collapse is a center-CROP (constant vertical scale), not a squash; in
+          strip mode the axis labels + outlet markers drop out as clutter. */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: compassH, overflow: 'hidden', background: CC.bg, borderBottom: stripMode ? `1px solid ${CC.border}` : '1px solid transparent', pointerEvents: 'none', zIndex: 2 }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: HERO, transform: `scaleY(${(compassH / HERO).toFixed(4)})`, transformOrigin: 'top' }}>
-          <Field run={D.runs.baseline} tick={tick} layer="position" view="density" showGap landmarks="fixed" />
+        <div style={{ position: 'absolute', left: 0, right: 0, height: HERO, top: -(HERO - compassH) / 2 }}>
+          <Field run={D.runs.baseline} tick={tick} layer="position" view="density" showGap landmarks={stripMode ? false : 'fixed'} chrome={!stripMode} />
         </div>
         {/* fade the bottom edge so prose dissolves under the strip */}
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 56, background: `linear-gradient(180deg, rgba(249,248,244,0), ${CC.bg})` }} />
