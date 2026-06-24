@@ -1,125 +1,115 @@
-# polarlab
+# The Divide
 
-An **agent-based model of US political polarization** over a stylised
-~1980 → 2025 window, plus a public web demo that visualizes it. It models how a
-two-party society sorts into camps across several coupled channels — ideology,
-party identity, affect (out-party animus), partisan media, and social-network
-structure — and what real-world depolarization interventions actually do when
-applied. Every calibration choice is anchored to a published finding.
+*An interactive model of how a country pulls apart and a demo that lets you watch it happen.*
 
-It is a **teaching artefact, not a policy-prediction tool**: results are
-illustrative within a documented citation envelope, and limitations are recorded
-([`docs/model_blindspots.md`](docs/model_blindspots.md)) rather than hidden.
+**The Divide** is an agent-based model of political polarization: how a public
+splits into two camps that disagree on the issues and, more than that, come to
+dislike each other more than the disagreement alone would warrant. It simulates
+250 people drifting across a political compass over a stylized 1980 → 2025,
+sorting into camps under a handful of forces drawn from the polarization
+literature — who you talk to, the parties pulling from above, who you live and
+work next to, the media you steep in, and the warmth (or chill) you feel toward
+the other side. Those forces are fit to decades of US survey data. On top of the
+engine sits a public demo that lets you explore the whole thing visually, switch the forces on
+one at a time, and try the interventions people argue about.
 
-## ▶ Live demo
+It's more a teaching artifact/ exploratory tool than a predictive model - in fact it does not predict anything at all. It moves dots on a map and tries to stay honest about how it does that.
 
-**<https://vladpetk.github.io/ABM/>** — a static, build-free walkthrough of the
-model: the 1980→2025 arc, the forces that drive it, and an interactive
-intervention playground. *(Served from `web_demo/` via GitHub Pages. If the link
-is dark, enable Pages once under **Settings → Pages → Source: GitHub Actions**.)*
+## See it live
 
-## The headline finding
+**<https://vladpetk.github.io/ABM/>**
 
-**Most depolarization interventions people loudly demand don't move the macro
-picture in the model.** Of the seven-intervention library (re-measured on the
-R-phase canonical after the 2026-06 intervention-faithfulness pass), **six land
-null** and one — shared neighborhoods and workplaces (X6) — lands a **durable
-partial** on affect; **none lands "real."** Even cross-party exposure (X1), the
-lever most feared to *backfire*, is **null on average**: its backfire is
-threat-gated, surfacing only where exposure lands during active identity threat
-(faithful to the contested evidence — Bail 2018 found backfire; Guess & Coppock
-2020 found none on average). Each verdict is reached through a mechanism the
-engine can show, and each null carries a documented reason. See
-[`docs/INTERVENTIONS_OVERVIEW.md`](docs/INTERVENTIONS_OVERVIEW.md).
+A static, build-free walkthrough — the 1980→2025 arc, the forces that drive it, a
+3-D view of the run, and an intervention playground. (Served from `web_demo/` on
+GitHub Pages.)
 
-## Where to read
+## How it's built
 
-The model is documented at three altitudes — read top-down:
+Two halves, one repo:
 
-- **[`docs/ENGINE_OVERVIEW.md`](docs/ENGINE_OVERVIEW.md)** — what the engine is,
-  what each rule does, and why.
-- **[`docs/INTERVENTIONS_OVERVIEW.md`](docs/INTERVENTIONS_OVERVIEW.md)** — the
-  seven interventions (X1–X7), mechanisms, literature anchors, measured buckets.
-- **[`docs/methods.md`](docs/methods.md)** — citation-pinned methods: every
-  number, knob, and choice anchored to a published paper, plus the provenance and
-  limitations tables.
-- **[`docs/literature.md`](docs/literature.md)** — annotated index of every
-  dataset and paper: what each anchors and where it's used.
-- **[`docs/ENGINE_KNOBS.md`](docs/ENGINE_KNOBS.md)** — operator's manual: every
-  rule, knob, scenario, and `build_engine` kwarg.
-- **[`docs/polarization_causal_model.md`](docs/polarization_causal_model.md)** —
-  the evidence-grading / causal story behind the timeline copy.
-- **[`docs/web_data_contract.md`](docs/web_data_contract.md)** — the web data
-  schema (v1) and the engine → web pipeline.
-
-Measured results live under [`docs/results/`](docs/results); the authoritative
-intervention buckets are in
-[`docs/results/phase10_results.md`](docs/results/phase10_results.md) and the
-realism battery in [`docs/results/realism_report.md`](docs/results/realism_report.md).
-
-## Architecture
-
-Two tracks share one repo:
-
-1. **Engine** — pure Python (`numpy`/`scipy`), no ABM framework. Fully
-   reproducible: `python -m pytest` runs the suite.
-2. **Web demo** — a static React page (React 18 UMD + `@babel/standalone`
-   compiling `.jsx` in-browser). **No build step, no bundler, no npm.** It reads
-   a repacked snapshot of the engine's output; it runs no simulation itself.
+- **The engine** is plain Python (`numpy`/`scipy`, no ABM framework). It's the
+  actual simulation, and it's meant to be reproducible: `python -m pytest` runs
+  the test suite, and most of those pin a number or a behavior to a published
+  finding rather than to whatever the code happened to do.
+- **The demo** is a static React page — React 18 over UMD with `@babel/standalone`
+  compiling the `.jsx` in the browser. It doesn't run the simulation;
+   rather it just plays back a saved snapshot of the engine's output.
 
 ```
-abm/         the engine — core/ rules/ pillars/ scenarios/ metrics/
-data/        literature PDFs + ANES/GSS-derived calibration anchors (see NOTICE.md)
-docs/        all documentation (see "Where to read")
-scripts/     the engine→web data pipeline + calibration/measurement tooling
-tests/       367 tests (literature-pinned core + empirical-band gates + drift guards + machinery)
-validation/  realism battery + reproducible model-vs-ANES figures
-web_demo/    the static, build-free demo served on GitHub Pages
+abm/         the engine — core / rules / pillars / scenarios / metrics
+data/        literature + ANES/GSS-derived calibration anchors (see NOTICE.md)
+docs/        the documentation (see "Where to read")
+scripts/     the engine → web data pipeline + calibration/measurement tooling
+tests/       ~360 tests: literature-pinned core, empirical-band gates, drift guards
+validation/  the realism battery + reproducible model-vs-ANES figures
+web_demo/    the static demo that GitHub Pages serves
 ```
 
-## Quickstart (engine)
+## Run it yourself
+
+The engine:
 
 ```bash
 python -m venv .venv
-# Windows:  .venv\Scripts\Activate.ps1      macOS/Linux:  source .venv/bin/activate
+# Windows:  .venv\Scripts\Activate.ps1     macOS/Linux:  source .venv/bin/activate
 pip install -e .[dev]
 
-python -m pytest                      # full test suite (~14 min)
-python scripts/phase10_measure.py     # re-measure the 7-intervention library
+python -m pytest                    # the full suite (takes a while — ~15 min)
+python scripts/phase10_measure.py   # re-measure the seven interventions
 ```
 
-## Running the web demo locally
-
-The demo must be served over **HTTP**, not opened as `file://` (the sibling
+The demo — serve it over **HTTP**, don't open it as a `file://` (the sibling
 `.jsx`/`.js` files load over relative paths):
 
 ```bash
 python -m http.server 8137 --directory web_demo
-# then open http://localhost:8137/index.html
+# then open http://localhost:8137
 ```
 
-`web_demo/cc-data.js` is **generated** — never hand-edit it. To refresh it,
-re-run the data pipeline: `scripts/publish_web_data.py` → `scripts/repack_web_demo.py`
-(plus the auxiliary builders `build_branch_data.py`, `build_sandbox_data.py`,
-`build_freeflow_data.py`; full spec in
-[`docs/web_data_contract.md`](docs/web_data_contract.md)).
+One gotcha: `web_demo/cc-data.js` and its siblings are **generated** — never
+hand-edit them. Refreshing them runs the data pipeline (`publish_web_data.py` →
+`repack_web_demo.py`, plus the builders for the counterfactual branches, the
+sandbox grid, and the free-flowing run); the full contract is in
+[`docs/web_data_contract.md`](docs/web_data_contract.md).
 
-## Status
+## Where to read
 
-**Phase 10 complete** (Phase 9 = ANES recalibration; Phase 10 = intervention
-library re-measured on that baseline), plus the **MHV honest-rebuild (S0–S5)**,
-**emergence-recovery (E5)**, and the **R-phase** (audit-fix + reversibility)
-pass. The canonical engine substrate is the emergent D=7 build; positional
-sorting is written by an endogenous activist→elite→mass loop (~0.34 of the
-party-separation rise is forcing-free; the rest rides calibrated forcings that
-encode real event timing — quantified in
-[`docs/results/honesty_budget.json`](docs/results/honesty_budget.json), not
-hidden). The web demo ships the historical-arc run (preset `anes_full`, seed 0).
+The model is documented top-down — start at the overview and descend as far as
+your curiosity takes you:
+
+- [`docs/ENGINE_OVERVIEW.md`](docs/ENGINE_OVERVIEW.md) — what the engine is, what
+  each rule does, and why.
+- [`docs/INTERVENTIONS_OVERVIEW.md`](docs/INTERVENTIONS_OVERVIEW.md) — the seven
+  interventions, their mechanisms, and what each is anchored to.
+- [`docs/methods.md`](docs/methods.md) — the citation-pinned methods: every number
+  and knob tied to a paper, with the provenance and limitations tables.
+- [`docs/literature.md`](docs/literature.md) — an annotated index of every dataset
+  and paper, and where each one is used.
+- [`docs/ENGINE_KNOBS.md`](docs/ENGINE_KNOBS.md) — the operator's manual: every
+  rule, knob, scenario, and `build_engine` argument.
+- [`docs/model_blindspots.md`](docs/model_blindspots.md) — where the model is weak
+  or wrong, kept on the record on purpose.
+
+Measured results live under [`docs/results/`](docs/results) — the intervention
+buckets in [`phase10_results.md`](docs/results/phase10_results.md), the realism
+check in [`realism_report.md`](docs/results/realism_report.md).
+
+## A word on honesty
+
+The thing I most wanted to avoid was a model that quietly feeds itself the answer.
+So, for the record: roughly a third of the rise in party separation emerges from
+the forces alone, with nothing fed in from the outside world; the rest rides on
+calibrated forcings that encode *when* real events actually happened. That split
+is written down ([`docs/results/honesty_budget.json`](docs/results/honesty_budget.json)),
+not buried. The realistic interventions are calibrated to published field
+experiments; the "beyond realism" ones in the sandbox are thought experiments,
+dialed past anything I'd defend as a measurement. The aim was never to predict —
+it was to make a slow, abstract process visible, and to be straight about every
+place I put a thumb on the scale.
 
 ## License
 
-Code (`abm/`, `scripts/`, `tests/`, `validation/`, `web_demo/`) is **MIT** —
-see [`LICENSE`](LICENSE). Documentation and prose (`docs/`, this README, figures)
-are **CC-BY-4.0**. Derived data under `data/` carries upstream ANES/GSS
-attribution obligations in addition. Full details and data provenance:
-[`NOTICE.md`](NOTICE.md).
+The code (`abm/`, `scripts/`, `tests/`, `validation/`, `web_demo/`) is **MIT** —
+see [`LICENSE`](LICENSE). The writing and figures (`docs/`, this README) are
+**CC-BY-4.0**. Data under `data/` carries upstream ANES/GSS attribution on top of
+that. Full provenance and details: [`NOTICE.md`](NOTICE.md).
