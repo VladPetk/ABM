@@ -379,11 +379,11 @@ function SandboxCard({ iv }) {
   );
 }
 
-function NarrativeLeft({ iv }) {
+function NarrativeLeft({ iv, scrollRef }) {
   // Matches the Story page's WatchRail: large left indent, vertically centred,
   // scrolls when content is tall. On mobile it's a normal top-aligned column.
   const isMobile = useIsMobile();
-  const LX = isMobile ? '20px' : 'clamp(64px, 14vw, 248px)';
+  const LX = isMobile ? '20px' : RAIL_LX;
   const RX = isMobile ? '20px' : '44px';
   const wrap = { height: isMobile ? 'auto' : '100%', display: 'flex', flexDirection: 'column', justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: isMobile ? 'visible' : 'auto', minHeight: 0 };
   const pad = { flexShrink: 0, padding: isMobile ? `22px ${RX} 26px ${LX}` : `clamp(28px,4.5vh,52px) ${RX} clamp(24px,4vh,40px) ${LX}` };
@@ -392,20 +392,20 @@ function NarrativeLeft({ iv }) {
   // sandbox: the 5-knob alternate-history panel. No back-affordances here —
   // the Playground's Tier-2 pill (Interventions | Sandbox) is the one way
   // between the two modes.
-  if (iv.isSandbox) return <div style={wrap}><div style={pad}><SandboxPanel iv={iv} /></div></div>;
+  if (iv.isSandbox) return <div ref={scrollRef} style={wrap}><div style={pad}><SandboxPanel iv={iv} /></div></div>;
 
   return (
-    <div style={wrap}>
+    <div ref={scrollRef} style={wrap}>
       <div style={pad}>
       {iv.activeId
         ? <React.Fragment><BackToList onClick={iv.back} /><NarrativeDetail iv={iv} /></React.Fragment>
         : <React.Fragment>
             <Eyebrow>The experiment</Eyebrow>
             <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: headSize, lineHeight: 1.04, letterSpacing: '-.02em', color: CC.ink }}>Could anything have stopped the U.S. split?</h2>
-            <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+            <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
               This is the engine calibrated to the United States, 1980 to 2025: the same run you watched in <a style={{ color: CC.d, textDecoration: 'none', borderBottom: `1px solid ${CC.dSoft}`, cursor: 'pointer' }} href="#story" data-goto="story">the U.S. story</a>. Each lever here re-runs that history with one thing changed, to isolate its effect.
             </p>
-            <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+            <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
               Below are seven interventions, real things people have tried against the growing divide. Did they work? That is the open question. Pick one and see whether your expectations line up with what the data shows.
             </p>
             <div style={{ marginTop: DS.sp.lg, maxWidth: 520 }}>
@@ -447,6 +447,7 @@ function useIvPlayback(iv) {
   const tickRef = React.useRef(tick); tickRef.current = tick;
   const speedRef = React.useRef(speed); speedRef.current = speed;
   const activeRef = React.useRef(false);               // wheel-scrub gate (set each render)
+  const railRef = React.useRef(null);                  // the prose/controls scroller — wheel over it scrolls instead of scrubbing
   const rtRef = React.useRef(0);                        // lower scrub bound (release tick)
 
   const setTick = React.useCallback((v) => {
@@ -500,6 +501,14 @@ function useIvPlayback(iv) {
     const WHEEL_SENS = 0.0175;                          // matches Story's WHEEL_SENS
     const onWheel = (e) => {
       if (!activeRef.current) return;
+      // wheel over the (tall) prose/controls rail scrolls it; only once it's at the
+      // scroll boundary (or the pointer's over the map) does the wheel scrub time.
+      const sc = railRef.current;
+      if (sc && sc.contains(e.target) && sc.scrollHeight > sc.clientHeight + 1) {
+        const atTop = sc.scrollTop <= 0;
+        const atBottom = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+        if (!((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom))) return;
+      }
       e.preventDefault();
       setPlaying(false);
       setTick((t) => Math.max(rtRef.current, Math.min(window.LAST, t + e.deltaY * WHEEL_SENS)));
@@ -522,13 +531,13 @@ function useIvPlayback(iv) {
     activeRef.current = !!sbRun;                        // wheel active once loaded
     if (!sbRun) return null;                            // still fetching the grid cell
     return { run: sbRun, tick, rt: 0, playing, toggle, setTick, pause, speed, setSpeed,
-      isBranch: false, isSandbox: true, macro: sbRun.macro };
+      isBranch: false, isSandbox: true, macro: sbRun.macro, railRef };
   }
   // ── baseline / engine-branch
   activeRef.current = true;
   const run = branch || window.D.runs.baseline;        // baseline until a branch loads
   return { run, tick, rt, playing, toggle, setTick, pause, speed, setSpeed,
-    isBranch: branchMode, macro: run.macro };
+    isBranch: branchMode, macro: run.macro, railRef };
 }
 
 // Play / speed / year transport for the interventions bottom band — inherits
@@ -580,7 +589,7 @@ function SandboxPanel({ iv }) {
     <React.Fragment>
       <Eyebrow style={{ color: '#8a6d1f' }}>Sandbox · not a finding</Eyebrow>
       <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: DS.type.display, lineHeight: 1.04, letterSpacing: '-.02em', color: CC.ink }}>Build your own America</h2>
-      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         Five forces, dialed past anything real. Pick a preset or drag the dials and watch that alternate 1980→2025 play out on the map. This changes the <em>model</em>, not a policy — <strong>illustrative, not a finding.</strong>
       </p>
 
@@ -832,8 +841,8 @@ function IvNarrative({ iv, layer }) {
           {field}
         </div>
         <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '56%', background: `linear-gradient(90deg, ${CC.bg} 0%, ${CC.bg} 88%, rgba(249,248,244,0) 100%)`, pointerEvents: 'none', zIndex: 1 }} />
-        <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(54%, 820px)', display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3 }}>
-          <NarrativeLeft iv={iv} />
+        <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: RAIL_W, display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3 }}>
+          <NarrativeLeft iv={iv} scrollRef={play && play.railRef} />
         </div>
       </div>
       <div style={{ flexShrink: 0, borderTop: `1px solid ${CC.border}` }}>{band}</div>

@@ -76,7 +76,7 @@ function animateIntroMorph({ fromTick, setTick, setMorphT, onDone, dur = 1500 })
 function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D, variant = 'full' }) {
   const isMobile = useIsMobile();
   const hero = variant === 'mobile';
-  const LX = isMobile ? '20px' : 'clamp(64px, 14vw, 248px)';
+  const LX = isMobile ? '20px' : RAIL_LX;
   const RX = isMobile ? '20px' : '44px';
   const pillBase = {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -103,10 +103,10 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D, variant
       <div style={{ flexShrink: 0, padding: hero ? `18px ${RX} 40px ${LX}` : `${isMobile ? '22px' : 'clamp(28px,4.5vh,52px)'} ${RX} 8px ${LX}` }}>
         {!hero && <Eyebrow>An agent-based model · 250 simulated citizens</Eyebrow>}
         {!hero &&
-        <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(30px, 3.4vw, 44px)', lineHeight: 1.06, letterSpacing: '-.02em', maxWidth: 520 }}>
+        <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(30px, 3.4vw, 44px)', lineHeight: 1.06, letterSpacing: '-.02em', maxWidth: TEXTW }}>
           {INTRO_HEAD}
         </h2>}
-        <p style={{ margin: hero ? 0 : '20px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
+        <p style={{ margin: hero ? 0 : '20px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
           This is a (rather accurate) simulation of how politics polarize. It's
           built using well-established mechanisms from polarization research and
           real-world survey data. The website allows you to interact with the
@@ -114,7 +114,7 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D, variant
           what drives it, what stalls it, and what it actually means to be
           'polarized'.
         </p>
-        <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
+        <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
           I invite you to take the tour of the simulation engine. You'll be
           introduced to the forces (and get a chance to play around with them),
           get a visual feel for how society polarizes, and get a chance to see

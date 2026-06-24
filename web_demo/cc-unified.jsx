@@ -207,7 +207,7 @@ function BeatMetric({ data, tick }) {
   const cx = X(tick),cy = Y(cv);
   const ac = data.color === 'd' ? CC.d : CC.ink;
   return (
-    <div style={{ marginTop: 24 }}>
+    <div style={{ marginTop: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <Eyebrow style={{ color: CC.ink4 }}>{data.label} · {Math.floor(tickToYear(tick))}</Eyebrow>
         <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
@@ -215,7 +215,7 @@ function BeatMetric({ data, tick }) {
           {data.note && <Caption>{data.note}</Caption>}
         </span>
       </div>
-      <div ref={ref} style={{ marginTop: 9 }}>
+      <div ref={ref} style={{ marginTop: 6 }}>
         <svg viewBox={`0 0 ${w} ${H}`} width="100%" height={H} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
           <path d={full} fill="none" stroke={CC.borderS} strokeWidth="1.1" strokeDasharray="2 3" opacity="0.8" />
           <path d={pastPath} fill="none" stroke={ac} strokeWidth="1.9" strokeLinejoin="round" strokeLinecap="round" />
@@ -274,7 +274,7 @@ const ORIENT_STEPS = [
 ];
 
 function OrientRail({ step, onPrev, onNext, onContinue }) {
-  const LX = 'clamp(64px, 14vw, 248px)';
+  const LX = RAIL_LX;
   const total = ORIENT_STEPS.length;
   const s = ORIENT_STEPS[step];
   const last = step === total - 1;
@@ -282,9 +282,9 @@ function OrientRail({ step, onPrev, onNext, onContinue }) {
     <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: 'safe center', overflow: 'auto' }}>
       <div style={{ flexShrink: 0, padding: `clamp(28px,4.5vh,52px) 44px 8px ${LX}` }}>
         <Eyebrow>The U.S. story · 1980</Eyebrow>
-        <h2 style={{ margin: '14px 0 18px', fontFamily: SERIF, fontWeight: 600, fontSize: 38, lineHeight: 1.05, letterSpacing: '-.02em', maxWidth: 460 }}>{s.title}</h2>
-        <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: 440 }}>{s.lead}</p>
-        <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>{s.body}</p>
+        <h2 style={{ margin: '14px 0 18px', fontFamily: SERIF, fontWeight: 600, fontSize: 38, lineHeight: 1.05, letterSpacing: '-.02em', maxWidth: TEXTW }}>{s.title}</h2>
+        <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: TEXTW }}>{s.lead}</p>
+        <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>{s.body}</p>
         {total > 1 &&
         <div style={{ marginTop: 26, display: 'flex', alignItems: 'center', gap: 9 }}>
           {ORIENT_STEPS.map((_, i) => (
@@ -308,16 +308,18 @@ function OrientRail({ step, onPrev, onNext, onContinue }) {
 // ── Watch rail — sticky action footer (D2); transport now lives in the bar ──
 function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContinue, onExplore, onInterventions, onSandbox, on3D }) {
   const isMobile = useIsMobile();
-  const LX = isMobile ? '20px' : 'clamp(64px, 14vw, 248px)';
+  const LX = isMobile ? '20px' : RAIL_LX;
   const RX = isMobile ? '20px' : '44px';
-  const topPad = isMobile ? '22px' : 'clamp(28px,4.5vh,52px)';
-  const botPad = isMobile ? '26px' : 'clamp(24px,4vh,40px)';
+  const topPad = isMobile ? '22px' : 'clamp(18px,3vh,44px)';
+  const botPad = isMobile ? '26px' : 'clamp(16px,2.8vh,32px)';
   const pad = `${topPad} ${RX} 8px ${LX}`;
   const scrollWrap = { flexShrink: 0, padding: pad };
-  const footer = { flexShrink: 0, padding: `14px ${RX} ${botPad} ${LX}`, background: 'transparent' };
+  const footer = { flexShrink: 0, padding: `${isMobile ? '14px' : '10px'} ${RX} ${botPad} ${LX}`, background: 'transparent' };
   // top-align on mobile (read top-down in the scroll pane); centered on desktop
   const wrap = { background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' };
-  const beatTitleSize = isMobile ? (beat && beat.orient ? 25 : 29) : (beat && beat.orient ? 38 : 50);
+  // desktop title scales DOWN on short viewports (high-DPI laptops have a short CSS
+  // height) so the chapter fits without scrolling; full size on tall screens.
+  const beatTitleSize = isMobile ? (beat && beat.orient ? 25 : 29) : (beat && beat.orient ? 'clamp(30px, 4.2vh, 38px)' : 'clamp(38px, 5.4vh, 50px)');
 
   // (the old phase==='intro' and phase==='playing' rails were removed — both
   // were unreachable once the prologue + enterStory() flow landed: the story
@@ -357,9 +359,9 @@ function WatchRail({ phase, beat, beatI, total, nextBeat, tick, onBack, onContin
     <div style={wrap}>
       <div key={beatI} style={{ ...scrollWrap, animation: 'ccFadeUp .42s ease' }}>
         <Eyebrow>{beat.orient ? `The U.S. story · ${Math.floor(tickToYear(beat.tick))}` : `Chapter ${beatI} of ${total - 1} · ${Math.floor(tickToYear(beat.tick))}`}</Eyebrow>
-        <h2 style={{ margin: '14px 0 24px', fontFamily: SERIF, fontWeight: 600, fontSize: beatTitleSize, lineHeight: beat.orient ? 1.05 : 1.02, letterSpacing: '-.022em' }}>{beat.title}</h2>
+        <h2 style={{ margin: '12px 0 16px', fontFamily: SERIF, fontWeight: 600, fontSize: beatTitleSize, lineHeight: beat.orient ? 1.05 : 1.02, letterSpacing: '-.022em' }}>{beat.title}</h2>
         <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink }}>{beat.lead}</p>
-        <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>{beat.body}</p>
+        <p style={{ margin: '12px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>{beat.body}</p>
         {beat.orient ?
         null :
         beat.data ?
@@ -447,7 +449,7 @@ function ExploreRail({ tick, onBackToStory }) {
   const isMobile = useIsMobile();
   const pad = isMobile
     ? `22px 20px 26px 20px`
-    : `clamp(28px,4.5vh,52px) 44px clamp(28px,4.5vh,52px) clamp(64px,14vw,248px)`;
+    : `clamp(28px,4.5vh,52px) 44px clamp(28px,4.5vh,52px) ${RAIL_LX}`;
   return (
     <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%', justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
       <div style={{ flexShrink: 0, padding: pad, display: 'flex', flexDirection: 'column', gap: 22 }}>
@@ -465,7 +467,7 @@ function ExploreRail({ tick, onBackToStory }) {
           <h3 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: isMobile ? 30 : 46, lineHeight: 1.02, letterSpacing: '-.022em' }}>
             Do they hate each other?
           </h3>
-          <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+          <p style={{ margin: '18px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
             The positions pulled apart, but the feelings pulled apart faster. The map shows where people <em>stand</em>; this shows how they <em>feel</em>. Warmth toward your <em>own</em> side barely moved; toward the <em>other</em> side it fell sharply. <strong>Distance and animus are two different axes.</strong>
           </p>
         </div>
@@ -770,7 +772,10 @@ function Unified() {
   // whichever element is scrolling and hides the header on the way down, brings
   // it back on the way up. Reset to shown on every page change.
   React.useEffect(() => { setHdrHidden(false); }, [page]);
+  // header hide-on-scroll is a MOBILE-only affordance (reclaims vertical space on a
+  // phone); on desktop the header stays static, always shown.
   React.useEffect(() => {
+    if (!isMobile) { setHdrHidden(false); return; }
     let lastY = 0, lastT = null;
     const onScroll = (e) => {
       const el = e.target; if (!el || typeof el.scrollTop !== 'number') return;
@@ -783,7 +788,7 @@ function Unified() {
     };
     window.addEventListener('scroll', onScroll, true);        // capture: catches nested scrollers
     return () => window.removeEventListener('scroll', onScroll, true);
-  }, []);
+  }, [isMobile]);
 
   // wheel scrubbing — roll to move the needle through time, then ease onto the
   // nearest chapter when the wheel goes idle so it always lands on a beat. One
@@ -1131,7 +1136,7 @@ function Unified() {
           </div>
 
           {/* floating narrative — a centered editorial block on the left */}
-          <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(54%, 820px)', display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3 }}>
+          <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: RAIL_W, display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3 }}>
             {isIntro &&
               <IntroRail tick={introTick} storyDone={storyDone} onWatch={() => goPage('forces')}
                 onSandbox={() => goPlayground('sandbox')} onAbout={() => goPage('about')} on3D={() => goPage('agents')} />}

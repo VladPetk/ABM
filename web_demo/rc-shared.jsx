@@ -48,6 +48,19 @@ function _over(dst, src, sa) {
   ];
 }
 
+// ── shared editorial-rail metrics ───────────────────────────────────────────
+// The desktop "prose floating over the map" pages (forces, prologue, US story,
+// landing, interventions/sandbox, 3-D) share one column geometry so wide / short
+// laptops get more characters per line — fewer lines, less vertical height, so
+// the body fits without scrolling. TEXTW grows with the viewport but is capped
+// so the text stays inside the 56% scrim, never reaching the viz's dense centre;
+// the trimmed indent (RAIL_LX) makes room: RAIL_LX(≤8vw) + TEXTW(≈44vw) + the
+// rail's right pad ≈ 52vw < the scrim. On a phone the 440px floor exceeds the
+// column, so the body just fills it as before. (Use `isMobile ? '20px' : RAIL_LX`.)
+const TEXTW = 'clamp(440px, calc(46vw - 44px), 660px)';
+const RAIL_LX = 'clamp(56px, 8vw, 160px)';
+const RAIL_W = 'min(54%, 900px)';
+
 // ── engine-derived entities on the compass (audit §3.9, contract §entities) ──
 // Everything here is the simulation's OWN data — never eyeballed. Three classes:
 //   • 'party'   — live Dem/Rep centroids (ride the sim, always on)

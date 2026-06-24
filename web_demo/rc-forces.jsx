@@ -729,6 +729,9 @@ function ForceToy({ force, knob = 0, playing = false, revealed = false, onAutoRe
   );
 }
 
+// TEXTW (the shared responsive prose width) + RAIL_LX/RAIL_W live in rc-shared.jsx
+// now, so every floating-prose page shares one column geometry.
+
 // ── force descriptors ────────────────────────────────────────────────────────
 const FORCE_BC = {
   id: 'bc',
@@ -737,10 +740,10 @@ const FORCE_BC = {
   lead: 'Talking helps, but only if some agreement is already there.',
   body: (
     <>
-      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         Each person moves toward those close enough to them to have a constructive conversation. Hence the <em>bounded confidence</em> name - confidence in other people’s opinions bounded by how much they agree - anything out of those bounds gets ignored. On the compass this is represented by each person’s <strong>confidence radius</strong> (the dashed ring). Dots with overlapping rings mingle and build consensus. If the rings don’t overlap - conversations don’t happen or go nowhere. Think about it - do you often genuinely try to understand people who hold views that are anathema to you?
       </p>
-      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         See the force in action. The crowd clumps into <strong>shared clusters</strong> and the party colors <em>mix</em>. Left to itself, listening to your neighbors tends toward <strong>agreement</strong> (albeit in your circle) rather than division. Widen the radius (increase confidence) and everyone converges on one big blob; narrow it and the crowd shatters into islands.
       </p>
     </>
@@ -761,10 +764,10 @@ const FORCE_PARTY = {
   lead: 'Influence that comes down from the top — the leaders, not the neighbors.',
   body: (
     <>
-      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         A lot of our politics comes from the top. A party’s leaders take a stance, and over time their electorate drifts closer to it. Political scientists call it an <strong>elite cue</strong>, but you may have felt it yourself: an issue you’d hardly thought about suddenly feels salient and you know where <em>you</em> stand on it. Each party has its pole here (the two dashed targets); independents, with no team to follow, stay put. <strong>Drag a pole</strong> and you swing a whole side with it; pull a person away and watch their side drag them back.
       </p>
-      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         As it runs, the mixed crowd comes apart, the colors peeling into two camps with the middle thinning between them. Crank the pull up and each side snaps tight to its pole; ease it back down and they drift toward the center again.
       </p>
     </>
@@ -789,10 +792,10 @@ const FORCE_AFFECT = {
   lead: 'Affect: not a push by itself, but the feeling the forces before fail to capture.',
   body: (
     <>
-      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         Affect isn’t really a force at all — rather it’s a <strong>result</strong>. It’s the feeling the other forces breed which becomes the second, different dimension that polarization gets measured on. Look straight down at the compass and almost nothing seems to be happening. Then the axes tilt and a new movement path becomes apparent - it’s the emotional side of polarization. Two things drive it: <strong>contact</strong> (the more of the other side around you, the faster you sour) and a <strong>negativity bias</strong> (the knob).
       </p>
-      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         On screen, Democrats lift up, Republicans sink down, and the vertical gap between them is their mutual animosity.
       </p>
     </>
@@ -815,10 +818,10 @@ const FORCE_NETWORK = {
   lead: 'You slowly lose touch with those you disagree with.',
   body: (
     <>
-      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         Every dot sits in a web of social ties (the lines). At first it’s mixed: plenty of links cross the aisle. But people don’t want to constantly find themselves arguing and defending their positions; so they slowly trade ties that irritate for ones that soothe. Over time this tendency largely erodes the cross-aisle links, leaving only what cannot be given up easily (colleagues, neighbors, fellow commuters).
       </p>
-      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         Look at the compass. Most of the bridges thin out as people trade them away, but a few stubborn ones never break - these are the <strong>involuntary</strong> ties nobody chooses, like work, family, or neighbors. This is the <strong>ratchet</strong>: your network slowly seals itself, but some outside influence always remains. Turn homophily down to keep it mixed; up to close the bubbles fast.
       </p>
     </>
@@ -839,10 +842,10 @@ const FORCE_MEDIA = {
   lead: (<>Heavy media users exposed to <strong>partisan media</strong> are influenced.</>),
   body: (
     <>
-      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         Each party has its outlets (the diamonds). People tune in to their preferred ones, often based on political affiliation — what researchers call selective exposure. The more of partisan media they watch, the harder their outlet pulls them toward it. <strong>Drag an outlet</strong> to change where it pulls; drag a person to see which outlet they’re wired to.
       </p>
-      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         As it runs, most people barely move; it’s the heavy consumers who get drawn toward their outlet, coming out more partisan the more they watch — how far, and which way, depends on where the outlets sit. Turn the diet up and the pull strengthens (and vice versa).
       </p>
     </>
@@ -867,10 +870,10 @@ const FORCE_BACKFIRE = {
   lead: 'Backfire: the flip side of bounded confidence.',
   body: (
     <>
-      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         Bounded confidence pulled people together, but only when they could still <em>hear</em> each other. What happens if you do talk to someone from ‘the other side’? The backfiring force describes exactly that. Each cross-party encounter is now checked against how hostile you feel: up until a certain threshold the contact is harmless; but cross it and talking to someone you disagree with propels you <strong>away</strong>.
       </p>
-      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         Reach for the <strong>hostility</strong> knob. With it low, the mixed crowd just sits there, not much happening; turn it high and the <em>same</em> encounters become repellent, quickly forming a schism in the crowd. Drag a dot toward the other side and watch it recoil. This is what makes fostering constructive debates such an ambitious goal.
       </p>
     </>
@@ -895,10 +898,10 @@ const FORCE_ORIENT = {
   lead: 'First, what you are looking at.',
   body: (
     <>
-      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         The graph on the right is a <strong>political compass</strong>: left to right is the <strong>economic</strong> axis (from centralized to free), up–down the <strong>cultural</strong> one (from traditional to progressive). Every dot is one simulated person, their beliefs dictating their position on the compass. <strong>Navy</strong> leans Democratic, <strong>oxblood</strong> Republican, <strong>gray</strong> sits independent in the middle.
       </p>
-      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         Right now nobody is moving. On the following pages you’ll see the forces that move them <strong>one at a time</strong>, starting with the smart-sounding ‘bounded confidence’.
       </p>
     </>
@@ -1087,14 +1090,18 @@ function ForcesTour({ onFinale }) {
   const [playing, setPlaying] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const toyRef = useRef(null);
+  const narrRef = useRef(null);   // the floating prose column (desktop) — scrolled
+                                  // via the wheel handler below so short viewports
+                                  // can reach the rest of the body + the nav buttons.
   const isMobile = useIsMobile();
-  const LX = isMobile ? '20px' : 'clamp(64px, 14vw, 248px)';
+  const LX = isMobile ? '20px' : RAIL_LX;
   const RX = isMobile ? '20px' : '44px';
 
   const goStop = (i) => {
     const f = STOPS[i];
     setFi(i); setKnob(f.knob ? f.knob.def : 0); setRevealed(false);
     setPlaying(!f.static && !f.ambient);   // real forces auto-play on arrival
+    if (narrRef.current) narrRef.current.scrollTop = 0;   // new force → read from the top
   };
   const onStep = () => { setPlaying(false); toyRef.current && toyRef.current.step(); };
   const onReset = () => {
@@ -1113,11 +1120,11 @@ function ForcesTour({ onFinale }) {
 
   // the editorial column — shared between layouts; padding differs per device.
   const narrative = (
-    <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
+    <div ref={narrRef} style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
       <div style={{ flexShrink: 0, padding: `${isMobile ? '22px' : 'clamp(28px,4.5vh,52px)'} ${RX} 8px ${LX}` }}>
         <Eyebrow>{force.eyebrow}</Eyebrow>
-        <h1 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: isMobile ? 28 : 'clamp(30px,3.4vw,46px)', lineHeight: 1.04, letterSpacing: '-.02em', maxWidth: 460 }}>{force.title}</h1>
-        <p style={{ margin: '16px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: 440 }}>{force.lead}</p>
+        <h1 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: isMobile ? 28 : 'clamp(30px,3.4vw,46px)', lineHeight: 1.04, letterSpacing: '-.02em', maxWidth: TEXTW }}>{force.title}</h1>
+        <p style={{ margin: '16px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: TEXTW }}>{force.lead}</p>
         {force.body}
         <Caption style={{ marginTop: 18 }}>{force.caption}</Caption>
       </div>
@@ -1138,7 +1145,11 @@ function ForcesTour({ onFinale }) {
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: CC.bg }}>
-      <div style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden', background: CC.bg }}>
+      {/* the prose floats pointer-transparent (so the map stays draggable), which
+          also blocks wheel-scroll — so forward wheel over the whole area to the
+          prose column, letting short viewports reach the body + nav buttons. */}
+      <div onWheel={(e) => { const n = narrRef.current; if (n && n.scrollHeight > n.clientHeight + 1) n.scrollTop += (e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY); }}
+        style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden', background: CC.bg }}>
         {/* the compass — a contained square anchored right (matches the story field) */}
         <div style={{ position: 'absolute', top: '-2%', bottom: '-2%', right: '2%', aspectRatio: '1' }}>
           <ForceToy key={force.id} force={force} knob={knob} playing={playing} revealed={revealed}
@@ -1148,7 +1159,7 @@ function ForcesTour({ onFinale }) {
         <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '56%', background: `linear-gradient(90deg, ${CC.bg} 0%, ${CC.bg} 88%, rgba(249,248,244,0) 100%)`, pointerEvents: 'none', zIndex: 1 }} />
         {/* floating narrative — a centered editorial block on the left (pointer-
             transparent so the map stays draggable; only the buttons catch clicks) */}
-        <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(54%, 820px)', display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: RAIL_W, display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3, pointerEvents: 'none' }}>
           {narrative}
         </div>
       </div>

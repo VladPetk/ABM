@@ -18,7 +18,7 @@
 
 const FF = window.CC_FREEFLOW || null;
 const _FF_OK = !!(FF && FF.run && FF.run.pos);
-const _PLX = 'clamp(64px, 14vw, 248px)';
+const _PLX = RAIL_LX;   // shared trimmed indent (rc-shared)
 
 // inline prose link — routes via the prologue page wrapper's data-goto handler
 // (cc-unified). `goto` is a page id ('forces' / 'methods'). Defined BEFORE
@@ -120,20 +120,26 @@ function PrologueBeatRail({ beat, tick, year, onSkip }) {
   const sepSeries = FF.run.macro.map((m) => m.sep);
   return (
     <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
-      <div style={{ flexShrink: 0, padding: isMobile ? '22px 20px 8px 20px' : `clamp(28px,4.5vh,52px) 44px 8px ${_PLX}` }}>
+      <div style={{ flexShrink: 0, padding: isMobile ? '22px 20px 8px 20px' : `clamp(18px,3vh,44px) 44px 8px ${_PLX}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
           <Eyebrow>The engine, on its own</Eyebrow>
           {onSkip && <button onClick={onSkip} style={_skipStyle}>skip ahead →</button>}
         </div>
-        <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(28px,3.2vw,40px)', lineHeight: 1.05, letterSpacing: '-.018em', maxWidth: 460 }}>{beat.title}</h2>
-        <p style={{ margin: '16px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: 460 }}>{beat.lead}</p>
-        <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>{beat.body}</p>
-        <div style={{ marginTop: 24, maxWidth: 480 }}>
+        <h2 style={{ margin: '10px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: isMobile ? 27 : 'clamp(30px, 4vh, 40px)', lineHeight: 1.05, letterSpacing: '-.018em', maxWidth: TEXTW }}>{beat.title}</h2>
+        <p style={{ margin: '12px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: TEXTW }}>{beat.lead}</p>
+        <p style={{ margin: '12px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>{beat.body}</p>
+        {/* the "engine so far" readouts run side-by-side (they'd be too tall stacked
+            on a short screen) and only appear past the long intro beat, where they
+            actually show a trend — at the 1980 start they're flat. */}
+        {beat.tick > 0 &&
+        <div style={{ marginTop: 14, maxWidth: TEXTW }}>
           <Eyebrow style={{ color: CC.ink3 }}>The engine, so far · {year}</Eyebrow>
-          <PChart title="Out-party warmth" sub="cools on its own" series={affSeries} tick={tick} deg />
-          <PChart title="Party separation" sub="drifts, then stalls" series={sepSeries} tick={tick} />
+          <div style={{ display: 'flex', gap: 18, marginTop: 2 }}>
+            <div style={{ flex: 1, minWidth: 0 }}><PChart title="Out-party warmth" sub="cools on its own" series={affSeries} tick={tick} deg width={320} height={104} /></div>
+            <div style={{ flex: 1, minWidth: 0 }}><PChart title="Party separation" sub="drifts, then stalls" series={sepSeries} tick={tick} width={320} height={104} /></div>
+          </div>
           {beat.footnote && <p style={{ margin: '12px 0 0', fontSize: DS.type.micro, lineHeight: 1.4, color: CC.ink4, fontStyle: 'italic' }}>{beat.footnote}</p>}
-        </div>
+        </div>}
       </div>
     </div>
   );
@@ -141,30 +147,32 @@ function PrologueBeatRail({ beat, tick, year, onSkip }) {
 
 // the closing rail — every force at once (engine-alone) hits its ceiling;
 // the comparison to a real country, and the two doors out: the U.S. story · the 3-D view.
-function PrologueEndRail({ usArr, ffArr, onToStory, onPlayground, on3D }) {
+function PrologueEndRail({ usArr, ffArr, onToStory, onPlayground, on3D, scrollRef }) {
   const doorAlt = {
     flex: 1, padding: '12px 14px', borderRadius: DS.rad.pill, border: `1px solid ${CC.border}`, background: CC.surface,
     color: CC.ink2, cursor: 'pointer', fontFamily: SANS, fontSize: DS.type.small, fontWeight: 500, whiteSpace: 'nowrap',
   };
   const isMobile = useIsMobile();
   return (
-    <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
-      <div style={{ flexShrink: 0, padding: isMobile ? '22px 20px 8px 20px' : `clamp(24px,4vh,44px) 44px 8px ${_PLX}` }}>
+    <div ref={scrollRef} style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
+      <div style={{ flexShrink: 0, padding: isMobile ? '22px 20px 8px 20px' : `clamp(16px,2.6vh,40px) 44px 8px ${_PLX}` }}>
         <Eyebrow>The engine · every force at once</Eyebrow>
-        <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(26px,3vw,38px)', lineHeight: 1.05, letterSpacing: '-.018em', maxWidth: 460 }}>The forces alone don’t get us all the way</h2>
-        <p style={{ margin: '14px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.4, color: CC.ink, maxWidth: 460 }}>Compare the in-engine polarization against a country that <em>did</em> polarize — the United States.</p>
-        <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
+        <h2 style={{ margin: '10px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: isMobile ? 27 : 'clamp(26px, 3.4vh, 38px)', lineHeight: 1.05, letterSpacing: '-.018em', maxWidth: TEXTW }}>The forces alone don’t get us all the way</h2>
+        <p style={{ margin: '10px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.4, color: CC.ink, maxWidth: TEXTW }}>Compare the in-engine polarization against a country that <em>did</em> polarize — the United States.</p>
+        <p style={{ margin: '10px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
           So how far does the bare engine reach? On the <strong>feelings</strong>, most of the way — somewhere north of 80 percent. The engine-only line and the real one nearly meet, suggesting that animus can be modeled largely from rather fundamental psychological forces.
         </p>
-        <p style={{ margin: '12px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
+        <p style={{ margin: '10px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
           The <strong>position split</strong> is a different story. Alone, the engine reaches only about a third of it, tracking the data well until c. 2010 but then stalling while the real split climbs sharply. This sharp rise is caused by external factors (<strong>forcings</strong>) that are switched off in this view: the build-up of partisan media, momentous events, the timing of who mobilized and when. The engine supplies the forces; history supplies the rest.
         </p>
-        <div style={{ marginTop: 18, maxWidth: 480 }}>
-          <PChart title="Party separation — the split" sub="tracks for a while, then peels away after ~2010" us={usArr('sep')} ff={ffArr('sep')} marker />
-          <PChart title="Out-party warmth — the feelings" sub="close, not identical — the engine cools mostly on its own" us={usArr('aff')} ff={ffArr('aff')} deg marker />
+        <div style={{ marginTop: 12, maxWidth: TEXTW }}>
+          <div style={{ display: 'flex', gap: 18 }}>
+            <div style={{ flex: 1, minWidth: 0 }}><PChart title="Party separation — the split" sub="tracks, then peels away after ~2010" us={usArr('sep')} ff={ffArr('sep')} marker width={320} height={104} /></div>
+            <div style={{ flex: 1, minWidth: 0 }}><PChart title="Out-party warmth — the feelings" sub="close, not identical" us={usArr('aff')} ff={ffArr('aff')} deg marker width={320} height={104} /></div>
+          </div>
           <CompareLegend />
         </div>
-        <div style={{ marginTop: 22, maxWidth: 480 }}>
+        <div style={{ marginTop: 14, maxWidth: TEXTW }}>
           <Eyebrow style={{ color: CC.ink3 }}>Where to next</Eyebrow>
           <button onClick={onToStory} style={{ marginTop: 10, width: '100%', padding: '13px 18px', borderRadius: DS.rad.pill, border: 'none', background: CC.ink, color: '#fff', cursor: 'pointer', fontFamily: SANS, fontSize: 14, fontWeight: 500 }}>
             See what actually happened in the U.S. →
@@ -187,6 +195,8 @@ function ProloguePage({ onToStory, onPlayground, on3D }) {
   const toggle = () => { setHintSeen(true); setPlaying((p) => !p); };
   const skipToEnd = () => { setPlaying(false); setTick(LAST); };
   const wrapRef = React.useRef(null);
+  const endRailRef = React.useRef(null);   // the terminal end-card scroller (it's too dense to fit short)
+  const endedRef = React.useRef(false);    // when ended, wheel scrolls that card instead of scrubbing
   const raf = React.useRef(0);
   // touch-scrub: phones have no wheel, so a vertical drag on the map band moves
   // time (swipe up = forward), mirroring the story canvas.
@@ -217,7 +227,17 @@ function ProloguePage({ onToStory, onPlayground, on3D }) {
   // wheel-scrub through time (parity with the story's scroll-to-move-time)
   React.useEffect(() => {
     const el = wrapRef.current; if (!el) return;
-    const onWheel = (e) => { e.preventDefault(); setHintSeen(true); setPlaying(false); setTick((t) => Math.max(0, Math.min(LAST, t + e.deltaY * 0.06))); };
+    const onWheel = (e) => {
+      // beats scrub cleanly (no scroll). On the terminal end card — which is too
+      // dense to fit a short screen and where there's nothing left to scrub — the
+      // wheel scrolls the card instead; scrubbing back only at its very top.
+      const sc = endRailRef.current;
+      if (endedRef.current && sc && sc.contains(e.target) && sc.scrollHeight > sc.clientHeight + 1) {
+        const atTop = sc.scrollTop <= 0;
+        if (!(e.deltaY < 0 && atTop)) return;
+      }
+      e.preventDefault(); setHintSeen(true); setPlaying(false); setTick((t) => Math.max(0, Math.min(LAST, t + e.deltaY * 0.06)));
+    };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
   }, []);
@@ -232,6 +252,7 @@ function ProloguePage({ onToStory, onPlayground, on3D }) {
 
   const run = FF.run;
   const ended = tick >= LAST - 1e-6;
+  endedRef.current = ended;
   const showHint = !hintSeen && !playing && !ended && tick < 1.5;   // first-run scrub helper
   const beatI = _pBeat(tick);
   const beat = PROLOGUE_BEATS[beatI];
@@ -296,17 +317,12 @@ function ProloguePage({ onToStory, onPlayground, on3D }) {
         <div style={{ position: 'absolute', top: '-2%', bottom: '-2%', right: '2%', aspectRatio: '1' }}>
           <Field run={run} tick={tick} layer="position" view="density" showGap dim={ended ? 0.24 : 0} landmarks={false} />
         </div>
-        {/* the engine-alone marker chip (mirrors the story's "paused at…" chip) */}
-        {!ended &&
-        <div style={{ position: 'absolute', right: 24, top: 20, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: CC.ink3, background: 'rgba(249,248,244,.85)', padding: '5px 12px', borderRadius: 999, border: `1px solid ${CC.border}` }}>
-          <span style={{ width: 7, height: 7, borderRadius: 999, background: '#9aa0a6' }} /> the engine alone · {year}
-        </div>}
         {/* paper scrim — keeps the floating prose legible */}
         <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '56%', background: `linear-gradient(90deg, ${CC.bg} 0%, ${CC.bg} 88%, rgba(249,248,244,0) 100%)`, pointerEvents: 'none', zIndex: 1 }} />
         {/* floating narrative — same left column as the story */}
-        <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(54%, 820px)', display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3 }}>
+        <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: RAIL_W, display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3 }}>
           {ended
-            ? <PrologueEndRail usArr={usArr} ffArr={ffArr} onToStory={onToStory} onPlayground={onPlayground} on3D={on3D} />
+            ? <PrologueEndRail usArr={usArr} ffArr={ffArr} onToStory={onToStory} onPlayground={onPlayground} on3D={on3D} scrollRef={endRailRef} />
             : <PrologueBeatRail beat={beat} tick={tick} year={year} onSkip={skipToEnd} />}
         </div>
         {/* first-run helper — the scrub timeline is new here; same pill as the story */}

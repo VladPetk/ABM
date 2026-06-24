@@ -298,7 +298,7 @@ function Agents3DPage() {
   const monthLabel = `${months[Math.min(11, Math.floor((tickToYear(tick) - year) * 12))]} ${year}`;
   const Dot = ({ c }) => <span style={{ width: 8, height: 8, borderRadius: 999, background: c, display: 'inline-block', flexShrink: 0 }} />;
   const isMobile = useIsMobile();
-  const LX = isMobile ? '20px' : 'clamp(64px, 14vw, 248px)';
+  const LX = isMobile ? '20px' : RAIL_LX;
   const RX = isMobile ? '20px' : '44px';
   // the same chapter markers as the U.S. story (not the raw historical events)
   const BEATS = window.STORY_BEATS || [];
@@ -309,16 +309,16 @@ function Agents3DPage() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
       <div style={{ flexShrink: 0, padding: `${isMobile ? '22px' : 'clamp(28px,4.5vh,52px)'} ${RX} ${isMobile ? '26px' : 'clamp(28px,4.5vh,52px)'} ${LX}` }}>
         <Eyebrow>Under the hood · the U.S. run</Eyebrow>
-        <h2 style={{ margin: '14px 0 18px', fontFamily: SERIF, fontWeight: 600, fontSize: isMobile ? 29 : 46, lineHeight: 1.04, letterSpacing: '-.022em', maxWidth: 460 }}>
+        <h2 style={{ margin: '14px 0 18px', fontFamily: SERIF, fontWeight: 600, fontSize: isMobile ? 29 : 46, lineHeight: 1.04, letterSpacing: '-.022em', maxWidth: TEXTW }}>
           Every agent, in three dimensions.
         </h2>
-        <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: 440 }}>
+        <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink, maxWidth: TEXTW }}>
           No density clouds this time — just the 250 people the engine actually moves, one dot apiece.
         </p>
-        <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+        <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
           This is the engine run against the United States, 1980 to 2025. The flat plane is the <strong>political compass</strong> you already know: left–right is the economy, front–back is culture. What the third dimension adds is the <em>feeling</em>. Each person lifts off the plane as they sour on the other side — Democrats rising, Republicans sinking — so the vertical gap between blue and red <em>is</em> their mutual animus. The independents stay down in the shared middle.
         </p>
-        <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: 460 }}>
+        <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
           Press play, and watch the two camps pull apart sideways and lift away from each other at the same time.
         </p>
         <p style={{ margin: '18px 0 0', display: 'flex', alignItems: 'center', gap: 16, fontSize: DS.type.small, color: CC.ink3, flexWrap: 'wrap' }}>
@@ -415,7 +415,7 @@ function Agents3DPage() {
         <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '56%', background: `linear-gradient(90deg, ${CC.bg} 0%, ${CC.bg} 88%, rgba(249,248,244,0) 100%)`, pointerEvents: 'none', zIndex: 1 }} />
 
         {/* floating narrative — left column, same position as the story rail */}
-        <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(54%, 820px)', display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: RAIL_W, display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 3, pointerEvents: 'none' }}>
           {narrative}
         </div>
 
