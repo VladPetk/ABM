@@ -731,21 +731,27 @@ function SandboxControls({ iv }) {
   );
 }
 
+// Fit-to-screen: a flex column that fills IvWorkbench's bounded box (height:100%,
+// NOT flex:1 — IvWorkbench is a plain block, so flex:1 collapsed to content height
+// and overflow:auto had nothing to bound against → the page couldn't scroll AND
+// the animus chart clipped under the browser chrome). Header + accordion are pinned
+// top, transport + animus pinned bottom, and the map FLEXES into whatever space is
+// left — so the whole sandbox lands on one screen with no scroll. The dials open as
+// an opaque sheet over the map (Field stays mounted underneath, so toggling never
+// recomputes the cloud). Outer overflow:auto is the safety net for very short phones.
 function MobileSandbox({ iv, play, field }) {
   const [open, setOpen] = React.useState(false);
   const P = window.SANDBOX_PRESETS;
   const active = P.find((p) => p.vec.join('') === iv.sbKey);
   const label = active ? active.name : 'Custom mix';
   return (
-    <div style={{ flex: 1, minHeight: 0, overflow: 'auto', background: CC.bg }}>
-      <div style={{ padding: '14px 20px 0' }}>
+    <div style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'auto', background: CC.bg }}>
+      <div style={{ flexShrink: 0, padding: '14px 20px 0' }}>
         <Eyebrow style={{ color: '#8a6d1f' }}>Sandbox · not a finding</Eyebrow>
       </div>
-      {/* controls FIRST — the sandbox IS the dials/presets, so make them the first,
-          obviously-tappable thing (they used to be dead-last, below the map and the
-          chart, where a phone's browser chrome pushed them off-screen entirely). A
-          clear bordered accordion bar; the map + chart sit just below. */}
-      <div style={{ padding: '12px 20px 0' }}>
+      {/* the sandbox IS the dials/presets, so the accordion bar sits up top where
+          it's the first obviously-tappable thing. */}
+      <div style={{ flexShrink: 0, padding: '12px 20px 0' }}>
         <button onClick={() => setOpen((o) => !o)} aria-expanded={open} style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left', cursor: 'pointer',
           background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: 12, padding: '13px 15px' }}>
@@ -753,19 +759,26 @@ function MobileSandbox({ iv, play, field }) {
           <span style={{ fontFamily: SANS, fontSize: 13, color: CC.ink3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>· {label}</span>
           <span style={{ marginLeft: 'auto', flexShrink: 0, fontSize: 12, color: CC.ink3, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>▾</span>
         </button>
-        {open && <div style={{ marginTop: 14, animation: 'ccFadeUp .2s ease' }}><SandboxControls iv={iv} /></div>}
       </div>
-      {/* the alternate-history cloud — plays on the same playhead as the chart */}
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '1', marginTop: 12 }}>
+      {/* the alternate-history cloud — fills the leftover height, capped so the
+          transport + chart below always stay on-screen. When the dials are open they
+          overlay this region (opaque) and scroll on their own; the Field underneath
+          stays mounted. */}
+      <div style={{ flex: '1 1 auto', minHeight: 180, position: 'relative', marginTop: 12 }}>
         <div style={{ position: 'absolute', inset: 0 }}>{field}</div>
+        {open &&
+          <div style={{ position: 'absolute', inset: 0, overflow: 'auto', background: CC.bg, padding: '2px 20px 16px', animation: 'ccFadeUp .2s ease' }}>
+            <SandboxControls iv={iv} />
+          </div>}
       </div>
-      <div style={{ padding: '6px 20px 44px' }}>
+      {/* transport + animus — the payoff, pinned at the bottom so it never clips */}
+      <div style={{ flexShrink: 0, padding: '8px 20px 16px' }}>
         {play ? <IvTransport play={play} /> :
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, fontFamily: SANS, fontSize: DS.type.small, color: CC.ink3 }}>
             <span style={{ width: 12, height: 12, borderRadius: 999, border: `2px solid ${CC.border}`, borderTopColor: CC.ink3, animation: 'ccSpin .8s linear infinite' }} />
             Preparing the alternate history…
           </div>}
-        {play && <div style={{ marginTop: 14 }}><SandboxAnimusChart play={play} /></div>}
+        {play && <div style={{ marginTop: 10 }}><SandboxAnimusChart play={play} /></div>}
       </div>
     </div>
   );
