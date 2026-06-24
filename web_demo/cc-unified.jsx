@@ -85,9 +85,14 @@ function SiteHeader({ page, setPage, hidden = false, pgMode = null, onPgMode = n
               return (
                 <React.Fragment key={it.id}>
                   <button onClick={() => setPage(it.target || it.id)} style={{
-                    textAlign: 'left', padding: '14px 22px', background: on ? CC.bg2 : 'none', border: 'none', cursor: 'pointer',
+                    textAlign: 'left', padding: '14px 22px', background: 'none', border: 'none', cursor: 'pointer',
                     fontFamily: SANS, fontSize: 16, fontWeight: on ? 600 : 500, color: on ? CC.ink : CC.ink2 }}>
-                    {it.label}
+                    {/* active page: bold + a 2px ink underline under the text, matching
+                        the desktop nav (dropped the warm-grey selected-row fill) */}
+                    <span style={{ position: 'relative', display: 'inline-block' }}>
+                      {it.label}
+                      <span style={{ position: 'absolute', left: 0, right: 0, bottom: -3, height: 2, borderRadius: 2, background: on ? CC.ink : 'transparent' }} />
+                    </span>
                   </button>
                   {/* sub-choices that used to be on-page pills now live under their
                       section in the menu: Model → tour/engine · Playground → iv/sandbox */}
@@ -610,24 +615,28 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
   const year = Math.floor(tickToYear(beats[ci] ? beats[ci].tick : tick));   // the chapter's year
   const tickAt = (i) => i < N ? beats[i].tick : LAST;
 
-  // each chapter's compass — its window runs from the previous chapter's year to
-  // the NEXT chapter's, so it keeps animating with the scroll the whole time it's
-  // on screen (not just until you reach it), and only freezes (recompute-free)
-  // once it has scrolled off. At most ~2 compasses are live at any moment.
-  const compassFor = (i) => {
+  // each chapter's live tick — its window runs from the previous chapter's year
+  // to the NEXT chapter's, so it keeps animating with the scroll the whole time
+  // the section is on screen (not just until you reach it), and only freezes
+  // once it has scrolled off. At most ~2 sections are live at any moment. Drives
+  // BOTH the compass AND the chapter's readouts (sparklines) so they move as one.
+  const liveTickFor = (i) => {
     const lo = i > 0 ? tickAt(i - 1) : tickAt(0);
     const hi = tickAt(i + 1);
-    const ct = Math.max(lo, Math.min(hi, tick));
-    return (
+    return Math.max(lo, Math.min(hi, tick));
+  };
+  const compassFor = (ct) => (
       <div style={{ position: 'relative', width: '100%', aspectRatio: '1', margin: '2px 0 4px' }}>
         <div style={{ position: 'absolute', inset: 0 }}>
           <Field run={run} tick={ct} layer="position" view="density" showGap landmarks={landmarks} />
         </div>
       </div>);
-  };
 
   // ── default U.S. story chapter copy (renderBeat overrides for the prologue) ──
-  const storyBeatInner = (beat, i) => {
+  // The chapter eyebrow year stays ANCHORED to beat.tick (each chapter is a named
+  // historical moment), but the data readout takes the live, scroll-driven tick
+  // so the sparkline animates with the compass instead of sitting frozen.
+  const storyBeatInner = (beat, i, liveTick = beat.tick) => {
     const yr = Math.floor(tickToYear(beat.tick));
     return (<>
       <Eyebrow>{beat.orient ? `The U.S. story · ${yr}` : `Chapter ${i} of ${N - 1} · ${yr}`}</Eyebrow>
@@ -635,11 +644,11 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
       <p style={{ margin: '14px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.42, color: CC.ink }}>{beat.lead}</p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>{beat.body}</p>
       {beat.orient ? null :
-        beat.data ? <BeatMetric data={beat.data} tick={beat.tick} /> :
+        beat.data ? <BeatMetric data={beat.data} tick={liveTick} /> :
         beat.metric ?
           <div style={{ marginTop: 20, paddingTop: 13, borderTop: `1px solid ${CC.border}`, display: 'flex', alignItems: 'center', gap: 11 }}>
             <Eyebrow style={{ color: CC.ink4, letterSpacing: '.1em' }}>data</Eyebrow>
-            <MonoVal size={DS.type.small} color={CC.ink}>{beat.metric(beat.tick)}</MonoVal>
+            <MonoVal size={DS.type.small} color={CC.ink}>{beat.metric(liveTick)}</MonoVal>
           </div> : null}
     </>);
   };
@@ -663,11 +672,12 @@ function MobileScrollStory({ tick, setTick, playing, toggle, setPlaying, onInter
   const section = (i) => {
     const isEnd = i === N;
     const beat = isEnd ? null : beats[i];
+    const ct = liveTickFor(i);
     return (
       <section key={i} ref={(el) => (secRefs.current[i] = el)}
         style={{ padding: i === 0 ? '6px 20px 14px' : '24px 20px 14px', marginTop: i === 0 ? 0 : 14, borderTop: i === 0 ? 'none' : `1px solid ${CC.border}` }}>
-        {compassFor(i)}
-        {isEnd ? (endContent || defaultEnd) : (renderBeat || storyBeatInner)(beat, i)}
+        {compassFor(ct)}
+        {isEnd ? (endContent || defaultEnd) : (renderBeat || storyBeatInner)(beat, i, ct)}
       </section>);
   };
 
@@ -993,19 +1003,36 @@ function Unified() {
 
   }
 
-  // ── mobile landing (intro) — one continuous scroll: the ambient dots as a
-  // full-width hero on the page, then the pitch + CTAs flow beneath. ──
+  // ── mobile landing (intro) — the ambient dots as a full-bleed hero with the
+  // headline floated over a bottom scrim (the desktop's editorial overlay,
+  // ported to a vertical fade); the pitch + CTAs flow beneath. ──
   if (isMobile && isIntro) {
+    const introYr = Math.floor(tickToYear(introTick));
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: CC.bg, minHeight: 0 }}>
         <SiteHeader page={page} setPage={goPage} hidden={hdrHidden} />
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
           <div style={{ position: 'relative', width: '100%', aspectRatio: '1' }}>
             <div style={{ position: 'absolute', inset: 0 }}>
-              <Field run={D.runs.baseline} tick={introTick} layer="position" view="dots" morphT={introMorphT} showGap={false} landmarks={false} />
+              {/* hero canvas: declutter the quadrant words on the cramped square,
+                  keep the axes + arrows */}
+              <Field run={D.runs.baseline} tick={introTick} layer="position" view="dots" morphT={introMorphT} showGap={false} landmarks={false} quadrants={false} />
+            </div>
+            {/* paper scrim — feathers the dots into the page so the headline reads */}
+            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '64%', background: `linear-gradient(0deg, ${CC.bg} 0%, ${CC.bg} 32%, rgba(249,248,244,0) 100%)`, pointerEvents: 'none' }} />
+            {/* the headline + live ticker, floated over the lower field */}
+            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '0 20px 18px' }}>
+              <h1 style={{ margin: 0, fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(31px, 9vw, 40px)', lineHeight: 1.04, letterSpacing: '-.02em' }}>
+                {INTRO_HEAD}
+              </h1>
+              <div style={{ marginTop: 12 }}>
+                <span style={{ fontFamily: MONO, fontSize: DS.type.micro, color: CC.ink3, ...TNUM }}>
+                  {introYr} · {INTRO_RUN_NOTE}
+                </span>
+              </div>
             </div>
           </div>
-          <IntroRail tick={introTick} storyDone={storyDone} onWatch={() => goPage('forces')}
+          <IntroRail variant="mobile" tick={introTick} storyDone={storyDone} onWatch={() => goPage('forces')}
             onSandbox={() => goPlayground('sandbox')} onAbout={() => goPage('about')} on3D={() => goPage('agents')} />
         </div>
       </div>);

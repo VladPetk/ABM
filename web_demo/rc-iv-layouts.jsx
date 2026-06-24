@@ -687,8 +687,9 @@ function SandboxAnimusChart({ play }) {
   );
 }
 
-// ── mobile sandbox — compass + affect line + transport up top; the five dials
-// and presets tuck into an expandable menu so the playable view fits one screen.
+// ── mobile sandbox — the five dials + presets, shown inside the accordion that
+// sits at the top of MobileSandbox (above the map), so they're the first thing
+// the reader meets and can actually reach on a phone.
 function SandboxControls({ iv }) {
   const K = window.SANDBOX_KNOBS, P = window.SANDBOX_PRESETS;
   return (
@@ -731,8 +732,22 @@ function MobileSandbox({ iv, play, field }) {
       <div style={{ padding: '14px 20px 0' }}>
         <Eyebrow style={{ color: '#8a6d1f' }}>Sandbox · not a finding</Eyebrow>
       </div>
+      {/* controls FIRST — the sandbox IS the dials/presets, so make them the first,
+          obviously-tappable thing (they used to be dead-last, below the map and the
+          chart, where a phone's browser chrome pushed them off-screen entirely). A
+          clear bordered accordion bar; the map + chart sit just below. */}
+      <div style={{ padding: '12px 20px 0' }}>
+        <button onClick={() => setOpen((o) => !o)} aria-expanded={open} style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left', cursor: 'pointer',
+          background: CC.surface, border: `1px solid ${CC.border}`, borderRadius: 12, padding: '13px 15px' }}>
+          <span style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: CC.ink }}>Dials &amp; presets</span>
+          <span style={{ fontFamily: SANS, fontSize: 13, color: CC.ink3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>· {label}</span>
+          <span style={{ marginLeft: 'auto', flexShrink: 0, fontSize: 12, color: CC.ink3, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>▾</span>
+        </button>
+        {open && <div style={{ marginTop: 14, animation: 'ccFadeUp .2s ease' }}><SandboxControls iv={iv} /></div>}
+      </div>
       {/* the alternate-history cloud — plays on the same playhead as the chart */}
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '1', marginTop: 4 }}>
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '1', marginTop: 12 }}>
         <div style={{ position: 'absolute', inset: 0 }}>{field}</div>
       </div>
       <div style={{ padding: '6px 20px 44px' }}>
@@ -742,15 +757,6 @@ function MobileSandbox({ iv, play, field }) {
             Preparing the alternate history…
           </div>}
         {play && <div style={{ marginTop: 14 }}><SandboxAnimusChart play={play} /></div>}
-        {/* the five dials + presets, tucked away by default */}
-        <div style={{ marginTop: 18, borderTop: `1px solid ${CC.border}`, paddingTop: 14 }}>
-          <button onClick={() => setOpen((o) => !o)} aria-expanded={open} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, color: CC.ink }}>Dials &amp; presets</span>
-            <span style={{ fontFamily: SANS, fontSize: 12.5, color: CC.ink3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>· {label}</span>
-            <span style={{ marginLeft: 'auto', flexShrink: 0, fontSize: 12, color: CC.ink3, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>▾</span>
-          </button>
-          {open && <div style={{ marginTop: 16, animation: 'ccFadeUp .2s ease' }}><SandboxControls iv={iv} /></div>}
-        </div>
       </div>
     </div>
   );

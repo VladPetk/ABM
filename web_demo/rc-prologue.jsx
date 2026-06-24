@@ -246,8 +246,11 @@ function ProloguePage({ onToStory, onPlayground, on3D }) {
     // engine chapters → drives time; tap-to-expand the map; one bottom timeline.
     const affSeries = FF.run.macro.map((m) => m.aff);
     const sepSeries = FF.run.macro.map((m) => m.sep);
-    const renderBeat = (beat) => {
-      const yr = Math.floor(1980 + beat.tick / 3);
+    // liveTick is the scroll-driven tick MobileScrollStory feeds each section (the
+    // same one driving the compass), so the sparklines animate with the scroll
+    // instead of sitting frozen at the chapter's anchor. Falls back to beat.tick.
+    const renderBeat = (beat, i, liveTick = beat.tick) => {
+      const yr = Math.floor(1980 + liveTick / 3);
       return (<>
         <Eyebrow>The engine, on its own · {yr}</Eyebrow>
         <h2 style={{ margin: '13px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 27, lineHeight: 1.05, letterSpacing: '-.02em', textWrap: 'balance' }}>{beat.title}</h2>
@@ -255,8 +258,8 @@ function ProloguePage({ onToStory, onPlayground, on3D }) {
         <p style={{ margin: '15px 0 0', ...PROSE, color: CC.ink2 }}>{beat.body}</p>
         <div style={{ marginTop: 22, paddingTop: 16, borderTop: `1px solid ${CC.border}` }}>
           <Eyebrow style={{ color: CC.ink3 }}>The engine, so far · {yr}</Eyebrow>
-          <PChart title="Out-party warmth" sub="cools on its own" series={affSeries} tick={beat.tick} deg />
-          <PChart title="Party separation" sub="drifts, then stalls" series={sepSeries} tick={beat.tick} />
+          <PChart title="Out-party warmth" sub="cools on its own" series={affSeries} tick={liveTick} deg />
+          <PChart title="Party separation" sub="drifts, then stalls" series={sepSeries} tick={liveTick} />
           {beat.footnote && <p style={{ margin: '12px 0 0', fontSize: DS.type.micro, lineHeight: 1.4, color: CC.ink4, fontStyle: 'italic' }}>{beat.footnote}</p>}
         </div>
       </>);

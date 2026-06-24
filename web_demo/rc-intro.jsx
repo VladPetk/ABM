@@ -20,6 +20,10 @@ function setCcFlag(key, v = true) {
 }
 const CC_INTRO_SEEN = 'cc_intro_seen';
 const CC_STORY_DONE = 'cc_story_done';
+// the landing headline + live-run caption — shared so the desktop rail and the
+// mobile hero overlay (cc-unified) never drift apart.
+const INTRO_HEAD = 'Simulating political polarization, visually';
+const INTRO_RUN_NOTE = '45 years of political interactions';
 
 // ── ambient sweep — loops 1980→2025 with a short hold on the 2025 frame, so
 // the ending is shown before any lecture (review amendment #1). ─────────────
@@ -65,8 +69,13 @@ function animateIntroMorph({ fromTick, setTick, setMorphT, onDone, dur = 1500 })
 }
 
 // ── Act 0 left rail — stakes first, mechanics second, then the two doors ────
-function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D }) {
+// variant 'full' = desktop / fallback (eyebrow + headline + body + ticker, all
+// floated over the field). variant 'mobile' = the body half only; the mobile
+// landing renders the headline + live ticker as a hero OVER the dots above this,
+// so here we drop the eyebrow, headline and ticker to avoid repeating them.
+function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D, variant = 'full' }) {
   const isMobile = useIsMobile();
+  const hero = variant === 'mobile';
   const LX = isMobile ? '20px' : 'clamp(64px, 14vw, 248px)';
   const RX = isMobile ? '20px' : '44px';
   const pillBase = {
@@ -84,13 +93,16 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D }) {
   const watchStyle = storyDone ? white : black;
   const sandboxStyle = storyDone ? black : white;
   return (
-    <div style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
-      <div style={{ flexShrink: 0, padding: `${isMobile ? '22px' : 'clamp(28px,4.5vh,52px)'} ${RX} 8px ${LX}` }}>
-        <Eyebrow>An agent-based model · 250 simulated citizens</Eyebrow>
+    <div style={hero
+      ? { background: 'transparent' }
+      : { background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
+      <div style={{ flexShrink: 0, padding: hero ? `18px ${RX} 8px ${LX}` : `${isMobile ? '22px' : 'clamp(28px,4.5vh,52px)'} ${RX} 8px ${LX}` }}>
+        {!hero && <Eyebrow>An agent-based model · 250 simulated citizens</Eyebrow>}
+        {!hero &&
         <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(30px, 3.4vw, 44px)', lineHeight: 1.06, letterSpacing: '-.02em', maxWidth: 520 }}>
-          Simulating political polarization, visually
-        </h2>
-        <p style={{ margin: '20px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
+          {INTRO_HEAD}
+        </h2>}
+        <p style={{ margin: hero ? 0 : '20px 0 0', ...PROSE, color: CC.ink2, maxWidth: 470 }}>
           This is a (rather accurate) simulation of how politics polarize. It's
           built using well-established mechanisms from polarization research and
           real-world survey data. The website allows you to interact with the
@@ -115,14 +127,14 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D }) {
           <button onClick={onAbout} style={quiet}>Why did I build it? →</button>
         </div>
       </div>
-      <div style={{ flexShrink: 0, padding: `18px ${RX} ${isMobile ? '26px' : 'clamp(24px,4vh,40px)'} ${LX}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ width: 7, height: 7, borderRadius: DS.rad.pill, background: '#c47a2c', flexShrink: 0 }} />
+      {!hero &&
+      <div style={{ flexShrink: 0, padding: `18px ${RX} ${isMobile ? '26px' : 'clamp(24px,4vh,40px)'} ${LX}` }}>
         <span style={{ fontFamily: MONO, fontSize: DS.type.micro, color: CC.ink3, ...TNUM }}>
-          {Math.floor(tickToYear(tick))} · 45 years of polarization on a loop.
+          {Math.floor(tickToYear(tick))} · {INTRO_RUN_NOTE}
         </span>
-      </div>
+      </div>}
     </div>);
 
 }
 
-Object.assign(window, { IntroRail, useIntroLoop, animateIntroMorph, ccFlag, setCcFlag, CC_INTRO_SEEN, CC_STORY_DONE });
+Object.assign(window, { IntroRail, useIntroLoop, animateIntroMorph, ccFlag, setCcFlag, CC_INTRO_SEEN, CC_STORY_DONE, INTRO_HEAD, INTRO_RUN_NOTE });

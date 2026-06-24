@@ -221,7 +221,7 @@ function centroids(pos, party) {
 }
 
 // ── the shared field canvas (edge-to-edge; square grid; field bleeds past it) ─
-function Field({ run, tick, layer = 'position', view = 'density', showGap = true, dim = 0, transform = null, landmarks = false, reveal = null, morphT = null, chrome = true, compact = false }) {
+function Field({ run, tick, layer = 'position', view = 'density', showGap = true, dim = 0, transform = null, landmarks = false, reveal = null, morphT = null, chrome = true, compact = false, quadrants = true }) {
   // `reveal` (array of layer names) stages the first Watch chapter element by
   // element. null = draw everything, exactly as before.
   // `morphT` crossfades the two representations of the SAME positions on one
@@ -443,11 +443,13 @@ function Field({ run, tick, layer = 'position', view = 'density', showGap = true
     // mobile story's collapsed compass strip, where they'd just be clutter)
     if (show('labels') && chrome) {
     ctx.textBaseline = 'middle';
+    if (quadrants) {
     ctx.fillStyle = CC.ink4;ctx.font = `italic ${fq}px Newsreader, Georgia, serif`;
     ctx.textAlign = 'left';ctx.fillText('populist', mx(-0.95), my(0.9));
     ctx.textAlign = 'right';ctx.fillText('traditional right', mx(0.95), my(0.9));
     ctx.textAlign = 'left';ctx.fillText('progressive left', mx(-0.95), my(-0.9));
     ctx.textAlign = 'right';ctx.fillText('libertarian', mx(0.95), my(-0.9));
+    }
     ctx.fillStyle = CC.ink3;ctx.font = `500 ${fa}px Geist, system-ui, sans-serif`;
     ctx.textAlign = 'center';ctx.textBaseline = 'alphabetic';
     ctx.fillText('traditional', (mx(-1) + mx(1)) / 2, my(1) - fa * 1.1);
