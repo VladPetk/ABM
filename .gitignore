@@ -107,10 +107,10 @@ docs/_*
 web_demo/OLD_VERSION/
 docs/web_demo_audit_screenshots/
 web_demo/dashboard-mock.html
-# cf/ holds per-tick trajectory data. The sandbox grid is committed so the
-# public deploy can play it; the (larger) intervention-branch runs stay ignored.
-web_demo/cf/*
-!web_demo/cf/sandbox/
+# cf/ holds the per-tick trajectory data the demo fetches at runtime — the
+# sandbox grid (cf/sandbox/) AND the intervention-branch runs (cf/*.json). Both
+# are committed so the public deploy can actually play them. Large but < the
+# 1 GB Pages limit; regenerate with the scripts/ data builders.
 _temp/
 
 # Current-state snapshot for hand-off / show-and-tell (regenerable; code+docs
