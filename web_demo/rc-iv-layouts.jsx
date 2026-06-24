@@ -406,7 +406,7 @@ function NarrativeLeft({ iv, scrollRef }) {
               This is the engine calibrated to the United States, 1980 to 2025: the same run you watched in <a style={{ color: CC.d, textDecoration: 'none', borderBottom: `1px solid ${CC.dSoft}`, cursor: 'pointer' }} href="#story" data-goto="story">the U.S. story</a>. Each lever here re-runs that history with one thing changed, to isolate its effect.
             </p>
             <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-              Below are seven interventions, real things people have tried against the growing divide. Did they work? That is the open question. Pick one and see whether your expectations line up with what the data shows.
+              Below are seven interventions, real things people have tried to tone dislike and disagreement down. Did they work? That is the open question. Pick one and see whether your expectations line up with what the data shows.
             </p>
             <div style={{ marginTop: DS.sp.lg, maxWidth: 520 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '0 2px 11px' }}>

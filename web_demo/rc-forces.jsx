@@ -212,20 +212,37 @@ function stepAffect(ags, bias, rate = 0.035, sigma = 0) {
 
 // 4 — tie rewiring (homophily): swap a cross-aisle tie for a same-side one. Slow,
 // degree-preserving, positions untouched. Faithful in form to TieRewiring.
+// One swap: drop a cross-aisle tie `j` for a fresh same-side one. `unlock` lets the
+// move sever an involuntary tie (clearing its lock) — used only at high homophily.
+function rewireOne(ags, i, cross, n, unlock) {
+  if (!cross.length) return;
+  const a = ags[i];
+  const cand = [];
+  for (let k = 0; k < n; k++) if (k !== i && ags[k].party === a.party && !a.ties.has(k)) cand.push(k);
+  if (!cand.length) return;
+  const j = cross[Math.floor(Math.random() * cross.length)];
+  const k = cand[Math.floor(Math.random() * cand.length)];
+  a.ties.delete(j); ags[j].ties.delete(i);
+  if (unlock) { a.locked.delete(j); ags[j].locked.delete(i); }
+  a.ties.add(k); ags[k].ties.add(i);
+}
 function stepRewire(ags, rate) {
   const n = ags.length;
+  // involuntary ties (work, family, neighbours) are the ratchet's floor — at a
+  // normal pace they never rewire, so a residue of cross-cutting bridges survives.
+  // But cranking homophily up wears even those down: their per-step break chance
+  // climbs from ~0 at the low end of the dial (default 0.02 → exactly 0).
+  const lockBreak = Math.max(0, rate - 0.04) * 0.25;
   for (let i = 0; i < n; i++) {
-    if (Math.random() > rate) continue;
     const a = ags[i];
-    const cross = [...a.ties].filter((j) => ags[j].party !== a.party && !a.locked.has(j));
-    if (!cross.length) continue;
-    const cand = [];
-    for (let k = 0; k < n; k++) if (k !== i && ags[k].party === a.party && !a.ties.has(k)) cand.push(k);
-    if (!cand.length) continue;
-    const j = cross[Math.floor(Math.random() * cross.length)];
-    const k = cand[Math.floor(Math.random() * cand.length)];
-    a.ties.delete(j); ags[j].ties.delete(i);
-    a.ties.add(k); ags[k].ties.add(i);
+    // the usual move: trade a voluntary cross-aisle tie for a same-side one.
+    if (Math.random() < rate) {
+      rewireOne(ags, i, [...a.ties].filter((j) => ags[j].party !== a.party && !a.locked.has(j)), n);
+    }
+    // at higher homophily, even an involuntary cross tie can snap (rarely).
+    if (lockBreak > 0 && Math.random() < lockBreak) {
+      rewireOne(ags, i, [...a.ties].filter((j) => ags[j].party !== a.party && a.locked.has(j)), n, true);
+    }
   }
 }
 
@@ -556,6 +573,7 @@ function ForceToy({ force, knob = 0, playing = false, revealed = false, onAutoRe
     anchorsRef.current = force.anchors ? force.anchors() : null;
     tickRef.current = 0; autoRevealedRef.current = false;
     camTRef.current = 0; applyCam(0);
+    fromRef.current = null; targetRef.current = null;   // drop any in-flight interp so a running loop can't overwrite the fresh seed
     drawRef.current();
   }, [force, n, seed]);
 
@@ -741,10 +759,10 @@ const FORCE_BC = {
   body: (
     <>
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-        Each person moves toward those close enough to them to have a constructive conversation. Hence the <em>bounded confidence</em> name - confidence in other people’s opinions bounded by how much they agree - anything out of those bounds gets ignored. On the compass this is represented by each person’s <strong>confidence radius</strong> (the dashed ring). Dots with overlapping rings mingle and build consensus. If the rings don’t overlap - conversations don’t happen or go nowhere. Think about it - do you often genuinely try to understand people who hold views that are anathema to you?
+        Each person moves toward those close enough to them to have a constructive conversation. Hence the <em>bounded confidence</em> name - confidence in other people’s opinions bounded by how much they agree - anything out of those bounds gets ignored. On the compass this is represented by each person’s <strong>confidence radius</strong> (the dashed ring). Dots with overlapping rings mingle and build consensus. If the rings don’t overlap - conversations don’t happen or go nowhere. Think about it - do we often genuinely try to understand people who hold views that are anathema to us?
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-        See the force in action. The crowd clumps into <strong>shared clusters</strong> and the party colors <em>mix</em>. Left to itself, listening to your neighbors tends toward <strong>agreement</strong> (albeit in your circle) rather than division. Widen the radius (increase confidence) and everyone converges on one big blob; narrow it and the crowd shatters into islands.
+        See the force in action. The crowd clumps into <strong>shared clusters</strong> and the party colors <em>mix</em>. Left to itself, listening to your neighbors tends toward <strong>agreement</strong> (albeit in your own circle) rather than division. Widen the radius (increase confidence) and everyone converges on one big blob; narrow it and the crowd splits into islands.
       </p>
     </>
   ),
@@ -761,14 +779,14 @@ const FORCE_PARTY = {
   id: 'party',
   eyebrow: 'How the engine works · force 4 of 5',
   title: 'Party pull: following your side’s lead.',
-  lead: 'Influence that comes down from the top — the leaders, not the neighbors.',
+  lead: 'Influence that comes not from your circle, but from above.',
   body: (
     <>
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-        A lot of our politics comes from the top. A party’s leaders take a stance, and over time their electorate drifts closer to it. Political scientists call it an <strong>elite cue</strong>, but you may have felt it yourself: an issue you’d hardly thought about suddenly feels salient and you know where <em>you</em> stand on it. Each party has its pole here (the two dashed targets); independents, with no team to follow, stay put. <strong>Drag a pole</strong> and you swing a whole side with it; pull a person away and watch their side drag them back.
+        A lot of our politics comes from the top. A party’s leaders take a stance, and over time their electorate drifts closer to it. Political scientists call it an <strong>elite cue</strong>, but you may have felt it yourself: an issue you’ve hardly thought about suddenly feels salient and you know where <em>you</em> stand on it. Of course, it’s not a one-way street and there’s a feedback element to it, but research is clear on the power of elite cues. Each party has its pole here (the two dashed targets); independents, with no team to follow, stay put.
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-        As it runs, the mixed crowd comes apart, the colors peeling into two camps with the middle thinning between them. Crank the pull up and each side snaps tight to its pole; ease it back down and they drift toward the center again.
+        <strong>Drag a pole</strong> and you swing a whole side with it; pull a person away and watch their side drag them back. As it runs, the mixed crowd comes apart, the colors peeling into two camps with the middle thinning between them. Crank the pull up and each side snaps tight to its pole; ease it back down and they drift toward the center again.
       </p>
     </>
   ),
@@ -789,11 +807,11 @@ const FORCE_AFFECT = {
   id: 'affect',
   eyebrow: 'How the engine works · the second axis',
   title: 'Disagreeing is only half the story',
-  lead: 'Affect: not a push by itself, but the feeling the forces before fail to capture.',
+  lead: 'Affect: not a force in itself, but the feeling the forces before fail to capture.',
   body: (
     <>
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-        Affect isn’t really a force at all — rather it’s a <strong>result</strong>. It’s the feeling the other forces breed which becomes the second, different dimension that polarization gets measured on. Look straight down at the compass and almost nothing seems to be happening. Then the axes tilt and a new movement path becomes apparent - it’s the emotional side of polarization. Two things drive it: <strong>contact</strong> (the more of the other side around you, the faster you sour) and a <strong>negativity bias</strong> (the knob).
+        Affect isn’t really a force at all — rather it’s another <strong>result</strong>. It’s the feeling the other forces breed which becomes the second, different dimension that polarization gets measured on. Look straight down at the compass and almost nothing seems to be happening. Then the axes tilt and a new movement path becomes apparent - it’s the emotional side of polarization. Two things drive it: <strong>contact</strong> (the more of the other side around you, the faster you sour) and a <strong>negativity bias</strong> (people’s disproportionate reaction to negative information).
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
         On screen, Democrats lift up, Republicans sink down, and the vertical gap between them is their mutual animosity.
@@ -822,7 +840,7 @@ const FORCE_NETWORK = {
         Every dot sits in a web of social ties (the lines). At first it’s mixed: plenty of links cross the aisle. But people don’t want to constantly find themselves arguing and defending their positions; so they slowly trade ties that irritate for ones that soothe. Over time this tendency largely erodes the cross-aisle links, leaving only what cannot be given up easily (colleagues, neighbors, fellow commuters).
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-        Look at the compass. Most of the bridges thin out as people trade them away, but a few stubborn ones never break - these are the <strong>involuntary</strong> ties nobody chooses, like work, family, or neighbors. This is the <strong>ratchet</strong>: your network slowly seals itself, but some outside influence always remains. Turn homophily down to keep it mixed; up to close the bubbles fast.
+        Look at the compass. Most of the bridges thin out as people trade them away, while the <strong>involuntary</strong> ties nobody chooses - work, family, neighbors - hold out longest. That residue is the <strong>ratchet</strong>: your network seals itself, but at an ordinary pace some outside influence tends to survive. Crank homophily high, though, and even those stubborn ties begin to give. Turn it down to keep it mixed; up to close the bubbles fast.
       </p>
     </>
   ),
@@ -838,7 +856,7 @@ const FORCE_NETWORK = {
 const FORCE_MEDIA = {
   id: 'media',
   eyebrow: 'How the engine works · force 5 of 5',
-  title: 'Turn on the news, and you may drift toward your own side.',
+  title: 'The news doesn’t have to mean new opinions',
   lead: (<>Heavy media users exposed to <strong>partisan media</strong> are influenced.</>),
   body: (
     <>
@@ -846,7 +864,7 @@ const FORCE_MEDIA = {
         Each party has its outlets (the diamonds). People tune in to their preferred ones, often based on political affiliation — what researchers call selective exposure. The more of partisan media they watch, the harder their outlet pulls them toward it. <strong>Drag an outlet</strong> to change where it pulls; drag a person to see which outlet they’re wired to.
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-        As it runs, most people barely move; it’s the heavy consumers who get drawn toward their outlet, coming out more partisan the more they watch — how far, and which way, depends on where the outlets sit. Turn the diet up and the pull strengthens (and vice versa).
+        As it runs, most people barely move; it’s the heavy consumers who get drawn toward their outlet, coming out more partisan the more they watch — how far, and which way, depends on where the outlets sit. Dial the diet up and the pull strengthens (and vice versa).
       </p>
     </>
   ),
@@ -866,7 +884,7 @@ const FORCE_MEDIA = {
 const FORCE_BACKFIRE = {
   id: 'backfire',
   eyebrow: 'How the engine works · force 2 of 5',
-  title: 'The same contact, now it shoves people apart.',
+  title: 'The same contact, but now it shoves people apart.',
   lead: 'Backfire: the flip side of bounded confidence.',
   body: (
     <>
@@ -894,15 +912,15 @@ const FORCES = [FORCE_BC, FORCE_BACKFIRE, FORCE_NETWORK, FORCE_PARTY, FORCE_MEDI
 const FORCE_ORIENT = {
   id: 'orient',
   eyebrow: 'How the engine works · orientation',
-  title: 'Two axes, a few hundred people.',
+  title: 'People as dots, opinions as positions',
   lead: 'First, what you are looking at.',
   body: (
     <>
       <p style={{ margin: '16px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-        The graph on the right is a <strong>political compass</strong>: left to right is the <strong>economic</strong> axis (from centralized to free), up–down the <strong>cultural</strong> one (from traditional to progressive). Every dot is one simulated person, their beliefs dictating their position on the compass. <strong>Navy</strong> leans Democratic, <strong>oxblood</strong> Republican, <strong>gray</strong> sits independent in the middle.
+        The graph you see is a <strong>political compass</strong>: left to right is the <strong>economic</strong> axis (from centralized to free-market), up–down the <strong>cultural</strong> one (from traditional to progressive). Every dot is one simulated person, their beliefs dictating their position on the compass. <strong>Navy</strong> leans Democratic, <strong>oxblood</strong> Republican, <strong>gray</strong> sits independent in the middle.
       </p>
       <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-        Right now nobody is moving. On the following pages you’ll see the forces that move them <strong>one at a time</strong>, starting with the smart-sounding ‘bounded confidence’.
+        For now everyone is still. On the following pages you’ll see the forces that move them <strong>one at a time</strong>, starting with the smart-sounding ‘bounded confidence’.
       </p>
     </>
   ),
@@ -921,7 +939,7 @@ const FORCE_TAB = { orient: 'Orientation', bc: 'Bounded confidence', backfire: '
 
 // ── the shared bottom bar — transport (left) · force buttons (center) · knob
 // (right). Named buttons, not a timeline; the controls sit where the story's do.
-function ForceBar({ stops, fi, goStop, force, playing, setPlaying, onStep, onReset, knob, setKnob, revealed, setRevealed }) {
+function ForceBar({ stops, fi, goStop, force, playing, setPlaying, onStep, onReset, knob, setKnob, onCommit, revealed, setRevealed }) {
   const isMobile = useIsMobile();
   const round = { width: 32, height: 32, borderRadius: DS.rad.pill, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, fontFamily: SANS };
   const pill = (label, active, onClick, muted) => (
@@ -952,7 +970,8 @@ function ForceBar({ stops, fi, goStop, force, playing, setPlaying, onStep, onRes
       {force.knob &&
         <label style={{ display: 'flex', alignItems: 'center', gap: 9, fontFamily: SANS, fontSize: 13, color: CC.ink2 }}>
           {force.knob.label}
-          <input type="range" className="cc-range" min={force.knob.min} max={force.knob.max} step={force.knob.step} value={knob} onChange={(e) => setKnob(parseFloat(e.target.value))}
+          <input type="range" className="cc-range" min={force.knob.min} max={force.knob.max} step={force.knob.step} value={knob}
+            onChange={(e) => setKnob(parseFloat(e.target.value))} onPointerUp={onCommit} onKeyUp={onCommit}
             style={{ width: isMobile ? 104 : 140, background: `linear-gradient(90deg, ${CC.ink} 0 ${kpct}%, ${CC.border} ${kpct}% 100%)` }} />
           <MonoVal size={12}>{knob.toFixed(2)}</MonoVal>
         </label>}
@@ -1012,6 +1031,14 @@ function ForceFeedItem({ force, idx, assignRef, onActive }) {
     return () => io.disconnect();
   }, []);
   const kpct = force.knob ? ((knob - force.knob.min) / (force.knob.max - force.knob.min)) * 100 : 0;
+  // a new dial value only shows its effect from a fresh start — but wait for the
+  // finger to LIFT before re-seeding + replaying, so a drag doesn't restart on
+  // every tick. The value still tracks live (setKnob) during the drag.
+  const commitKnob = () => {
+    if (force.reveal) setRevealed(false);
+    toyRef.current && toyRef.current.reset();
+    setPlaying(true);
+  };
   return (
     <section ref={ref} style={{ padding: '30px 20px 10px', borderTop: idx === 0 ? 'none' : `1px solid ${CC.border}` }}>
       <Eyebrow>{force.eyebrow}</Eyebrow>
@@ -1037,7 +1064,7 @@ function ForceFeedItem({ force, idx, assignRef, onActive }) {
             <button onClick={() => { setRevealed(false); setKnob(force.knob.def); toyRef.current && toyRef.current.reset(); setPlaying(true); }} aria-label="Reset"
               style={{ width: 34, height: 34, borderRadius: DS.rad.pill, flexShrink: 0, background: 'transparent', color: CC.ink2, border: `1px solid ${CC.borderS}`, fontSize: 13, cursor: 'pointer' }}>↺</button>
             <input type="range" className="cc-range" min={force.knob.min} max={force.knob.max} step={force.knob.step} value={knob}
-              onChange={(e) => setKnob(parseFloat(e.target.value))}
+              onChange={(e) => setKnob(parseFloat(e.target.value))} onPointerUp={commitKnob} onKeyUp={commitKnob}
               style={{ flex: 1, minWidth: 0, display: 'block', background: `linear-gradient(90deg, ${CC.ink} 0 ${kpct}%, ${CC.border} ${kpct}% 100%)` }} />
           </div>
         </div>}
@@ -1109,6 +1136,15 @@ function ForcesTour({ onFinale }) {
     toyRef.current && toyRef.current.reset();
     setPlaying(!force.static && !force.ambient);   // reset = watch it again from the top
   };
+  // a new dial value only shows its effect from a fresh start. The value tracks live
+  // while you drag (setKnob), but the re-seed + replay waits until you RELEASE the
+  // slider (commitKnob) — restarting on every tick would never let a run play out.
+  const commitKnob = () => {
+    if (force.static) return;
+    if (force.reveal) setRevealed(false);
+    toyRef.current && toyRef.current.reset();
+    setPlaying(true);
+  };
 
   const lastForce = fi === STOPS.length - 1;
   const navBtn = (label, onClick, primary) => (
@@ -1165,7 +1201,7 @@ function ForcesTour({ onFinale }) {
       </div>
       <ForceBar stops={STOPS} fi={fi} goStop={goStop} force={force}
         playing={playing} setPlaying={setPlaying} onStep={onStep} onReset={onReset}
-        knob={knob} setKnob={setKnob} revealed={revealed} setRevealed={setRevealed} />
+        knob={knob} setKnob={setKnob} onCommit={commitKnob} revealed={revealed} setRevealed={setRevealed} />
     </div>
   );
 }

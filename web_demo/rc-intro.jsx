@@ -101,26 +101,30 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D, variant
       ? { background: 'transparent' }
       : { background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
       <div style={{ flexShrink: 0, padding: hero ? `18px ${RX} 40px ${LX}` : `${isMobile ? '22px' : 'clamp(28px,4.5vh,52px)'} ${RX} 8px ${LX}` }}>
-        {!hero && <Eyebrow>An agent-based model · 250 simulated citizens</Eyebrow>}
+        {!hero && <Eyebrow>An agent-based model</Eyebrow>}
         {!hero &&
         <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(30px, 3.4vw, 44px)', lineHeight: 1.06, letterSpacing: '-.02em', maxWidth: TEXTW }}>
           {INTRO_HEAD}
         </h2>}
         <p style={{ margin: hero ? 0 : '20px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-          This is a (rather accurate) simulation of how politics polarize. It's
-          built using well-established mechanisms from polarization research and
-          real-world survey data. The website allows you to interact with the
-          engine and see polarization unfold - in the process learning more about
-          what drives it, what stalls it, and what it actually means to be
-          'polarized'.
+          This is a simulation of how politics polarizes. It runs on
+          tried-and-tested mechanisms from polarization research: we don't trust
+          people we disagree with, maintain ties with the ones we agree with,
+          consume media that sits well with us, and so on. Pretty basic stuff —
+          but that's what makes it interesting: turns out you don't need complex
+          calculations or vast datasets to model polarization. A lot of it
+          follows from first principles. What's a little unusual here is that it
+          brings these mechanisms together — they're more often studied in
+          isolation.
         </p>
         <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-          I invite you to take the tour of the simulation engine. You'll be
-          introduced to the forces (and get a chance to play around with them),
-          get a visual feel for how society polarizes, and get a chance to see
-          the engine tuned to a specific case - the U.S. Afterwards (or now if
-          feeling rebellious), you can dive into the sandbox to see what happens
-          if we tinker with the forces driving the divide.
+          Take the tour of the engine and watch polarization unfold — learning,
+          as it does, what drives it, what stalls it, and what it even means to
+          be 'polarized'. You'll meet the forces (and get to play with them), get
+          a visual feel for how a society comes apart, and see the engine tuned
+          to one real case — the U.S. Afterwards (or now, if feeling rebellious),
+          dive into the sandbox to see what happens when we tinker with the
+          forces driving the divide.
         </p>
         <div style={{ marginTop: 28, display: 'flex', gap: 10, alignItems: 'center', flexWrap: hero ? 'nowrap' : 'wrap' }}>
           <button onClick={onWatch} style={{ ...watchStyle, ...ctaHero }}>Take the tour &nbsp;→</button>

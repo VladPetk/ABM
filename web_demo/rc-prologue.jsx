@@ -37,8 +37,8 @@ const PROLOGUE_BEATS = [
       </>
     ) },
   { tick: 48, short: 'It cools', title: 'On its own, it pulls apart',
-    lead: 'Left alone, does anything happen? Some things do.',
-    body: 'Warmth toward the other side does drain away, steadily, and the two leanings do pull a little apart. The mechanism manages this much by itself, with nothing fed in from the outside world.' },
+    lead: 'Left alone, does anything happen? Something does.',
+    body: 'Warmth toward the other side drains away steadily, and the two leanings do pull a little apart. The mechanism manages this much by itself, with nothing fed in from the outside world.' },
   { tick: 96, short: 'It stalls', title: 'But then it stalls',
     lead: 'And here is about as far as the bare forces reach.',
     body: 'From this point onwards the split flattens out, it even slips back a tad. Though the feelings keep cooling, the positions settle into a sort of optimum. Society never hardens into two genuinely separate worlds. That\'s roughly as far as forty-five years of engine-only forces can take us. But is it enough to model the real-world situation? Scrub to the end - the answer might surprise you.*', footnote: '* click-bait used exclusively ironically' },
@@ -157,13 +157,13 @@ function PrologueEndRail({ usArr, ffArr, onToStory, onPlayground, on3D, scrollRe
     <div ref={scrollRef} style={{ background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
       <div style={{ flexShrink: 0, padding: isMobile ? '22px 20px 8px 20px' : `clamp(16px,2.6vh,40px) 44px 8px ${_PLX}` }}>
         <Eyebrow>The engine · every force at once</Eyebrow>
-        <h2 style={{ margin: '10px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: isMobile ? 27 : 'clamp(26px, 3.4vh, 38px)', lineHeight: 1.05, letterSpacing: '-.018em', maxWidth: TEXTW }}>The forces alone don’t get us all the way</h2>
+        <h2 style={{ margin: '10px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: isMobile ? 27 : 'clamp(26px, 3.4vh, 38px)', lineHeight: 1.05, letterSpacing: '-.018em', maxWidth: TEXTW }}>The forces alone do not get us all the way</h2>
         <p style={{ margin: '10px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.4, color: CC.ink, maxWidth: TEXTW }}>Compare the in-engine polarization against a country that <em>did</em> polarize — the United States.</p>
         <p style={{ margin: '10px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-          So how far does the bare engine reach? On the <strong>feelings</strong>, most of the way — somewhere north of 80 percent. The engine-only line and the real one nearly meet, suggesting that animus can be modeled largely from rather fundamental psychological forces.
+          So how far does the bare engine reach? On the <strong>feelings</strong>, pretty far — north of 80 percent. The engine-only line and the real one nearly meet, suggesting that animus can be modeled largely from quite fundamental psychological forces.
         </p>
         <p style={{ margin: '10px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-          The <strong>position split</strong> is a different story. Alone, the engine reaches only about a third of it, tracking the data well until c. 2010 but then stalling while the real split climbs sharply. This sharp rise is caused by external factors (<strong>forcings</strong>) that are switched off in this view: the build-up of partisan media, momentous events, the timing of who mobilized and when. The engine supplies the forces; history supplies the rest.
+          The <strong>position split</strong> is a different story. Alone, the engine reaches only about a third of it, tracking the data well until c. 2010 but then stalling while the real split climbs rapidly. This sharp rise is caused by external factors (<strong>forcings</strong>) that are switched off in this view: the build-up of partisan media, momentous events, the timing of who mobilized when. The engine supplies the forces; history supplies the rest.
         </p>
         <div style={{ marginTop: 12, maxWidth: TEXTW }}>
           <div style={{ display: 'flex', gap: 18 }}>
@@ -287,10 +287,10 @@ function ProloguePage({ onToStory, onPlayground, on3D }) {
     };
     const endContent = (<>
       <Eyebrow>The engine · every force at once</Eyebrow>
-      <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 27, lineHeight: 1.05, letterSpacing: '-.018em', textWrap: 'balance' }}>The forces alone don’t get us all the way</h2>
+      <h2 style={{ margin: '12px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 27, lineHeight: 1.05, letterSpacing: '-.018em', textWrap: 'balance' }}>The forces alone do not get us all the way</h2>
       <p style={{ margin: '14px 0 0', fontFamily: SERIF, fontStyle: 'italic', fontSize: DS.type.subhead, lineHeight: 1.4, color: CC.ink }}>Compare the in-engine polarization against a country that <em>did</em> polarize — the United States.</p>
-      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>So how far does the bare engine reach? On the <strong>feelings</strong>, most of the way — somewhere north of 80 percent. The engine-only line and the real one nearly meet, suggesting that animus can be modeled largely from rather fundamental psychological forces.</p>
-      <p style={{ margin: '12px 0 0', ...PROSE, color: CC.ink2 }}>The <strong>position split</strong> is a different story. Alone, the engine reaches only about a third of it, tracking the data well until c. 2010 but then stalling while the real split climbs sharply. This sharp rise is caused by external <strong>forcings</strong> switched off in this view: the build-up of partisan media, momentous events, the timing of who mobilized and when. The engine supplies the forces; history supplies the rest.</p>
+      <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2 }}>So how far does the bare engine reach? On the <strong>feelings</strong>, pretty far — north of 80 percent. The engine-only line and the real one nearly meet, suggesting that animus can be modeled largely from quite fundamental psychological forces.</p>
+      <p style={{ margin: '12px 0 0', ...PROSE, color: CC.ink2 }}>The <strong>position split</strong> is a different story. Alone, the engine reaches only about a third of it, tracking the data well until c. 2010 but then stalling while the real split climbs rapidly. This sharp rise is caused by external <strong>forcings</strong> switched off in this view: the build-up of partisan media, momentous events, the timing of who mobilized when. The engine supplies the forces; history supplies the rest.</p>
       <div style={{ marginTop: 18 }}>
         <PChart title="Party separation — the split" sub="tracks for a while, then peels away after ~2010" us={usArr('sep')} ff={ffArr('sep')} marker />
         <PChart title="Out-party warmth — the feelings" sub="close, not identical — the engine cools mostly on its own" us={usArr('aff')} ff={ffArr('aff')} deg marker />
