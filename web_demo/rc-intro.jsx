@@ -92,11 +92,15 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D, variant
   // the nudge follows what the visitor hasn't done yet
   const watchStyle = storyDone ? white : black;
   const sandboxStyle = storyDone ? black : white;
+  // on the mobile hero the two pills share the row as equal halves (auto-width
+  // wraps them into an ugly column at phone widths); tighter padding + nowrap so
+  // the labels never clip in half a screen.
+  const ctaHero = hero ? { flex: 1, padding: '13px 12px', fontSize: 15, whiteSpace: 'nowrap' } : null;
   return (
     <div style={hero
       ? { background: 'transparent' }
       : { background: 'transparent', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, justifyContent: isMobile ? 'flex-start' : 'safe center', overflow: 'auto' }}>
-      <div style={{ flexShrink: 0, padding: hero ? `18px ${RX} 8px ${LX}` : `${isMobile ? '22px' : 'clamp(28px,4.5vh,52px)'} ${RX} 8px ${LX}` }}>
+      <div style={{ flexShrink: 0, padding: hero ? `18px ${RX} 40px ${LX}` : `${isMobile ? '22px' : 'clamp(28px,4.5vh,52px)'} ${RX} 8px ${LX}` }}>
         {!hero && <Eyebrow>An agent-based model · 250 simulated citizens</Eyebrow>}
         {!hero &&
         <h2 style={{ margin: '14px 0 0', fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(30px, 3.4vw, 44px)', lineHeight: 1.06, letterSpacing: '-.02em', maxWidth: 520 }}>
@@ -118,9 +122,9 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D, variant
           feeling rebellious), you can dive into the sandbox to see what happens
           if we tinker with the forces driving the divide.
         </p>
-        <div style={{ marginTop: 28, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <button onClick={onWatch} style={watchStyle}>Take the tour &nbsp;→</button>
-          <button onClick={onSandbox} style={sandboxStyle}>Open the sandbox</button>
+        <div style={{ marginTop: 28, display: 'flex', gap: 10, alignItems: 'center', flexWrap: hero ? 'nowrap' : 'wrap' }}>
+          <button onClick={onWatch} style={{ ...watchStyle, ...ctaHero }}>Take the tour &nbsp;→</button>
+          <button onClick={onSandbox} style={{ ...sandboxStyle, ...ctaHero }}>Open the sandbox</button>
         </div>
         <div style={{ marginTop: 22, display: 'flex', gap: 18, alignItems: 'baseline', flexWrap: 'wrap' }}>
           <button onClick={on3D} style={quiet}>see it in three dimensions →</button>
