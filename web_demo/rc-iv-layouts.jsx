@@ -758,8 +758,13 @@ function MobileSandbox({ iv, play, field }) {
         </button>
         {open && <div style={{ marginTop: 14, animation: 'ccFadeUp .2s ease' }}><SandboxControls iv={iv} /></div>}
       </div>
-      {/* the alternate-history cloud — plays on the same playhead as the chart */}
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '1', marginTop: 12 }}>
+      {/* the alternate-history cloud — plays on the same playhead as the chart.
+          Kept a SQUARE (Field draws its KDE stretched across the whole canvas, so a
+          non-square box distorts/repeats the cloud), but capped to the height left
+          after the furniture above + below, so the transport + animus chart land
+          on-screen without scrolling. Centred; the page still scrolls on short
+          phones (the calc under-shoots). */}
+      <div style={{ position: 'relative', width: 'min(100%, calc(100dvh - 360px))', aspectRatio: '1', margin: '12px auto 0' }}>
         <div style={{ position: 'absolute', inset: 0 }}>{field}</div>
       </div>
       <div style={{ padding: '6px 20px 44px' }}>
