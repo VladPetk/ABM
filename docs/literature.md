@@ -56,7 +56,8 @@ when raw microdata download was blocked): Levendusky 2009 Tables 2.1/2.2
 (within-party SD), Baldassarri & Gelman 2008 Tables 2–3 (cross-issue
 correlation), Mason 2018 Appendix B (sorting coefficients), Treier & Hillygus
 2009 Fig 1/Table 1 (2D-IRT correlations), Hare, Liu & Lupton 2018 (ideological
-labels), Ansolabehere & Schaffner 2022 (CCES codebook). See
+scaling / Ordered Optimal Classification), Ansolabehere & Schaffner 2022 (CES
+codebook). See
 phase9_raw_data_sources.md §"Published-paper tables."
 
 **Repo data artifacts.** `data/literature/` holds `augmentation_notes.pdf`,
@@ -89,20 +90,35 @@ are in methods.md's provenance table.
 - **Deffuant, G., Neau, D., Amblard, F., & Weisbuch, G.** (2000). Mixing
   beliefs among interacting agents. *Advances in Complex Systems* 3:87. —
   Bounded-confidence variant (pairwise mixing).
+- **Jager, W., & Amblard, F.** (2005). Uniformity, bipolarization and
+  pluriformity captured as generic stylized behavior with an agent-based
+  simulation model of attitude change. *Computational & Mathematical
+  Organization Theory* 10(4):295. — Bounded confidence + repulsion (negative
+  influence); the model-form precedent for `BacklashRepulsion`.
 - **Mäs, M., & Flache** (2013). Differentiation without distancing. *PLOS ONE*
-  8:e74516. — Repulsion / differentiation precedent for `BacklashRepulsion`.
-- **Kan, U., Porter, M. A., & Mason** (2023). An adaptive bounded-confidence
-  model of opinion dynamics on networks. *Journal of Complex Networks*. —
-  Network-coupled adaptive BC precedent (ties the BC rule to the network
-  substrate).
-- **Friedkin, N. E., & Johnsen, E. C.** (1999). *Social Influence Networks and
-  Opinion Change*. — The FJ anchor + stubbornness damping `(1 − stubbornness)`
-  applied at every ideology-moving rule's apply-site.
+  8:e74516. — NB: argues bipolarization can arise *without* negative influence
+  (via homophily); a contrast case, not a repulsion precedent.
+- **Kan, U., Feng, M., & Porter, M. A.** (2023). An adaptive bounded-confidence
+  model of opinion dynamics on networks. *Journal of Complex Networks*
+  11(1):cnac055. — Network-coupled adaptive BC precedent (ties the BC rule to
+  the network substrate). *(Author fix 2026-06: second author is Michelle Feng;
+  "Mason" was Mason Porter's first name mistakenly split out.)*
+- **Friedkin, N. E., & Johnsen, E. C.** (1990). Social influence and opinions.
+  *Journal of Mathematical Sociology* 15(3–4):193. — The FJ model: anchor +
+  stubbornness damping `(1 − stubbornness)` applied at every ideology-moving
+  rule's apply-site. *(Standardized 2026-06 to the originating 1990 paper, to
+  match methods.md and the Methods page; the 1999 restatement "Social Influence
+  Networks and Opinion Change," Advances in Group Processes 16:1, carries the
+  same model.)*
 
 ### 2.2 Network structure
 - **McPherson, M., Smith-Lovin, L., & Cook, J. M.** (2001). Birds of a feather:
   Homophily in social networks. *Annual Review of Sociology* 27:415. — The
   homophily basis for network-primary design (ADR-001) and `TieRewiring`.
+- **Holme, P., & Newman, M. E. J.** (2006). Nonequilibrium phase transition in
+  the coevolution of networks and opinions. *Physical Review E* 74:056108. —
+  Network–opinion coevolution (ties rewire as opinions shift); the model-form
+  precedent for `TieRewiring`.
 
 ### 2.3 Elite divergence & mass sorting
 - **McCarty, N., Poole, K. T., & Rosenthal, H.** (2006). *Polarized America*.
@@ -217,9 +233,11 @@ are in methods.md's provenance table.
   intergroup contact theory. *JPSP* 90:751. — Contact roughly halves prejudice
   (515 studies, r ≈ −0.21) → `cooperative_mute = 0.5`. Per-encounter scale
   tagged **E**.
-- **Pettigrew, T. F.** (2009). Secondary transfer effects of intergroup
-  contact. *Annual Review of Psychology* 60:121. — Agent-level cooperative-share
-  mute / warmth recovery (the X6b Phase 11 candidate).
+- **Pettigrew, T. F.** (2009). Secondary transfer effect of contact: do
+  intergroup contact effects spread to noncontacted outgroups? *Social
+  Psychology* 40(2):55. — Agent-level cooperative-share mute / warmth recovery
+  (the X6b Phase 11 candidate). *(Venue fix 2026-06: was wrongly listed as
+  Annual Review of Psychology 60:121.)*
 
 ### 2.6 Algorithmic / platform null anchors
 - **Allcott, H., Braghieri, L., Eichmeyer, S., & Gentzkow, M.** (2020). The
@@ -355,9 +373,9 @@ This is the compact map of which sources anchor which lever. Measured buckets:
 | Lever | Mechanism | Primary anchors | Supporting / envelope |
 |---|---|---|---|
 | **X1** Show the other side | `BacklashRepulsion` + identity weight | Bail 2018 (backfire) — **grade LOW/CONTESTED (T0.2)** | Combs et al. 2023 (anonymous reduces); Mutz 2018 (threat); Settle 2018; Levendusky & Stecula 2021; Yeomans et al. 2020. **Counterweights:** Guess & Coppock 2020 (*BJPS* 50:1497 — no backlash in 3 experiments); Wood & Porter 2019 (*Political Behavior* 41:135 — backfire "elusive" across 52 issues, 10k+ subjects). These two anchor the LOW/CONTESTED grade on X1's backfire reading (methods.md §5.13); beside it sits the 99.8% affect-gate firing rate (methods.md §5.4.bis). |
-| **X2** Fix the algorithm | `BC.affect_weight = 0` (null) | Guess et al. 2023 (Meta-2020); Allcott et al. 2024 | Stray 2022 (bridging, theoretical); Hangartner et al. 2021; Munger 2017 |
+| **X2** Fix the algorithm | `BC.affect_weight = 0` (null) | Guess et al. 2023 (Meta-2020); Allcott et al. 2024 | Stray 2022 (*Designing Recommender Systems to Depolarize*, First Monday); Hangartner et al. 2021; Munger 2017 |
 | **X3** Quit cable news | zero Fox/MSNBC `media_diet` | Allcott et al. 2020 (quit-analogue); Levendusky 2013 | Broockman & Kalla 2024 (switching, X3b candidate); DellaVigna & Kaplan 2007; Levendusky & Malhotra 2016 |
-| **X4** Bipartisan dialogue | identity-prime + threat reset | Voelkel et al. 2024 (best single anchor); Levendusky 2018 | Bursztyn & Yang 2023; Santoro & Broockman 2022; Kalla & Broockman 2020; Mutz 2006; Levendusky 2021; Mason 2018 (resistance) |
+| **X4** Bipartisan dialogue | identity-prime + threat reset | Voelkel et al. 2024 (best single anchor); Levendusky 2018 | Bursztyn & Yang 2022; Santoro & Broockman 2022; Kalla & Broockman 2020; Mutz 2006; Levendusky 2021; Mason 2018 (resistance) |
 | **X5** Deprogramming & exit programs | treated 50% of faction-tagged agents exit (clear `faction_center` → FactionAnchor self-gates off) **and** have `identity_strength` halved (weaker PartyPull) | Horgan 2009; Koehler 2017; Berger 2018 (deradicalization mechanism) | Gielen 2019 (program-efficacy review — modest/contested); Bjørgo & Horgan 2009. *[N] magnitude; replaces the retired "ranked-choice voting" lever (drift-multiplier arm inert on the S3 data-fed path; MHV S5 T5.0). Measures null — targeted-tail counter-extremism doesn't scale to the aggregate* |
 | **X6** Shared neighborhoods/workplaces | +1 cross-party cooperative tie + affect/threat reset | Pettigrew & Tropp 2006; Mousa 2020; Allport 1954 | Lowe 2021; Paluck et al. 2021; Enos 2014 (backfire under threat); Scacco & Warren 2018; Mutz 2006 |
 | **X7** Correct the perception gap | `PerceptionUpdate` reset + accelerated correction | Ahler & Sood 2018; Voelkel et al. 2024 | Lees & Cikara 2020; Druckman et al. 2022 (decay); Moore-Berg et al. 2020; Yudkin et al. 2019 (More in Common) |
@@ -375,8 +393,8 @@ Schickler *Partisan Hearts and Minds* (party-ID continuity r ≈ .97); Kuziemko 
 Washington 2018 (*AER*, Southern realignment = race-driven conversion); Ghitza,
 Gelman & Auerbach 2023 (*AJPS*, formative-years imprinting ~ages 14–24);
 Rosenfeld 2017 (*Socius*) & Baunach 2011 (*SSM*, issue-attitude liberalization ~⅓
-replacement); Phillips 2022 (*Political Behavior*), Stoker 2020, Boxell,
-Gentzkow & Shapiro 2017/2021 — three independent APC studies converging that
+replacement); Phillips 2022 (*Political Behavior*), Stoker 2020 (APSA Preprints working paper), Boxell,
+Gentzkow & Shapiro 2017/2024 — three independent APC studies converging that
 **affective polarization is a period effect** (out-party warmth fell across all
 cohorts at once, fastest among the oldest/least-online); Firebaugh (linear
 decomposition method). **Reality-validation workstream (2026-06):** the
@@ -437,13 +455,24 @@ Kozlowski & Murphy 2021 (*SSR* 94:102498), Hare 2022 (*BJPS* 52:1602),
 Baldassarri & Gelman 2008 (*AJS* 114:408). Note the §2.8 correction: the
 title "Constrained Citizens?" belongs to Hare 2022, not Kozlowski.
 
-**Pending venue/year verification** (flagged in redesign_briefs.md §"Citation
-verification TODO" — pin before treating as load-bearing): Voelkel et al. 2024
-(*Science Advances*?), Allcott et al. 2024 (venue), Combs et al. 2023 (*PNAS*?),
-Broockman & Kalla 2024 (NBER WP / forthcoming venue), Lowe 2021 (*AER*?),
-Atkinson et al. 2023 (Maine RCV venue), Santoro & Broockman 2022, Kalla &
-Broockman 2020 (*APSR*?), Yeomans et al. 2020 (*OBHDP*), Yudkin et al. 2019
-(More in Common, *Perception Gap*).
+**Venue/year — resolved in the 2026-06 citation audit** (previously pending):
+- Voelkel et al. **2024** — *Science* (the 25-treatment megastudy, "Megastudy
+  testing 25 treatments to reduce antidemocratic attitudes and partisan
+  animosity"); **not** *Science Advances*. (A separate "Durably reducing partisan
+  animosity…" is *PNAS* 2025 — confirm which is intended where cited.)
+- Allcott et al. 2024 — *PNAS* 121(21) (Meta-2020 deactivation).
+- Combs et al. 2023 — ***Nature Human Behaviour*** 7:1454; **not** *PNAS*.
+- Broockman & Kalla 2024 — ***Journal of Politics*** ("Consuming Cross-Cutting
+  Media Causes Learning and Moderates Attitudes"); **not** NBER/AJPS.
+- Lowe 2021 — *AER* 111:1807.
+- Atkinson, Foley & Ganz **2024** — *University of Illinois Law Review* 2024:1655;
+  **not** 2023. NB: it argues RCV does *not* reduce polarization — check any
+  claim that attributes a depolarizing RCV finding to it.
+- Santoro & Broockman 2022 — *Science Advances* 8:eabn5515.
+- Kalla & Broockman 2020 — *APSR* 114:410.
+- Yeomans et al. 2020 — *OBHDP* 160:131 ("Conversational receptiveness").
+- Yudkin, Hawkins & Dixon 2019 — More in Common, *The Perception Gap*.
+- Bursztyn & Yang — *Annual Review of Economics* 14:425, **2022** (not 2023).
 
 ---
 

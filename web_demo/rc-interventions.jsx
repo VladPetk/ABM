@@ -38,7 +38,7 @@ const IV_TAKE = {
 
 // Extra caveats the audit requires be shown in-UI (§3.4 #6, §5.2).
 const IV_CAVEAT = {
-  X1_show_other_side: 'The backfire is threat-gated — Bail 2018 vs Guess & Coppock 2020 vs Combs 2023.',
+  X1_show_other_side: 'The backfire is conditional — Bail 2018 vs Guess & Coppock 2020 vs Combs 2023.',
   X5_deprogramming: 'This treats half the organized tail, and real deradicalization efficacy is itself contested.',
 };
 

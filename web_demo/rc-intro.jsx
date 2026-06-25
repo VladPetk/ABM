@@ -110,17 +110,17 @@ function IntroRail({ tick, storyDone, onWatch, onSandbox, onAbout, on3D, variant
           This is a simulation of how politics polarizes. It runs on
           tried-and-tested mechanisms from polarization research: we don't trust
           people we disagree with, maintain ties with the ones we agree with,
-          consume media that sits well with us, and so on. Pretty basic stuff —
-          but that's what makes it interesting: turns out you don't need complex
+          consume media that sits well with us, and so on. Pretty basic stuff,
+          but that's what makes it interesting - turns out you don't need complex
           calculations or vast datasets to model polarization. A lot of it
-          follows from first principles. What's a little unusual here is that it
-          brings these mechanisms together — they're more often studied in
-          isolation.
+          follows from first principles. What's a little unusual here is that
+          this model brings these mechanisms - often studied in isolation -
+          together.
         </p>
         <p style={{ margin: '14px 0 0', ...PROSE, color: CC.ink2, maxWidth: TEXTW }}>
-          Take the tour of the engine and watch polarization unfold — learning,
-          as it does, what drives it, what stalls it, and what it even means to
-          be 'polarized'. You'll meet the forces (and get to play with them), get
+          Take the tour of the engine and watch polarization unfold — in the
+          process learning what drives it, what stalls it, and what it even means
+          to be 'polarized'. You'll meet the forces (and get to play with them), get
           a visual feel for how a society comes apart, and see the engine tuned
           to one real case — the U.S. Afterwards (or now, if feeling rebellious),
           dive into the sandbox to see what happens when we tinker with the

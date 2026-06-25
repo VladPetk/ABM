@@ -790,7 +790,7 @@ const FORCE_PARTY = {
       </p>
     </>
   ),
-  caption: 'Nerdy note: faithful in form to PartyPull — elite-cue drift toward each party’s own emergent pole.',
+  caption: 'Nerdy note: an elite cue (Zaller 1992; Levendusky 2009) — partisans drift toward their party’s signaled position. The pole it chases isn’t fed in; the engine produces it.',
   seed: seedMixed,
   step: (ags, knob, anchors) => stepParty(ags, knob, anchors, 0.012),
   anchors: () => [
@@ -844,7 +844,7 @@ const FORCE_NETWORK = {
       </p>
     </>
   ),
-  caption: 'Nerdy note: faithful in form to Tie Rewiring — slow homophilous network co-evolution.',
+  caption: 'Nerdy note: homophily (McPherson, Smith-Lovin & Cook 2001), modeled as slow co-evolution of network and opinions — in the spirit of Holme & Newman 2006.',
   seed: seedNetwork,
   step: (ags, knob) => stepRewire(ags, knob),
   knob: { label: 'homophily', min: 0, max: 0.2, step: 0.01, def: 0.02 },
@@ -896,7 +896,7 @@ const FORCE_BACKFIRE = {
       </p>
     </>
   ),
-  caption: 'Nerdy note: faithful in form to Backlash Repulsion (Bail 2018) — gated by affect and fires only when warmth is already low.',
+  caption: 'Nerdy note: bounded confidence with a repulsion (negative-influence) term — Jager & Amblard 2005. The cross-party backfire it encodes follows Bail et al. 2018 (contested); affect-gated, so it fires only when warmth is already low.',
   seed: seedBackfire,
   step: (ags, knob) => stepBackfire(ags, knob, 0.022, 0.05, 0.7, 0.004),
   knob: { label: 'hostility', min: 0, max: 1, step: 0.05, def: 0.8 },
